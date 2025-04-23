@@ -101,7 +101,9 @@
   }
   
   .text-shadow-lg {
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 
+                 0 4px 12px rgba(0, 0, 0, 0.7),
+                 0 12px 20px rgba(0, 0, 0, 0.5);
   }
   
   .text-glow {

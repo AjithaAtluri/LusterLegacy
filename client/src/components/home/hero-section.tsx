@@ -20,11 +20,11 @@ export default function HeroSection() {
         <img 
           src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
           alt="Luxury diamond jewelry" 
-          className="w-full h-full object-cover opacity-50"
+          className="w-full h-full object-cover brightness-125 contrast-110"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
         />
-        {/* Dark overlay for guaranteed text readability */}
-        <div className="absolute inset-0 bg-charcoal/90"></div>
+        {/* Semi-transparent gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-charcoal/90 via-charcoal/75 to-charcoal/60"></div>
       </div>
       
       {/* Subtle gold accents */}
@@ -55,17 +55,17 @@ export default function HeroSection() {
           </div>
           
           {/* Heading with enhanced elegant typography */}
-          <h1 className="font-playfair font-bold text-4xl md:text-6xl lg:text-7xl text-pearl mb-6 leading-tight text-shadow-lg">
-            <span className="block">Crafted by</span>
+          <h1 className="font-playfair font-bold text-4xl md:text-6xl lg:text-7xl text-pearl mb-6 leading-tight">
+            <span className="block text-shadow-lg">Crafted by</span>
             <span className="block text-primary text-glow font-extrabold my-1">Artisans</span>
-            <span className="block mt-2">Designed by You</span>
+            <span className="block mt-2 text-shadow-lg">Designed by You</span>
           </h1>
           
-          {/* Tagline with elegant styling */}
+          {/* Tagline with elegant styling and enhanced readability */}
           <div className="mb-12 max-w-xl">
-            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4">
+            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4 text-shadow-sm">
               <span className="text-primary font-semibold">Experience bespoke luxury in every piece.</span>{" "}
-              <span className="text-pearl">Timeless elegance reimagined for the modern connoisseur.</span>
+              <span className="text-pearl font-medium">Timeless elegance reimagined for the modern connoisseur.</span>
             </p>
           </div>
           
