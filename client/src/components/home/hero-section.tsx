@@ -24,7 +24,7 @@ export default function HeroSection() {
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
         />
         {/* Gradient overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/90 via-charcoal/60 to-charcoal/30"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/95 via-charcoal/85 to-charcoal/70"></div>
       </div>
       
       {/* Subtle gold accents */}
@@ -54,18 +54,18 @@ export default function HeroSection() {
             </div>
           </div>
           
-          {/* Heading with elegant typography */}
-          <h1 className="font-playfair font-bold text-4xl md:text-6xl lg:text-7xl text-pearl mb-6 leading-tight text-shadow">
-            <span className="block">Crafted by</span>
-            <span className="block text-primary">Artisans</span>
-            <span className="block mt-2">Designed by You</span>
+          {/* Heading with enhanced elegant typography */}
+          <h1 className="font-playfair font-bold text-4xl md:text-6xl lg:text-7xl text-pearl mb-6 leading-tight text-shadow-lg">
+            <span className="block bg-charcoal/50 backdrop-blur-sm shadow-sm inline-block px-2">Crafted by</span>
+            <span className="block text-primary text-glow font-extrabold my-1">Artisans</span>
+            <span className="block mt-2 bg-charcoal/50 backdrop-blur-sm shadow-sm inline-block px-2">Designed by You</span>
           </h1>
           
-          {/* Tagline with subtle background for readability */}
-          <div className="mb-12 max-w-xl py-3 px-4 bg-charcoal/30 backdrop-blur-sm border-l-4 border-primary">
-            <p className="font-cormorant text-xl md:text-2xl text-pearl/90 leading-relaxed">
+          {/* Tagline with enhanced background for readability */}
+          <div className="mb-12 max-w-xl py-4 px-5 bg-charcoal/70 backdrop-blur-md border-l-4 border-primary shadow-xl">
+            <p className="font-cormorant text-xl md:text-2xl text-pearl leading-relaxed">
               <span className="text-primary font-semibold">Experience bespoke luxury in every piece.</span>{" "}
-              <span className="text-pearl/90">Timeless elegance reimagined for the modern connoisseur.</span>
+              <span className="text-pearl">Timeless elegance reimagined for the modern connoisseur.</span>
             </p>
           </div>
           
