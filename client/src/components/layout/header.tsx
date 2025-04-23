@@ -33,9 +33,7 @@ export default function Header() {
     <header className="bg-background shadow-md sticky top-0 z-50">
       <nav className="container mx-auto px-4 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center">
-          <Link href="/" className="font-playfair text-3xl font-bold text-charcoal">
-            Luster<span className="text-primary">Legacy</span>
-          </Link>
+          <Logo size="lg" />
         </div>
         
         {/* Desktop navigation */}
@@ -70,9 +68,9 @@ export default function Header() {
           <SheetContent side="right" className="w-[80%] sm:w-[350px] bg-background">
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between mb-8">
-                <Link href="/" onClick={() => setIsMenuOpen(false)} className="font-playfair text-2xl font-bold text-foreground">
-                  Luster<span className="text-primary">Legacy</span>
-                </Link>
+                <div onClick={() => setIsMenuOpen(false)}>
+                  <Logo size="md" />
+                </div>
                 <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
                   <X className="h-5 w-5" />
                 </Button>
