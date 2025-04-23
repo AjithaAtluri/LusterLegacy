@@ -1,14 +1,65 @@
 import { Link } from "wouter";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "@/components/products/product-card";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCallback, useEffect, useState } from "react";
+import useEmblaCarousel from 'embla-carousel-react';
+import { Button } from "@/components/ui/button";
 
 export default function FeaturedProducts() {
   // Fetch featured products
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products/featured'],
   });
+  
+  // Embla carousel setup
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: 'start',
+    loop: false,
+    dragFree: true,
+    containScroll: 'trimSnaps',
+  });
+  
+  // Carousel navigation state
+  const [prevBtnDisabled, setPrevBtnDisabled] = useState(true);
+  const [nextBtnDisabled, setNextBtnDisabled] = useState(true);
+  
+  // Update button states on scroll
+  const onScroll = useCallback(() => {
+    if (!emblaApi) return;
+    setPrevBtnDisabled(!emblaApi.canScrollPrev());
+    setNextBtnDisabled(!emblaApi.canScrollNext());
+  }, [emblaApi]);
+  
+  useEffect(() => {
+    if (emblaApi) {
+      onScroll();
+      emblaApi.on('select', onScroll);
+      emblaApi.on('reInit', onScroll);
+    }
+    return () => {
+      if (emblaApi) {
+        emblaApi.off('select', onScroll);
+        emblaApi.off('reInit', onScroll);
+      }
+    };
+  }, [emblaApi, onScroll]);
+  
+  // Navigation handlers
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+  
+  // Randomize products order on component mount
+  const [shuffledProducts, setShuffledProducts] = useState([]);
+  
+  useEffect(() => {
+    if (products && products.length > 0) {
+      // Create a copy of products and shuffle
+      const shuffled = [...products].sort(() => Math.random() - 0.5);
+      setShuffledProducts(shuffled);
+    }
+  }, [products]);
   
   return (
     <section id="collections" className="py-20 px-4 md:px-8 bg-background">
@@ -24,42 +75,76 @@ export default function FeaturedProducts() {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading ? (
-            // Loading skeletons
-            Array(3).fill(0).map((_, index) => (
-              <div key={index} className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
-                <Skeleton className="h-80 w-full" />
-                <div className="p-6">
-                  <Skeleton className="h-6 w-2/3 mb-2" />
-                  <Skeleton className="h-4 w-full mb-4" />
-                  <div className="mb-4">
-                    <Skeleton className="h-4 w-1/3 mb-1" />
-                    <Skeleton className="h-10 w-full mb-3" />
-                    <Skeleton className="h-4 w-1/3 mb-1" />
-                    <Skeleton className="h-10 w-full mb-3" />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <Skeleton className="h-3 w-16 mb-1" />
-                      <Skeleton className="h-6 w-24" />
+        <div className="relative mb-8">
+          {/* Carousel navigation */}
+          <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-4 z-10 md:-translate-x-6">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full bg-background/80 backdrop-blur-sm border border-primary/20 text-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:pointer-events-none shadow-md"
+              onClick={scrollPrev}
+              disabled={prevBtnDisabled}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-4 z-10 md:translate-x-6">
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="rounded-full bg-background/80 backdrop-blur-sm border border-primary/20 text-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-30 disabled:pointer-events-none shadow-md"
+              onClick={scrollNext}
+              disabled={nextBtnDisabled}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          {/* Carousel container */}
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex gap-6">
+              {isLoading ? (
+                // Loading skeletons
+                Array(3).fill(0).map((_, index) => (
+                  <div key={index} className="flex-[0_0_100%] sm:flex-[0_0_80%] md:flex-[0_0_45%] lg:flex-[0_0_30%] bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 min-w-0">
+                    <Skeleton className="h-80 w-full" />
+                    <div className="p-6">
+                      <Skeleton className="h-6 w-2/3 mb-2" />
+                      <Skeleton className="h-4 w-full mb-4" />
+                      <div className="mb-4">
+                        <Skeleton className="h-4 w-1/3 mb-1" />
+                        <Skeleton className="h-10 w-full mb-3" />
+                        <Skeleton className="h-4 w-1/3 mb-1" />
+                        <Skeleton className="h-10 w-full mb-3" />
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <Skeleton className="h-3 w-16 mb-1" />
+                          <Skeleton className="h-6 w-24" />
+                        </div>
+                        <Skeleton className="h-10 w-24" />
+                      </div>
                     </div>
-                    <Skeleton className="h-10 w-24" />
                   </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            // Actual products
-            products?.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            )) || (
-              // Fallback for no data
-              <div className="col-span-full text-center py-8">
-                <p className="text-lg text-muted-foreground">No products available at the moment.</p>
-              </div>
-            )
-          )}
+                ))
+              ) : (
+                // Actual products with dynamic ordering
+                shuffledProducts.length > 0 ? (
+                  shuffledProducts.map((product) => (
+                    <div key={product.id} className="flex-[0_0_100%] sm:flex-[0_0_80%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0">
+                      <ProductCard product={product} />
+                    </div>
+                  ))
+                ) : (
+                  // Fallback for no data
+                  <div className="flex-[0_0_100%] text-center py-8">
+                    <p className="text-lg text-muted-foreground">No products available at the moment.</p>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
         </div>
         
         <div className="mt-16 text-center">
