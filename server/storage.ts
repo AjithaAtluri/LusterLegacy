@@ -83,6 +83,26 @@ export interface IStorage {
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
   markContactMessageAsRead(id: number): Promise<boolean>;
   deleteContactMessage(id: number): Promise<boolean>;
+  
+  // Metal Type methods
+  getMetalType(id: number): Promise<MetalType | undefined>;
+  getAllMetalTypes(): Promise<MetalType[]>;
+  createMetalType(metalType: InsertMetalType): Promise<MetalType>;
+  updateMetalType(id: number, metalType: Partial<InsertMetalType>): Promise<MetalType | undefined>;
+  deleteMetalType(id: number): Promise<boolean>;
+  
+  // Stone Type methods
+  getStoneType(id: number): Promise<StoneType | undefined>;
+  getAllStoneTypes(): Promise<StoneType[]>;
+  createStoneType(stoneType: InsertStoneType): Promise<StoneType>;
+  updateStoneType(id: number, stoneType: Partial<InsertStoneType>): Promise<StoneType | undefined>;
+  deleteStoneType(id: number): Promise<boolean>;
+  
+  // Product-Stone methods
+  getProductStones(productId: number): Promise<StoneType[]>;
+  addProductStones(productId: number, stoneTypeIds: number[]): Promise<void>;
+  updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void>;
+  removeProductStone(productId: number, stoneTypeId: number): Promise<boolean>;
 }
 
 // In-memory storage implementation

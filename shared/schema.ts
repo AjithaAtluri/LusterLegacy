@@ -41,7 +41,7 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-// Product relations defined further down with stone relationships
+// Products relations defined below
 
 export const insertProductSchema = createInsertSchema(products).pick({
   name: true,

@@ -655,6 +655,345 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Cancel a PayPal order
   app.post('/api/payment/cancel-paypal-order', cancelOrder);
+  
+  /**
+   * Admin API endpoints for Jewelry Management
+   */
+  
+  // Metal Types Management
+  app.get('/api/admin/metal-types', validateAdmin, async (req, res) => {
+    try {
+      const metalTypes = await storage.getAllMetalTypes();
+      res.json(metalTypes);
+    } catch (error) {
+      console.error('Error fetching metal types:', error);
+      res.status(500).json({ message: 'Failed to fetch metal types' });
+    }
+  });
+
+  app.post('/api/admin/metal-types', validateAdmin, async (req, res) => {
+    try {
+      const metalType = await storage.createMetalType(req.body);
+      res.status(201).json(metalType);
+    } catch (error) {
+      console.error('Error creating metal type:', error);
+      res.status(500).json({ message: 'Failed to create metal type' });
+    }
+  });
+
+  app.put('/api/admin/metal-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const metalType = await storage.updateMetalType(id, req.body);
+      if (metalType) {
+        res.json(metalType);
+      } else {
+        res.status(404).json({ message: 'Metal type not found' });
+      }
+    } catch (error) {
+      console.error('Error updating metal type:', error);
+      res.status(500).json({ message: 'Failed to update metal type' });
+    }
+  });
+
+  app.delete('/api/admin/metal-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteMetalType(id);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(404).json({ message: 'Metal type not found' });
+      }
+    } catch (error) {
+      console.error('Error deleting metal type:', error);
+      res.status(500).json({ message: 'Failed to delete metal type' });
+    }
+  });
+
+  // Stone Types Management
+  app.get('/api/admin/stone-types', validateAdmin, async (req, res) => {
+    try {
+      const stoneTypes = await storage.getAllStoneTypes();
+      res.json(stoneTypes);
+    } catch (error) {
+      console.error('Error fetching stone types:', error);
+      res.status(500).json({ message: 'Failed to fetch stone types' });
+    }
+  });
+
+  app.post('/api/admin/stone-types', validateAdmin, upload.single('image'), async (req, res) => {
+    try {
+      const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+      const stoneType = await storage.createStoneType({
+        ...req.body,
+        imageUrl
+      });
+      res.status(201).json(stoneType);
+    } catch (error) {
+      console.error('Error creating stone type:', error);
+      res.status(500).json({ message: 'Failed to create stone type' });
+    }
+  });
+
+  app.put('/api/admin/stone-types/:id', validateAdmin, upload.single('image'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      let updateData = { ...req.body };
+      
+      if (req.file) {
+        updateData.imageUrl = `/uploads/${req.file.filename}`;
+        
+        // Delete old image if it exists
+        const stoneType = await storage.getStoneType(id);
+        if (stoneType?.imageUrl) {
+          const oldImagePath = path.join(process.cwd(), stoneType.imageUrl.substring(1));
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        }
+      }
+      
+      const updatedStoneType = await storage.updateStoneType(id, updateData);
+      if (updatedStoneType) {
+        res.json(updatedStoneType);
+      } else {
+        res.status(404).json({ message: 'Stone type not found' });
+      }
+    } catch (error) {
+      console.error('Error updating stone type:', error);
+      res.status(500).json({ message: 'Failed to update stone type' });
+    }
+  });
+
+  app.delete('/api/admin/stone-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get stone type to check for image
+      const stoneType = await storage.getStoneType(id);
+      
+      const success = await storage.deleteStoneType(id);
+      if (success) {
+        // Delete the image file if it exists
+        if (stoneType?.imageUrl) {
+          const imagePath = path.join(process.cwd(), stoneType.imageUrl.substring(1));
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+          }
+        }
+        res.status(204).send();
+      } else {
+        res.status(404).json({ message: 'Stone type not found' });
+      }
+    } catch (error) {
+      console.error('Error deleting stone type:', error);
+      res.status(500).json({ message: 'Failed to delete stone type' });
+    }
+  });
+
+  // Products Management with Multi-select Stones
+  app.get('/api/admin/products', validateAdmin, async (req, res) => {
+    try {
+      const products = await storage.getAllProducts();
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ message: 'Failed to fetch products' });
+    }
+  });
+
+  app.get('/api/admin/products/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const product = await storage.getProduct(id);
+      
+      if (product) {
+        // Get the associated stone types for the product
+        const productStones = await storage.getProductStones(id);
+        
+        res.json({
+          ...product,
+          stoneTypes: productStones
+        });
+      } else {
+        res.status(404).json({ message: 'Product not found' });
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      res.status(500).json({ message: 'Failed to fetch product' });
+    }
+  });
+
+  app.post('/api/admin/products', validateAdmin, upload.fields([
+    { name: 'mainImage', maxCount: 1 },
+    { name: 'additionalImages', maxCount: 5 }
+  ]), async (req, res) => {
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      // Process main image
+      const mainImageUrl = files.mainImage ? `/uploads/${files.mainImage[0].filename}` : null;
+      
+      // Process additional images
+      let additionalImages: string[] = [];
+      if (files.additionalImages) {
+        additionalImages = files.additionalImages.map(file => `/uploads/${file.filename}`);
+      }
+
+      // Parse stone type IDs from request body
+      let stoneTypeIds: number[] = [];
+      if (req.body.stoneTypeIds) {
+        try {
+          stoneTypeIds = JSON.parse(req.body.stoneTypeIds);
+        } catch (e) {
+          console.error('Error parsing stoneTypeIds:', e);
+          stoneTypeIds = [];
+        }
+      }
+      
+      // First create the product
+      const product = await storage.createProduct({
+        ...req.body,
+        imageUrl: mainImageUrl,
+        additionalImages: additionalImages
+      });
+      
+      // Then associate stone types with the product
+      if (stoneTypeIds.length > 0) {
+        await storage.addProductStones(product.id, stoneTypeIds);
+      }
+      
+      res.status(201).json({
+        ...product,
+        stoneTypes: stoneTypeIds.length > 0 ? await storage.getProductStones(product.id) : []
+      });
+    } catch (error) {
+      console.error('Error creating product:', error);
+      res.status(500).json({ message: 'Failed to create product' });
+    }
+  });
+
+  app.put('/api/admin/products/:id', validateAdmin, upload.fields([
+    { name: 'mainImage', maxCount: 1 },
+    { name: 'additionalImages', maxCount: 5 }
+  ]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      let updateData = { ...req.body };
+      
+      // Get existing product for old image cleanup
+      const existingProduct = await storage.getProduct(id);
+      if (!existingProduct) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      
+      // Handle main image update
+      if (files.mainImage) {
+        updateData.imageUrl = `/uploads/${files.mainImage[0].filename}`;
+        
+        // Delete old main image
+        if (existingProduct.imageUrl) {
+          const oldMainImagePath = path.join(process.cwd(), existingProduct.imageUrl.substring(1));
+          if (fs.existsSync(oldMainImagePath)) {
+            fs.unlinkSync(oldMainImagePath);
+          }
+        }
+      }
+      
+      // Handle additional images update
+      if (files.additionalImages && files.additionalImages.length > 0) {
+        const newAdditionalImages = files.additionalImages.map(file => `/uploads/${file.filename}`);
+        
+        // Delete existing additional images if 'replaceExistingImages' is true
+        if (req.body.replaceExistingImages === 'true' && existingProduct.additionalImages) {
+          existingProduct.additionalImages.forEach(imgUrl => {
+            const imgPath = path.join(process.cwd(), imgUrl.substring(1));
+            if (fs.existsSync(imgPath)) {
+              fs.unlinkSync(imgPath);
+            }
+          });
+          updateData.additionalImages = newAdditionalImages;
+        } else {
+          // Append new images to existing ones
+          updateData.additionalImages = [...(existingProduct.additionalImages || []), ...newAdditionalImages];
+        }
+      }
+      
+      // Parse stone type IDs from request body
+      let stoneTypeIds: number[] = [];
+      if (req.body.stoneTypeIds) {
+        try {
+          stoneTypeIds = JSON.parse(req.body.stoneTypeIds);
+        } catch (e) {
+          console.error('Error parsing stoneTypeIds:', e);
+          stoneTypeIds = [];
+        }
+      }
+      
+      // Update the product
+      const updatedProduct = await storage.updateProduct(id, updateData);
+      
+      // Update product stone associations
+      if (stoneTypeIds.length > 0 || req.body.updateStoneTypes === 'true') {
+        await storage.updateProductStones(id, stoneTypeIds);
+      }
+      
+      // Get the updated product with stone types
+      const productWithStones = {
+        ...updatedProduct,
+        stoneTypes: await storage.getProductStones(id)
+      };
+      
+      res.json(productWithStones);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).json({ message: 'Failed to update product' });
+    }
+  });
+
+  app.delete('/api/admin/products/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get product to check for images
+      const product = await storage.getProduct(id);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      
+      // Delete the product
+      const success = await storage.deleteProduct(id);
+      
+      if (success) {
+        // Delete main image
+        if (product.imageUrl) {
+          const mainImagePath = path.join(process.cwd(), product.imageUrl.substring(1));
+          if (fs.existsSync(mainImagePath)) {
+            fs.unlinkSync(mainImagePath);
+          }
+        }
+        
+        // Delete additional images
+        if (product.additionalImages) {
+          product.additionalImages.forEach(imgUrl => {
+            const imgPath = path.join(process.cwd(), imgUrl.substring(1));
+            if (fs.existsSync(imgPath)) {
+              fs.unlinkSync(imgPath);
+            }
+          });
+        }
+        
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: 'Failed to delete product' });
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      res.status(500).json({ message: 'Failed to delete product' });
+    }
+  });
 
   // Get current user
   app.get('/api/auth/me', async (req, res) => {
