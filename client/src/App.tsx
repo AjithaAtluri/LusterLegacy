@@ -15,6 +15,14 @@ const Contact = lazy(() => import("@/pages/contact"));
 const Product = lazy(() => import("@/pages/product"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 
+// Info pages
+const Privacy = lazy(() => import("@/pages/privacy"));
+const Terms = lazy(() => import("@/pages/terms"));
+const Shipping = lazy(() => import("@/pages/shipping"));
+const Returns = lazy(() => import("@/pages/returns"));
+const Repairs = lazy(() => import("@/pages/repairs"));
+const FAQ = lazy(() => import("@/pages/faq"));
+
 // Admin pages
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
@@ -43,6 +51,14 @@ function App() {
             <Route path="/contact" component={Contact} />
             <Route path="/product/:id" component={Product} />
             <Route path="/checkout" component={Checkout} />
+            
+            {/* Information pages */}
+            <Route path="/privacy" component={Privacy} />
+            <Route path="/terms" component={Terms} />
+            <Route path="/shipping" component={Shipping} />
+            <Route path="/returns" component={Returns} />
+            <Route path="/repairs" component={Repairs} />
+            <Route path="/faq" component={FAQ} />
             
             {/* Admin routes */}
             <Route path="/admin" component={AdminLogin} />
