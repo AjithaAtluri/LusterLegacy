@@ -83,11 +83,11 @@ export default function HeroSection() {
             <Button 
               asChild
               variant="outline"
-              className="font-montserrat font-medium border border-primary/80 bg-charcoal/30 backdrop-blur-sm text-pearl px-8 py-4 md:px-10 md:py-5 rounded-none hover:bg-primary/20 focus:bg-primary/20 focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-charcoal transition duration-300 h-auto shadow-lg group"
+              className="font-montserrat font-medium border border-primary/80 bg-primary/20 backdrop-blur-sm text-pearl px-8 py-4 md:px-10 md:py-5 rounded-none hover:bg-primary/30 focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-charcoal transition duration-300 h-auto shadow-lg"
             >
               <Link href="/custom-design" className="flex items-center">
                 <span>Create Custom Design</span>
-                <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">✦</span>
+                <span className="ml-2">✦</span>
               </Link>
             </Button>
           </div>
