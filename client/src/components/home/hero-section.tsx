@@ -12,7 +12,7 @@ export default function HeroSection() {
           alt="Luxury jewelry showcase" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-charcoal opacity-30"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-charcoal/50 via-charcoal/40 to-charcoal/60"></div>
       </div>
       
       {/* Content */}
@@ -20,8 +20,8 @@ export default function HeroSection() {
         <h1 className="font-playfair font-bold text-4xl md:text-6xl text-pearl mb-6 text-shadow">
           Crafted by Artisans, <span className="text-primary">Designed by You</span>
         </h1>
-        <p className="font-cormorant text-xl md:text-2xl text-pearl mb-12">
-          Experience bespoke luxury in every piece. Timeless elegance reimagined for the modern connoisseur.
+        <p className="font-cormorant text-xl md:text-2xl text-pearl mb-12 max-w-3xl mx-auto bg-charcoal/50 p-4 rounded backdrop-blur-sm text-shadow-sm">
+          <span className="font-semibold text-primary">Experience bespoke luxury in every piece.</span> <span className="text-pearl font-medium">Timeless elegance reimagined for the modern connoisseur.</span>
         </p>
         <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 justify-center">
           <Button 
