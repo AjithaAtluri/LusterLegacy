@@ -117,12 +117,16 @@ export const captureOrder = async (req: Request, res: Response) => {
     }
 
     // Record the order in the database (simplified version)
+    const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
+    
     const orderDetails = {
       sessionId,
       userId: null, // If user is logged in, get their ID
       orderStatus: 'pending',
       paymentStatus: 'completed',
-      totalAmount: cartItems.reduce((sum, item) => sum + item.price, 0),
+      totalAmount: totalAmount,
+      advanceAmount: totalAmount * 0.5, // 50% advance payment
+      balanceAmount: totalAmount * 0.5, // 50% remaining payment
       customerName: `${shippingAddress.name}`,
       customerEmail: shippingAddress.email || 'customer@example.com',
       customerPhone: shippingAddress.phone || '',

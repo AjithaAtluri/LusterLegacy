@@ -638,6 +638,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.clearCookie('userId');
     res.json({ message: 'Logged out successfully' });
   });
+  
+  /**
+   * PayPal Integration Routes
+   */
+  // Get PayPal client ID
+  app.get('/api/payment/paypal-client-id', (req, res) => {
+    res.json({ clientId: paypalClientId });
+  });
+
+  // Create a PayPal order
+  app.post('/api/payment/create-paypal-order', createOrder);
+
+  // Capture a PayPal order
+  app.post('/api/payment/capture-paypal-order', captureOrder);
+
+  // Cancel a PayPal order
+  app.post('/api/payment/cancel-paypal-order', cancelOrder);
 
   // Get current user
   app.get('/api/auth/me', async (req, res) => {
