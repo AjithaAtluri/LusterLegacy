@@ -1,6 +1,7 @@
-import { pgTable, text, serial, integer, boolean, real, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, real, timestamp, json, foreignKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // Users schema (for authentication)
 export const users = pgTable("users", {
@@ -10,6 +11,12 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("customer"), // "admin" or "customer"
   createdAt: timestamp("created_at").defaultNow()
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  designRequests: many(designRequests),
+  cartItems: many(cartItems),
+  orders: many(orders)
+}));
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -34,6 +41,11 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+export const productsRelations = relations(products, ({ many }) => ({
+  cartItems: many(cartItems),
+  orderItems: many(orderItems)
+}));
+
 export const insertProductSchema = createInsertSchema(products).pick({
   name: true,
   description: true,
@@ -51,6 +63,7 @@ export const insertProductSchema = createInsertSchema(products).pick({
 // Custom design requests schema
 export const designRequests = pgTable("design_requests", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   fullName: text("full_name").notNull(),
   email: text("email").notNull(),
   metalType: text("metal_type").notNull(),
@@ -63,7 +76,17 @@ export const designRequests = pgTable("design_requests", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+export const designRequestsRelations = relations(designRequests, ({ one, many }) => ({
+  user: one(users, {
+    fields: [designRequests.userId],
+    references: [users.id]
+  }),
+  cartItems: many(cartItems),
+  orderItems: many(orderItems)
+}));
+
 export const insertDesignRequestSchema = createInsertSchema(designRequests).pick({
+  userId: true,
   fullName: true,
   email: true,
   metalType: true,
@@ -75,14 +98,31 @@ export const insertDesignRequestSchema = createInsertSchema(designRequests).pick
 // Cart items schema
 export const cartItems = pgTable("cart_items", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id"),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   sessionId: text("session_id"),
-  productId: integer("product_id").notNull(),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
   metalTypeId: text("metal_type_id").notNull(),
   stoneTypeId: text("stone_type_id").notNull(),
   price: integer("price").notNull(),
+  isCustomDesign: boolean("is_custom_design").default(false),
+  designRequestId: integer("design_request_id").references(() => designRequests.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow()
 });
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+  user: one(users, {
+    fields: [cartItems.userId],
+    references: [users.id]
+  }),
+  product: one(products, {
+    fields: [cartItems.productId],
+    references: [products.id]
+  }),
+  designRequest: one(designRequests, {
+    fields: [cartItems.designRequestId],
+    references: [designRequests.id]
+  })
+}));
 
 export const insertCartItemSchema = createInsertSchema(cartItems).pick({
   userId: true,
@@ -91,12 +131,14 @@ export const insertCartItemSchema = createInsertSchema(cartItems).pick({
   metalTypeId: true,
   stoneTypeId: true,
   price: true,
+  isCustomDesign: true,
+  designRequestId: true,
 });
 
 // Orders schema
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id"),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   sessionId: text("session_id"),
   customerName: text("customer_name").notNull(),
   customerEmail: text("customer_email").notNull(),
@@ -111,6 +153,14 @@ export const orders = pgTable("orders", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id]
+  }),
+  orderItems: many(orderItems)
+}));
+
 export const insertOrderSchema = createInsertSchema(orders).pick({
   userId: true,
   sessionId: true,
@@ -122,19 +172,36 @@ export const insertOrderSchema = createInsertSchema(orders).pick({
   totalAmount: true,
   advanceAmount: true,
   balanceAmount: true,
+  paymentStatus: true,
+  orderStatus: true,
 });
 
 // Order items schema
 export const orderItems = pgTable("order_items", {
   id: serial("id").primaryKey(),
-  orderId: integer("order_id").notNull(),
-  productId: integer("product_id").notNull(),
+  orderId: integer("order_id").notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
   metalTypeId: text("metal_type_id").notNull(),
   stoneTypeId: text("stone_type_id").notNull(),
   price: integer("price").notNull(),
   isCustomDesign: boolean("is_custom_design").default(false),
-  designRequestId: integer("design_request_id")
+  designRequestId: integer("design_request_id").references(() => designRequests.id, { onDelete: 'set null' })
 });
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id]
+  }),
+  product: one(products, {
+    fields: [orderItems.productId],
+    references: [products.id]
+  }),
+  designRequest: one(designRequests, {
+    fields: [orderItems.designRequestId],
+    references: [designRequests.id]
+  })
+}));
 
 export const insertOrderItemSchema = createInsertSchema(orderItems).pick({
   orderId: true,
