@@ -11,7 +11,8 @@ import {
   insertContactMessageSchema,
   insertUserSchema,
   insertMetalTypeSchema,
-  insertStoneTypeSchema
+  insertStoneTypeSchema,
+  insertInspirationGallerySchema
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";

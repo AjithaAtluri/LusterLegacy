@@ -153,6 +153,7 @@ export class MemStorage implements IStorage {
     this.metalTypes = new Map();
     this.stoneTypes = new Map();
     this.productStones = new Map();
+    this.inspirationItems = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;
@@ -164,6 +165,7 @@ export class MemStorage implements IStorage {
     this.currentContactMessageId = 1;
     this.currentMetalTypeId = 1;
     this.currentStoneTypeId = 1;
+    this.currentInspirationItemId = 1;
     
     // Initialize with sample data
     this.initSampleData();
@@ -532,6 +534,48 @@ export class MemStorage implements IStorage {
   async removeProductStone(productId: number, stoneTypeId: number): Promise<boolean> {
     const key = `${productId}-${stoneTypeId}`;
     return this.productStones.delete(key);
+  }
+
+  // Inspiration Gallery methods
+  async getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined> {
+    return this.inspirationItems.get(id);
+  }
+
+  async getAllInspirationItems(): Promise<InspirationGalleryItem[]> {
+    return Array.from(this.inspirationItems.values());
+  }
+
+  async getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]> {
+    return Array.from(this.inspirationItems.values()).filter(
+      (item) => item.featured
+    );
+  }
+
+  async getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]> {
+    return Array.from(this.inspirationItems.values()).filter(
+      (item) => item.category === category
+    );
+  }
+
+  async createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem> {
+    const id = this.currentInspirationItemId++;
+    const createdAt = new Date();
+    const inspirationItem: InspirationGalleryItem = { ...item, id, createdAt };
+    this.inspirationItems.set(id, inspirationItem);
+    return inspirationItem;
+  }
+
+  async updateInspirationItem(id: number, itemUpdate: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined> {
+    const item = this.inspirationItems.get(id);
+    if (!item) return undefined;
+    
+    const updatedItem = { ...item, ...itemUpdate };
+    this.inspirationItems.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deleteInspirationItem(id: number): Promise<boolean> {
+    return this.inspirationItems.delete(id);
   }
 
   // Initialize sample data
@@ -1016,6 +1060,81 @@ export class DatabaseStorage implements IStorage {
       return result.rowCount > 0;
     } catch (error) {
       console.error("Error removing product stone:", error);
+      return false;
+    }
+  }
+
+  // Inspiration Gallery methods
+  async getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined> {
+    try {
+      const [item] = await db.select().from(inspirationGallery).where(eq(inspirationGallery.id, id));
+      return item || undefined;
+    } catch (error) {
+      console.error("Error getting inspiration gallery item:", error);
+      return undefined;
+    }
+  }
+
+  async getAllInspirationItems(): Promise<InspirationGalleryItem[]> {
+    try {
+      return await db.select().from(inspirationGallery).orderBy(desc(inspirationGallery.createdAt));
+    } catch (error) {
+      console.error("Error getting all inspiration gallery items:", error);
+      return [];
+    }
+  }
+
+  async getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]> {
+    try {
+      return await db.select().from(inspirationGallery)
+        .where(eq(inspirationGallery.featured, true))
+        .orderBy(desc(inspirationGallery.createdAt));
+    } catch (error) {
+      console.error("Error getting featured inspiration gallery items:", error);
+      return [];
+    }
+  }
+
+  async getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]> {
+    try {
+      return await db.select().from(inspirationGallery)
+        .where(eq(inspirationGallery.category, category))
+        .orderBy(desc(inspirationGallery.createdAt));
+    } catch (error) {
+      console.error("Error getting inspiration gallery items by category:", error);
+      return [];
+    }
+  }
+
+  async createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem> {
+    try {
+      const [inspirationItem] = await db.insert(inspirationGallery).values(item).returning();
+      return inspirationItem;
+    } catch (error) {
+      console.error("Error creating inspiration gallery item:", error);
+      throw error;
+    }
+  }
+
+  async updateInspirationItem(id: number, itemUpdate: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined> {
+    try {
+      const [item] = await db.update(inspirationGallery)
+        .set(itemUpdate)
+        .where(eq(inspirationGallery.id, id))
+        .returning();
+      return item || undefined;
+    } catch (error) {
+      console.error("Error updating inspiration gallery item:", error);
+      return undefined;
+    }
+  }
+
+  async deleteInspirationItem(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(inspirationGallery).where(eq(inspirationGallery.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting inspiration gallery item:", error);
       return false;
     }
   }
