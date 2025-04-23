@@ -55,10 +55,10 @@ export default function HeroSection() {
           </div>
           
           {/* Heading with enhanced elegant typography */}
-          <h1 className="font-playfair font-bold text-4xl md:text-6xl lg:text-7xl text-pearl mb-6 leading-tight">
-            <span className="block text-shadow-lg">Crafted by</span>
+          <h1 className="font-playfair font-bold text-4xl md:text-6xl lg:text-7xl mb-6 leading-tight">
+            <span className="block text-shadow-lg text-white">Crafted by</span>
             <span className="block text-primary text-glow font-extrabold my-1">Artisans</span>
-            <span className="block mt-2 text-shadow-lg">Designed by You</span>
+            <span className="block mt-2 text-shadow-lg text-white">Designed by You</span>
           </h1>
           
           {/* Tagline with elegant styling and enhanced readability */}
@@ -83,10 +83,11 @@ export default function HeroSection() {
             <Button 
               asChild
               variant="outline"
-              className="font-montserrat font-medium border border-primary/80 bg-charcoal/30 backdrop-blur-sm text-pearl px-8 py-4 md:px-10 md:py-5 rounded-none hover:bg-primary/20 transition duration-300 h-auto shadow-lg"
+              className="font-montserrat font-medium border border-primary/80 bg-charcoal/30 backdrop-blur-sm text-pearl px-8 py-4 md:px-10 md:py-5 rounded-none hover:bg-primary/20 focus:bg-primary/20 focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-charcoal transition duration-300 h-auto shadow-lg group"
             >
-              <Link href="/custom-design">
-                Create Custom Design
+              <Link href="/custom-design" className="flex items-center">
+                <span>Create Custom Design</span>
+                <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">✦</span>
               </Link>
             </Button>
           </div>
