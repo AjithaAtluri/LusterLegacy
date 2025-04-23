@@ -103,6 +103,15 @@ export interface IStorage {
   addProductStones(productId: number, stoneTypeIds: number[]): Promise<void>;
   updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void>;
   removeProductStone(productId: number, stoneTypeId: number): Promise<boolean>;
+  
+  // Inspiration Gallery methods
+  getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined>;
+  getAllInspirationItems(): Promise<InspirationGalleryItem[]>;
+  getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]>;
+  getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]>;
+  createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem>;
+  updateInspirationItem(id: number, item: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined>;
+  deleteInspirationItem(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation

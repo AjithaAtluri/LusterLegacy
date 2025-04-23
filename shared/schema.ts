@@ -355,3 +355,27 @@ export type StoneType = typeof stoneTypes.$inferSelect;
 export type InsertStoneType = z.infer<typeof insertStoneTypeSchema>;
 
 export type ProductStone = typeof productStones.$inferSelect;
+
+// Inspiration gallery schema
+export const inspirationGallery = pgTable("inspiration_gallery", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("image_url").notNull(),
+  category: text("category").notNull(), // "rings", "necklaces", "earrings", "bracelets", etc.
+  tags: json("tags").$type<string[]>().notNull(),
+  featured: boolean("featured").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertInspirationGallerySchema = createInsertSchema(inspirationGallery).pick({
+  title: true,
+  description: true,
+  imageUrl: true,
+  category: true,
+  tags: true,
+  featured: true,
+});
+
+export type InspirationGalleryItem = typeof inspirationGallery.$inferSelect;
+export type InsertInspirationGalleryItem = z.infer<typeof insertInspirationGallerySchema>;

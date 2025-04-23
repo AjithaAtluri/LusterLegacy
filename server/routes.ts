@@ -1270,6 +1270,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Inspiration Gallery Routes
+   */
+  // Get all inspiration gallery items
+  app.get('/api/inspiration', async (_req, res) => {
+    try {
+      const inspirationItems = await storage.getAllInspirationItems();
+      res.json(inspirationItems);
+    } catch (error) {
+      console.error('Error fetching inspiration gallery items:', error);
+      res.status(500).json({ message: 'Failed to fetch inspiration gallery items' });
+    }
+  });
+
+  // Get featured inspiration gallery items
+  app.get('/api/inspiration/featured', async (_req, res) => {
+    try {
+      const featuredItems = await storage.getFeaturedInspirationItems();
+      res.json(featuredItems);
+    } catch (error) {
+      console.error('Error fetching featured inspiration gallery items:', error);
+      res.status(500).json({ message: 'Failed to fetch featured inspiration gallery items' });
+    }
+  });
+
+  // Get inspiration gallery items by category
+  app.get('/api/inspiration/category/:category', async (req, res) => {
+    try {
+      const { category } = req.params;
+      const items = await storage.getInspirationItemsByCategory(category);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching inspiration gallery items by category:', error);
+      res.status(500).json({ message: 'Failed to fetch inspiration gallery items by category' });
+    }
+  });
+
+  // Admin: Create new inspiration gallery item
+  app.post('/api/admin/inspiration', validateAdmin, async (req, res) => {
+    try {
+      const validatedData = insertInspirationGallerySchema.parse(req.body);
+      const newItem = await storage.createInspirationItem(validatedData);
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error('Error creating inspiration gallery item:', error);
+      res.status(500).json({ message: 'Failed to create inspiration gallery item' });
+    }
+  });
+
+  // Admin: Update inspiration gallery item
+  app.put('/api/admin/inspiration/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid ID' });
+      }
+
+      const updatedItem = await storage.updateInspirationItem(id, req.body);
+      if (!updatedItem) {
+        return res.status(404).json({ message: 'Inspiration gallery item not found' });
+      }
+
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating inspiration gallery item:', error);
+      res.status(500).json({ message: 'Failed to update inspiration gallery item' });
+    }
+  });
+
+  // Admin: Delete inspiration gallery item
+  app.delete('/api/admin/inspiration/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid ID' });
+      }
+
+      const success = await storage.deleteInspirationItem(id);
+      if (!success) {
+        return res.status(404).json({ message: 'Inspiration gallery item not found' });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting inspiration gallery item:', error);
+      res.status(500).json({ message: 'Failed to delete inspiration gallery item' });
+    }
+  });
+
   // Get current user
   app.get('/api/auth/me', async (req, res) => {
     try {
