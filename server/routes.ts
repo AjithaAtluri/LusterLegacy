@@ -997,6 +997,279 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Metal Type Routes (Admin only)
+   */
+  // Get all metal types
+  app.get('/api/admin/metal-types', async (_req, res) => {
+    try {
+      const metalTypes = await storage.getAllMetalTypes();
+      res.json(metalTypes);
+    } catch (error) {
+      console.error('Error fetching metal types:', error);
+      res.status(500).json({ message: 'Failed to fetch metal types' });
+    }
+  });
+
+  // Get metal type by ID
+  app.get('/api/admin/metal-types/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid metal type ID' });
+      }
+
+      const metalType = await storage.getMetalType(id);
+      if (!metalType) {
+        return res.status(404).json({ message: 'Metal type not found' });
+      }
+
+      res.json(metalType);
+    } catch (error) {
+      console.error('Error fetching metal type:', error);
+      res.status(500).json({ message: 'Failed to fetch metal type' });
+    }
+  });
+
+  // Create a new metal type (admin only)
+  app.post('/api/admin/metal-types', validateAdmin, async (req, res) => {
+    try {
+      const metalTypeData = insertMetalTypeSchema.parse(req.body);
+      const metalType = await storage.createMetalType(metalTypeData);
+      res.status(201).json(metalType);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid metal type data', errors: error.errors });
+      }
+      console.error('Error creating metal type:', error);
+      res.status(500).json({ message: 'Failed to create metal type' });
+    }
+  });
+
+  // Update a metal type (admin only)
+  app.put('/api/admin/metal-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid metal type ID' });
+      }
+
+      const updateData = insertMetalTypeSchema.partial().parse(req.body);
+      const updatedMetalType = await storage.updateMetalType(id, updateData);
+
+      if (!updatedMetalType) {
+        return res.status(404).json({ message: 'Metal type not found' });
+      }
+
+      res.json(updatedMetalType);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid metal type data', errors: error.errors });
+      }
+      console.error('Error updating metal type:', error);
+      res.status(500).json({ message: 'Failed to update metal type' });
+    }
+  });
+
+  // Delete a metal type (admin only)
+  app.delete('/api/admin/metal-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid metal type ID' });
+      }
+
+      const success = await storage.deleteMetalType(id);
+      if (!success) {
+        return res.status(404).json({ message: 'Metal type not found' });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting metal type:', error);
+      res.status(500).json({ message: 'Failed to delete metal type' });
+    }
+  });
+
+  /**
+   * Stone Type Routes (Admin only)
+   */
+  // Get all stone types
+  app.get('/api/admin/stone-types', async (_req, res) => {
+    try {
+      const stoneTypes = await storage.getAllStoneTypes();
+      res.json(stoneTypes);
+    } catch (error) {
+      console.error('Error fetching stone types:', error);
+      res.status(500).json({ message: 'Failed to fetch stone types' });
+    }
+  });
+
+  // Get stone type by ID
+  app.get('/api/admin/stone-types/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid stone type ID' });
+      }
+
+      const stoneType = await storage.getStoneType(id);
+      if (!stoneType) {
+        return res.status(404).json({ message: 'Stone type not found' });
+      }
+
+      res.json(stoneType);
+    } catch (error) {
+      console.error('Error fetching stone type:', error);
+      res.status(500).json({ message: 'Failed to fetch stone type' });
+    }
+  });
+
+  // Create a new stone type (admin only)
+  app.post('/api/admin/stone-types', validateAdmin, upload.single('image'), async (req, res) => {
+    try {
+      // Parse the stone type data
+      const stoneTypeData = insertStoneTypeSchema.parse({
+        ...req.body,
+        imageUrl: req.file ? `/uploads/${req.file.filename}` : undefined
+      });
+
+      const stoneType = await storage.createStoneType(stoneTypeData);
+      res.status(201).json(stoneType);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid stone type data', errors: error.errors });
+      }
+      console.error('Error creating stone type:', error);
+      res.status(500).json({ message: 'Failed to create stone type' });
+    }
+  });
+
+  // Update a stone type (admin only)
+  app.put('/api/admin/stone-types/:id', validateAdmin, upload.single('image'), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid stone type ID' });
+      }
+
+      // Get the existing stone type to check for image
+      const existingStoneType = await storage.getStoneType(id);
+      if (!existingStoneType) {
+        return res.status(404).json({ message: 'Stone type not found' });
+      }
+
+      // Parse update data
+      let updateData: any = { ...req.body };
+      
+      // Handle image update
+      if (req.file) {
+        updateData.imageUrl = `/uploads/${req.file.filename}`;
+        
+        // Delete old image if it exists
+        if (existingStoneType.imageUrl) {
+          const oldImagePath = path.join(process.cwd(), existingStoneType.imageUrl.substring(1));
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        }
+      }
+
+      // Validate data
+      const validatedData = insertStoneTypeSchema.partial().parse(updateData);
+      
+      // Update the stone type
+      const updatedStoneType = await storage.updateStoneType(id, validatedData);
+      if (!updatedStoneType) {
+        return res.status(404).json({ message: 'Stone type not found' });
+      }
+
+      res.json(updatedStoneType);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid stone type data', errors: error.errors });
+      }
+      console.error('Error updating stone type:', error);
+      res.status(500).json({ message: 'Failed to update stone type' });
+    }
+  });
+
+  // Delete a stone type (admin only)
+  app.delete('/api/admin/stone-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid stone type ID' });
+      }
+
+      // Get the stone type to check for image
+      const stoneType = await storage.getStoneType(id);
+      if (!stoneType) {
+        return res.status(404).json({ message: 'Stone type not found' });
+      }
+
+      // Delete the stone type
+      const success = await storage.deleteStoneType(id);
+      if (success) {
+        // Delete image if it exists
+        if (stoneType.imageUrl) {
+          const imagePath = path.join(process.cwd(), stoneType.imageUrl.substring(1));
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+          }
+        }
+        
+        res.status(204).send();
+      } else {
+        res.status(500).json({ message: 'Failed to delete stone type' });
+      }
+    } catch (error) {
+      console.error('Error deleting stone type:', error);
+      res.status(500).json({ message: 'Failed to delete stone type' });
+    }
+  });
+
+  /**
+   * Product-Stone Routes (Admin only)
+   */
+  // Get stones for a product
+  app.get('/api/admin/products/:id/stones', validateAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+
+      const stones = await storage.getProductStones(productId);
+      res.json(stones);
+    } catch (error) {
+      console.error('Error fetching product stones:', error);
+      res.status(500).json({ message: 'Failed to fetch product stones' });
+    }
+  });
+
+  // Add stones to a product
+  app.post('/api/admin/products/:id/stones', validateAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+
+      const { stoneTypeIds } = req.body;
+      if (!Array.isArray(stoneTypeIds)) {
+        return res.status(400).json({ message: 'stoneTypeIds must be an array' });
+      }
+
+      await storage.updateProductStones(productId, stoneTypeIds);
+      const stones = await storage.getProductStones(productId);
+      res.json(stones);
+    } catch (error) {
+      console.error('Error adding stones to product:', error);
+      res.status(500).json({ message: 'Failed to add stones to product' });
+    }
+  });
+
   // Get current user
   app.get('/api/auth/me', async (req, res) => {
     try {
