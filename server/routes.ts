@@ -647,6 +647,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   // Get PayPal client ID
   app.get('/api/payment/paypal-client-id', (req, res) => {
+    console.log("PayPal Client ID requested, returning:", 
+                paypalClientId ? "Client ID available" : "Client ID not available");
+    
+    if (!paypalClientId) {
+      return res.status(500).json({ 
+        error: "PayPal Client ID not configured", 
+        message: "PayPal integration is not properly configured"
+      });
+    }
+    
     res.json({ clientId: paypalClientId });
   });
 

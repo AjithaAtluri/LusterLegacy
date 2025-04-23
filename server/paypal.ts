@@ -8,6 +8,12 @@ if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
 
 export const paypalClientId = process.env.PAYPAL_CLIENT_ID;
 
+// Log PayPal environment setup
+console.log('PayPal Environment:',
+  paypalClientId ? 'Client ID is configured' : 'Missing Client ID',
+  process.env.PAYPAL_CLIENT_SECRET ? 'Client Secret is configured' : 'Missing Client Secret'
+);
+
 /**
  * Create an order in PayPal
  */

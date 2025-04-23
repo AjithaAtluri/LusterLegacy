@@ -42,15 +42,21 @@ export function PayPalButton({
   const { toast } = useToast();
   const [clientId, setClientId] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [initError, setInitError] = useState<string | null>(null);
   
   // Fetch PayPal client ID on component mount
   useEffect(() => {
     const fetchClientId = async () => {
       try {
+        // Log the attempt to fetch client ID
+        console.log("Attempting to fetch PayPal client ID...");
+        
         const id = await getPayPalClientId();
+        console.log("PayPal client ID fetched successfully");
         setClientId(id);
       } catch (error) {
         console.error("Failed to load PayPal client ID:", error);
+        setInitError("Failed to initialize PayPal. Please try again later or contact support.");
         onError(error);
       } finally {
         setIsLoading(false);
@@ -81,11 +87,11 @@ export function PayPalButton({
     );
   }
   
-  // If client ID not available, show error
-  if (!clientId) {
+  // If client ID not available or error occurred, show error
+  if (initError || !clientId) {
     return (
       <div className="p-4 border border-destructive rounded-md text-destructive">
-        <p className="text-center">Unable to initialize PayPal. Please try again later.</p>
+        <p className="text-center">{initError || "Unable to initialize PayPal. Please try again later."}</p>
       </div>
     );
   }
