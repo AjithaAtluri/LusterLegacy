@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ShoppingBag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Logo } from "@/components/ui/logo";
 
 export default function Header() {
   const [location] = useLocation();
