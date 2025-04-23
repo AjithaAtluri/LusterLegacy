@@ -127,6 +127,7 @@ export class MemStorage implements IStorage {
   private metalTypes: Map<number, MetalType>;
   private stoneTypes: Map<number, StoneType>;
   private productStones: Map<string, ProductStone>; // Key is "productId-stoneTypeId"
+  private inspirationItems: Map<number, InspirationGalleryItem>;
   
   private currentUserId: number;
   private currentProductId: number;
@@ -138,6 +139,7 @@ export class MemStorage implements IStorage {
   private currentContactMessageId: number;
   private currentMetalTypeId: number;
   private currentStoneTypeId: number;
+  private currentInspirationItemId: number;
 
   constructor() {
     this.users = new Map();
