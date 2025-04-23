@@ -2,7 +2,8 @@ import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { COMPANY } from "@/lib/constants";
-import { Instagram, Facebook, Linkedin, ArrowRight } from "lucide-react";
+import { Instagram, Facebook, ArrowRight } from "lucide-react";
+import { BsPinterest } from "react-icons/bs";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -69,9 +70,9 @@ export default function Footer() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-pearl hover:text-primary transition duration-300"
-                aria-label="Linkedin"
+                aria-label="Pinterest"
               >
-                <Linkedin className="h-5 w-5" />
+                <BsPinterest className="h-5 w-5" />
               </a>
             </div>
           </div>
