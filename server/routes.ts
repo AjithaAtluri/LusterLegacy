@@ -9,7 +9,9 @@ import {
   insertOrderSchema,
   insertOrderItemSchema,
   insertContactMessageSchema,
-  insertUserSchema
+  insertUserSchema,
+  insertMetalTypeSchema,
+  insertStoneTypeSchema
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";

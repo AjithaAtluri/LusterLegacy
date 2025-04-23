@@ -13,7 +13,9 @@ import {
   UserCircle,
   LogOut,
   Menu,
-  X
+  X,
+  Diamond,
+  Gem
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -74,6 +76,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Products", 
       icon: <GalleryHorizontal className="h-5 w-5" />, 
       href: "/admin/products" 
+    },
+    { 
+      title: "Metal Types", 
+      icon: <Diamond className="h-5 w-5" />, 
+      href: "/admin/metal-types" 
+    },
+    { 
+      title: "Stone Types", 
+      icon: <Gem className="h-5 w-5" />, 
+      href: "/admin/stone-types" 
     },
     { 
       title: "Custom Designs", 
