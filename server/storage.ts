@@ -15,6 +15,13 @@ import {
   InsertTestimonial,
   ContactMessage,
   InsertContactMessage,
+  MetalType,
+  InsertMetalType,
+  StoneType,
+  InsertStoneType,
+  ProductStone,
+  InspirationGalleryItem,
+  InsertInspirationGalleryItem,
   users,
   products,
   designRequests,
@@ -22,7 +29,11 @@ import {
   orders,
   orderItems,
   testimonials,
-  contactMessages
+  contactMessages,
+  metalTypes,
+  stoneTypes,
+  productStones,
+  inspirationGallery
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, SQL } from "drizzle-orm";
