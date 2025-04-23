@@ -14,8 +14,18 @@ import {
   Testimonial,
   InsertTestimonial,
   ContactMessage,
-  InsertContactMessage
+  InsertContactMessage,
+  users,
+  products,
+  designRequests,
+  cartItems,
+  orders,
+  orderItems,
+  testimonials,
+  contactMessages
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, asc, and, SQL } from "drizzle-orm";
 
 // Storage interface definition
 export interface IStorage {
@@ -472,4 +482,217 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  // Product methods
+  async getProduct(id: number): Promise<Product | undefined> {
+    const [product] = await db.select().from(products).where(eq(products.id, id));
+    return product || undefined;
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    return await db.select().from(products).orderBy(asc(products.name));
+  }
+
+  async getFeaturedProducts(): Promise<Product[]> {
+    return await db.select().from(products).where(eq(products.isFeatured, true)).orderBy(asc(products.name));
+  }
+
+  async getProductsByCategory(category: string): Promise<Product[]> {
+    return await db.select().from(products).where(eq(products.category, category)).orderBy(asc(products.name));
+  }
+
+  async createProduct(insertProduct: InsertProduct): Promise<Product> {
+    const [product] = await db.insert(products).values(insertProduct).returning();
+    return product;
+  }
+
+  async updateProduct(id: number, productUpdate: Partial<InsertProduct>): Promise<Product | undefined> {
+    const [product] = await db.update(products)
+      .set(productUpdate)
+      .where(eq(products.id, id))
+      .returning();
+    return product || undefined;
+  }
+
+  async deleteProduct(id: number): Promise<boolean> {
+    const result = await db.delete(products).where(eq(products.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Design Request methods
+  async getDesignRequest(id: number): Promise<DesignRequest | undefined> {
+    const [request] = await db.select().from(designRequests).where(eq(designRequests.id, id));
+    return request || undefined;
+  }
+
+  async getAllDesignRequests(): Promise<DesignRequest[]> {
+    return await db.select().from(designRequests).orderBy(desc(designRequests.createdAt));
+  }
+
+  async getDesignRequestsByEmail(email: string): Promise<DesignRequest[]> {
+    return await db.select().from(designRequests).where(eq(designRequests.email, email));
+  }
+
+  async createDesignRequest(insertDesignRequest: InsertDesignRequest): Promise<DesignRequest> {
+    const [request] = await db.insert(designRequests).values(insertDesignRequest).returning();
+    return request;
+  }
+
+  async updateDesignRequest(id: number, designRequestUpdate: Partial<DesignRequest>): Promise<DesignRequest | undefined> {
+    const [request] = await db.update(designRequests)
+      .set(designRequestUpdate)
+      .where(eq(designRequests.id, id))
+      .returning();
+    return request || undefined;
+  }
+
+  // Cart methods
+  async getCartItem(id: number): Promise<CartItem | undefined> {
+    const [item] = await db.select().from(cartItems).where(eq(cartItems.id, id));
+    return item || undefined;
+  }
+
+  async getCartItemsBySession(sessionId: string): Promise<CartItem[]> {
+    return await db.select().from(cartItems).where(eq(cartItems.sessionId, sessionId));
+  }
+
+  async getCartItemsByUser(userId: number): Promise<CartItem[]> {
+    return await db.select().from(cartItems).where(eq(cartItems.userId, userId));
+  }
+
+  async createCartItem(insertCartItem: InsertCartItem): Promise<CartItem> {
+    const [item] = await db.insert(cartItems).values(insertCartItem).returning();
+    return item;
+  }
+
+  async updateCartItem(id: number, cartItemUpdate: Partial<CartItem>): Promise<CartItem | undefined> {
+    const [item] = await db.update(cartItems)
+      .set(cartItemUpdate)
+      .where(eq(cartItems.id, id))
+      .returning();
+    return item || undefined;
+  }
+
+  async deleteCartItem(id: number): Promise<boolean> {
+    const result = await db.delete(cartItems).where(eq(cartItems.id, id));
+    return result.rowCount > 0;
+  }
+
+  async clearCart(sessionId: string): Promise<boolean> {
+    const result = await db.delete(cartItems).where(eq(cartItems.sessionId, sessionId));
+    return true;
+  }
+
+  // Order methods
+  async getOrder(id: number): Promise<Order | undefined> {
+    const [order] = await db.select().from(orders).where(eq(orders.id, id));
+    return order || undefined;
+  }
+
+  async getAllOrders(): Promise<Order[]> {
+    return await db.select().from(orders).orderBy(desc(orders.createdAt));
+  }
+
+  async getOrdersBySession(sessionId: string): Promise<Order[]> {
+    return await db.select().from(orders).where(eq(orders.sessionId, sessionId));
+  }
+
+  async getOrdersByUser(userId: number): Promise<Order[]> {
+    return await db.select().from(orders).where(eq(orders.userId, userId));
+  }
+
+  async createOrder(insertOrder: InsertOrder): Promise<Order> {
+    const [order] = await db.insert(orders).values(insertOrder).returning();
+    return order;
+  }
+
+  async updateOrder(id: number, orderUpdate: Partial<Order>): Promise<Order | undefined> {
+    const [order] = await db.update(orders)
+      .set(orderUpdate)
+      .where(eq(orders.id, id))
+      .returning();
+    return order || undefined;
+  }
+
+  // Order Item methods
+  async getOrderItemsByOrder(orderId: number): Promise<OrderItem[]> {
+    return await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+  }
+
+  async createOrderItem(insertOrderItem: InsertOrderItem): Promise<OrderItem> {
+    const [item] = await db.insert(orderItems).values(insertOrderItem).returning();
+    return item;
+  }
+
+  // Testimonial methods
+  async getAllTestimonials(): Promise<Testimonial[]> {
+    return await db.select().from(testimonials);
+  }
+
+  async getApprovedTestimonials(): Promise<Testimonial[]> {
+    return await db.select().from(testimonials).where(eq(testimonials.isApproved, true));
+  }
+
+  async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
+    const [testimonial] = await db.insert(testimonials).values(insertTestimonial).returning();
+    return testimonial;
+  }
+
+  async updateTestimonial(id: number, testimonialUpdate: Partial<Testimonial>): Promise<Testimonial | undefined> {
+    const [testimonial] = await db.update(testimonials)
+      .set(testimonialUpdate)
+      .where(eq(testimonials.id, id))
+      .returning();
+    return testimonial || undefined;
+  }
+
+  async deleteTestimonial(id: number): Promise<boolean> {
+    const result = await db.delete(testimonials).where(eq(testimonials.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Contact Message methods
+  async getAllContactMessages(): Promise<ContactMessage[]> {
+    return await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
+  }
+
+  async createContactMessage(insertMessage: InsertContactMessage): Promise<ContactMessage> {
+    const [message] = await db.insert(contactMessages).values({
+      ...insertMessage,
+      isRead: false
+    }).returning();
+    return message;
+  }
+
+  async markContactMessageAsRead(id: number): Promise<boolean> {
+    const result = await db.update(contactMessages)
+      .set({ isRead: true })
+      .where(eq(contactMessages.id, id));
+    return result.rowCount > 0;
+  }
+
+  async deleteContactMessage(id: number): Promise<boolean> {
+    const result = await db.delete(contactMessages).where(eq(contactMessages.id, id));
+    return result.rowCount > 0;
+  }
+}
+
+// Use database storage implementation
+export const storage = new DatabaseStorage();
