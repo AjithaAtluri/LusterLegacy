@@ -284,8 +284,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/cart', async (req, res) => {
     try {
       const sessionId = req.sessionId;
+      
+      // Debug logging
+      console.log('GET /api/cart - Session ID:', sessionId);
+      console.log('GET /api/cart - Cookies:', req.cookies);
+      
       const cartItems = await storage.getCartItemsBySession(sessionId);
-
+      
+      // Debug logging
+      console.log(`GET /api/cart - Found ${cartItems.length} items for session ${sessionId}`);
+      
       // For each cart item, fetch the corresponding product
       const itemsWithDetails = await Promise.all(
         cartItems.map(async (item) => {
@@ -316,7 +324,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { productId, metalTypeId, stoneTypeId, price } = req.body;
       const sessionId = req.sessionId;
       const userId = req.user?.id;
-
+      
+      // Debug logging
+      console.log('POST /api/cart - Request body:', { productId, metalTypeId, stoneTypeId, price });
+      console.log('POST /api/cart - Session ID:', sessionId);
+      console.log('POST /api/cart - Cookies:', req.cookies);
+      
       const cartItemData = insertCartItemSchema.parse({
         sessionId,
         userId,
@@ -325,11 +338,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stoneTypeId,
         price
       });
-
+      
+      // Debug logging
+      console.log('POST /api/cart - Parsed cart item data:', cartItemData);
+      
       const cartItem = await storage.createCartItem(cartItemData);
+      
+      // Debug logging
+      console.log('POST /api/cart - Created cart item:', cartItem);
+      
+      // Invalidate any cart caching
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.status(201).json(cartItem);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('POST /api/cart - Validation error:', error.errors);
         return res.status(400).json({ message: 'Invalid cart item data', errors: error.errors });
       }
       console.error('Error adding item to cart:', error);
