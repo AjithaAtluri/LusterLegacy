@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link as WouterLink } from "wouter";
 import { Helmet } from "react-helmet";
-import CheckoutForm from "@/components/checkout/checkout-form";
+import PayPalCheckoutForm from "@/components/checkout/paypal-checkout-form";
 import { Button } from "@/components/ui/button";
 import { Loader2, ShoppingBag, AlertTriangle, CheckCircle2 } from "lucide-react";
 
@@ -193,7 +193,7 @@ export default function Checkout() {
       </div>
       
       <div className="container mx-auto px-4 md:px-8 py-12">
-        <CheckoutForm cart={cart} />
+        <PayPalCheckoutForm cart={cart} />
       </div>
     </>
   );
