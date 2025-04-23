@@ -663,56 +663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * Admin API endpoints for Jewelry Management
    */
   
-  // Metal Types Management
-  app.get('/api/admin/metal-types', validateAdmin, async (req, res) => {
-    try {
-      const metalTypes = await storage.getAllMetalTypes();
-      res.json(metalTypes);
-    } catch (error) {
-      console.error('Error fetching metal types:', error);
-      res.status(500).json({ message: 'Failed to fetch metal types' });
-    }
-  });
-
-  app.post('/api/admin/metal-types', validateAdmin, async (req, res) => {
-    try {
-      const metalType = await storage.createMetalType(req.body);
-      res.status(201).json(metalType);
-    } catch (error) {
-      console.error('Error creating metal type:', error);
-      res.status(500).json({ message: 'Failed to create metal type' });
-    }
-  });
-
-  app.put('/api/admin/metal-types/:id', validateAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const metalType = await storage.updateMetalType(id, req.body);
-      if (metalType) {
-        res.json(metalType);
-      } else {
-        res.status(404).json({ message: 'Metal type not found' });
-      }
-    } catch (error) {
-      console.error('Error updating metal type:', error);
-      res.status(500).json({ message: 'Failed to update metal type' });
-    }
-  });
-
-  app.delete('/api/admin/metal-types/:id', validateAdmin, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deleteMetalType(id);
-      if (success) {
-        res.status(204).send();
-      } else {
-        res.status(404).json({ message: 'Metal type not found' });
-      }
-    } catch (error) {
-      console.error('Error deleting metal type:', error);
-      res.status(500).json({ message: 'Failed to delete metal type' });
-    }
-  });
+  // Metal Types Management - See complete implementation below
 
   // Stone Types Management
   app.get('/api/admin/stone-types', validateAdmin, async (req, res) => {
