@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 97%;  /* Pearl white */
+    --foreground: 0 0% 13%;    /* Charcoal */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
+    
+    --primary: 46 65% 52%;     /* Gold */
+    --primary-foreground: 36 33% 97%;
+    
+    --secondary: 60 54% 91%;   /* Ivory */
+    --secondary-foreground: 0 0% 13%;
+    
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 0 0% 45%;
+    
+    --accent: 292 63% 18%;     /* Deep plum */
+    --accent-foreground: 36 33% 97%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    
+    --border: 0 0% 80%;
+    --input: 0 0% 80%;
+    --ring: 46 65% 52%;        /* Gold */
+    
+    --radius: 0.5rem;
+
+    /* Chart colors */
+    --chart-1: 46 65% 52%;     /* Gold */
+    --chart-2: 292 63% 18%;    /* Deep plum */
+    --chart-3: 0 0% 13%;       /* Charcoal */
+    --chart-4: 36 33% 97%;     /* Pearl white */
+    --chart-5: 60 54% 91%;     /* Ivory */
+  }
+ 
+  .dark {
+    --background: 0 0% 13%;    /* Charcoal */
+    --foreground: 36 33% 97%;  /* Pearl white */
+    
+    --card: 0 0% 18%;
+    --card-foreground: 36 33% 97%;
+    
+    --popover: 0 0% 18%;
+    --popover-foreground: 36 33% 97%;
+    
+    --primary: 46 65% 52%;     /* Gold */
+    --primary-foreground: 0 0% 13%;
+    
+    --secondary: 292 63% 18%;  /* Deep plum */
+    --secondary-foreground: 36 33% 97%;
+    
+    --muted: 0 0% 18%;
+    --muted-foreground: 36 33% 90%;
+    
+    --accent: 292 63% 18%;     /* Deep plum */
+    --accent-foreground: 36 33% 97%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 36 33% 97%;
+    
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 46 65% 52%;        /* Gold */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-montserrat antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-playfair;
+  }
+}
+
+@layer utilities {
+  .gold-gradient {
+    background: linear-gradient(135deg, hsl(46, 65%, 52%) 0%, hsl(46, 97%, 81%) 50%, hsl(46, 65%, 52%) 100%);
+  }
+  
+  .text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .hover-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hover-shine::after {
+    content: '';
+    position: absolute;
+    top: -110%;
+    left: -210%;
+    width: 200%;
+    height: 200%;
+    opacity: 0;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 100%);
+    transform: rotate(30deg);
+    transition: all 0.6s ease;
+  }
+  
+  .hover-shine:hover::after {
+    opacity: 1;
+    top: -30%;
+    left: -30%;
+    transition: all 0.6s ease;
+  }
+}
