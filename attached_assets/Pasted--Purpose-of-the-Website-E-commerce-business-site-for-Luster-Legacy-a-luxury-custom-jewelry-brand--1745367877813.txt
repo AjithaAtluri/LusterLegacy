@@ -1,0 +1,305 @@
+
+✅ Purpose of the Website
+E-commerce business site for Luster Legacy, a luxury custom jewelry brand.
+
+The site will allow users to:
+
+Browse curated, ready-to-order jewelry
+
+Customize pieces by selecting metal and stone combinations
+
+Upload a personal design for custom-made jewelry
+
+Receive instant or quoted estimates
+
+Pay a CAD fee for custom designs (adjusted against final order)
+
+Make a 50% advance payment online and complete remaining on delivery
+
+💡 Key Features to Include
+Homepage with luxury branding and call-to-action
+
+Product Gallery with customization options
+
+Custom Design Form with image upload and dropdowns
+
+Live Price Estimator
+
+User Authentication (optional, for order tracking)
+
+Admin Portal for uploading products, pricing, managing orders
+
+Order Summary + Checkout Flow (with 50% upfront payment logic)
+
+About Us / Our Story Page
+
+Contact Page or WhatsApp button
+
+Terms: Repair Guarantee & 100% Metal/Stone Exchange
+
+🎨 Design Preferences
+Luxurious, elegant, modern aesthetic
+
+Fonts: Serif for headlines (e.g., Playfair Display, Cormorant Garamond), Sans-serif for body (e.g., Lato, Montserrat)
+
+Color Palette: Gold, ivory, charcoal black, deep plum, pearl white
+
+Large visuals with soft shadows and polished finishes
+
+Clean grid-based layout, minimalistic yet premium
+
+⚙️ Technologies to Use
+Frontend: React (with TailwindCSS for styling)
+
+Backend: Flask (Python)
+
+Database: MySQL or SQLite (initially)
+
+Hosting: Replit (for now), scalable later to GCP or Vercel/Render
+
+Optional Add-ons:
+
+Stripe / Razorpay integration for payments
+
+Cloudinary or Firebase for image storage
+
+Email notifications using SendGrid or Mailgun
+
+✅ Next Step:
+Would you like me to now:
+
+Generate your homepage layout (App.js)?
+
+Start with backend route like /estimate or /submit-design?
+
+Build database schema for your Products, CustomOrders, and Estimates?
+
+Just let me know what you'd like to tackle first — or I can set up a complete MVP step-by-step.
+
+
+
+
+
+
+You said:
+Give details of hoe each feature works
+
+
+ChatGPT said:
+Absolutely! Here’s a detailed breakdown of how each core feature of your Luster Legacy website will work, both from a user flow perspective and a technical implementation perspective (using React + Flask + MySQL):
+
+💎 1. Homepage
+🧭 Purpose:
+Capture brand essence: elegance, trust, customization
+
+Guide users to start shopping or submit their own design
+
+🔧 Tech/Functionality:
+React HomePage.js with sections:
+
+Hero Banner (tagline + CTA)
+
+Featured Products (cards with “Customize” buttons)
+
+“Our Story” snippet
+
+Link to “Custom Design” and “About Us”
+
+🛍️ 2. Product Gallery with Customization
+🧭 Purpose:
+Let users browse ready-made designs and configure metal/stones
+
+Get instant price estimate and order
+
+🔧 Tech/Functionality:
+React ProductGallery.js fetches products from Flask /products
+
+Each card shows:
+
+Image, description, base price
+
+Dropdowns for:
+
+Metal type (22kt, 18kt, etc.)
+
+Stone types (Polki, Moissanite, etc.)
+
+Real-time price calculator (based on selection)
+
+Price calculation logic:
+
+React calculates from client OR sends a request to /estimate
+
+Add to Cart or Order button
+
+Backend:
+
+/products: GET — retrieves all product metadata
+
+/estimate: POST — returns price based on metal/stone config
+
+✍️ 3. Custom Design Form
+🧭 Purpose:
+Let customers upload their own design and get a CAD + quote
+
+🔧 Tech/Functionality:
+React CustomDesignForm.js with fields:
+
+Upload Image (jpg/png/pdf)
+
+Dropdowns: Metal, Stone 1–6, Notes
+
+Submit Button
+
+Workflow:
+
+Customer submits form
+
+React sends FormData to Flask /submit-design
+
+Backend:
+
+Stores image to local folder or cloud (e.g., Cloudinary)
+
+Saves form data to DB
+
+Returns confirmation
+
+Backend:
+
+/submit-design: POST
+
+DesignRequests table in MySQL with:
+
+id, customer_email, metal, stones, notes, image_path, status
+
+💸 4. Live Price Estimator
+🧭 Purpose:
+Show users an estimated price as they make selections
+
+🔧 Tech/Functionality:
+React PriceEstimator.js
+
+Tracks dropdown changes
+
+Sends options to /estimate
+
+Displays returned price
+
+Backend Logic:
+
+Looks up:
+
+Metal base price
+
+Stone type multipliers
+
+Any additional charges (making, shipping, wastage)
+
+Returns total estimate
+
+👤 5. User Authentication (Optional for Phase 2)
+🧭 Purpose:
+Let users track orders or save designs
+
+🔧 Tech/Functionality:
+React login/register form
+
+Flask uses JWT or session auth
+
+MySQL table: Users
+
+Endpoints:
+
+/register, /login, /logout, /user/dashboard
+
+🔐 6. Admin Portal
+🧭 Purpose:
+Admin uploads new jewelry, prices, edits product catalog
+
+🔧 Tech/Functionality:
+Admin-only React UI (guarded route)
+
+Upload Product form: title, description, image, prices
+
+View orders / manage design requests
+
+Backend:
+
+/admin/add-product
+
+/admin/view-orders
+
+/admin/respond-design
+
+MySQL tables:
+
+Products, CustomOrders, AdminResponses
+
+🛒 7. Order Summary + Checkout (50% Upfront)
+🧭 Purpose:
+Collect initial payment, show total and balance breakdown
+
+🔧 Tech/Functionality:
+React OrderSummary.js
+
+Displays selected product + price breakdown
+
+Payment gateway integration (Stripe or Razorpay)
+
+Stores order to DB
+
+Shows “balance payable on delivery” message
+
+Backend:
+
+/create-order: stores order, marks as “Partially Paid”
+
+MySQL table: Orders
+
+Fields: id, customer_id, product_id, price, advance_paid, balance_due, status
+
+📖 8. About Us / Our Story Page
+🧭 Purpose:
+Build emotional trust through founder story
+
+🔧 Tech/Functionality:
+Static About.js component
+
+Text and optional image layout
+
+Content from your Founder’s Note
+
+📞 9. Contact Page / WhatsApp CTA
+🧭 Purpose:
+Allow customers to reach out easily
+
+🔧 Tech/Functionality:
+WhatsApp chat button:
+
+js
+Copy
+Edit
+window.open("https://wa.me/91XXXXXXXXXX")
+Contact Form:
+
+Name, Email, Message
+
+Sends to backend or email service
+
+🔁 10. Repair & Exchange Policy Display
+🧭 Purpose:
+Reinforce trust and post-sale commitment
+
+🔧 Tech/Functionality:
+Footer or separate Policies.js page
+
+Content: Free Repairs, 100% Exchange on metal and stones
+
+✅ Bonus: Optional Future Features
+
+Feature	Use
+Customer login	Track design status, orders
+Design iterations UI	Let user approve/reject CAD drafts
+Email notifications	Update user on status
+Real-time metal pricing	Adjust estimates based on live rates
