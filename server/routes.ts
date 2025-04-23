@@ -986,11 +986,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new metal type (admin only)
   app.post('/api/admin/metal-types', validateAdmin, async (req, res) => {
     try {
+      console.log('Metal Type Creation - Request Body:', req.body);
+      console.log('Expected schema fields:', Object.keys(insertMetalTypeSchema.shape));
+      
       const metalTypeData = insertMetalTypeSchema.parse(req.body);
       const metalType = await storage.createMetalType(metalTypeData);
       res.status(201).json(metalType);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Zod validation error:', error.errors);
         return res.status(400).json({ message: 'Invalid metal type data', errors: error.errors });
       }
       console.error('Error creating metal type:', error);

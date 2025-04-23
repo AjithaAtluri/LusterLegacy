@@ -14,7 +14,10 @@ import { useQueryClient } from "@tanstack/react-query";
 const metalTypeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   priceModifier: z.coerce.number().min(0, "Price modifier cannot be negative"),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
+  displayOrder: z.number().default(0),
+  isActive: z.boolean().default(true),
+  color: z.string().nullable().optional(),
 });
 
 type MetalTypeFormValues = z.infer<typeof metalTypeFormSchema>;
@@ -33,7 +36,10 @@ export default function MetalTypeForm({ initialData, metalTypeId, onSuccess }: M
   const defaultValues: Partial<MetalTypeFormValues> = {
     name: "",
     priceModifier: 0,
-    description: "",
+    description: null,
+    displayOrder: 0,
+    isActive: true,
+    color: null,
     ...initialData
   };
   
@@ -135,7 +141,11 @@ export default function MetalTypeForm({ initialData, metalTypeId, onSuccess }: M
               <FormItem>
                 <FormLabel>Description (Optional)</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="The highest purity gold available for jewelry" />
+                  <Input 
+                    {...field} 
+                    placeholder="The highest purity gold available for jewelry" 
+                    value={field.value || ""}
+                  />
                 </FormControl>
                 <FormDescription>
                   Brief description of the metal type
