@@ -115,6 +115,9 @@ export class MemStorage implements IStorage {
   private orderItems: Map<number, OrderItem>;
   private testimonials: Map<number, Testimonial>;
   private contactMessages: Map<number, ContactMessage>;
+  private metalTypes: Map<number, MetalType>;
+  private stoneTypes: Map<number, StoneType>;
+  private productStones: Map<string, ProductStone>; // Key is "productId-stoneTypeId"
   
   private currentUserId: number;
   private currentProductId: number;
@@ -124,6 +127,8 @@ export class MemStorage implements IStorage {
   private currentOrderItemId: number;
   private currentTestimonialId: number;
   private currentContactMessageId: number;
+  private currentMetalTypeId: number;
+  private currentStoneTypeId: number;
 
   constructor() {
     this.users = new Map();
@@ -134,6 +139,9 @@ export class MemStorage implements IStorage {
     this.orderItems = new Map();
     this.testimonials = new Map();
     this.contactMessages = new Map();
+    this.metalTypes = new Map();
+    this.stoneTypes = new Map();
+    this.productStones = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;
@@ -143,6 +151,8 @@ export class MemStorage implements IStorage {
     this.currentOrderItemId = 1;
     this.currentTestimonialId = 1;
     this.currentContactMessageId = 1;
+    this.currentMetalTypeId = 1;
+    this.currentStoneTypeId = 1;
     
     // Initialize with sample data
     this.initSampleData();
@@ -413,6 +423,104 @@ export class MemStorage implements IStorage {
 
   async deleteContactMessage(id: number): Promise<boolean> {
     return this.contactMessages.delete(id);
+  }
+  
+  // Metal Type methods
+  async getMetalType(id: number): Promise<MetalType | undefined> {
+    return this.metalTypes.get(id);
+  }
+  
+  async getAllMetalTypes(): Promise<MetalType[]> {
+    return Array.from(this.metalTypes.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+  
+  async createMetalType(metalType: InsertMetalType): Promise<MetalType> {
+    const id = this.currentMetalTypeId++;
+    const newMetalType: MetalType = { ...metalType, id };
+    this.metalTypes.set(id, newMetalType);
+    return newMetalType;
+  }
+  
+  async updateMetalType(id: number, metalTypeUpdate: Partial<InsertMetalType>): Promise<MetalType | undefined> {
+    const metalType = this.metalTypes.get(id);
+    if (!metalType) return undefined;
+    
+    const updatedMetalType = { ...metalType, ...metalTypeUpdate };
+    this.metalTypes.set(id, updatedMetalType);
+    return updatedMetalType;
+  }
+  
+  async deleteMetalType(id: number): Promise<boolean> {
+    return this.metalTypes.delete(id);
+  }
+  
+  // Stone Type methods
+  async getStoneType(id: number): Promise<StoneType | undefined> {
+    return this.stoneTypes.get(id);
+  }
+  
+  async getAllStoneTypes(): Promise<StoneType[]> {
+    return Array.from(this.stoneTypes.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+  
+  async createStoneType(stoneType: InsertStoneType): Promise<StoneType> {
+    const id = this.currentStoneTypeId++;
+    const newStoneType: StoneType = { ...stoneType, id };
+    this.stoneTypes.set(id, newStoneType);
+    return newStoneType;
+  }
+  
+  async updateStoneType(id: number, stoneTypeUpdate: Partial<InsertStoneType>): Promise<StoneType | undefined> {
+    const stoneType = this.stoneTypes.get(id);
+    if (!stoneType) return undefined;
+    
+    const updatedStoneType = { ...stoneType, ...stoneTypeUpdate };
+    this.stoneTypes.set(id, updatedStoneType);
+    return updatedStoneType;
+  }
+  
+  async deleteStoneType(id: number): Promise<boolean> {
+    // First, delete any product-stone associations
+    for (const [key, productStone] of this.productStones.entries()) {
+      if (productStone.stoneTypeId === id) {
+        this.productStones.delete(key);
+      }
+    }
+    
+    return this.stoneTypes.delete(id);
+  }
+  
+  // Product-Stone relationship methods
+  async getProductStones(productId: number): Promise<StoneType[]> {
+    const stoneIds = Array.from(this.productStones.values())
+      .filter(ps => ps.productId === productId)
+      .map(ps => ps.stoneTypeId);
+    
+    return stoneIds.map(id => this.stoneTypes.get(id)).filter(Boolean) as StoneType[];
+  }
+  
+  async addProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
+    stoneTypeIds.forEach(stoneTypeId => {
+      const key = `${productId}-${stoneTypeId}`;
+      this.productStones.set(key, { productId, stoneTypeId });
+    });
+  }
+  
+  async updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
+    // First, delete all existing product-stone relationships for this product
+    for (const [key, productStone] of this.productStones.entries()) {
+      if (productStone.productId === productId) {
+        this.productStones.delete(key);
+      }
+    }
+    
+    // Then add the new relationships
+    await this.addProductStones(productId, stoneTypeIds);
+  }
+  
+  async removeProductStone(productId: number, stoneTypeId: number): Promise<boolean> {
+    const key = `${productId}-${stoneTypeId}`;
+    return this.productStones.delete(key);
   }
 
   // Initialize sample data
@@ -711,6 +819,194 @@ export class DatabaseStorage implements IStorage {
   async deleteContactMessage(id: number): Promise<boolean> {
     const result = await db.delete(contactMessages).where(eq(contactMessages.id, id));
     return result.rowCount > 0;
+  }
+
+  // Metal Type methods
+  async getMetalType(id: number): Promise<MetalType | undefined> {
+    try {
+      const [metalType] = await db.select().from(metalTypes).where(eq(metalTypes.id, id));
+      return metalType;
+    } catch (error) {
+      console.error("Error getting metal type:", error);
+      return undefined;
+    }
+  }
+  
+  async getAllMetalTypes(): Promise<MetalType[]> {
+    try {
+      return await db.select().from(metalTypes).orderBy(asc(metalTypes.name));
+    } catch (error) {
+      console.error("Error getting all metal types:", error);
+      return [];
+    }
+  }
+  
+  async createMetalType(metalType: InsertMetalType): Promise<MetalType> {
+    try {
+      const [newMetalType] = await db.insert(metalTypes).values(metalType).returning();
+      return newMetalType;
+    } catch (error) {
+      console.error("Error creating metal type:", error);
+      throw error;
+    }
+  }
+  
+  async updateMetalType(id: number, metalTypeUpdate: Partial<InsertMetalType>): Promise<MetalType | undefined> {
+    try {
+      const [updatedMetalType] = await db
+        .update(metalTypes)
+        .set(metalTypeUpdate)
+        .where(eq(metalTypes.id, id))
+        .returning();
+      return updatedMetalType;
+    } catch (error) {
+      console.error("Error updating metal type:", error);
+      return undefined;
+    }
+  }
+  
+  async deleteMetalType(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(metalTypes).where(eq(metalTypes.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting metal type:", error);
+      return false;
+    }
+  }
+  
+  // Stone Type methods
+  async getStoneType(id: number): Promise<StoneType | undefined> {
+    try {
+      const [stoneType] = await db.select().from(stoneTypes).where(eq(stoneTypes.id, id));
+      return stoneType;
+    } catch (error) {
+      console.error("Error getting stone type:", error);
+      return undefined;
+    }
+  }
+  
+  async getAllStoneTypes(): Promise<StoneType[]> {
+    try {
+      return await db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
+    } catch (error) {
+      console.error("Error getting all stone types:", error);
+      return [];
+    }
+  }
+  
+  async createStoneType(stoneType: InsertStoneType): Promise<StoneType> {
+    try {
+      const [newStoneType] = await db.insert(stoneTypes).values(stoneType).returning();
+      return newStoneType;
+    } catch (error) {
+      console.error("Error creating stone type:", error);
+      throw error;
+    }
+  }
+  
+  async updateStoneType(id: number, stoneTypeUpdate: Partial<InsertStoneType>): Promise<StoneType | undefined> {
+    try {
+      const [updatedStoneType] = await db
+        .update(stoneTypes)
+        .set(stoneTypeUpdate)
+        .where(eq(stoneTypes.id, id))
+        .returning();
+      return updatedStoneType;
+    } catch (error) {
+      console.error("Error updating stone type:", error);
+      return undefined;
+    }
+  }
+  
+  async deleteStoneType(id: number): Promise<boolean> {
+    try {
+      // First, delete any product-stone associations
+      await db.delete(productStones).where(eq(productStones.stoneTypeId, id));
+      
+      // Then delete the stone type
+      const result = await db.delete(stoneTypes).where(eq(stoneTypes.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting stone type:", error);
+      return false;
+    }
+  }
+  
+  // Product-Stone relationship methods
+  async getProductStones(productId: number): Promise<StoneType[]> {
+    try {
+      const result = await db
+        .select({
+          stoneType: stoneTypes
+        })
+        .from(productStones)
+        .innerJoin(stoneTypes, eq(productStones.stoneTypeId, stoneTypes.id))
+        .where(eq(productStones.productId, productId));
+      
+      return result.map(r => r.stoneType);
+    } catch (error) {
+      console.error("Error getting product stones:", error);
+      return [];
+    }
+  }
+  
+  async addProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
+    try {
+      // Create the values array for batch insert
+      const values = stoneTypeIds.map(stoneTypeId => ({
+        productId,
+        stoneTypeId
+      }));
+      
+      if (values.length > 0) {
+        await db.insert(productStones).values(values);
+      }
+    } catch (error) {
+      console.error("Error adding product stones:", error);
+      throw error;
+    }
+  }
+  
+  async updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
+    try {
+      // Begin transaction
+      await db.transaction(async (tx) => {
+        // Delete all existing associations
+        await tx.delete(productStones).where(eq(productStones.productId, productId));
+        
+        // Add new associations
+        if (stoneTypeIds.length > 0) {
+          const values = stoneTypeIds.map(stoneTypeId => ({
+            productId,
+            stoneTypeId
+          }));
+          
+          await tx.insert(productStones).values(values);
+        }
+      });
+    } catch (error) {
+      console.error("Error updating product stones:", error);
+      throw error;
+    }
+  }
+  
+  async removeProductStone(productId: number, stoneTypeId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(productStones)
+        .where(
+          and(
+            eq(productStones.productId, productId),
+            eq(productStones.stoneTypeId, stoneTypeId)
+          )
+        );
+      
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error removing product stone:", error);
+      return false;
+    }
   }
 }
 
