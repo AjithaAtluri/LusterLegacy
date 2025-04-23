@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, real, timestamp, json, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, real, timestamp, json, foreignKey, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -41,10 +41,7 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
-export const productsRelations = relations(products, ({ many }) => ({
-  cartItems: many(cartItems),
-  orderItems: many(orderItems)
-}));
+// Product relations defined further down with stone relationships
 
 export const insertProductSchema = createInsertSchema(products).pick({
   name: true,
@@ -251,6 +248,81 @@ export const insertContactMessageSchema = createInsertSchema(contactMessages).pi
   message: true,
 });
 
+// Metal types schema
+export const metalTypes = pgTable("metal_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  priceModifier: real("price_modifier").notNull().default(1.0),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  color: text("color"), // hex color code for UI display
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertMetalTypeSchema = createInsertSchema(metalTypes).pick({
+  name: true,
+  description: true,
+  priceModifier: true,
+  displayOrder: true,
+  isActive: true,
+  color: true,
+});
+
+// Stone types schema
+export const stoneTypes = pgTable("stone_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  priceModifier: real("price_modifier").notNull().default(1.0),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  color: text("color"), // hex color code for UI display
+  imageUrl: text("image_url"), // optional image of the stone
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertStoneTypeSchema = createInsertSchema(stoneTypes).pick({
+  name: true,
+  description: true,
+  priceModifier: true,
+  displayOrder: true,
+  isActive: true,
+  color: true,
+  imageUrl: true,
+});
+
+// Product stones (many-to-many relationship between products and stone types)
+export const productStones = pgTable("product_stones", {
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
+  stoneTypeId: integer("stone_type_id").notNull().references(() => stoneTypes.id, { onDelete: 'cascade' }),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.productId, t.stoneTypeId] }),
+}));
+
+export const productStonesRelations = relations(productStones, ({ one }) => ({
+  product: one(products, {
+    fields: [productStones.productId],
+    references: [products.id],
+  }),
+  stoneType: one(stoneTypes, {
+    fields: [productStones.stoneTypeId],
+    references: [stoneTypes.id],
+  }),
+}));
+
+// Update product relations to include stones
+export const productsRelations = relations(products, ({ many }) => ({
+  cartItems: many(cartItems),
+  orderItems: many(orderItems),
+  productStones: many(productStones),
+}));
+
+// Stone types relations
+export const stoneTypesRelations = relations(stoneTypes, ({ many }) => ({
+  productStones: many(productStones),
+}));
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -275,3 +347,11 @@ export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
 
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+
+export type MetalType = typeof metalTypes.$inferSelect;
+export type InsertMetalType = z.infer<typeof insertMetalTypeSchema>;
+
+export type StoneType = typeof stoneTypes.$inferSelect;
+export type InsertStoneType = z.infer<typeof insertStoneTypeSchema>;
+
+export type ProductStone = typeof productStones.$inferSelect;
