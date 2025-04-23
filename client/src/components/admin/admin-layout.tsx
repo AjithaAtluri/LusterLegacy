@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useRoute, Link } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -99,11 +99,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   ];
   
-  // Check if route is active
-  const isActiveRoute = (path: string) => {
-    const [match] = useRoute(path);
-    return match;
-  };
+  // Current location for determining active route
+  const [location] = useLocation();
   
   if (isLoading) {
     return (
@@ -143,7 +140,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                           href={item.href}
                           onClick={() => setIsMobileMenuOpen(false)}
                           className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
-                            isActiveRoute(item.href) ? "bg-accent/50 font-medium" : ""
+                            location === item.href ? "bg-accent/50 font-medium" : ""
                           }`}
                         >
                           {item.icon}
@@ -198,7 +195,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
-                  isActiveRoute(item.href) ? "bg-accent/50 font-medium" : ""
+                  location === item.href ? "bg-accent/50 font-medium" : ""
                 }`}
               >
                 {item.icon}
