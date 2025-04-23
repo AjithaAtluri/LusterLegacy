@@ -29,7 +29,7 @@ export default function Header() {
     { label: "Collections", path: "/collections" },
     { label: "Custom Design", path: "/custom-design" },
     { label: "Inspiration", path: "/inspiration" },
-    { label: "Our Story", path: "/about" },
+    { label: "Founder's Story", path: "/about" },
     { label: "Contact", path: "/contact" }
   ];
   

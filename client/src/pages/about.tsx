@@ -6,13 +6,13 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>Our Story | Luster Legacy</title>
+        <title>Founder's Story | Luster Legacy</title>
         <meta name="description" content="Discover the story behind Luster Legacy, a luxury jewelry house specializing in custom-made pieces that celebrate individuality and timeless elegance." />
       </Helmet>
       
       <div className="bg-charcoal py-20">
         <div className="container mx-auto px-4 md:px-8 text-center">
-          <h1 className="font-playfair text-3xl md:text-5xl font-bold text-pearl mb-4">Our Story</h1>
+          <h1 className="font-playfair text-3xl md:text-5xl font-bold text-pearl mb-4">Founder's Story</h1>
           <div className="w-24 h-1 bg-primary mx-auto mb-6"></div>
           <p className="font-cormorant text-lg md:text-xl text-pearl/80 max-w-2xl mx-auto">
             Every jewel begins with a spark — ours began with passion.
