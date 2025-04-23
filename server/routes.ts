@@ -61,15 +61,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((req: Request, res: Response, next) => {
     if (!req.cookies || !req.cookies.sessionId) {
       const sessionId = uuidv4();
+      console.log(`Creating new sessionId: ${sessionId} for URL: ${req.url}`);
       res.cookie('sessionId', sessionId, { 
         httpOnly: true, 
-        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        sameSite: 'lax', // Allow cross-site requests when navigating from external site
+        secure: false, // Allow non-HTTPS (for development)
+        path: '/' // Ensure cookie is sent with all requests
       });
       req.sessionId = sessionId;
     } else {
       req.sessionId = req.cookies.sessionId;
+      console.log(`Using existing sessionId: ${req.sessionId} for URL: ${req.url}`);
     }
     next();
+  });
+
+  // Test endpoint for debugging
+  app.get('/api/debug/session', (req, res) => {
+    res.json({
+      sessionId: req.sessionId,
+      cookies: req.cookies
+    });
   });
 
   /**

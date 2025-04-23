@@ -3,6 +3,20 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 
+// Extend Express Request interface to include sessionId
+declare global {
+  namespace Express {
+    interface Request {
+      sessionId?: string;
+      user?: {
+        id: number;
+        username: string;
+        role: string;
+      }
+    }
+  }
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

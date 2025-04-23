@@ -11,11 +11,14 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Fetch cart items count
-  const { data: cartItems = [] } = useQuery({
+  const { data: cartData } = useQuery({
     queryKey: ['/api/cart'],
-    enabled: false // Disable this query until we implement cart functionality
+    // Enable the cart query to properly show cart items
+    staleTime: 60000 // 1 minute stale time to reduce refetches
   });
   
+  // Safely extract items from the cart data response
+  const cartItems = cartData?.items || [];
   const cartCount = cartItems.length;
   
   const isActive = (path: string) => {
