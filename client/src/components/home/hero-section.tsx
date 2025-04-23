@@ -20,11 +20,11 @@ export default function HeroSection() {
         <img 
           src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
           alt="Luxury diamond jewelry" 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover opacity-50"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
         />
-        {/* Gradient overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-charcoal/95 via-charcoal/85 to-charcoal/70"></div>
+        {/* Dark overlay for guaranteed text readability */}
+        <div className="absolute inset-0 bg-charcoal/90"></div>
       </div>
       
       {/* Subtle gold accents */}
@@ -56,14 +56,14 @@ export default function HeroSection() {
           
           {/* Heading with enhanced elegant typography */}
           <h1 className="font-playfair font-bold text-4xl md:text-6xl lg:text-7xl text-pearl mb-6 leading-tight text-shadow-lg">
-            <span className="block bg-charcoal/50 backdrop-blur-sm shadow-sm inline-block px-2">Crafted by</span>
+            <span className="block">Crafted by</span>
             <span className="block text-primary text-glow font-extrabold my-1">Artisans</span>
-            <span className="block mt-2 bg-charcoal/50 backdrop-blur-sm shadow-sm inline-block px-2">Designed by You</span>
+            <span className="block mt-2">Designed by You</span>
           </h1>
           
-          {/* Tagline with enhanced background for readability */}
-          <div className="mb-12 max-w-xl py-4 px-5 bg-charcoal/70 backdrop-blur-md border-l-4 border-primary shadow-xl">
-            <p className="font-cormorant text-xl md:text-2xl text-pearl leading-relaxed">
+          {/* Tagline with elegant styling */}
+          <div className="mb-12 max-w-xl">
+            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4">
               <span className="text-primary font-semibold">Experience bespoke luxury in every piece.</span>{" "}
               <span className="text-pearl">Timeless elegance reimagined for the modern connoisseur.</span>
             </p>
