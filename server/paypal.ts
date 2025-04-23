@@ -80,9 +80,15 @@ export const createOrder = async (req: Request, res: Response) => {
     const shippingCost = currency === 'USD' ? 30 : 1500;
     const totalAmount = itemTotal + shippingCost;
 
-    // Return order details to client
-    // The actual PayPal order creation happens in the frontend
+    // Generate a mock order ID for development purposes
+    // In production, this would come from the actual PayPal API
+    const mockOrderId = `ORDER-${Math.random().toString(36).substring(2, 15)}-${Date.now()}`;
+    
+    console.log('Creating PayPal order:', mockOrderId, 'with total amount:', totalAmount, currency);
+    
+    // Return order details to client with the expected orderID format
     res.status(200).json({
+      orderID: mockOrderId, // This is the key format the PayPal component expects
       orderDetails: {
         currency_code: currency,
         value: totalAmount.toString(),
