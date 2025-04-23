@@ -48,7 +48,7 @@ export default function HeroSection() {
           <div className="mb-6">
             <div className="inline-flex items-center px-4 py-1.5 border border-primary/40 rounded-full bg-charcoal/60 backdrop-blur-sm shadow-lg">
               <Sparkles className="h-3.5 w-3.5 text-primary mr-2" />
-              <span className="text-xs uppercase tracking-widest font-montserrat text-pearl/90">
+              <span className="text-xs uppercase tracking-widest font-montserrat text-primary font-semibold">
                 Luxury Custom Jewelry
               </span>
             </div>
