@@ -14,6 +14,7 @@ const About = lazy(() => import("@/pages/about"));
 const Contact = lazy(() => import("@/pages/contact"));
 const Product = lazy(() => import("@/pages/product"));
 const Checkout = lazy(() => import("@/pages/checkout"));
+const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 
 // Info pages
 const Privacy = lazy(() => import("@/pages/privacy"));
@@ -53,6 +54,7 @@ function App() {
             <Route path="/contact" component={Contact} />
             <Route path="/product/:id" component={Product} />
             <Route path="/checkout" component={Checkout} />
+            <Route path="/inspiration" component={InspirationGallery} />
             
             {/* Information pages */}
             <Route path="/privacy" component={Privacy} />

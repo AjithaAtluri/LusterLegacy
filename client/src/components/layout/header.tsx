@@ -25,6 +25,7 @@ export default function Header() {
   const navItems = [
     { label: "Collections", path: "/collections" },
     { label: "Custom Design", path: "/custom-design" },
+    { label: "Inspiration", path: "/inspiration" },
     { label: "Our Story", path: "/about" },
     { label: "Contact", path: "/contact" }
   ];
