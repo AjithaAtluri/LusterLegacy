@@ -18,8 +18,8 @@ export default function HeroSection() {
       {/* Full-width background image with beautiful jewelry */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.pexels.com/photos/9428850/pexels-photo-9428850.jpeg?auto=compress&cs=tinysrgb&w=1920" 
-          alt="Luxury gold jewelry on dark background" 
+          src="https://images.pexels.com/photos/1457801/pexels-photo-1457801.jpeg?auto=compress&cs=tinysrgb&w=1920" 
+          alt="Premium luxury gold and diamond jewelry collection" 
           className="w-full h-full object-cover brightness-110 contrast-105"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
         />
