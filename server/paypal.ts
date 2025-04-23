@@ -1,0 +1,178 @@
+import { Request, Response } from 'express';
+import { storage } from './storage';
+
+// Check if PayPal credentials are available
+if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+  console.error('Missing PayPal API credentials. Set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET environment variables.');
+}
+
+export const paypalClientId = process.env.PAYPAL_CLIENT_ID;
+
+/**
+ * Create an order in PayPal
+ */
+export const createOrder = async (req: Request, res: Response) => {
+  try {
+    const { cartItems, currency = 'USD', shippingAddress } = req.body;
+    
+    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      return res.status(400).json({ error: 'Invalid cart items' });
+    }
+
+    // Get session ID from request
+    const sessionId = req.cookies.sessionId || '';
+    
+    // Validate currency
+    if (currency !== 'USD' && currency !== 'INR') {
+      return res.status(400).json({ error: 'Currency must be USD or INR' });
+    }
+
+    // Validate shipping address based on currency
+    if (!shippingAddress || !shippingAddress.country) {
+      return res.status(400).json({ error: 'Shipping address is required' });
+    }
+
+    // Check country and currency match
+    if (
+      (currency === 'USD' && shippingAddress.country !== 'US') ||
+      (currency === 'INR' && shippingAddress.country !== 'IN')
+    ) {
+      return res.status(400).json({ 
+        error: 'Currency and shipping country mismatch. USD for US addresses and INR for India addresses only.'
+      });
+    }
+
+    // Calculate totals
+    let itemTotal = 0;
+    const items = [];
+
+    for (const item of cartItems) {
+      const product = await storage.getProduct(item.productId);
+      
+      if (!product) {
+        return res.status(404).json({ error: `Product not found: ${item.productId}` });
+      }
+
+      const price = item.isCustomDesign 
+        ? (await storage.getDesignRequest(item.designRequestId || 0))?.estimatedPrice || product.basePrice
+        : product.basePrice;
+      
+      itemTotal += price;
+      
+      items.push({
+        name: product.name,
+        unit_amount: {
+          currency_code: currency,
+          value: price.toString()
+        },
+        quantity: 1
+      });
+    }
+
+    // Determine shipping cost based on currency
+    // For demonstration: INR shipping is 1500, USD shipping is 30
+    const shippingCost = currency === 'USD' ? 30 : 1500;
+    const totalAmount = itemTotal + shippingCost;
+
+    // Return order details to client
+    // The actual PayPal order creation happens in the frontend
+    res.status(200).json({
+      orderDetails: {
+        currency_code: currency,
+        value: totalAmount.toString(),
+        items,
+        shipping: {
+          currency_code: currency,
+          value: shippingCost.toString()
+        },
+        item_total: {
+          currency_code: currency,
+          value: itemTotal.toString()
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error creating PayPal order:', error);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+};
+
+/**
+ * Capture an order payment
+ */
+export const captureOrder = async (req: Request, res: Response) => {
+  try {
+    const { orderID, shippingAddress, currency } = req.body;
+    
+    if (!orderID) {
+      return res.status(400).json({ error: 'Order ID is required' });
+    }
+
+    // Get cart items from session
+    const sessionId = req.cookies.sessionId || '';
+    const cartItems = await storage.getCartItemsBySession(sessionId);
+    
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ error: 'No items in cart' });
+    }
+
+    // Record the order in the database (simplified version)
+    const orderDetails = {
+      sessionId,
+      userId: null, // If user is logged in, get their ID
+      orderStatus: 'pending',
+      paymentStatus: 'completed',
+      totalAmount: cartItems.reduce((sum, item) => sum + item.price, 0),
+      customerName: `${shippingAddress.name}`,
+      customerEmail: shippingAddress.email || 'customer@example.com',
+      customerPhone: shippingAddress.phone || '',
+      shippingAddress,
+      paymentMethod: 'paypal',
+      paymentId: orderID,
+      currency: currency || 'USD'
+    };
+
+    // Create order in database
+    const order = await storage.createOrder(orderDetails);
+
+    // Create order items
+    for (const item of cartItems) {
+      await storage.createOrderItem({
+        orderId: order.id,
+        productId: item.productId,
+        metalTypeId: item.metalTypeId,
+        stoneTypeId: item.stoneTypeId,
+        price: item.price,
+        isCustomDesign: item.isCustomDesign || false,
+        designRequestId: item.designRequestId
+      });
+    }
+
+    // Clear cart after successful order
+    await storage.clearCart(sessionId);
+
+    // Return success response
+    res.status(200).json({
+      success: true,
+      orderId: order.id
+    });
+  } catch (error) {
+    console.error('Error capturing PayPal order:', error);
+    res.status(500).json({ error: 'Failed to capture order' });
+  }
+};
+
+/**
+ * Cancel an order
+ */
+export const cancelOrder = async (req: Request, res: Response) => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: 'Order was canceled'
+    });
+  } catch (error) {
+    console.error('Error canceling order:', error);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+};
