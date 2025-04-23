@@ -18,9 +18,9 @@ export default function HeroSection() {
       {/* Full-width background image with beautiful jewelry */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80" 
-          alt="Luxury diamond jewelry" 
-          className="w-full h-full object-cover brightness-125 contrast-110"
+          src="https://images.unsplash.com/photo-1622398925373-3f91b1d04b5d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=90" 
+          alt="Elegant gold rings and luxury jewelry" 
+          className="w-full h-full object-cover brightness-110 contrast-105"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
         />
         {/* Semi-transparent gradient overlay for text readability */}
