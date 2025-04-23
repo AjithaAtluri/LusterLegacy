@@ -41,17 +41,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { InspirationGalleryItem } from "@shared/schema";
 
-// Types for inspiration gallery items
-interface InspirationItem {
-  id: number;
-  title: string;
-  description: string;
-  imageUrl: string;
-  category: string;
-  tags: string[];
-  featured: boolean;
-}
+// For component compatibility
+type InspirationItem = InspirationGalleryItem;
 
 export default function InspirationGallery() {
   const isMobile = useIsMobile();
