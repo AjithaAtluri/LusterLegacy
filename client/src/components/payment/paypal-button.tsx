@@ -55,7 +55,7 @@ export function PayPalButton({
   return (
     <PayPalScriptProvider
       options={{
-        clientId: process.env.PAYPAL_CLIENT_ID || '',
+        clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
         currency,
         intent: "capture",
       }}
@@ -163,7 +163,7 @@ function PayPalButtonContent({
     try {
       if (orderID) {
         // Make a call to the server to cancel the order
-        await apiRequest("POST", "/api/paypal/cancel-order", {
+        await apiRequest("POST", "/api/payment/cancel-paypal-order", {
           orderID,
         });
       }
