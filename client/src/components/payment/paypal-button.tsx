@@ -4,10 +4,10 @@ import {
   PayPalButtons,
   usePayPalScriptReducer
 } from '@paypal/react-paypal-js';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { PAYMENT_TERMS } from '@/lib/constants';
+import { getPayPalClientId, createPayPalOrder, capturePayPalOrder, cancelPayPalOrder } from '@/lib/paypal-client';
 
 interface PayPalButtonProps {
   cartItems: Array<{
@@ -40,6 +40,25 @@ export function PayPalButton({
   onError
 }: PayPalButtonProps) {
   const { toast } = useToast();
+  const [clientId, setClientId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  // Fetch PayPal client ID on component mount
+  useEffect(() => {
+    const fetchClientId = async () => {
+      try {
+        const id = await getPayPalClientId();
+        setClientId(id);
+      } catch (error) {
+        console.error("Failed to load PayPal client ID:", error);
+        onError(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchClientId();
+  }, [onError]);
   
   // Calculate total price
   const calculateTotal = () => {
@@ -52,12 +71,32 @@ export function PayPalButton({
     return calculateTotal() * PAYMENT_TERMS.ADVANCE_PERCENTAGE;
   };
   
+  // Show loading while fetching client ID
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-6 border rounded-md">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <span>Initializing payment...</span>
+      </div>
+    );
+  }
+  
+  // If client ID not available, show error
+  if (!clientId) {
+    return (
+      <div className="p-4 border border-destructive rounded-md text-destructive">
+        <p className="text-center">Unable to initialize PayPal. Please try again later.</p>
+      </div>
+    );
+  }
+  
   return (
     <PayPalScriptProvider
       options={{
-        clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || '',
+        clientId,
         currency,
         intent: "capture",
+        components: "buttons"
       }}
     >
       <PayPalButtonContent
@@ -106,19 +145,18 @@ function PayPalButtonContent({
   // Create a PayPal order
   const createOrder = async () => {
     try {
-      // Make a call to the server to create the order
-      const response = await apiRequest("POST", "/api/payment/create-paypal-order", {
+      // Use the helper function to create the order
+      const orderID = await createPayPalOrder({
         cartItems,
         currency,
-        amount: amount,
         shippingAddress
       });
       
       // Store the order ID
-      setOrderID(response.orderID);
+      setOrderID(orderID);
       
       // Return the order ID
-      return response.orderID;
+      return orderID;
     } catch (error) {
       console.error("Error creating PayPal order:", error);
       onError(error);
@@ -129,13 +167,14 @@ function PayPalButtonContent({
   // Capture a PayPal order
   const onApprove = async (data: { orderID: string }) => {
     try {
-      // Make a call to the server to capture the order
-      const response = await apiRequest("POST", "/api/payment/capture-paypal-order", {
+      // Use the helper function to capture the order
+      const result = await capturePayPalOrder({
         orderID: data.orderID,
-        shippingAddress
+        shippingAddress,
+        currency
       });
       
-      if (response.success) {
+      if (result.success) {
         // Show success message
         toast({
           title: "Payment Successful",
@@ -143,7 +182,7 @@ function PayPalButtonContent({
         });
         
         // Call the success callback
-        onSuccess(response.orderId);
+        onSuccess(result.orderId);
       } else {
         throw new Error("Failed to capture order");
       }
@@ -162,10 +201,8 @@ function PayPalButtonContent({
   const onCancel = async () => {
     try {
       if (orderID) {
-        // Make a call to the server to cancel the order
-        await apiRequest("POST", "/api/payment/cancel-paypal-order", {
-          orderID,
-        });
+        // Use the helper function to cancel the order
+        await cancelPayPalOrder(orderID);
       }
       
       toast({
