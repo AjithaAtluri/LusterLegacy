@@ -406,8 +406,5 @@ export type InsertProductType = z.infer<typeof insertProductTypeSchema>;
 
 // Product types relations 
 export const productTypesRelations = relations(productTypes, ({ many }) => ({
-  products: many(products, {
-    fields: [productTypes.name],
-    references: [products.category],
-  }),
+  products: many(products, { relationName: "productTypeToProducts" }),
 }));
