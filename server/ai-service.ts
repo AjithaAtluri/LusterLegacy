@@ -79,10 +79,11 @@ export const generateContent = async (req: Request, res: Response) => {
         content: "You are a luxury jewelry expert who creates elegant, compelling product descriptions."
       };
       
+      // Start with the text content part
       const contentParts: ChatCompletionContentPart[] = [
         {
           type: "text",
-          text: `Analyze this jewelry image and create product content based on what you see and the following details:
+          text: `Analyze ${imageUrls.length > 1 ? 'these jewelry images' : 'this jewelry image'} and create product content based on what you see and the following details:
           
           Item details:
           - Product Type: ${productType}
@@ -95,22 +96,37 @@ export const generateContent = async (req: Request, res: Response) => {
           2. An elegant tagline that highlights the uniqueness (max 15 words)
           3. A short 3-line description that captures the essence of the piece
           4. A detailed website-friendly description (150-200 words) describing craftsmanship, materials, occasions, and luxury aspects
+          5. A brief insight about what you observed in the image(s) that influenced your description
           
           Respond with JSON in this format:
           {
             "title": "Product Title",
             "tagline": "Product Tagline",
             "shortDescription": "3-line description",
-            "detailedDescription": "Detailed description for website listing"
+            "detailedDescription": "Detailed description for website listing",
+            "imageInsights": "Brief notes on what was observed in the images"
           }`
-        },
-        {
-          type: "image_url",
-          image_url: {
-            url: `data:image/jpeg;base64,${imageUrls[0]}`
-          }
         }
       ];
+      
+      // Add all image parts (support multiple images)
+      // For consistency and API limitations, we'll use up to 4 images maximum
+      const maxImages = 4;
+      const imagesToProcess = imageUrls.slice(0, maxImages);
+      
+      imagesToProcess.forEach(imageUrl => {
+        contentParts.push({
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${imageUrl}`
+          }
+        });
+      });
+      
+      // If more than maxImages were provided, log that we're limiting them
+      if (imageUrls.length > maxImages) {
+        console.log(`Using first ${maxImages} images out of ${imageUrls.length} provided for AI analysis`);
+      }
       
       const userMessage: ChatCompletionMessageParam = {
         role: "user",

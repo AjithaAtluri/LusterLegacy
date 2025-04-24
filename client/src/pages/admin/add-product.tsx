@@ -628,7 +628,10 @@ export default function AddProduct() {
                     metalWeight={metalWeight}
                     primaryGems={primaryGems}
                     userDescription={form.watch("userDescription")}
-                    imageUrls={mainImagePreview ? [mainImagePreview] : []}
+                    imageUrls={[
+                      ...(mainImagePreview ? [mainImagePreview] : []),
+                      ...additionalImagePreviews
+                    ]}
                     onContentGenerated={handleContentGenerated}
                   />
                 </div>
