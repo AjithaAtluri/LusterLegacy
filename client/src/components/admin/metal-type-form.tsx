@@ -127,7 +127,7 @@ export default function MetalTypeForm({ initialData, metalTypeId, onSuccess }: M
                   />
                 </FormControl>
                 <FormDescription>
-                  Price adjustment percentage relative to base price (0 = no change, 10 = +10%)
+                  Price adjustment percentage relative to 24kt gold price (0 = no change, 10 = +10%)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
