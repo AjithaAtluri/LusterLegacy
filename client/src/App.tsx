@@ -63,6 +63,7 @@ function App() {
             
             {/* Tools */}
             <Route path="/tools/image-test" component={ImageTest} />
+            <Route path="/tools/price-calculator" component={PriceCalculator} />
             
             {/* Information pages */}
             <Route path="/privacy" component={Privacy} />

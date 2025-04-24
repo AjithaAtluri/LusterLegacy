@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { getMetalType, getStoneType } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { METAL_TYPES, STONE_TYPES } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Gem {
@@ -34,71 +35,64 @@ interface UsePriceCalculatorReturn {
 export function useJewelryPrice({
   productType,
   initialMetalTypeId = "18kt-gold",
-  initialStoneTypeId = "natural-polki",
-  metalWeight = 5,
+  initialStoneTypeId = "natural-diamond",
+  metalWeight = 5
 }: UsePriceCalculatorProps): UsePriceCalculatorReturn {
+  // State for selected options
   const [metalTypeId, setMetalTypeId] = useState<string>(initialMetalTypeId);
   const [stoneTypeId, setStoneTypeId] = useState<string>(initialStoneTypeId);
-  const [priceUSD, setPriceUSD] = useState<number>(0);
-  const [priceINR, setPriceINR] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   
-  useEffect(() => {
-    // Get the actual metal type name from the ID
-    const metalType = getMetalType(metalTypeId);
-    const stoneType = getStoneType(stoneTypeId);
+  // Find the metal and stone information based on the selected IDs
+  const selectedMetal = METAL_TYPES.find(metal => metal.id === metalTypeId);
+  const selectedStone = STONE_TYPES.find(stone => stone.id === stoneTypeId);
+  
+  // Prepare gems array for the price calculation
+  let gems: Gem[] = [];
+  if (selectedStone) {
+    // Add the selected stone with a default carat value based on product type
+    let defaultCarats = 0.5; // Default for rings
     
-    // Create primary gem from the selected stone
-    const primaryGems: Gem[] = [
-      {
-        name: stoneType.name,
-        carats: 1.0 // Default to 1 carat
-      }
-    ];
+    if (productType === "Necklace") defaultCarats = 1.0;
+    else if (productType === "Bracelet") defaultCarats = 0.75;
+    else if (productType === "Earrings") defaultCarats = 0.5;
     
-    // Call the server to calculate the price based on the current market rates
-    const calculatePrice = async () => {
-      setIsLoading(true);
-      setError(null);
+    gems = [{ name: selectedStone.name, carats: defaultCarats }];
+  }
+  
+  // Use React Query to fetch the price from the API
+  const { data, isLoading, error } = useQuery({
+    queryKey: [
+      "/api/calculate-price", 
+      productType, 
+      metalTypeId, 
+      stoneTypeId, 
+      metalWeight
+    ],
+    queryFn: async () => {
+      // Create the request payload
+      const payload = {
+        productType,
+        metalType: selectedMetal?.name || "18k Gold", // Fallback if metal not found
+        metalWeight,
+        primaryGems: gems
+      };
       
-      try {
-        const response = await apiRequest("POST", "/api/calculate-price", {
-          productType,
-          metalType: metalType.name,
-          metalWeight,
-          primaryGems
-        });
-        
-        const data = await response.json();
-        
-        if (data.priceUSD && data.priceINR) {
-          setPriceUSD(data.priceUSD);
-          setPriceINR(data.priceINR);
-        } else {
-          // Fallback to client-side calculation if server doesn't respond with prices
-          setPriceUSD(1500); // Default base price in USD
-          setPriceINR(112500); // Default base price in INR
-          setError("Could not get precise pricing, showing estimates");
-        }
-      } catch (err) {
-        console.error("Error calculating price:", err);
-        setError("Failed to calculate price");
-        
-        // Fallback to default prices
-        setPriceUSD(1500);
-        setPriceINR(112500);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    calculatePrice();
-  }, [productType, metalTypeId, stoneTypeId, metalWeight]);
+      // Make the API request to calculate the price
+      const response = await apiRequest("POST", "/api/calculate-price", payload);
+      return await response.json();
+    },
+    enabled: !!selectedMetal && !!selectedStone, // Only run the query if we have valid selections
+    refetchInterval: false, // Don't automatically refetch
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+  });
   
-  // Calculate advance payment (50%)
-  const advancePayment = Math.round(priceINR * 0.5);
-  const remainingPayment = priceINR - advancePayment;
+  // Default values in case the API call fails
+  const priceUSD = data?.success ? data.priceUSD : 0;
+  const priceINR = data?.success ? data.priceINR : 0;
+  
+  // Calculate the advance payment (50%) and remaining payment
+  const advancePayment = Math.round(priceUSD * 0.5);
+  const remainingPayment = priceUSD - advancePayment;
   
   return {
     metalTypeId,
@@ -108,7 +102,7 @@ export function useJewelryPrice({
     priceUSD,
     priceINR,
     isLoading,
-    error,
+    error: error ? (error as Error).message : null,
     advancePayment,
     remainingPayment
   };
