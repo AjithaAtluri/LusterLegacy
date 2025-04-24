@@ -75,7 +75,7 @@ export default function ImprovedAIContentGenerator({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<AIGeneratedContent | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [gemFields, setGemFields] = useState([{ name: "", carats: 0.1 }]);
+  const [stoneTypeFields, setStoneTypeFields] = useState([{ name: "", carats: 0.1 }]);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -100,27 +100,27 @@ export default function ImprovedAIContentGenerator({
     setFormData({ ...formData, [name]: value });
   };
 
-  // Add a new gem field
-  const addGemField = () => {
-    setGemFields([...gemFields, { name: "", carats: 0.1 }]);
+  // Add a new stone type field
+  const addStoneTypeField = () => {
+    setStoneTypeFields([...stoneTypeFields, { name: "", carats: 0.1 }]);
   };
 
-  // Remove a gem field
-  const removeGemField = (index: number) => {
-    const updatedGemFields = [...gemFields];
-    updatedGemFields.splice(index, 1);
-    setGemFields(updatedGemFields);
+  // Remove a stone type field
+  const removeStoneTypeField = (index: number) => {
+    const updatedStoneTypeFields = [...stoneTypeFields];
+    updatedStoneTypeFields.splice(index, 1);
+    setStoneTypeFields(updatedStoneTypeFields);
   };
 
-  // Update gem field values
-  const updateGemField = (index: number, field: string, value: string) => {
-    const updatedGemFields = [...gemFields];
+  // Update stone type field values
+  const updateStoneTypeField = (index: number, field: string, value: string) => {
+    const updatedStoneTypeFields = [...stoneTypeFields];
     if (field === 'name') {
-      updatedGemFields[index].name = value;
+      updatedStoneTypeFields[index].name = value;
     } else if (field === 'carats') {
-      updatedGemFields[index].carats = parseFloat(value) || 0.1;
+      updatedStoneTypeFields[index].carats = parseFloat(value) || 0.1;
     }
-    setGemFields(updatedGemFields);
+    setStoneTypeFields(updatedStoneTypeFields);
   };
 
   // Close the preview dialog and apply the generated content
@@ -147,14 +147,14 @@ export default function ImprovedAIContentGenerator({
         throw new Error("Product type and metal type are required");
       }
 
-      // Filter out empty gem fields
-      const validGems = gemFields.filter(gem => gem.name.trim() !== "");
+      // Filter out empty stone type fields
+      const validStoneTypes = stoneTypeFields.filter(stone => stone.name.trim() !== "");
 
       // Create the request payload
       const requestPayload = {
         ...formData,
         metalWeight: Number(formData.metalWeight) || 5,
-        primaryGems: validGems.length > 0 ? validGems : undefined,
+        primaryGems: validStoneTypes.length > 0 ? validStoneTypes : undefined, // Keep primaryGems key for backward compatibility
       };
 
       console.log("Generating content with data:", requestPayload);
@@ -299,54 +299,54 @@ export default function ImprovedAIContentGenerator({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Gems/Stones (Optional)</Label>
+              <Label>Stone Types (Optional)</Label>
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm" 
-                onClick={addGemField}
+                onClick={addStoneTypeField}
               >
-                Add Gem
+                Add Stone Type
               </Button>
             </div>
             
-            {gemFields.map((gem, index) => (
+            {stoneTypeFields.map((stone, index) => (
               <div key={index} className="flex items-end gap-2">
                 <div className="flex-1">
-                  <Label htmlFor={`gemName-${index}`} className="text-xs">Name</Label>
+                  <Label htmlFor={`stoneName-${index}`} className="text-xs">Name</Label>
                   <Select 
-                    value={gem.name} 
-                    onValueChange={(value) => updateGemField(index, 'name', value)}
+                    value={stone.name} 
+                    onValueChange={(value) => updateStoneTypeField(index, 'name', value)}
                   >
-                    <SelectTrigger id={`gemName-${index}`}>
-                      <SelectValue placeholder="Select gem type" />
+                    <SelectTrigger id={`stoneName-${index}`}>
+                      <SelectValue placeholder="Select stone type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {gemOptions.map((gem) => (
-                        <SelectItem key={gem} value={gem}>
-                          {gem}
+                      {stoneTypeOptions.map((stoneType) => (
+                        <SelectItem key={stoneType} value={stoneType}>
+                          {stoneType}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="w-1/3">
-                  <Label htmlFor={`gemCarats-${index}`} className="text-xs">Carats</Label>
+                  <Label htmlFor={`stoneCarats-${index}`} className="text-xs">Carats</Label>
                   <Input
-                    id={`gemCarats-${index}`}
+                    id={`stoneCarats-${index}`}
                     type="number"
                     min="0.01"
                     step="0.01"
                     placeholder="0.1"
-                    value={gem.carats || ""}
-                    onChange={(e) => updateGemField(index, 'carats', e.target.value)}
+                    value={stone.carats || ""}
+                    onChange={(e) => updateStoneTypeField(index, 'carats', e.target.value)}
                   />
                 </div>
                 <Button 
                   type="button" 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => removeGemField(index)}
+                  onClick={() => removeStoneTypeField(index)}
                   className="text-destructive"
                 >
                   &times;
