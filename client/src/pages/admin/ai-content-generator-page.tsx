@@ -130,7 +130,21 @@ export default function AIContentGeneratorPage() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<AIGeneratedContent | null>(null);
+  const [savedContent, setSavedContent] = useState<AIGeneratedContent | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
+  // Use effect to load saved content from localStorage on component mount
+  React.useEffect(() => {
+    const savedContentJson = localStorage.getItem('aiGeneratedContent');
+    if (savedContentJson) {
+      try {
+        const parsedContent = JSON.parse(savedContentJson);
+        setSavedContent(parsedContent);
+      } catch (error) {
+        console.error('Error parsing saved content from localStorage:', error);
+      }
+    }
+  }, []);
   
   // Store images
   const [mainImage, setMainImage] = useState<File | null>(null);
@@ -733,6 +747,75 @@ export default function AIContentGeneratorPage() {
           </CardFooter>
         </Card>
         
+        {/* Saved Content Card */}
+        {savedContent && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Saved AI-Generated Content
+                <Badge variant="outline" className="ml-2">Ready to use</Badge>
+              </CardTitle>
+              <CardDescription>
+                Use this content to create a new product or edit an existing one
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-medium text-lg">{savedContent.title}</h3>
+                <p className="text-muted-foreground italic">{savedContent.tagline}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Short Description</h4>
+                  <p className="text-sm">{savedContent.shortDescription}</p>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Price</h4>
+                  <div className="flex gap-3">
+                    <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
+                      USD ${savedContent.priceUSD.toFixed(2)}
+                    </Badge>
+                    <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                      INR ₹{savedContent.priceINR.toFixed(2)}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  // Clear saved content from state and localStorage
+                  setSavedContent(null);
+                  localStorage.removeItem('aiGeneratedContent');
+                  
+                  toast({
+                    title: "Content Cleared",
+                    description: "Saved content has been cleared.",
+                  });
+                }}
+              >
+                Clear Saved Content
+              </Button>
+              <Button
+                onClick={() => {
+                  // Here we would navigate to create a new product with this content
+                  // For now, we'll just show a toast explaining this feature
+                  toast({
+                    title: "Coming Soon",
+                    description: "This feature will soon allow you to create a product with this content.",
+                  });
+                }}
+              >
+                Use for New Product
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
+        
         {/* Result Preview Dialog */}
         {generatedContent && (
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -813,10 +896,19 @@ export default function AIContentGeneratorPage() {
                   Cancel
                 </Button>
                 <Button onClick={() => {
+                  // Save content for later use
+                  setSavedContent(generatedContent);
+                  
+                  // Store in localStorage for persistence
+                  localStorage.setItem('aiGeneratedContent', JSON.stringify(generatedContent));
+                  
+                  // Show success toast
                   toast({
-                    title: "Content Applied",
-                    description: "AI generated content has been saved.",
+                    title: "Content Saved",
+                    description: "AI generated content has been saved. You can now use it to create a product.",
                   });
+                  
+                  // Close dialog
                   setIsPreviewOpen(false);
                 }} className="gap-2">
                   <CheckCircle2 size={16} />
