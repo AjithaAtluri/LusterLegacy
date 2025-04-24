@@ -26,7 +26,7 @@ const productFormSchema = z.object({
   isNew: z.boolean().default(false),
   isBestseller: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
-  category: z.string().min(1, "Category is required"),
+  category: z.string().min(1, "Product Type is required"),
   // We'll handle images and stone types separately
 });
 
@@ -397,14 +397,14 @@ export default function ProductFormEnhanced({ initialData, productId, onSuccess 
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category *</FormLabel>
+                        <FormLabel>Product Type *</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue placeholder="Select product type" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
