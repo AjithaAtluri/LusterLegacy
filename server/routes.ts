@@ -21,6 +21,7 @@ import { validateAdmin } from "./utils";
 import { v4 as uuidv4 } from "uuid";
 import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal";
 import { generateContent } from "./ai-service";
+import { generateJewelryContent } from "./openai-content-generator";
 
 // Set up multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -793,13 +794,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Content Generation for Products
+  // AI Content Generation for Products (Original version)
   app.post('/api/admin/generate-content', validateAdmin, async (req, res) => {
     try {
       // Pass the request to the OpenAI service
       await generateContent(req, res);
     } catch (error) {
       console.error('Error generating content:', error);
+      res.status(500).json({ message: 'Failed to generate content' });
+    }
+  });
+  
+  // NEW: Improved AI Content Generation for Products
+  app.post('/api/admin/generate-jewelry-content', validateAdmin, async (req, res) => {
+    try {
+      console.log("Using improved jewelry content generator");
+      // Pass the request to the improved OpenAI service
+      await generateJewelryContent(req, res);
+    } catch (error) {
+      console.error('Error generating jewelry content:', error);
       res.status(500).json({ message: 'Failed to generate content' });
     }
   });

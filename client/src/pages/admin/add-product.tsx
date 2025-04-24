@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import AIContentGenerator from "@/components/admin/ai-content-generator";
+import ImprovedAIContentGenerator from "@/components/admin/improved-ai-content-generator";
 import { useToast } from "@/hooks/use-toast";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
@@ -657,18 +658,36 @@ export default function AddProduct() {
                     </CardContent>
                   </Card>
                   
-                  <AIContentGenerator
-                    productType={productType}
-                    metalType={metalType}
-                    metalWeight={metalWeight}
-                    primaryGems={primaryGems}
-                    userDescription={form.watch("userDescription")}
-                    imageUrls={[
-                      ...(mainImagePreview ? [mainImagePreview] : []),
-                      ...additionalImagePreviews
-                    ]}
-                    onContentGenerated={handleContentGenerated}
-                  />
+                  {/* Original AI Content Generator */}
+                  <div className="hidden">
+                    <AIContentGenerator
+                      productType={productType}
+                      metalType={metalType}
+                      metalWeight={metalWeight}
+                      primaryGems={primaryGems}
+                      userDescription={form.watch("userDescription")}
+                      imageUrls={[
+                        ...(mainImagePreview ? [mainImagePreview] : []),
+                        ...additionalImagePreviews
+                      ]}
+                      onContentGenerated={handleContentGenerated}
+                    />
+                  </div>
+                  
+                  {/* Improved AI Content Generator */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>AI Product Content Generator</CardTitle>
+                      <CardDescription>
+                        Create professional product descriptions and pricing with just a few clicks.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ImprovedAIContentGenerator 
+                        onGeneratedContent={handleContentGenerated} 
+                      />
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </TabsContent>
