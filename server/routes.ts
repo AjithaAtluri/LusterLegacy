@@ -793,6 +793,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Content Generation for Products
+  app.post('/api/admin/generate-content', validateAdmin, async (req, res) => {
+    try {
+      // Pass the request to the OpenAI service
+      await generateContent(req, res);
+    } catch (error) {
+      console.error('Error generating content:', error);
+      res.status(500).json({ message: 'Failed to generate content' });
+    }
+  });
+  
   // Products Management with Multi-select Stones
   app.get('/api/admin/products', validateAdmin, async (req, res) => {
     try {
