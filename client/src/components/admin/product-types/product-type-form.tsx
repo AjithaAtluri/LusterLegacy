@@ -77,12 +77,7 @@ export function ProductTypeForm({ productType, onSuccess, onCancel }: ProductTyp
 
   const createMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      const res = await apiRequest("POST", "/api/product-types", data);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to create product type");
-      }
-      return res.json();
+      return await apiRequest("POST", "/api/product-types", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/product-types"] });
@@ -104,13 +99,7 @@ export function ProductTypeForm({ productType, onSuccess, onCancel }: ProductTyp
   const updateMutation = useMutation({
     mutationFn: async (data: FormValues) => {
       if (!productType) throw new Error("No product type to update");
-      
-      const res = await apiRequest("PUT", `/api/product-types/${productType.id}`, data);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to update product type");
-      }
-      return res.json();
+      return await apiRequest("PUT", `/api/product-types/${productType.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/product-types"] });
