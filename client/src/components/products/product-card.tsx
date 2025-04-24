@@ -14,7 +14,8 @@ interface ProductCardProps {
     name: string;
     description: string;
     basePrice: number;
-    imageUrl: string;
+    imageUrl?: string;
+    image_url?: string;
     isNew?: boolean;
     isBestseller?: boolean;
   };
@@ -35,7 +36,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
       <div className="relative h-80 overflow-hidden">
         <img 
-          src={product.imageUrl}
+          src={product.imageUrl || product.image_url}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
         />
