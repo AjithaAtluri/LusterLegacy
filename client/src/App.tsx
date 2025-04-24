@@ -18,6 +18,7 @@ const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 
 // Tools and utilities
 const ImageTest = lazy(() => import("@/pages/tools/image-test"));
+const PriceCalculator = lazy(() => import("@/pages/tools/price-calculator"));
 
 // Info pages
 const Privacy = lazy(() => import("@/pages/privacy"));

@@ -1045,6 +1045,47 @@ Respond in JSON format:
     }
   });
   
+  // Jewelry price calculator endpoint - uses 2025 market rates
+  app.post("/api/calculate-price", async (req, res) => {
+    try {
+      console.log("Price calculator endpoint called");
+      
+      // Check if we have the required fields before proceeding
+      const { productType, metalType, metalWeight = 5, primaryGems = [] } = req.body;
+      
+      if (!productType || !metalType) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required product details (productType and metalType)"
+        });
+      }
+      
+      // Use the centralized price calculator utility
+      const { priceUSD, priceINR } = calculateJewelryPrice({
+        productType,
+        metalType,
+        metalWeight,
+        primaryGems
+      });
+      
+      return res.status(200).json({
+        success: true,
+        priceUSD,
+        priceINR,
+        productType,
+        metalType,
+        metalWeight,
+        primaryGems
+      });
+    } catch (error) {
+      console.error("Error in price calculator endpoint:", error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Unknown error in price calculation"
+      });
+    }
+  });
+  
   // Simple test JSON parsing endpoint
   app.get("/api/test-json-parse", async (req, res) => {
     try {
