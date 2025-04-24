@@ -444,7 +444,7 @@ export default function CustomDesignSection() {
                 className="rounded-lg shadow-md w-full h-60 object-cover hover:scale-[1.02] transition-transform duration-300"
               />
               <p className="font-montserrat text-xs text-foreground/70 mt-2 italic">
-                From raw amethyst gemstones to exquisite handcrafted necklace
+                From raw lavender quartz gemstones to exquisite handcrafted necklace
               </p>
             </div>
           </div>
