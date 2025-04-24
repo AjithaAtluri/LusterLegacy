@@ -37,7 +37,8 @@ export const products = pgTable("products", {
   isNew: boolean("is_new").default(false),
   isBestseller: boolean("is_bestseller").default(false),
   isFeatured: boolean("is_featured").default(false),
-  category: text("category"), // e.g. "necklace", "earrings", "ring", etc.
+  category: text("category"), // Legacy field for backward compatibility
+  productTypeId: integer("product_type_id").references(() => productTypes.id), // Reference to product types table
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -55,6 +56,7 @@ export const insertProductSchema = createInsertSchema(products).pick({
   isBestseller: true,
   isFeatured: true,
   category: true,
+  productTypeId: true,
 });
 
 // Custom design requests schema
@@ -311,11 +313,16 @@ export const productStonesRelations = relations(productStones, ({ one }) => ({
   }),
 }));
 
-// Update product relations to include stones
-export const productsRelations = relations(products, ({ many }) => ({
+// Update product relations to include stones and product type
+export const productsRelations = relations(products, ({ many, one }) => ({
   cartItems: many(cartItems),
   orderItems: many(orderItems),
   productStones: many(productStones),
+  productType: one(productTypes, {
+    fields: [products.productTypeId],
+    references: [productTypes.id],
+    relationName: "productTypeToProducts"
+  })
 }));
 
 // Stone types relations
