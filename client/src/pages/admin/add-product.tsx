@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ import AIContentGenerator from "@/components/admin/ai-content-generator";
 import { useToast } from "@/hooks/use-toast";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
+import type { ProductType, StoneType } from "@shared/schema";
 
 interface FormValues {
   title: string;
@@ -50,6 +52,21 @@ export default function AddProduct() {
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
+  const [mainStoneType, setMainStoneType] = useState<string>("");
+  const [mainStoneWeight, setMainStoneWeight] = useState<string>("");
+  const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<string>("");
+  
+  // Fetch product types from database
+  const { data: productTypes, isLoading: isLoadingProductTypes } = useQuery<ProductType[]>({
+    queryKey: ['/api/admin/product-types'],
+    refetchOnWindowFocus: false,
+  });
+  
+  // Fetch stone types from database
+  const { data: stoneTypes, isLoading: isLoadingStoneTypes } = useQuery<StoneType[]>({
+    queryKey: ['/api/admin/stone-types'],
+    refetchOnWindowFocus: false,
+  });
   
   // Initialize form with default values
   const form = useForm<FormValues>({
