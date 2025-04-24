@@ -49,8 +49,8 @@ interface AIGeneratedContent {
   imageInsights?: string;
 }
 
-// Available gem options for the form
-const gemOptions = [
+// Available stone type options for the form
+const stoneTypeOptions = [
   "Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", 
   "Aquamarine", "Tanzanite", "Topaz", "Opal", "Pearl",
   "Garnet", "Peridot", "Tourmaline", "Citrine", "Morganite"
