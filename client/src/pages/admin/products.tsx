@@ -30,10 +30,10 @@ export default function AdminProducts() {
   const params = new URLSearchParams(window.location.search);
   const action = params.get('action');
   
-  // If action=new, open create form
+  // If action=new, redirect to add-product page
   useState(() => {
     if (action === 'new') {
-      setIsCreating(true);
+      setLocation("/admin/add-product");
     }
   });
   
