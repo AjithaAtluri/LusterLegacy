@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useLocation, useHistory } from "wouter";
+import { useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -275,7 +275,7 @@ export default function AddProduct() {
   };
   
   return (
-    <AdminLayout>
+    <AdminLayout title="Add Product">
       <Helmet>
         <title>Add New Product - Admin | Luster Legacy</title>
       </Helmet>

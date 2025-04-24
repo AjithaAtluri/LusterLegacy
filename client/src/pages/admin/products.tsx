@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet";
+import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/admin-layout";
 import ProductForm from "@/components/admin/product-form";
@@ -21,6 +22,7 @@ export default function AdminProducts() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -54,7 +56,8 @@ export default function AdminProducts() {
   
   // Handle create product
   const handleCreateProduct = () => {
-    setIsCreating(true);
+    // Instead of opening the modal, navigate to the new add product page
+    setLocation("/admin/add-product");
   };
   
   // Handle edit product
