@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useDropzone } from "react-dropzone";
 import { isImageFile, getFileExtension } from "@/lib/utils";
+import type { SubmitHandler } from "react-hook-form";
 
 const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -46,7 +47,7 @@ export default function CustomDesignSection() {
     }
   });
   
-  const onSubmit = async (data: DesignFormValues) => {
+  const onSubmit: SubmitHandler<DesignFormValues> = async (data) => {
     if (!uploadedImage) {
       toast({
         title: "Image required",
@@ -232,7 +233,7 @@ export default function CustomDesignSection() {
             <h4 className="font-playfair text-2xl font-semibold text-foreground mb-6">Submit Your Design</h4>
             
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit as any)}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="mb-6">
                   <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
                     Upload Reference Image*
