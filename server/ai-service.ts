@@ -44,8 +44,13 @@ export const generateContent = async (req: Request, res: Response) => {
     console.log(`Processing request for ${productType} in ${metalType}`);
     console.log(`Images provided: ${imageUrls?.length || 0}`);
     
-    // Calculate estimated price
-    let estimatedUSDPrice = calculateEstimatedPrice(metalType, metalWeight, primaryGems);
+    // Calculate estimated price using the centralized price calculator
+    const { priceUSD: estimatedUSDPrice, priceINR: estimatedINRPrice } = calculateJewelryPrice({
+      productType,
+      metalType,
+      metalWeight,
+      primaryGems
+    });
     
     // Check if we have images to analyze
     const hasImages = imageUrls && imageUrls.length > 0;
@@ -361,7 +366,7 @@ export const generateContent = async (req: Request, res: Response) => {
       
       // Round prices for better presentation
       const priceUSD = Math.round(estimatedUSDPrice);
-      const priceINR = Math.round(estimatedUSDPrice * USD_TO_INR_RATE / 10) * 10; // Round to nearest 10 rupees
+      const priceINR = Math.round(estimatedINRPrice / 10) * 10; // Round to nearest 10 rupees
 
       // Validate that all required fields are present
       const requiredFields = ['title', 'tagline', 'shortDescription', 'detailedDescription'];
@@ -467,29 +472,3 @@ export const generateContent = async (req: Request, res: Response) => {
   }
 };
 
-// Calculate estimated price based on materials
-function calculateEstimatedPrice(
-  metalType: string,
-  metalWeight: number,
-  gems: Gem[]
-): number {
-  // Base metal price calculation
-  const metalPricePerGram = METAL_PRICES[metalType as keyof typeof METAL_PRICES] || 50; // Default to 50 USD if metal not found
-  const metalPrice = metalPricePerGram * metalWeight;
-  
-  // Calculate gem prices
-  let gemPrice = 0;
-  for (const gem of gems) {
-    const pricePerCarat = GEM_PRICES[gem.name as keyof typeof GEM_PRICES] || 200; // Default to 200 USD if gem not found
-    gemPrice += pricePerCarat * (gem.carats || 0.1); // Default to 0.1 carat if not specified
-  }
-  
-  // Add craftmanship premium (30% of material cost)
-  const craftmanshipPremium = (metalPrice + gemPrice) * 0.3;
-  
-  // Calculate total price
-  let totalPrice = metalPrice + gemPrice + craftmanshipPremium;
-  
-  // Ensure minimum price
-  return Math.max(totalPrice, 100); // Minimum price of 100 USD
-}
