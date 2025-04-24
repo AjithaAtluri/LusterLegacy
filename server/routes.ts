@@ -1331,47 +1331,81 @@ Respond in JSON format:
     { name: 'additionalImages', maxCount: 5 }
   ]), async (req, res) => {
     try {
+      console.log('Received product creation request:', req.body);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
       // Process main image
       const mainImageUrl = files.mainImage ? `/uploads/${files.mainImage[0].filename}` : null;
+      console.log('Main image URL:', mainImageUrl);
       
       // Process additional images
       let additionalImages: string[] = [];
       if (files.additionalImages) {
         additionalImages = files.additionalImages.map(file => `/uploads/${file.filename}`);
+        console.log('Additional images:', additionalImages);
       }
 
-      // Parse stone type IDs from request body
-      let stoneTypeIds: number[] = [];
-      if (req.body.stoneTypeIds) {
+      // Parse stone types from request body
+      let stoneTypes: string[] = [];
+      if (req.body.stoneTypes) {
         try {
-          stoneTypeIds = JSON.parse(req.body.stoneTypeIds);
+          stoneTypes = JSON.parse(req.body.stoneTypes);
+          console.log('Parsed stone types:', stoneTypes);
         } catch (e) {
-          console.error('Error parsing stoneTypeIds:', e);
-          stoneTypeIds = [];
+          console.error('Error parsing stoneTypes:', e);
+          stoneTypes = [];
         }
       }
       
-      // First create the product
-      const product = await storage.createProduct({
-        ...req.body,
-        imageUrl: mainImageUrl,
-        additionalImages: additionalImages
+      // Extract numeric values
+      const basePrice = parseFloat(req.body.basePrice) || 0;
+      const basePriceINR = parseFloat(req.body.basePriceINR) || 0;
+      const metalWeight = parseFloat(req.body.metalWeight) || 0;
+      
+      // Convert boolean values
+      const isNew = req.body.isNew === 'true';
+      const isBestseller = req.body.isBestseller === 'true';
+      const isFeatured = req.body.isFeatured === 'true';
+      
+      // Prepare product data - map form fields to schema fields
+      const productData = {
+        name: req.body.title, // Map title to name field
+        description: req.body.description || '',
+        basePrice: basePrice,
+        imageUrl: mainImageUrl || '',
+        additionalImages: additionalImages,
+        details: req.body.detailedDescription || '', // Map detailedDescription to details
+        category: req.body.category,
+        isNew: isNew,
+        isBestseller: isBestseller,
+        isFeatured: isFeatured
+      };
+      
+      // Store additional data in the details field as JSON
+      const additionalData = {
+        tagline: req.body.tagline,
+        basePriceINR: basePriceINR,
+        metalType: req.body.metalType,
+        metalWeight: metalWeight,
+        stoneTypes: stoneTypes
+      };
+      
+      // Add the additional data to the details field
+      productData.details = JSON.stringify({
+        detailedDescription: req.body.detailedDescription || '',
+        additionalData
       });
       
-      // Then associate stone types with the product
-      if (stoneTypeIds.length > 0) {
-        await storage.addProductStones(product.id, stoneTypeIds);
-      }
+      console.log('Creating product with data:', productData);
       
-      res.status(201).json({
-        ...product,
-        stoneTypes: stoneTypeIds.length > 0 ? await storage.getProductStones(product.id) : []
-      });
+      // Create the product
+      const product = await storage.createProduct(productData);
+      console.log('Product created:', product);
+      
+      res.status(201).json(product);
     } catch (error) {
       console.error('Error creating product:', error);
-      res.status(500).json({ message: 'Failed to create product' });
+      res.status(500).json({ message: 'Failed to create product', error: String(error) });
     }
   });
 
