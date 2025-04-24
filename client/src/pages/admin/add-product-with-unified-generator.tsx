@@ -327,7 +327,7 @@ export default function AddProduct() {
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          Select the product type category
+                          Select the product type
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

@@ -132,7 +132,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         <p className="font-cormorant text-lg text-foreground/70 mb-3">{product.description}</p>
         
-        {/* Display product category and status badges */}
+        {/* Display product type and status badges */}
         <div className="flex flex-wrap gap-1 mb-4">
           {product.category && (
             <Badge variant="outline" className="capitalize text-xs">
