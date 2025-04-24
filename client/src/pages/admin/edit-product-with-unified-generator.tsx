@@ -28,7 +28,8 @@ import type { ProductType, StoneType } from "@shared/schema";
 interface FormValues {
   title: string;
   tagline: string;
-  category: string;
+  category: string; // Legacy field maintained for compatibility
+  productTypeId: string; // New field referencing product_types table
   basePrice: string;
   basePriceINR: string;
   description: string;
@@ -74,6 +75,7 @@ export default function EditProduct() {
       title: "",
       tagline: "",
       category: "",
+      productTypeId: "",
       basePrice: "",
       basePriceINR: "",
       description: "",
@@ -101,6 +103,7 @@ export default function EditProduct() {
         title: productData.name || "",
         tagline: productData.tagline || "",
         category: productData.category || "",
+        productTypeId: productData.productTypeId ? productData.productTypeId.toString() : "",
         basePrice: productData.basePrice?.toString() || "",
         basePriceINR: productData.basePriceINR?.toString() || "",
         description: productData.description || "",
