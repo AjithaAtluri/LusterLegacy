@@ -71,11 +71,67 @@ export default function AddProduct() {
   });
 
   const onSubmit = async (data: FormValues) => {
-    toast({
-      title: "Product Submitted",
-      description: "Your product has been saved successfully.",
-    });
-    console.log(data);
+    try {
+      // Show loading toast
+      toast({
+        title: "Saving Product",
+        description: "Please wait while your product is being saved...",
+      });
+      
+      // Convert images to base64 for API submission
+      const formData = new FormData();
+      
+      // Add all form fields
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, value.toString());
+      });
+      
+      // Add stone types as a JSON string
+      formData.append('stoneTypes', JSON.stringify(selectedStoneTypes));
+      
+      // Add main image if available
+      if (mainImageFile) {
+        formData.append('mainImage', mainImageFile);
+      }
+      
+      // Add additional images if available
+      if (additionalImageFiles.length > 0) {
+        additionalImageFiles.forEach((file) => {
+          formData.append('additionalImages', file);
+        });
+      }
+      
+      // Send the API request
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        body: formData,
+        // Don't set Content-Type, browser will set it with the correct boundary for FormData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to save product: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      // Show success toast
+      toast({
+        title: "Product Saved",
+        description: "Your product has been saved successfully.",
+      });
+      
+      // Redirect to products list
+      setLocation('/admin/products');
+    } catch (error) {
+      console.error('Error saving product:', error);
+      
+      // Show error toast
+      toast({
+        title: "Error Saving Product",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   // Convert file to base64 for API submission
