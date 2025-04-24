@@ -276,12 +276,28 @@ export default function AIContentGenerator({
       console.error("Error generating content:", error);
       setGenerationError(error.message || "Failed to generate content");
       
-      // More detailed error toast with helpful suggestions
+      // More detailed error toast with helpful diagnostic info
+      let errorMessage = "Failed to generate content";
+      if (error.message) {
+        console.log("Detailed AI generation error:", error.message);
+        
+        if (error.message.includes("OpenAI")) {
+          errorMessage = "OpenAI API error. Check your connection and API key.";
+        } else if (error.message.includes("rate limit")) {
+          errorMessage = "OpenAI rate limit reached. Please try again in a few minutes.";
+        } else if (error.message.includes("billing")) {
+          errorMessage = "OpenAI billing issue. Please check your account status.";
+        } else if (error.message.includes("Required fields")) {
+          errorMessage = "Please fill in both Product Type and Metal Type fields.";
+        } else {
+          // Keep the original error message if we have one
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Generation Failed",
-        description: error.message?.includes("OpenAI") 
-          ? "OpenAI API error. Check your connection and API key." 
-          : "Failed to generate content. Verify your inputs are complete and try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -438,35 +454,37 @@ export default function AIContentGenerator({
             )}
             
             <div className="text-sm space-y-2">
-              <p><strong>Product Type:</strong> {productType || "Not specified"}</p>
-              <p><strong>Metal Type:</strong> {metalType || "Not specified"}</p>
-              <p><strong>Metal Weight:</strong> {metalWeight ? `${metalWeight}g` : "Not specified"}</p>
+              <p><strong>Product Type:</strong> {productType || "Not specified"} <span className="text-red-500">*</span></p>
+              <p><strong>Metal Type:</strong> {metalType || "Not specified"} <span className="text-red-500">*</span></p>
+              <p><strong>Metal Weight:</strong> {metalWeight ? `${metalWeight}g` : "Not specified"} <span className="text-xs text-muted-foreground">(optional)</span></p>
               <p><strong>Gems:</strong> {primaryGems?.length ? primaryGems.map(gem => 
                 `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`
-              ).join(', ') : "None specified"}</p>
-              {userDescription && (
-                <div>
-                  <strong>Your Description:</strong>
+              ).join(', ') : "None specified"} <span className="text-xs text-muted-foreground">(optional)</span></p>
+              <div>
+                <strong>Your Description:</strong> <span className="text-xs text-muted-foreground">(optional)</span>
+                {userDescription ? (
                   <p className="mt-1 italic text-muted-foreground">{userDescription}</p>
-                </div>
-              )}
-              {imageUrls?.length ? (
-                <div>
-                  <strong>Images for Analysis:</strong> {imageUrls.length} image{imageUrls.length > 1 ? 's' : ''} 
-                  {imageUrls.length > 1 && (
-                    <span className="text-xs ml-1 text-green-600">
-                      (Multiple images will provide better accuracy)
-                    </span>
-                  )}
-                  {imageUrls.length > 1 && (
-                    <p className="text-xs text-amber-600 mt-1">
-                      Note: Due to API size limits, only 1 image can be processed at a time
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p><strong>Images:</strong> No images uploaded yet</p>
-              )}
+                ) : (
+                  <p className="mt-1 text-xs text-muted-foreground">Add a custom description if you want the AI to include specific details or features about this product</p>
+                )}
+              </div>
+              <div>
+                <strong>Images for Analysis:</strong> <span className="text-xs text-muted-foreground">(optional)</span>
+                {imageUrls?.length ? (
+                  <>
+                    <p>{imageUrls.length} image{imageUrls.length > 1 ? 's' : ''} uploaded</p>
+                    {imageUrls.length > 1 && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Note: Due to API size limits, only the first image can be processed. Multiple images are still saved with the product.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Images help the AI generate more accurate descriptions but are not required.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -479,6 +497,9 @@ export default function AIContentGenerator({
           "bg-primary/5"
         )}>
           <div className="w-full space-y-2">
+            <div className="mb-2 text-xs text-center text-muted-foreground">
+              <span className="text-red-500">*</span> Required fields. Only Product Type and Metal Type are required.
+            </div>
             <Button 
               onClick={handleGenerateContent} 
               disabled={isGenerating || !productType || !metalType}
