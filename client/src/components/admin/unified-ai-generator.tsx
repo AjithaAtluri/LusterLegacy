@@ -80,6 +80,14 @@ export default function UnifiedAIGenerator({
   const productType = selectedProductType?.name || form.watch("category");
   const metalType = form.watch("metalType");
   const metalWeight = form.watch("metalWeight") ? parseFloat(form.watch("metalWeight")) : undefined;
+  
+  // Define type-safe versions of state setters to fix TypeScript issues
+  const handleSetSelectedStoneTypes = (updater: (prev: string[]) => string[]) => {
+    // Create a direct copy, apply the updater function, then set the state
+    const currentStoneTypes = [...selectedStoneTypes];
+    const updatedStoneTypes = updater(currentStoneTypes);
+    setSelectedStoneTypes(updatedStoneTypes);
+  };
 
   return (
     <>
@@ -463,9 +471,9 @@ export default function UnifiedAIGenerator({
                               checked={selectedStoneTypes.includes(stone.name)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedStoneTypes((prev: string[]) => [...prev, stone.name]);
+                                  handleSetSelectedStoneTypes((prev) => [...prev, stone.name]);
                                 } else {
-                                  setSelectedStoneTypes((prev: string[]) => prev.filter((s: string) => s !== stone.name));
+                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s !== stone.name));
                                 }
                               }}
                             />
@@ -487,9 +495,9 @@ export default function UnifiedAIGenerator({
                               checked={selectedStoneTypes.includes(stone)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedStoneTypes((prev: string[]) => [...prev, stone]);
+                                  handleSetSelectedStoneTypes((prev) => [...prev, stone]);
                                 } else {
-                                  setSelectedStoneTypes((prev: string[]) => prev.filter((s: string) => s !== stone));
+                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s !== stone));
                                 }
                               }}
                             />
