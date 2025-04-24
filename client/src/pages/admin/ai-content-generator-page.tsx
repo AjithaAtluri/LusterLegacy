@@ -338,7 +338,12 @@ export default function AIContentGeneratorPage() {
   // Test the OpenAI connection
   const testOpenAIConnection = async () => {
     try {
-      const response = await apiRequest("GET", "/api/test-openai");
+      const response = await fetch("/api/test-openai");
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      
       const data = await response.json();
       
       if (data.success) {
