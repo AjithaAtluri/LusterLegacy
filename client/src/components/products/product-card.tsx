@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import { METAL_TYPES, STONE_TYPES } from "@/lib/constants";
 import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import { Badge } from "@/components/ui/badge";
+import GemSparkle from "@/components/ui/gem-sparkle";
 
 interface ProductCardProps {
   product: {
@@ -31,13 +32,16 @@ export default function ProductCard({ product }: ProductCardProps) {
   });
   
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
       <div className="relative h-80 overflow-hidden">
         <img 
           src={product.imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover hover:scale-105 transition duration-500"
+          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
         />
+        
+        {/* Gemstone sparkle effect on hover */}
+        <GemSparkle />
         
         {product.isNew && (
           <Badge className="absolute top-4 right-4 bg-primary text-background px-3 py-1 rounded-full">
@@ -53,7 +57,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
       
       <div className="p-6">
-        <h3 className="font-playfair text-xl font-semibold text-foreground mb-2">{product.name}</h3>
+        <h3 className="font-playfair text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">{product.name}</h3>
         <p className="font-cormorant text-lg text-foreground/70 mb-4">{product.description}</p>
         
         <div className="mb-4">
@@ -100,7 +104,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="flex justify-between items-center">
           <div>
             <p className="font-montserrat text-sm text-foreground/70">Starting from</p>
-            <p className="font-playfair text-xl font-semibold text-foreground">
+            <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
               {formatCurrency(currentPrice)}
             </p>
           </div>
