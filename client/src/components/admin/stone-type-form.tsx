@@ -14,10 +14,19 @@ import { useQueryClient } from "@tanstack/react-query";
 // Define the form schema
 const stoneTypeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  description: z.string().nullable().transform(val => val || ""),
+  description: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string().max(500, "Description must be 500 characters or less")
+  ),
   priceModifier: z.coerce.number().min(0, "Price per carat cannot be negative"),
-  imageUrl: z.string().nullable().transform(val => val || ""),
-  color: z.string().nullable().transform(val => val || ""),
+  imageUrl: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string()
+  ),
+  color: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string().max(20, "Color code must be 20 characters or less")
+  ),
 });
 
 type StoneTypeFormValues = z.infer<typeof stoneTypeFormSchema>;

@@ -24,11 +24,20 @@ import { Loader2 } from "lucide-react";
 // Form schema validation
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be 50 characters or less"),
-  description: z.string().nullable().transform(val => val || "").max(200, "Description must be 200 characters or less"),
+  description: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string().max(200, "Description must be 200 characters or less")
+  ),
   displayOrder: z.coerce.number().int().min(0).default(100),
   isActive: z.boolean().default(true),
-  icon: z.string().nullable().transform(val => val || "").max(30, "Icon name must be 30 characters or less"),
-  color: z.string().nullable().transform(val => val || "").max(20, "Color code must be 20 characters or less"),
+  icon: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string().max(30, "Icon name must be 30 characters or less")
+  ),
+  color: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string().max(20, "Color code must be 20 characters or less")
+  ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
