@@ -726,6 +726,52 @@ export class MemStorage implements IStorage {
     ];
 
     testimonials.forEach(testimonial => this.createTestimonial(testimonial));
+
+    // Create product types
+    const productTypes: InsertProductType[] = [
+      {
+        name: "Rings",
+        description: "Elegant rings for all occasions",
+        displayOrder: 10,
+        isActive: true,
+        icon: "ring",
+        color: "#FFD700" // Gold color
+      },
+      {
+        name: "Necklaces",
+        description: "Beautiful necklaces for everyday wear and special occasions",
+        displayOrder: 20,
+        isActive: true,
+        icon: "gem",
+        color: "#8A2BE2" // Deep purple
+      },
+      {
+        name: "Bracelets",
+        description: "Stylish bracelets to complement any outfit",
+        displayOrder: 30,
+        isActive: true,
+        icon: "circle",
+        color: "#20B2AA" // Light sea green
+      },
+      {
+        name: "Earrings",
+        description: "Stunning earrings for a perfect finishing touch",
+        displayOrder: 40,
+        isActive: true,
+        icon: "diamond",
+        color: "#FF6347" // Tomato red
+      },
+      {
+        name: "Pendants",
+        description: "Exquisite pendants to showcase your style",
+        displayOrder: 50,
+        isActive: true,
+        icon: "heart",
+        color: "#4169E1" // Royal blue
+      }
+    ];
+
+    productTypes.forEach(productType => this.createProductType(productType));
   }
 }
 

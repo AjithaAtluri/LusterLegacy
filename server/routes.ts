@@ -1813,6 +1813,111 @@ Respond in JSON format:
   });
 
   /**
+   * Product Type routes
+   */
+  // Get all product types
+  app.get('/api/product-types', async (_req, res) => {
+    try {
+      const productTypes = await storage.getAllProductTypes();
+      res.json(productTypes);
+    } catch (error) {
+      console.error('Error fetching product types:', error);
+      res.status(500).json({ message: 'Error fetching product types' });
+    }
+  });
+
+  // Get active product types (for public use in product selection)
+  app.get('/api/product-types/active', async (_req, res) => {
+    try {
+      const productTypes = await storage.getActiveProductTypes();
+      res.json(productTypes);
+    } catch (error) {
+      console.error('Error fetching active product types:', error);
+      res.status(500).json({ message: 'Error fetching active product types' });
+    }
+  });
+
+  // Get product type by ID
+  app.get('/api/product-types/:id', async (req, res) => {
+    try {
+      const productTypeId = parseInt(req.params.id);
+      if (isNaN(productTypeId)) {
+        return res.status(400).json({ message: 'Invalid product type ID' });
+      }
+
+      const productType = await storage.getProductType(productTypeId);
+      if (!productType) {
+        return res.status(404).json({ message: 'Product type not found' });
+      }
+
+      res.json(productType);
+    } catch (error) {
+      console.error('Error fetching product type:', error);
+      res.status(500).json({ message: 'Error fetching product type' });
+    }
+  });
+
+  // Create a new product type (admin only)
+  app.post('/api/product-types', validateAdmin, async (req, res) => {
+    try {
+      const productTypeData = insertProductTypeSchema.parse(req.body);
+      const productType = await storage.createProductType(productTypeData);
+      res.status(201).json(productType);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid product type data', errors: error.errors });
+      }
+      console.error('Error creating product type:', error);
+      res.status(500).json({ message: 'Error creating product type' });
+    }
+  });
+
+  // Update a product type (admin only)
+  app.put('/api/product-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const productTypeId = parseInt(req.params.id);
+      if (isNaN(productTypeId)) {
+        return res.status(400).json({ message: 'Invalid product type ID' });
+      }
+
+      const productTypeData = insertProductTypeSchema.partial().parse(req.body);
+      const updatedProductType = await storage.updateProductType(productTypeId, productTypeData);
+
+      if (!updatedProductType) {
+        return res.status(404).json({ message: 'Product type not found' });
+      }
+
+      res.json(updatedProductType);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid product type data', errors: error.errors });
+      }
+      console.error('Error updating product type:', error);
+      res.status(500).json({ message: 'Error updating product type' });
+    }
+  });
+
+  // Delete a product type (admin only)
+  app.delete('/api/product-types/:id', validateAdmin, async (req, res) => {
+    try {
+      const productTypeId = parseInt(req.params.id);
+      if (isNaN(productTypeId)) {
+        return res.status(400).json({ message: 'Invalid product type ID' });
+      }
+
+      const success = await storage.deleteProductType(productTypeId);
+      if (!success) {
+        return res.status(404).json({ message: 'Product type not found' });
+      }
+
+      res.json({ message: 'Product type deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting product type:', error);
+      res.status(500).json({ message: 'Error deleting product type' });
+    }
+  });
+
+  /**
    * Inspiration Gallery Routes
    */
   // Get all inspiration gallery items
