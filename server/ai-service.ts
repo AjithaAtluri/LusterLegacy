@@ -221,14 +221,20 @@ export const generateContent = async (req: Request, res: Response) => {
 
     // Use the newest OpenAI model (gpt-4o)
     try {
+      console.log("OpenAI API key configured:", process.env.OPENAI_API_KEY ? "✓ Yes" : "✗ No");
+      console.log("Making OpenAI API request with model: gpt-4o");
+      
+      const requestStart = Date.now();
+      
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: messages,
         response_format: { type: "json_object" },
         temperature: 0.7,
       });
-
-      console.log("OpenAI response received successfully");
+      
+      const requestDuration = Date.now() - requestStart;
+      console.log(`OpenAI response received successfully in ${requestDuration}ms`);
       
       if (!response.choices || response.choices.length === 0 || !response.choices[0].message) {
         console.error("Invalid response format from OpenAI:", response);
@@ -277,30 +283,48 @@ export const generateContent = async (req: Request, res: Response) => {
     } catch (openaiError: any) {
       console.error("OpenAI API error:", openaiError);
       
+      // Provide more detailed error logging
+      if (openaiError.response) {
+        console.error("OpenAI API response error details:", {
+          status: openaiError.response.status,
+          statusText: openaiError.response.statusText,
+          headers: openaiError.response.headers,
+          data: openaiError.response.data
+        });
+      }
+      
       const errorMessage = openaiError.message || "Unknown error";
       const errorStatus = openaiError.status || 500;
       
-      // Check for specific OpenAI error types
-      if (errorMessage.includes("rate limit")) {
+      console.log("Full error object:", JSON.stringify(openaiError, null, 2));
+      
+      // Check for specific OpenAI error types with improved detection
+      if (errorMessage.includes("rate limit") || errorMessage.includes("429")) {
         return res.status(429).json({
           message: "OpenAI rate limit exceeded, please try again later",
           details: errorMessage
         });
-      } else if (errorMessage.includes("authentication")) {
+      } else if (errorMessage.includes("auth") || errorMessage.includes("api key") || errorMessage.includes("401")) {
+        console.error("CRITICAL: OpenAI authentication error. API key may be invalid or expired.");
         return res.status(401).json({
           message: "OpenAI authentication error, please check API key",
           details: errorMessage
         });
-      } else if (errorMessage.includes("billing")) {
+      } else if (errorMessage.includes("billing") || errorMessage.includes("payment") || errorMessage.includes("quota")) {
         return res.status(402).json({
           message: "OpenAI billing error, please check account status",
+          details: errorMessage
+        });
+      } else if (errorMessage.includes("model")) {
+        return res.status(400).json({
+          message: "OpenAI model error, the requested model may not be available",
           details: errorMessage
         });
       }
       
       // Generic error response
       res.status(errorStatus).json({
-        message: "OpenAI API error",
+        message: "OpenAI API error: " + errorMessage.slice(0, 100),
         details: errorMessage
       });
     }

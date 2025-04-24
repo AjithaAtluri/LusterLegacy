@@ -804,6 +804,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test endpoint for OpenAI API
+  app.get("/api/test-openai", async (req, res) => {
+    try {
+      console.log("Testing OpenAI API connection...");
+      
+      const OpenAI = (await import("openai")).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      // Log API key presence (not the actual key)
+      console.log("OpenAI API key configured:", process.env.OPENAI_API_KEY ? "✓ Yes" : "✗ No");
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "OpenAI API key is not configured"
+        });
+      }
+      
+      // Simple test completion to verify the API key works
+      const testResponse = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo", // Use a simpler model for the test
+        messages: [
+          { role: "system", content: "You are a test assistant." },
+          { role: "user", content: "Return the text 'OpenAI API connection successful' if you can read this." }
+        ],
+        max_tokens: 15
+      });
+      
+      if (testResponse.choices && testResponse.choices.length > 0) {
+        console.log("OpenAI API test successful:", testResponse.choices[0].message);
+        res.status(200).json({ 
+          success: true, 
+          message: "OpenAI API connection successful",
+          response: testResponse.choices[0].message
+        });
+      } else {
+        console.error("OpenAI API test failed: Unexpected response format");
+        res.status(500).json({ 
+          success: false, 
+          message: "OpenAI API test failed: Unexpected response format"
+        });
+      }
+    } catch (error) {
+      console.error("OpenAI API test error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "OpenAI API test failed",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+  
   // Products Management with Multi-select Stones
   app.get('/api/admin/products', validateAdmin, async (req, res) => {
     try {
