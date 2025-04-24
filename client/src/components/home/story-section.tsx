@@ -1,5 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import cadImage from "../../../src/assets/WhatsApp Image 2025-03-28 at 3.06.26 AM.jpeg";
+import jewelryImage from "../../../src/assets/final image.jpeg";
 
 export default function StorySection() {
   return (
@@ -39,7 +41,7 @@ export default function StorySection() {
           <div>
             <div className="relative">
               <img 
-                src="/assets/cad-design.jpg" 
+                src={cadImage} 
                 alt="Designer working on jewelry CAD design" 
                 className="rounded-lg shadow-xl"
                 onError={(e) => {
@@ -49,7 +51,7 @@ export default function StorySection() {
               />
                 
               <img 
-                src="/assets/finished-jewelry.jpg" 
+                src={jewelryImage} 
                 alt="Finished luxury jewelry piece" 
                 className="absolute -bottom-10 -right-10 w-48 h-48 object-cover rounded-lg shadow-xl border-4 border-background"
                 onError={(e) => {
