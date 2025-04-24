@@ -53,7 +53,7 @@ export default function EditProduct() {
     // Initialize with product data when it's loaded
     if (product) {
       setAiInputs({
-        productType: product.category || '',
+        productType: product.productTypeId || product.category || '',
         metalType: product.metalType || '',
         metalWeight: product.metalWeight ? parseFloat(product.metalWeight) : undefined,
         userDescription: product.userDescription || ''
@@ -93,7 +93,8 @@ export default function EditProduct() {
         details: content.detailedDescription,
         basePrice: content.priceINR,
         // Also update the product's type and metal type with the values from AI inputs
-        category: aiInputs.productType || product?.category,
+        productTypeId: aiInputs.productType || product?.productTypeId,
+        category: aiInputs.productType || product?.category, // Keep category for backward compatibility
         metalType: aiInputs.metalType || product?.metalType,
         metalWeight: aiInputs.metalWeight !== undefined ? aiInputs.metalWeight : product?.metalWeight,
         userDescription: aiInputs.userDescription || product?.userDescription
@@ -120,7 +121,7 @@ export default function EditProduct() {
   };
   
   // Get values for AI content generator - use aiInputs state which is updated by UI interactions
-  const getProductType = () => aiInputs.productType || product?.category || "";
+  const getProductType = () => aiInputs.productType || product?.productTypeId || product?.category || "";
   const getMetalType = () => aiInputs.metalType || product?.metalType || "";
   const getMetalWeight = () => aiInputs.metalWeight !== undefined ? aiInputs.metalWeight : product?.metalWeight ? parseFloat(product.metalWeight) : undefined;
   
