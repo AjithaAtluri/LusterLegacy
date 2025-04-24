@@ -141,8 +141,8 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
     }
   };
   
-  // Product types data - this will be replaced with dynamic data from the API
-  const productTypes = [
+  // Fallback product types if API fails to load
+  const fallbackProductTypes = [
     { id: "necklace", name: "Necklace" },
     { id: "earrings", name: "Earrings" },
     { id: "ring", name: "Ring" },
@@ -237,11 +237,23 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {productTypes.map((productType) => (
-                              <SelectItem key={productType.id} value={productType.id}>
-                                {productType.name}
-                              </SelectItem>
-                            ))}
+                            {isLoadingProductTypes ? (
+                              <div className="flex items-center justify-center p-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              </div>
+                            ) : productTypesData?.length ? (
+                              productTypesData.map(type => (
+                                <SelectItem key={type.id} value={type.id.toString()}>
+                                  {type.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              fallbackProductTypes.map(type => (
+                                <SelectItem key={type.id} value={type.id}>
+                                  {type.name}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
