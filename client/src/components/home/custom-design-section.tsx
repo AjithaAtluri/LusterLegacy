@@ -227,9 +227,9 @@ export default function CustomDesignSection() {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
           {/* Submit Your Design Section */}
-          <div className="bg-background p-8 rounded-lg shadow-xl">
+          <div className="bg-background p-8 rounded-lg shadow-xl flex flex-col">
             <h4 className="font-playfair text-2xl font-semibold text-foreground mb-6">Submit Your Design</h4>
             
             <Form {...form}>
@@ -400,10 +400,10 @@ export default function CustomDesignSection() {
           </div>
           
           {/* Our Design Process */}
-          <div className="bg-background p-8 rounded-lg shadow-xl">
+          <div className="bg-background p-8 rounded-lg shadow-xl flex flex-col">
             <h4 className="font-playfair text-2xl font-semibold text-foreground mb-6 text-center">Our Design Consultation Process</h4>
             
-            <div className="space-y-4">
+            <div className="space-y-4 mb-auto">
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</div>
                 <div>
@@ -437,7 +437,7 @@ export default function CustomDesignSection() {
               </div>
             </div>
             
-            <div className="mt-8 text-center">
+            <div className="mt-auto text-center">
               <img 
                 src={designProcessImage} 
                 alt="Custom jewelry design process" 
