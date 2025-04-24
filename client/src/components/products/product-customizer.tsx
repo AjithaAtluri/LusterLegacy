@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { ShoppingBag, Heart } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductCustomizerProps {
   product: {
@@ -22,9 +23,25 @@ interface ProductCustomizerProps {
     additionalImages?: string[];
     details?: string;
     dimensions?: string;
+    category?: string;
+    isNew?: boolean;
+    isBestseller?: boolean;
+    isFeatured?: boolean;
   };
   initialMetalTypeId?: string;
   initialStoneTypeId?: string;
+}
+
+// Extended product details interface
+interface ProductDetails {
+  detailedDescription: string;
+  additionalData: {
+    tagline: string;
+    basePriceINR: number;
+    metalType: string;
+    metalWeight: number;
+    stoneTypes: string[];
+  };
 }
 
 export default function ProductCustomizer({ 
@@ -36,6 +53,38 @@ export default function ProductCustomizer({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(product.imageUrl);
+  const [parsedDetails, setParsedDetails] = useState<ProductDetails | null>(null);
+  const [tagline, setTagline] = useState<string>("");
+  const [detailedDescription, setDetailedDescription] = useState<string>("");
+  const [productStones, setProductStones] = useState<string[]>([]);
+  const [productMetalType, setProductMetalType] = useState<string>("");
+  const [productMetalWeight, setProductMetalWeight] = useState<number>(0);
+  
+  // Try to parse the details JSON
+  useEffect(() => {
+    if (product.details) {
+      try {
+        const parsed = JSON.parse(product.details) as ProductDetails;
+        setParsedDetails(parsed);
+        
+        // Set individual fields from parsed data
+        if (parsed.additionalData) {
+          setTagline(parsed.additionalData.tagline || "");
+          setProductStones(parsed.additionalData.stoneTypes || []);
+          setProductMetalType(parsed.additionalData.metalType || "");
+          setProductMetalWeight(parsed.additionalData.metalWeight || 0);
+        }
+        
+        if (parsed.detailedDescription) {
+          setDetailedDescription(parsed.detailedDescription);
+        }
+      } catch (e) {
+        console.error("Failed to parse product details JSON:", e);
+        // If parsing fails, use the details field directly
+        setDetailedDescription(product.details);
+      }
+    }
+  }, [product.details]);
   
   const { 
     metalTypeId, 
@@ -47,7 +96,7 @@ export default function ProductCustomizer({
     remainingPayment
   } = usePriceCalculator({
     basePrice: product.basePrice,
-    initialMetalTypeId,
+    initialMetalTypeId: productMetalType ? productMetalType.toLowerCase().replace(/\s+/g, '-') : initialMetalTypeId,
     initialStoneTypeId
   });
   
@@ -150,9 +199,40 @@ export default function ProductCustomizer({
         <h1 className="font-playfair text-3xl font-bold text-foreground mb-2">
           {product.name}
         </h1>
-        <p className="font-cormorant text-xl text-foreground/70 mb-6">
+        
+        {/* Display the tagline if it exists */}
+        {tagline && (
+          <p className="font-cormorant text-lg italic text-primary mb-3">
+            {tagline}
+          </p>
+        )}
+        
+        <p className="font-cormorant text-xl text-foreground/70 mb-3">
           {product.description}
         </p>
+        
+        {/* Display product badges */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {product.category && (
+            <Badge variant="outline" className="capitalize">
+              {product.category}
+            </Badge>
+          )}
+          {product.isNew && (
+            <Badge className="bg-blue-500 text-white">New</Badge>
+          )}
+          {product.isBestseller && (
+            <Badge className="bg-green-500 text-white">Bestseller</Badge>
+          )}
+          {product.isFeatured && (
+            <Badge className="bg-primary text-white">Featured</Badge>
+          )}
+          
+          {/* Show stone types from parsed details */}
+          {productStones && productStones.length > 0 && productStones.map((stone, index) => (
+            <Badge key={index} variant="secondary">{stone}</Badge>
+          ))}
+        </div>
         
         <Card className="mb-8">
           <CardContent className="p-6">
@@ -243,14 +323,59 @@ export default function ProductCustomizer({
         <Tabs defaultValue="details">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="dimensions">Dimensions</TabsTrigger>
+            <TabsTrigger value="specifications">Specifications</TabsTrigger>
             <TabsTrigger value="care">Care</TabsTrigger>
           </TabsList>
           <TabsContent value="details" className="font-montserrat text-foreground/80">
-            <p>{product.details || "Handcrafted with precision by our master artisans using traditional techniques combined with modern design principles. Each piece undergoes rigorous quality checks."}</p>
+            {/* Show the parsed detailed description if available, otherwise show the raw details */}
+            <div className="prose prose-sm max-w-none">
+              {detailedDescription ? (
+                <div dangerouslySetInnerHTML={{ __html: detailedDescription.replace(/\n/g, '<br />') }} />
+              ) : (
+                <p>{product.details || "Handcrafted with precision by our master artisans using traditional techniques combined with modern design principles. Each piece undergoes rigorous quality checks."}</p>
+              )}
+            </div>
           </TabsContent>
-          <TabsContent value="dimensions" className="font-montserrat text-foreground/80">
-            <p>{product.dimensions || "Dimensions may vary slightly as each piece is handcrafted. Standard ring sizes and chain lengths are available. Custom dimensions can be accommodated upon request."}</p>
+          <TabsContent value="specifications" className="font-montserrat text-foreground/80">
+            <div className="space-y-4">
+              {/* Show specifications from parsed details */}
+              <div className="grid grid-cols-2 gap-3">
+                {productMetalType && (
+                  <div>
+                    <span className="font-semibold block">Metal Type</span>
+                    <span>{productMetalType}</span>
+                  </div>
+                )}
+                {productMetalWeight > 0 && (
+                  <div>
+                    <span className="font-semibold block">Metal Weight</span>
+                    <span>{productMetalWeight}g</span>
+                  </div>
+                )}
+                {product.category && (
+                  <div>
+                    <span className="font-semibold block">Category</span>
+                    <span className="capitalize">{product.category}</span>
+                  </div>
+                )}
+                {product.dimensions && (
+                  <div>
+                    <span className="font-semibold block">Dimensions</span>
+                    <span>{product.dimensions}</span>
+                  </div>
+                )}
+              </div>
+              {productStones && productStones.length > 0 && (
+                <div>
+                  <span className="font-semibold block mb-1">Stones & Gems</span>
+                  <div className="flex flex-wrap gap-2">
+                    {productStones.map((stone, index) => (
+                      <Badge key={index} variant="outline">{stone}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </TabsContent>
           <TabsContent value="care" className="font-montserrat text-foreground/80">
             <p>Store your jewelry in a cool, dry place. Clean with a soft, lint-free cloth. Avoid exposure to harsh chemicals, perfumes, and prolonged sunlight. Visit us for professional cleaning and maintenance.</p>

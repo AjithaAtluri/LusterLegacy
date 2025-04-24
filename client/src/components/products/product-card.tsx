@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,18 @@ function getImageUrl(url: string | undefined): string {
   return `/${url}`;
 }
 
+// Interface for product details stored as JSON
+interface ProductDetails {
+  detailedDescription: string;
+  additionalData: {
+    tagline: string;
+    basePriceINR: number;
+    metalType: string;
+    metalWeight: number;
+    stoneTypes: string[];
+  };
+}
+
 interface ProductCardProps {
   product: {
     id: number;
@@ -35,11 +47,41 @@ interface ProductCardProps {
     image_url?: string;
     isNew?: boolean;
     isBestseller?: boolean;
+    isFeatured?: boolean;
+    category?: string;
+    details?: string;
   };
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  console.log("Product data:", product);
+  const [parsedDetails, setParsedDetails] = useState<ProductDetails | null>(null);
+  const [tagline, setTagline] = useState<string>("");
+  const [productMetalType, setProductMetalType] = useState<string>("");
+  const [productStones, setProductStones] = useState<string[]>([]);
+  
+  // Parse additional details from JSON
+  useEffect(() => {
+    if (product.details) {
+      try {
+        const parsed = JSON.parse(product.details) as ProductDetails;
+        setParsedDetails(parsed);
+        
+        if (parsed.additionalData) {
+          setTagline(parsed.additionalData.tagline || "");
+          setProductMetalType(parsed.additionalData.metalType || "");
+          setProductStones(parsed.additionalData.stoneTypes || []);
+        }
+      } catch (e) {
+        console.error("Failed to parse product details JSON:", e);
+      }
+    }
+  }, [product.details]);
+  
+  // Determine initial metal type from parsed details if available
+  const initialMetalType = productMetalType 
+    ? productMetalType.toLowerCase().replace(/\s+/g, '-') 
+    : undefined;
+  
   const { 
     metalTypeId, 
     stoneTypeId,
@@ -47,7 +89,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     setStoneTypeId,
     currentPrice 
   } = usePriceCalculator({
-    basePrice: product.basePrice
+    basePrice: product.basePrice,
+    initialMetalTypeId: initialMetalType
   });
   
   return (
@@ -81,7 +124,30 @@ export default function ProductCard({ product }: ProductCardProps) {
       
       <div className="p-6">
         <h3 className="font-playfair text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">{product.name}</h3>
-        <p className="font-cormorant text-lg text-foreground/70 mb-4">{product.description}</p>
+        
+        {/* Display tagline if available */}
+        {tagline && (
+          <p className="font-cormorant text-md italic text-primary mb-2">{tagline}</p>
+        )}
+        
+        <p className="font-cormorant text-lg text-foreground/70 mb-3">{product.description}</p>
+        
+        {/* Display product category and status badges */}
+        <div className="flex flex-wrap gap-1 mb-4">
+          {product.category && (
+            <Badge variant="outline" className="capitalize text-xs">
+              {product.category}
+            </Badge>
+          )}
+          {product.isFeatured && (
+            <Badge variant="secondary" className="text-xs">Featured</Badge>
+          )}
+          {productStones && productStones.length > 0 && (
+            <Badge variant="outline" className="text-xs">
+              {productStones.join(', ')}
+            </Badge>
+          )}
+        </div>
         
         <div className="mb-4">
           {/* Customization Options */}
