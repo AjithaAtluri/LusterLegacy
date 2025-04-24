@@ -343,12 +343,17 @@ export const generateContent = async (req: Request, res: Response) => {
         console.error(`AI response missing required fields: ${missingFields.join(', ')}`);
         console.log("Partial AI response received:", result);
         
+        // Extract product info from the original request
+        const productType = req.body.productType || "Jewelry";
+        const metalType = req.body.metalType || "Gold";
+        const metalWeight = req.body.metalWeight || 5;
+        
         // Create default values for missing fields to ensure we can still return a response
         const defaults: Record<string, string> = {
-          title: `${basicInfo.productType} in ${basicInfo.metalType}`,
+          title: `${productType} in ${metalType}`,
           tagline: "Elegant craftsmanship meets timeless design",
-          shortDescription: `Beautifully crafted ${basicInfo.productType.toLowerCase()} made with premium ${basicInfo.metalType.toLowerCase()}.`,
-          detailedDescription: `This exquisite ${basicInfo.productType.toLowerCase()} is meticulously crafted from the finest ${basicInfo.metalType.toLowerCase()}, weighing approximately ${basicInfo.metalWeight}g. A perfect addition to any jewelry collection.`
+          shortDescription: `Beautifully crafted ${productType.toLowerCase()} made with premium ${metalType.toLowerCase()}.`,
+          detailedDescription: `This exquisite ${productType.toLowerCase()} is meticulously crafted from the finest ${metalType.toLowerCase()}, weighing approximately ${metalWeight}g. A perfect addition to any jewelry collection.`
         };
         
         // Fill in any missing fields with defaults

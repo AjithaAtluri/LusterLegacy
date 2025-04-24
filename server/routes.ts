@@ -856,6 +856,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Simple test JSON parsing endpoint
+  app.get("/api/test-json-parse", async (req, res) => {
+    try {
+      console.log("Testing JSON parsing capabilities");
+      
+      // Sample responses with different JSON formats
+      const testCases = [
+        // Valid JSON
+        { name: "valid", content: '{"title":"Test Ring","tagline":"Beautiful test","shortDescription":"This is a test.","detailedDescription":"Longer test description."}' },
+        // JSON with markdown blocks
+        { name: "markdown", content: '```json\n{"title":"Test Ring","tagline":"Beautiful test","shortDescription":"This is a test.","detailedDescription":"Longer test description."}\n```' },
+        // Malformed but recoverable JSON
+        { name: "malformed", content: '{"title":"Test Ring","tagline":"Beautiful test" "shortDescription":"This is a test.","detailedDescription":"Longer test description."}' },
+        // Text with embedded JSON
+        { name: "embedded", content: 'Here is your result:\n{"title":"Test Ring","tagline":"Beautiful test","shortDescription":"This is a test.","detailedDescription":"Longer test description."}\nHope that helps!' },
+      ];
+      
+      // Process each test case
+      const results = [];
+      for (const testCase of testCases) {
+        try {
+          console.log(`Testing JSON parsing for case: ${testCase.name}`);
+          
+          // Clean the response - remove markdown formatting if present
+          const cleanedContent = testCase.content
+            .replace(/```json/g, '')  // Remove markdown json code blocks start
+            .replace(/```/g, '')      // Remove any remaining markdown code blocks
+            .trim();                  // Trim whitespace
+            
+          let result;
+          
+          // First try direct parsing
+          try {
+            result = JSON.parse(cleanedContent);
+            results.push({
+              case: testCase.name,
+              success: true,
+              method: "direct",
+              result
+            });
+          } catch (parseError) {
+            console.log(`Direct parsing failed for case ${testCase.name}:`, parseError.message);
+            
+            // Try regex extraction
+            const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              try {
+                result = JSON.parse(jsonMatch[0]);
+                results.push({
+                  case: testCase.name,
+                  success: true,
+                  method: "regex",
+                  result
+                });
+              } catch (regexError) {
+                console.log(`Regex extraction failed for case ${testCase.name}:`, regexError.message);
+                results.push({
+                  case: testCase.name,
+                  success: false,
+                  method: "failed",
+                  error: regexError.message
+                });
+              }
+            } else {
+              results.push({
+                case: testCase.name,
+                success: false,
+                method: "failed",
+                error: "No JSON pattern found"
+              });
+            }
+          }
+        } catch (error) {
+          results.push({
+            case: testCase.name,
+            success: false,
+            method: "failed",
+            error: error.message
+          });
+        }
+      }
+      
+      return res.status(200).json({
+        success: true,
+        results
+      });
+    } catch (error: any) {
+      console.error("JSON parse test failed:", error);
+      return res.status(500).json({
+        success: false,
+        message: "JSON parse test failed",
+        error: error.message
+      });
+    }
+  });
+  
+  // Simple test content generation endpoint
+  app.get("/api/generate-test-content", async (req, res) => {
+    try {
+      console.log("Testing content generation with minimal payload");
+      
+      // Create a minimal test request
+      const testRequest = {
+        body: {
+          productType: "Ring",
+          metalType: "18k Gold",
+          metalWeight: 5,
+          primaryGems: [{ name: "Diamond", carats: 0.5 }],
+          userDescription: "A simple test ring with a diamond solitaire"
+        }
+      };
+      
+      // Forward to the content generation handler
+      return await generateContent(testRequest as Request, res);
+    } catch (error: any) {
+      console.error("Test content generation failed:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Test content generation failed",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+  
   // Test endpoint for OpenAI API
   app.get("/api/test-openai", async (req, res) => {
     try {
