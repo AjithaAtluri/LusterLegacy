@@ -212,14 +212,14 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category *</FormLabel>
+                        <FormLabel>Product Type *</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select category" />
+                              <SelectValue placeholder="Select product type" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>

@@ -92,7 +92,7 @@ export default function EditProduct() {
         description: content.shortDescription,
         details: content.detailedDescription,
         basePrice: content.priceINR,
-        // Also update the product's category and metal type with the values from AI inputs
+        // Also update the product's type and metal type with the values from AI inputs
         category: aiInputs.productType || product?.category,
         metalType: aiInputs.metalType || product?.metalType,
         metalWeight: aiInputs.metalWeight !== undefined ? aiInputs.metalWeight : product?.metalWeight,

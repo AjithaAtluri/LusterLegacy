@@ -28,8 +28,8 @@ import type { ProductType, StoneType } from "@shared/schema";
 interface FormValues {
   title: string;
   tagline: string;
-  category: string; // Legacy field maintained for compatibility
-  productTypeId: string; // New field referencing product_types table
+  category: string; // Legacy field being phased out (use productTypeId instead)
+  productTypeId: string; // Main field referencing product_types table
   basePrice: string;
   basePriceINR: string;
   description: string;
