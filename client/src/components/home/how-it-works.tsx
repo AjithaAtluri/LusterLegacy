@@ -57,7 +57,7 @@ export default function HowItWorks() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-6">
             <div className="flex items-start">
               <div className="flex-shrink-0 mr-4">
-                <div className="bg-amber-500 w-10 h-10 rounded-full flex items-center justify-center">
+                <div className="bg-accent w-10 h-10 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">F</span>
                 </div>
               </div>
@@ -72,7 +72,7 @@ export default function HowItWorks() {
             
             <div className="flex items-start">
               <div className="flex-shrink-0 mr-4">
-                <div className="bg-amber-500 w-10 h-10 rounded-full flex items-center justify-center">
+                <div className="bg-accent w-10 h-10 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">%</span>
                 </div>
               </div>

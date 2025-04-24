@@ -438,13 +438,13 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
                   </h4>
                   <ul className="text-sm space-y-3">
                     <li className="flex items-start">
-                      <div className="bg-amber-500 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
+                      <div className="bg-accent w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
                         <span className="text-white font-semibold text-xs">F</span>
                       </div>
                       <span>We offer complimentary repairs for any manufacturing defects throughout the lifetime of your jewelry.</span>
                     </li>
                     <li className="flex items-start">
-                      <div className="bg-amber-500 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
+                      <div className="bg-accent w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
                         <span className="text-white font-semibold text-xs">%</span>
                       </div>
                       <span>Full current value of metal and stones can be credited toward future purchases or upgrades.</span>

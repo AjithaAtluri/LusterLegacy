@@ -91,7 +91,7 @@ export default function StorySection() {
               </div>
               
               {/* Quote box */}
-              <div className="col-span-6 row-span-1 bg-primary/90 rounded-lg shadow-lg p-4 flex items-center mt-3">
+              <div className="col-span-6 row-span-1 bg-accent/90 rounded-lg shadow-lg p-4 flex items-center mt-3">
                 <blockquote className="font-cormorant text-base italic text-white">
                   "I believe that true luxury isn't just about precious materials — it's about the meaning we invest in our possessions."
                 </blockquote>
