@@ -59,69 +59,123 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
-    // Try our new improved jewelry content endpoint first
+    // Try our new improved jewelry content endpoint first using direct fetch
     try {
       console.log("Trying improved jewelry content endpoint first...");
-      const improvedResponse = await apiRequest("POST", "/api/admin/generate-jewelry-content", data);
+      const improvedResponse = await fetch("/api/admin/generate-jewelry-content", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data),
+        credentials: "include"
+      });
+      
       if (improvedResponse.ok) {
         console.log("Improved endpoint successful");
-        return await improvedResponse.json();
+        const responseText = await improvedResponse.text();
+        console.log("Got improved endpoint response text:", responseText.substring(0, 50) + "...");
+        
+        try {
+          const result = JSON.parse(responseText);
+          console.log("Successfully parsed improved response JSON");
+          return result;
+        } catch (parseError) {
+          console.log("Failed to parse improved endpoint response as JSON:", parseError);
+          // Continue to next endpoint
+        }
       }
       console.log("Improved endpoint failed (status: " + improvedResponse.status + "), falling back to main endpoint");
     } catch (e) {
       console.log("Improved endpoint error:", e);
     }
     
-    // Then try the test endpoint as a backup option
+    // Then try the test endpoint as a backup option using direct fetch
     try {
       console.log("Trying test endpoint next...");
-      const testResponse = await apiRequest("POST", "/api/test-content-generation", data);
+      const testResponse = await fetch("/api/test-content-generation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data),
+        credentials: "include"
+      });
+      
       if (testResponse.ok) {
         console.log("Test endpoint successful");
-        return await testResponse.json();
+        const responseText = await testResponse.text();
+        console.log("Got test endpoint response text:", responseText.substring(0, 50) + "...");
+        
+        try {
+          const result = JSON.parse(responseText);
+          console.log("Successfully parsed test response JSON");
+          return result;
+        } catch (parseError) {
+          console.log("Failed to parse test endpoint response as JSON:", parseError);
+          // Continue to next endpoint
+        }
       }
       console.log("Test endpoint failed, falling back to standard endpoint");
     } catch (e) {
       console.log("Test endpoint error:", e);
     }
     
-    // Try the public content generation endpoint
-    const response = await apiRequest("POST", "/api/generate-content", data);
+    // Try the public content generation endpoint using regular fetch instead of apiRequest
+    console.log("Trying public content generation endpoint...");
+    const response = await fetch("/api/generate-content", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data),
+      credentials: "include"
+    });
     
+    // Error handling
     if (!response.ok) {
       let errorMessage = "Failed to generate content";
       let errorDetails = "";
       
       try {
-        const errorData = await response.json();
+        // Try to get error response as text first
+        const responseText = await response.text();
         
-        // Get more detailed error information if available
-        errorMessage = errorData.message || errorMessage;
-        errorDetails = errorData.details || errorData.error || "";
-        
-        // Specific error handling based on status code
-        if (response.status === 401 || response.status === 402) {
-          errorMessage = "OpenAI API key issue. Please verify your API key is valid and has sufficient credits.";
-        } else if (response.status === 429) {
-          errorMessage = "Rate limit exceeded. Please try again in a few moments.";
-        } else if (response.status === 413) {
-          errorMessage = "Request too large. Try with fewer or smaller images.";
-        } else if (response.status >= 500) {
-          errorMessage = "Server error processing your request. Please try again or use text-only mode.";
+        // Then attempt to parse it as JSON
+        try {
+          const errorData = JSON.parse(responseText);
+          
+          // Get more detailed error information if available
+          errorMessage = errorData.message || errorMessage;
+          errorDetails = errorData.details || errorData.error || "";
+          
+          // Specific error handling based on status code
+          if (response.status === 401 || response.status === 402) {
+            errorMessage = "OpenAI API key issue. Please verify your API key is valid and has sufficient credits.";
+          } else if (response.status === 429) {
+            errorMessage = "Rate limit exceeded. Please try again in a few moments.";
+          } else if (response.status === 413) {
+            errorMessage = "Request too large. Try with fewer or smaller images.";
+          } else if (response.status >= 500) {
+            errorMessage = "Server error processing your request. Please try again or use text-only mode.";
+          }
+          
+          // Log more details for debugging
+          console.error("API Error Response:", {
+            status: response.status,
+            errorMessage,
+            errorDetails,
+            rawError: errorData
+          });
+        } catch (parseError) {
+          // JSON parsing failed, use the text response
+          errorDetails = responseText || response.statusText;
+          console.error("Failed to parse error response as JSON", parseError);
         }
-        
-        // Log more details for debugging
-        console.error("API Error Response:", {
-          status: response.status,
-          errorMessage,
-          errorDetails,
-          rawError: errorData
-        });
-        
       } catch (e) {
-        // If JSON parsing fails, use response status text
+        // If text retrieval fails, use response status text
         errorDetails = response.statusText;
-        console.error("Failed to parse error response", e);
+        console.error("Failed to get error response text", e);
       }
       
       const finalErrorMessage = errorDetails 
@@ -131,7 +185,32 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       throw new Error(finalErrorMessage);
     }
     
-    const result = await response.json();
+    // Get response text first and safely parse
+    const responseText = await response.text();
+    console.log("Got successful response text:", responseText.substring(0, 50) + "...");
+    
+    let result;
+    try {
+      result = JSON.parse(responseText);
+      console.log("Successfully parsed response JSON");
+    } catch (parseError) {
+      console.error("Failed to parse success response as JSON:", parseError);
+      
+      // Try to find JSON in the response text using regex
+      try {
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          console.log("Found JSON pattern in response, trying to parse it");
+          result = JSON.parse(jsonMatch[0]);
+          console.log("Successfully parsed JSON from matched pattern");
+        } else {
+          throw new Error("Could not find valid JSON in response");
+        }
+      } catch (matchError) {
+        console.error("JSON extraction failed:", matchError);
+        throw new Error("Failed to parse AI response: " + responseText.substring(0, 100));
+      }
+    }
     
     // Validate the result has the expected fields
     if (!result.title || !result.tagline || !result.shortDescription || !result.detailedDescription) {

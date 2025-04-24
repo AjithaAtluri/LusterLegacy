@@ -1,0 +1,66 @@
+Attempting to process image 1 of 1
+add-product-DIULiR-y.js:6 Processing image: Original size 110.14KB
+add-product-DIULiR-y.js:6 Original dimensions: 792x1040
+add-product-DIULiR-y.js:6 Resizing to: 228x300 with quality 0.4
+add-product-DIULiR-y.js:6 Compressed image size: 10.66KB
+add-product-DIULiR-y.js:6 Successfully processed image with final size 10.66KB
+add-product-DIULiR-y.js:6 Proceeding with 1 processed image
+add-product-DIULiR-y.js:6 Generating AI content for: necklaces, Metal: 14k Gold, Images: 1, Gems: none
+add-product-DIULiR-y.js:6 Sending AI content request with: {productType: 'necklaces', metalType: '14k Gold', gems: 0, hasDescription: true, imageCount: 1}
+add-product-DIULiR-y.js:6 Trying improved jewelry content endpoint first...
+add-product-DIULiR-y.js:6 Improved endpoint failed (status: undefined), falling back to main endpoint
+add-product-DIULiR-y.js:6 Trying test endpoint next...
+add-product-DIULiR-y.js:6 Test endpoint failed, falling back to standard endpoint
+add-product-DIULiR-y.js:6 Failed to parse error response TypeError: v.json is not a function
+    at Ke (add-product-DIULiR-y.js:6:1331)
+    at async de (add-product-DIULiR-y.js:6:6651)
+Ke @ add-product-DIULiR-y.js:6
+await in Ke
+de @ add-product-DIULiR-y.js:6
+await in de
+Tg @ index-C1e3wpED.js:38
+_g @ index-C1e3wpED.js:38
+Ng @ index-C1e3wpED.js:38
+wd @ index-C1e3wpED.js:38
+hh @ index-C1e3wpED.js:38
+(anonymous) @ index-C1e3wpED.js:38
+rc @ index-C1e3wpED.js:41
+Fp @ index-C1e3wpED.js:38
+Nl @ index-C1e3wpED.js:38
+bu @ index-C1e3wpED.js:38
+Hg @ index-C1e3wpED.js:38Understand this error
+add-product-DIULiR-y.js:6 Error generating content: Error: Failed to generate content
+    at Ke (add-product-DIULiR-y.js:6:1946)
+    at async de (add-product-DIULiR-y.js:6:6651)
+Ke @ add-product-DIULiR-y.js:6
+await in Ke
+de @ add-product-DIULiR-y.js:6
+await in de
+Tg @ index-C1e3wpED.js:38
+_g @ index-C1e3wpED.js:38
+Ng @ index-C1e3wpED.js:38
+wd @ index-C1e3wpED.js:38
+hh @ index-C1e3wpED.js:38
+(anonymous) @ index-C1e3wpED.js:38
+rc @ index-C1e3wpED.js:41
+Fp @ index-C1e3wpED.js:38
+Nl @ index-C1e3wpED.js:38
+bu @ index-C1e3wpED.js:38
+Hg @ index-C1e3wpED.js:38Understand this error
+add-product-DIULiR-y.js:6 Error generating content: Error: Failed to generate content
+    at Ke (add-product-DIULiR-y.js:6:1946)
+    at async de (add-product-DIULiR-y.js:6:6651)
+de @ add-product-DIULiR-y.js:6
+await in de
+Tg @ index-C1e3wpED.js:38
+_g @ index-C1e3wpED.js:38
+Ng @ index-C1e3wpED.js:38
+wd @ index-C1e3wpED.js:38
+hh @ index-C1e3wpED.js:38
+(anonymous) @ index-C1e3wpED.js:38
+rc @ index-C1e3wpED.js:41
+Fp @ index-C1e3wpED.js:38
+Nl @ index-C1e3wpED.js:38
+bu @ index-C1e3wpED.js:38
+Hg @ index-C1e3wpED.js:38Understand this error
+add-product-DIULiR-y.js:6 Detailed AI generation error: Failed to generate content
