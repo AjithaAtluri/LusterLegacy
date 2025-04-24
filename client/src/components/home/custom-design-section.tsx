@@ -26,9 +26,9 @@ export default function CustomDesignSection() {
           <div className="order-1 lg:order-2">
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1600701707248-20e17cdf1e2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                alt="Custom jewelry design process" 
-                className="rounded-lg shadow-xl w-full"
+                src="/src/assets/amethyst-jewelry.png" 
+                alt="Custom amethyst jewelry design" 
+                className="rounded-lg shadow-xl w-full aspect-[5/3] object-cover"
               />
                 
               <div className="absolute -bottom-8 -right-8 bg-background p-6 rounded-lg shadow-lg max-w-xs">

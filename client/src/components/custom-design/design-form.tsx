@@ -213,115 +213,95 @@ export default function DesignForm() {
   };
   
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="bg-background rounded-lg shadow-lg p-8">
-        <h3 className="font-playfair text-2xl font-semibold text-foreground mb-6">Submit Your Design</h3>
-        
-        <div className="mb-6">
-          <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
-            Upload Reference Image*
-          </FormLabel>
-          {renderUploadArea()}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <FormField
-            control={form.control}
-            name="metalType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                  Metal Type*
-                </FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
-                      <SelectValue placeholder="Select metal type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {METAL_TYPES.map((metal) => (
-                      <SelectItem key={metal.id} value={metal.id}>
-                        {metal.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="primaryStone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                  Primary Stones*
-                </FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
-                      <SelectValue placeholder="Select stone type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {STONE_TYPES.map((stone) => (
-                      <SelectItem key={stone.id} value={stone.id}>
-                        {stone.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem className="mb-6">
-              <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                Additional Notes
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="bg-background rounded-lg shadow-lg p-8">
+            <h3 className="font-playfair text-2xl font-semibold text-foreground mb-6">Submit Your Design</h3>
+            
+            <div className="mb-6">
+              <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
+                Upload Reference Image*
               </FormLabel>
-              <FormControl>
-                <Textarea 
-                  {...field} 
-                  rows={4}
-                  placeholder="Share specific details about your vision, size requirements, or any other preferences..."
-                  className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="mb-6">
-          <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
-            Contact Information*
-          </FormLabel>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderUploadArea()}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <FormField
+                control={form.control}
+                name="metalType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                      Metal Type*
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
+                          <SelectValue placeholder="Select metal type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {METAL_TYPES.map((metal) => (
+                          <SelectItem key={metal.id} value={metal.id}>
+                            {metal.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="primaryStone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                      Primary Stones*
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
+                          <SelectValue placeholder="Select stone type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {STONE_TYPES.map((stone) => (
+                          <SelectItem key={stone.id} value={stone.id}>
+                            {stone.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
             <FormField
               control={form.control}
-              name="fullName"
+              name="notes"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="mb-6">
+                  <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                    Additional Notes
+                  </FormLabel>
                   <FormControl>
-                    <Input 
+                    <Textarea 
                       {...field} 
-                      placeholder="Full Name" 
-                      className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                      rows={4}
+                      placeholder="Share specific details about your vision, size requirements, or any other preferences..."
+                      className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" 
                     />
                   </FormControl>
                   <FormMessage />
@@ -329,54 +309,122 @@ export default function DesignForm() {
               )}
             />
             
+            <div className="mb-6">
+              <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
+                Contact Information*
+              </FormLabel>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="Full Name" 
+                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="Email Address" 
+                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
             <FormField
               control={form.control}
-              name="email"
+              name="agreeToTerms"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="mb-6 flex items-start space-x-2">
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Email Address" 
-                      className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                    <Checkbox 
+                      checked={field.value} 
+                      onCheckedChange={field.onChange} 
                     />
                   </FormControl>
-                  <FormMessage />
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="font-montserrat text-sm text-foreground/70">
+                      I understand that submitting this design requires a CAD fee of ₹{PAYMENT_TERMS.cadFee.toLocaleString()}, which will be adjusted against my final order.
+                    </FormLabel>
+                    <FormMessage />
+                  </div>
                 </FormItem>
               )}
             />
-          </div>
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="agreeToTerms"
-          render={({ field }) => (
-            <FormItem className="mb-6 flex items-start space-x-2">
-              <FormControl>
-                <Checkbox 
-                  checked={field.value} 
-                  onCheckedChange={field.onChange} 
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="font-montserrat text-sm text-foreground/70">
-                  I understand that submitting this design requires a CAD fee of ₹{PAYMENT_TERMS.cadFee.toLocaleString()}, which will be adjusted against my final order.
-                </FormLabel>
-                <FormMessage />
+            
+            <Button 
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full font-montserrat font-medium bg-primary text-background px-6 py-3 rounded hover:bg-accent transition duration-300 h-auto"
+            >
+              {isSubmitting ? "Submitting..." : "Submit Design Request"}
+            </Button>
+          </form>
+        </Form>
+      </div>
+      
+      <div className="hidden lg:block">
+        <div className="bg-background rounded-lg shadow-lg p-6">
+          <h4 className="font-playfair text-xl font-semibold text-foreground mb-4">Our Design Process</h4>
+          <ul className="space-y-4">
+            <li className="flex items-start">
+              <div className="flex-shrink-0 bg-primary rounded-full h-7 w-7 flex items-center justify-center mr-3 mt-0.5">
+                <span className="text-background text-sm font-semibold">1</span>
               </div>
-            </FormItem>
-          )}
-        />
-        
-        <Button 
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full font-montserrat font-medium bg-primary text-background px-6 py-3 rounded hover:bg-accent transition duration-300 h-auto"
-        >
-          {isSubmitting ? "Submitting..." : "Submit Design Request"}
-        </Button>
-      </form>
-    </Form>
+              <div>
+                <h5 className="font-montserrat font-medium text-foreground">Submit your design & preferences</h5>
+                <p className="text-sm text-foreground/70 mt-1">Upload your design concept and tell us about your preferences for metals and stones.</p>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <div className="flex-shrink-0 bg-primary rounded-full h-7 w-7 flex items-center justify-center mr-3 mt-0.5">
+                <span className="text-background text-sm font-semibold">2</span>
+              </div>
+              <div>
+                <h5 className="font-montserrat font-medium text-foreground">Receive CAD model & detailed quote</h5>
+                <p className="text-sm text-foreground/70 mt-1">Our designers will create a 3D CAD model and provide a comprehensive quote.</p>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <div className="flex-shrink-0 bg-primary rounded-full h-7 w-7 flex items-center justify-center mr-3 mt-0.5">
+                <span className="text-background text-sm font-semibold">3</span>
+              </div>
+              <div>
+                <h5 className="font-montserrat font-medium text-foreground">Approve design & pay 50% advance</h5>
+                <p className="text-sm text-foreground/70 mt-1">Review the design, request any adjustments, and pay the advance to begin production.</p>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <div className="flex-shrink-0 bg-primary rounded-full h-7 w-7 flex items-center justify-center mr-3 mt-0.5">
+                <span className="text-background text-sm font-semibold">4</span>
+              </div>
+              <div>
+                <h5 className="font-montserrat font-medium text-foreground">Receive your finished masterpiece</h5>
+                <p className="text-sm text-foreground/70 mt-1">Your handcrafted piece will be delivered to your doorstep once completed.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }
