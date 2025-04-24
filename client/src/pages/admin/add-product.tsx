@@ -41,6 +41,8 @@ const productFormSchema = z.object({
 type ProductFormValues = z.infer<typeof productFormSchema>;
 
 export default function AddProduct() {
+  console.log("AddProduct component rendering");
+  
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedMainImage, setUploadedMainImage] = useState<File | null>(null);
