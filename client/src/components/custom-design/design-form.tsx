@@ -14,7 +14,6 @@ import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS } from "@/lib/constants";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Image as ImageIcon, CheckCircle } from "lucide-react";
 import { isImageFile, getFileExtension } from "@/lib/utils";
-import designProcessImage from "@/assets/design-process.png";
 
 const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -223,42 +222,6 @@ export default function DesignForm() {
             Upload Reference Image*
           </FormLabel>
           {renderUploadArea()}
-        </div>
-        
-        {/* Process visualization section */}
-        <div className="grid grid-cols-1 gap-6 mb-8">
-          <div className="flex items-start gap-4">
-            <div className="mt-2 flex-grow">
-              <h4 className="font-playfair text-lg font-semibold text-foreground mb-4">Our Design Process</h4>
-              <div className="relative">
-                <img 
-                  src={designProcessImage} 
-                  alt="Custom jewelry design process" 
-                  className="max-w-full h-auto rounded"
-                />
-                <div className="absolute inset-0 flex flex-col justify-end p-3">
-                  <div className="grid grid-cols-1 gap-2 items-end ml-auto max-w-[60%]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">1</div>
-                      <span className="text-sm font-medium">Submit your design & preferences</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">2</div>
-                      <span className="text-sm font-medium">Receive CAD model & detailed quote</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">3</div>
-                      <span className="text-sm font-medium">Approve design & pay 50% advance</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">4</div>
-                      <span className="text-sm font-medium">Receive your finished masterpiece</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
