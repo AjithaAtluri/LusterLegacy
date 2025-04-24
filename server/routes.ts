@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal";
 import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
+import { analyzeJewelryImage } from "./direct-vision-api";
 
 // Set up multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -997,6 +998,21 @@ Respond in JSON format:
       res.status(500).json({ 
         message: 'Failed to generate content', 
         details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Direct jewelry image analysis endpoint - simplified approach with no authentication
+  app.post("/api/direct-jewelry-analysis", async (req, res) => {
+    try {
+      console.log("Direct jewelry image analysis endpoint called");
+      await analyzeJewelryImage(req, res);
+    } catch (error: any) {
+      console.error("Error in direct jewelry image analysis:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error analyzing jewelry image",
+        details: error.message || "Unknown error"
       });
     }
   });

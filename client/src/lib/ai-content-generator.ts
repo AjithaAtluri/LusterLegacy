@@ -189,8 +189,60 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       console.log("Test endpoint error:", e);
     }
     
+    // Try our new direct jewelry image analysis endpoint first
+    console.log("Trying direct jewelry image analysis endpoint...");
+    if (data.imageUrls && data.imageUrls.length > 0) {
+      try {
+        // Prepare data for direct jewelry image analysis
+        const directImageData = {
+          imageData: data.imageUrls[0], // Send only the first image
+          productType: data.productType,
+          metalType: data.metalType,
+          metalWeight: data.metalWeight,
+          primaryGems: data.primaryGems,
+          userDescription: data.userDescription
+        };
+        
+        console.log("Calling direct jewelry image analysis with:", {
+          hasImage: !!directImageData.imageData,
+          imageDataLength: directImageData.imageData ? directImageData.imageData.length : 0,
+          productType: directImageData.productType,
+          metalType: directImageData.metalType,
+          gemCount: directImageData.primaryGems?.length || 0
+        });
+        
+        const directResponse = await fetch("/api/direct-jewelry-analysis", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(directImageData),
+          credentials: "include"
+        });
+        
+        if (directResponse.ok) {
+          console.log("Direct jewelry image analysis successful");
+          const responseText = await directResponse.text();
+          console.log("Got direct jewelry analysis response text:", responseText.substring(0, 50) + "...");
+          
+          try {
+            const result = JSON.parse(responseText);
+            console.log("Successfully parsed direct jewelry analysis response");
+            return result;
+          } catch (parseError) {
+            console.error("Failed to parse direct jewelry analysis response:", parseError);
+            // Continue to next approach
+          }
+        } else {
+          console.log("Direct jewelry image analysis failed, status:", directResponse.status);
+        }
+      } catch (directError) {
+        console.error("Error with direct jewelry image analysis:", directError);
+      }
+    }
+    
     // Try the public content generation endpoint using regular fetch instead of apiRequest
-    console.log("Trying public content generation endpoint...");
+    console.log("Falling back to public content generation endpoint...");
     const response = await fetch("/api/generate-content", {
       method: "POST",
       headers: {
