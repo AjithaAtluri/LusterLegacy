@@ -15,17 +15,16 @@ export default function HeroSection() {
 
   return (
     <section className="relative h-screen overflow-hidden">
-      {/* Luxury gradient background with subtle pattern */}
+      {/* Full-width background image with beautiful jewelry */}
       <div className="absolute inset-0 z-0">
-        <div 
-          className="w-full h-full bg-gradient-to-br from-charcoal via-[#121212] to-[#1a1a1a]"
+        <img 
+          src="https://images.pexels.com/photos/1457801/pexels-photo-1457801.jpeg?auto=compress&cs=tinysrgb&w=1920" 
+          alt="Premium luxury gold and diamond jewelry collection" 
+          className="w-full h-full object-cover brightness-110 contrast-105"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
-        >
-          {/* Subtle golden sparkle pattern */}
-          <div className="absolute inset-0 bg-[radial-gradient(#D4AF37_1px,transparent_1px)] bg-[length:20px_20px] opacity-5"></div>
-        </div>
-        {/* Overlay with light effect */}
-        <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-charcoal/80"></div>
+        />
+        {/* Semi-transparent gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-charcoal/90 via-charcoal/75 to-charcoal/60"></div>
       </div>
       
       {/* Subtle gold accents */}
