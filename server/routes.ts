@@ -1242,6 +1242,36 @@ Respond in JSON format:
       });
     }
   });
+  
+  // Get metal types for admin
+  app.get('/api/admin/metal-types', async (req, res) => {
+    try {
+      const metalTypes = await storage.getAllMetalTypes();
+      res.json(metalTypes);
+    } catch (error) {
+      console.error('Error fetching metal types:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching metal types',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Get stone types for admin
+  app.get('/api/admin/stone-types', async (req, res) => {
+    try {
+      const stoneTypes = await storage.getAllStoneTypes();
+      res.json(stoneTypes);
+    } catch (error) {
+      console.error('Error fetching stone types:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching stone types',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
   // Test endpoint for OpenAI API
   app.get("/api/test-openai", async (req, res) => {

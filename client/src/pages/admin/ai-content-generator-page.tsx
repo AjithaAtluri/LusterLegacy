@@ -132,6 +132,9 @@ const ImageUpload = ({
 };
 
 // Main AI Content Generator Page
+import { Helmet } from "react-helmet";
+import AdminLayout from "@/components/admin/admin-layout";
+
 export default function AIContentGeneratorPage() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -370,8 +373,10 @@ export default function AIContentGeneratorPage() {
   };
   
   return (
-    <div className="container py-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">AI Jewelry Content Generator</h1>
+    <AdminLayout title="AI Content Generator">
+      <Helmet>
+        <title>AI Content Generator | Luster Legacy Admin</title>
+      </Helmet>
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -819,6 +824,6 @@ export default function AIContentGeneratorPage() {
           </Dialog>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }
