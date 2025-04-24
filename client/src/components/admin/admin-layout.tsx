@@ -24,7 +24,7 @@ interface AdminLayoutProps {
   title: string;
 }
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { toast } = useToast();
@@ -170,7 +170,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </div>
           
           <div className="flex-1">
-            <h1 className="font-playfair text-xl font-semibold tracking-tight">Admin Dashboard</h1>
+            <h1 className="font-playfair text-xl font-semibold tracking-tight">{title || "Admin Dashboard"}</h1>
           </div>
           
           <div className="flex items-center gap-4">
