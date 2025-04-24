@@ -847,10 +847,9 @@ export default function AddProduct() {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-          </Tabs>
-        </Form>
-      </div>
-    </AdminLayout>
-  );
-}
+            </div>
+          </Form>
+        </div>
+      </AdminLayout>
+    );
+  }
