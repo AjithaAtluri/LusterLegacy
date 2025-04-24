@@ -846,17 +846,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Create a default request if minimal fields missing
-      const testRequest = {
-        ...req.body,
-        metalWeight: req.body.metalWeight || 5,
-        primaryGems: req.body.primaryGems || [{ name: "Diamond", carats: 0.5 }],
-      };
+      // Import OpenAI with SDK
+      const OpenAI = require('openai');
       
-      console.log("Processed test request:", testRequest);
+      // Check for OpenAI API key
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ 
+          message: "OpenAI API key not configured", 
+          testMode: true,
+          success: false
+        });
+      }
       
-      // Pass the request to the OpenAI service
-      await generateContent({ body: testRequest } as Request, res);
+      // Extract fields from request
+      const metalWeight = req.body.metalWeight || 5;
+      const primaryGems = req.body.primaryGems || [{ name: "Diamond", carats: 0.5 }];
+      const userDescription = req.body.userDescription || "";
+      const imageUrls = req.body.imageUrls || [];
+      
+      console.log(`Processing jewelry content with ${imageUrls.length} images`);
+      
+      // Calculate price based on materials
+      const basePrice = 1000; // Base price in USD
+      const metalPricePerGram = metalType.toLowerCase().includes('gold') ? 60 : 30;
+      const gemPriceMultiplier = primaryGems.reduce((acc, gem) => {
+        let multiplier = 1;
+        if (gem.name.toLowerCase().includes('diamond')) multiplier = 1000;
+        else if (gem.name.toLowerCase().includes('ruby') || 
+                gem.name.toLowerCase().includes('sapphire') || 
+                gem.name.toLowerCase().includes('emerald')) multiplier = 800;
+        else multiplier = 200;
+        
+        return acc + (gem.carats || 0.5) * multiplier;
+      }, 0);
+      
+      const calculatedPrice = basePrice + (metalWeight * metalPricePerGram) + gemPriceMultiplier;
+      const priceUSD = Math.round(calculatedPrice);
+      const priceINR = Math.round(priceUSD * 75); // Approximate exchange rate
+      
+      // Format gems for prompt
+      const gemsDescription = primaryGems.map(gem => 
+        `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`
+      ).join(', ');
+      
+      // Handle different scenarios
+      let imageAnalysis = "";
+      
+      // Only try to get image analysis if we have images
+      if (imageUrls.length > 0) {
+        try {
+          // Initialize OpenAI
+          const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+          });
+          
+          // Skip vision API and use standard text completion
+          console.log("Using text-only completion for content generation");
+          
+          // Format a robust prompt
+          const prompt = `You are an expert jewelry copywriter for a luxury brand called Luster Legacy.
+
+Product Details:
+- Type: ${productType}
+- Metal: ${metalType} (${metalWeight}g)
+- Gemstones: ${gemsDescription}
+- Additional details: ${userDescription}
+
+Create a luxurious product listing with the following sections:
+1. A sophisticated product name (max 5 words)
+2. A compelling tagline (max 15 words)
+3. A concise 3-sentence description
+4. A detailed 150-200 word description including:
+   - Materials and craftsmanship details
+   - Design highlights
+   - Occasions it would be suitable for
+   - What makes it special
+
+I want the tone to be elegant, exclusive, and emotional. Focus on the craftsmanship, uniqueness, and how it makes the wearer feel.
+
+Respond in JSON format:
+{
+  "title": "Product Name",
+  "tagline": "Product Tagline",
+  "shortDescription": "3-sentence description",
+  "detailedDescription": "Detailed website description",
+  "imageInsights": "Brief notes about the product's visual appeal"
+}`;
+
+          // Make API call
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+            messages: [
+              { role: "system", content: "You are a luxury jewelry expert and copywriter." },
+              { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.7
+          });
+          
+          // Parse the response
+          const content = response.choices[0].message.content;
+          console.log("OpenAI response received successfully");
+          
+          let jsonData;
+          try {
+            jsonData = JSON.parse(content);
+            console.log("Successfully parsed response JSON");
+            
+            // Add prices to the response
+            jsonData.priceUSD = priceUSD;
+            jsonData.priceINR = priceINR;
+            
+            return res.status(200).json(jsonData);
+          } catch (parseError) {
+            console.error("Failed to parse OpenAI response:", parseError);
+            throw new Error("Failed to parse AI response");
+          }
+        } catch (aiError) {
+          console.error("Error calling OpenAI:", aiError);
+          
+          // Create a fallback response based on the provided example
+          return res.status(200).json({
+            title: `${primaryGems[0]?.name || 'Luxury'} ${productType}`,
+            tagline: `Timeless elegance crafted in exquisite ${metalType}`,
+            shortDescription: `Handcrafted ${productType.toLowerCase()} featuring ${gemsDescription}.\nA statement piece that captures attention and admiration.\nPerfect for special occasions and memorable moments.`,
+            detailedDescription: `A symphony of elegance and craftsmanship, this ${productType.toLowerCase()} is a true statement of refined luxury. Handcrafted in ${metalType}, this piece features ${gemsDescription}, blending tradition with modern sophistication.\n\nDesign Highlights:\n- Meticulously selected gemstones that shimmer with natural radiance\n- Expertly set in ${metalType} with attention to every detail\n- Lightweight yet durable design for comfortable all-day wear\n\nThis piece makes a graceful statement with timeless craftsmanship, exclusively available at Luster Legacy – where elegance meets ethics.`,
+            imageInsights: "This piece showcases the beautiful interplay of light and color through carefully selected gemstones and meticulous metalwork.",
+            priceUSD,
+            priceINR,
+            fallback: true
+          });
+        }
+      } else {
+        // No images provided, use the example-based template approach
+        return res.status(200).json({
+          title: `${primaryGems[0]?.name || 'Luxury'} ${productType}`,
+          tagline: `Timeless elegance crafted in exquisite ${metalType}`,
+          shortDescription: `Handcrafted ${productType.toLowerCase()} featuring ${gemsDescription}.\nA statement piece that captures attention and admiration.\nPerfect for special occasions and memorable moments.`,
+          detailedDescription: `A symphony of elegance and craftsmanship, this ${productType.toLowerCase()} is a true statement of refined luxury. Handcrafted in ${metalType}, this piece features ${gemsDescription}, blending tradition with modern sophistication.\n\nDesign Highlights:\n- Meticulously selected gemstones that shimmer with natural radiance\n- Expertly set in ${metalType} with attention to every detail\n- Lightweight yet durable design for comfortable all-day wear\n\nThis piece makes a graceful statement with timeless craftsmanship, exclusively available at Luster Legacy – where elegance meets ethics.`,
+          imageInsights: "No image analysis available",
+          priceUSD,
+          priceINR,
+          noImages: true
+        });
+      }
     } catch (error) {
       console.error('Error in test content generation:', error);
       // Force JSON response

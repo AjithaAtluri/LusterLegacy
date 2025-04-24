@@ -24,21 +24,89 @@ export interface AIGeneratedContent {
 
 /**
  * Convert a File object to a base64 string
+ * This version includes more robust validation and logging
  */
 export const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
+    if (!file) {
+      console.error('No file provided to fileToBase64');
+      reject(new Error('No file provided'));
+      return;
+    }
+
+    // Log file details
+    console.log(`Processing file: ${file.name}, type: ${file.type}, size: ${(file.size / 1024).toFixed(2)}KB`);
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      console.error('File is not an image:', file.type);
+      reject(new Error('File must be an image'));
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      console.error('File is too large:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
+      reject(new Error('File size exceeds 5MB limit'));
+      return;
+    }
+
     const reader = new FileReader();
-    reader.readAsDataURL(file);
+    
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64String = reader.result.split(',')[1];
-        resolve(base64String);
-      } else {
-        reject(new Error('Failed to convert file to base64'));
+      try {
+        if (typeof reader.result === 'string') {
+          // Validate the data URL format
+          if (!reader.result.startsWith('data:image/')) {
+            console.error('Invalid data URL format:', reader.result.substring(0, 30) + '...');
+            reject(new Error('Invalid data URL format'));
+            return;
+          }
+          
+          // Log success details
+          console.log(`File loaded successfully, data URL length: ${reader.result.length}`);
+          
+          // Extract the base64 content after the comma
+          const parts = reader.result.split(',');
+          if (parts.length !== 2) {
+            console.error('Invalid data URL structure:', reader.result.substring(0, 30) + '...');
+            reject(new Error('Invalid data URL structure'));
+            return;
+          }
+          
+          const base64String = parts[1];
+          
+          // Validate that the base64 string only contains valid characters
+          if (!/^[A-Za-z0-9+/=]+$/.test(base64String)) {
+            console.error('Invalid base64 characters in string');
+            reject(new Error('Invalid base64 characters'));
+            return;
+          }
+          
+          console.log(`Base64 string extracted, length: ${base64String.length}`);
+          resolve(base64String);
+        } else {
+          console.error('FileReader result is not a string:', typeof reader.result);
+          reject(new Error('Failed to convert file to base64 - result not a string'));
+        }
+      } catch (err) {
+        console.error('Error processing file:', err);
+        reject(err);
       }
     };
-    reader.onerror = error => reject(error);
+    
+    reader.onerror = (error) => {
+      console.error('FileReader error:', error);
+      reject(error);
+    };
+    
+    // Start reading the file
+    try {
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error reading file:', err);
+      reject(err);
+    }
   });
 };
 
