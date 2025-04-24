@@ -25,7 +25,8 @@ export default function CTASection() {
             </Button>
             <Button 
               asChild
-              className="font-montserrat font-medium bg-charcoal text-background px-8 py-4 rounded hover:bg-accent transition duration-300 h-auto"
+              className="font-montserrat font-medium bg-amber-600 text-white px-8 py-4 rounded hover:bg-amber-700 transition duration-300 h-auto"
+              style={{ opacity: 1, visibility: 'visible' }}
             >
               <Link href="/custom-design">
                 Start Custom Design
