@@ -1,280 +1,14 @@
-import { useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { Helmet } from "react-helmet";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import AdminLayout from "@/components/admin/admin-layout";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Save, ArrowLeft, Upload, Plus, X, Info } from "lucide-react";
-import { useDropzone } from 'react-dropzone';
-import { apiRequest } from "@/lib/queryClient";
-import AIContentGenerator from "@/components/admin/ai-content-generator";
-import { type AIGeneratedContent } from "@/lib/ai-content-generator";
-
-// Define the form schema
-const productFormSchema = z.object({
-  name: z.string().min(3, "Product name must be at least 3 characters"),
-  tagline: z.string().optional(),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  detailedDescription: z.string().optional(),
-  basePrice: z.coerce.number().min(10, "Base price must be at least $10"),
-  basePriceINR: z.coerce.number().min(800, "Base price INR must be at least ₹800"),
-  category: z.string().min(1, "Category is required"),
-  metalType: z.string().min(1, "Metal type is required"),
-  metalWeight: z.coerce.number().min(0, "Weight cannot be negative"),
-  stoneTypeIds: z.array(z.number()).optional(),
-  isNew: z.boolean().default(false),
-  isBestseller: z.boolean().default(false),
-  isFeatured: z.boolean().default(false),
-});
-
-type ProductFormValues = z.infer<typeof productFormSchema>;
+import { ArrowLeft } from "lucide-react";
 
 export default function AddProduct() {
   console.log("AddProduct component rendering");
   
   const [, setLocation] = useLocation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedMainImage, setUploadedMainImage] = useState<File | null>(null);
-  const [uploadedAdditionalImages, setUploadedAdditionalImages] = useState<File[]>([]);
-  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
-  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
-  const [metalTypes, setMetalTypes] = useState<any[]>([]);
-  const [stoneTypes, setStoneTypes] = useState<any[]>([]);
-  const [selectedStoneTypes, setSelectedStoneTypes] = useState<any[]>([]);
-  const [userDescription, setUserDescription] = useState("");
-  
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  // Initialize form
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productFormSchema),
-    defaultValues: {
-      name: "",
-      tagline: "",
-      description: "",
-      detailedDescription: "",
-      basePrice: 0,
-      basePriceINR: 0,
-      category: "",
-      metalType: "",
-      metalWeight: 0,
-      stoneTypeIds: [],
-      isNew: false,
-      isBestseller: false,
-      isFeatured: false,
-    },
-  });
-  
-  // Fetch metal types and stone types on component mount
-  useState(() => {
-    fetchMetalTypes();
-    fetchStoneTypes();
-  });
-  
-  // Fetch metal types
-  const fetchMetalTypes = async () => {
-    try {
-      const response = await apiRequest("GET", "/api/admin/metal-types");
-      const data = await response.json();
-      setMetalTypes(data);
-    } catch (error) {
-      console.error("Error fetching metal types:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch metal types",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  // Fetch stone types
-  const fetchStoneTypes = async () => {
-    try {
-      const response = await apiRequest("GET", "/api/admin/stone-types");
-      const data = await response.json();
-      setStoneTypes(data);
-    } catch (error) {
-      console.error("Error fetching stone types:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch stone types",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  // Handle main image drop
-  const onMainImageDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      setUploadedMainImage(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = () => {
-        setMainImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  // Handle additional images drop
-  const onAdditionalImagesDrop = (acceptedFiles: File[]) => {
-    const newFiles = [...uploadedAdditionalImages, ...acceptedFiles].slice(0, 5); // Limit to 5 images
-    setUploadedAdditionalImages(newFiles);
-    
-    // Create previews
-    const newPreviews = newFiles.map(file => {
-      if (file instanceof File) {
-        return URL.createObjectURL(file);
-      }
-      return "";
-    });
-    
-    setAdditionalImagePreviews(newPreviews);
-  };
-  
-  // Dropzone for main image
-  const { getRootProps: getMainImageRootProps, getInputProps: getMainImageInputProps } = useDropzone({
-    onDrop: onMainImageDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-    },
-    maxFiles: 1,
-  });
-  
-  // Dropzone for additional images
-  const { getRootProps: getAdditionalImagesRootProps, getInputProps: getAdditionalImagesInputProps } = useDropzone({
-    onDrop: onAdditionalImagesDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-    },
-    maxFiles: 5,
-  });
-  
-  // Handle stone type selection
-  const toggleStoneType = (stoneType: any) => {
-    const isSelected = selectedStoneTypes.some(s => s.id === stoneType.id);
-    
-    if (isSelected) {
-      setSelectedStoneTypes(selectedStoneTypes.filter(s => s.id !== stoneType.id));
-    } else {
-      setSelectedStoneTypes([...selectedStoneTypes, stoneType]);
-    }
-  };
-  
-  // Handle form submission
-  const onSubmit = async (data: ProductFormValues) => {
-    if (!uploadedMainImage) {
-      toast({
-        title: "Error",
-        description: "Please upload a main product image",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Create form data for file upload
-      const formData = new FormData();
-      
-      // Add main image
-      formData.append('mainImage', uploadedMainImage);
-      
-      // Add additional images
-      uploadedAdditionalImages.forEach(file => {
-        formData.append('additionalImages', file);
-      });
-      
-      // Add other form data
-      for (const [key, value] of Object.entries(data)) {
-        if (key === 'stoneTypeIds') {
-          // Handle arrays
-          formData.append(key, JSON.stringify(selectedStoneTypes.map(st => st.id)));
-        } else {
-          formData.append(key, value.toString());
-        }
-      }
-      
-      // Submit the form
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to create product: ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      
-      // Show success message
-      toast({
-        title: "Success",
-        description: "Product created successfully",
-      });
-      
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
-      
-      // Redirect to products page
-      setLocation('/admin/products');
-      
-    } catch (error) {
-      console.error('Error creating product:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create product",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // Handle removing an additional image
-  const removeAdditionalImage = (index: number) => {
-    const newFiles = [...uploadedAdditionalImages];
-    newFiles.splice(index, 1);
-    setUploadedAdditionalImages(newFiles);
-    
-    const newPreviews = [...additionalImagePreviews];
-    URL.revokeObjectURL(newPreviews[index]); // Clean up
-    newPreviews.splice(index, 1);
-    setAdditionalImagePreviews(newPreviews);
-  };
-
-  // Handle AI content generation
-  const handleContentGenerated = (content: AIGeneratedContent) => {
-    // Update form with AI generated content
-    form.setValue("name", content.title);
-    form.setValue("tagline", content.tagline);
-    form.setValue("description", content.shortDescription);
-    form.setValue("detailedDescription", content.detailedDescription);
-    form.setValue("basePrice", content.priceUSD);
-    form.setValue("basePriceINR", content.priceINR);
-    
-    // Show success message
-    toast({
-      title: "AI Content Applied",
-      description: "The product details have been updated with AI-generated content.",
-    });
-  };
   
   return (
     <AdminLayout title="Add Product">
@@ -295,56 +29,19 @@ export default function AddProduct() {
             </Button>
             <h1 className="text-2xl font-semibold">Add New Product</h1>
           </div>
-          
-          <Button
-            type="button"
-            onClick={form.handleSubmit(onSubmit)}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Product
-              </>
-            )}
-          </Button>
         </div>
         
-        <Tabs defaultValue="info">
-          <TabsList className="mb-6">
-            <TabsTrigger value="info">Basic Information</TabsTrigger>
-            <TabsTrigger value="images">Images</TabsTrigger>
-            <TabsTrigger value="ai-content">AI Content Generation</TabsTrigger>
-            <TabsTrigger value="materials">Materials & Stones</TabsTrigger>
-          </TabsList>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <TabsContent value="info">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Product Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Product Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g. Diamond Eternity Ring" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+        <Card>
+          <CardHeader>
+            <CardTitle>Add Product Form</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Product form is under maintenance. Please check back later.</p>
+          </CardContent>
+        </Card>
+      </div>
+    </AdminLayout>
+  );
                       
                       <FormField
                         control={form.control}
