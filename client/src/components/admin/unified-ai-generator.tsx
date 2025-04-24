@@ -75,7 +75,9 @@ export default function UnifiedAIGenerator({
   isEditMode = false
 }: UnifiedAIGeneratorProps) {
   // Get values for AI content generator
-  const productType = form.watch("category");
+  const productTypeId = form.watch("productTypeId");
+  const selectedProductType = productTypes?.find(type => type.id.toString() === productTypeId);
+  const productType = selectedProductType?.name || form.watch("category");
   const metalType = form.watch("metalType");
   const metalWeight = form.watch("metalWeight") ? parseFloat(form.watch("metalWeight")) : undefined;
 
@@ -290,7 +292,7 @@ export default function UnifiedAIGenerator({
                 {/* 4. Product Type */}
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="productTypeId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>4. Product Type</FormLabel>
@@ -310,18 +312,12 @@ export default function UnifiedAIGenerator({
                             </div>
                           ) : productTypes?.length ? (
                             productTypes.map(type => (
-                              <SelectItem key={type.id} value={type.name}>
+                              <SelectItem key={type.id} value={type.id.toString()}>
                                 {type.name}
                               </SelectItem>
                             ))
                           ) : (
-                            <>
-                              <SelectItem value="rings">Rings</SelectItem>
-                              <SelectItem value="necklaces">Necklaces</SelectItem>
-                              <SelectItem value="earrings">Earrings</SelectItem>
-                              <SelectItem value="bracelets">Bracelets</SelectItem>
-                              <SelectItem value="pendants">Pendants</SelectItem>
-                            </>
+                            <SelectItem value="">No product types found</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -467,9 +463,9 @@ export default function UnifiedAIGenerator({
                               checked={selectedStoneTypes.includes(stone.name)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedStoneTypes(prev => [...prev, stone.name]);
+                                  setSelectedStoneTypes((prev: string[]) => [...prev, stone.name]);
                                 } else {
-                                  setSelectedStoneTypes(prev => prev.filter(s => s !== stone.name));
+                                  setSelectedStoneTypes((prev: string[]) => prev.filter((s: string) => s !== stone.name));
                                 }
                               }}
                             />
@@ -491,9 +487,9 @@ export default function UnifiedAIGenerator({
                               checked={selectedStoneTypes.includes(stone)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  setSelectedStoneTypes(prev => [...prev, stone]);
+                                  setSelectedStoneTypes((prev: string[]) => [...prev, stone]);
                                 } else {
-                                  setSelectedStoneTypes(prev => prev.filter(s => s !== stone));
+                                  setSelectedStoneTypes((prev: string[]) => prev.filter((s: string) => s !== stone));
                                 }
                               }}
                             />
