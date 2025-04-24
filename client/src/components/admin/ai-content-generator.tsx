@@ -109,41 +109,88 @@ export default function AIContentGenerator({
         ctx.imageSmoothingQuality = 'high'; // Better quality for vision models
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Convert to base64 with appropriate quality
-        const base64 = canvas.toDataURL('image/jpeg', targetQuality).split(',')[1];
-        
-        // If base64 is still too large, we'll apply more compression but not as extreme as before
-        // Maximum size increased to 150KB which is reasonable for vision API
-        if (base64.length > 150000) { // ~150KB in base64
-          console.log(`Base64 still large: ${(base64.length / 1024).toFixed(2)}KB - applying higher compression`);
+        try {
+          // Convert to base64 with appropriate quality
+          const dataUrl = canvas.toDataURL('image/jpeg', targetQuality);
           
-          // Reduce quality but keep dimensions the same
-          const higherCompressionQuality = 0.5;
-          const compressedBase64 = canvas.toDataURL('image/jpeg', higherCompressionQuality).split(',')[1];
-          console.log(`After higher compression: ${(compressedBase64.length / 1024).toFixed(2)}KB`);
-          
-          // If still too large, resize and compress further
-          if (compressedBase64.length > 150000) {
-            const smallerWidth = Math.round(width * 0.75);
-            const smallerHeight = Math.round(height * 0.75);
-            
-            canvas.width = smallerWidth;
-            canvas.height = smallerHeight;
-            
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'medium';
-            ctx.drawImage(img, 0, 0, smallerWidth, smallerHeight);
-            
-            const finalQuality = 0.4;
-            const finalBase64 = canvas.toDataURL('image/jpeg', finalQuality).split(',')[1];
-            console.log(`Final compression: ${(finalBase64.length / 1024).toFixed(2)}KB with ${smallerWidth}x${smallerHeight} at ${finalQuality} quality`);
-            resolve(finalBase64);
-          } else {
-            resolve(compressedBase64);
+          // Validate data URL format
+          if (!dataUrl.startsWith('data:image/jpeg;base64,')) {
+            console.error('Invalid data URL format:', dataUrl.substring(0, 30) + '...');
+            reject(new Error('Invalid data URL format'));
+            return;
           }
-        } else {
-          console.log(`Compressed image size: ${(base64.length / 1024).toFixed(2)}KB - good quality for vision API`);
-          resolve(base64);
+          
+          const base64 = dataUrl.split(',')[1];
+          
+          // Verify the base64 data exists
+          if (!base64) {
+            console.error('Failed to extract base64 data from data URL');
+            reject(new Error('Failed to extract base64 data'));
+            return;
+          }
+          
+          // Verify the base64 string is valid
+          if (!/^[A-Za-z0-9+/=]+$/.test(base64)) {
+            console.error('Generated base64 contains invalid characters');
+            reject(new Error('Invalid base64 characters'));
+            return;
+          }
+        
+          // If base64 is still too large, we'll apply more compression but not as extreme as before
+          // Maximum size increased to 150KB which is reasonable for vision API
+          if (base64.length > 150000) { // ~150KB in base64
+            console.log(`Base64 still large: ${(base64.length / 1024).toFixed(2)}KB - applying higher compression`);
+            
+            // Reduce quality but keep dimensions the same
+            const higherCompressionQuality = 0.5;
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', higherCompressionQuality);
+            const compressedBase64 = compressedDataUrl.split(',')[1];
+            
+            if (!compressedBase64 || !/^[A-Za-z0-9+/=]+$/.test(compressedBase64)) {
+              console.error('Invalid compressed base64 data');
+              // Fall back to original base64 if compression fails
+              console.log('Using original base64 data since compression failed');
+              resolve(base64);
+              return;
+            }
+            
+            console.log(`After higher compression: ${(compressedBase64.length / 1024).toFixed(2)}KB`);
+            
+            // If still too large, resize and compress further
+            if (compressedBase64.length > 150000) {
+              const smallerWidth = Math.round(width * 0.75);
+              const smallerHeight = Math.round(height * 0.75);
+              
+              canvas.width = smallerWidth;
+              canvas.height = smallerHeight;
+              
+              ctx.imageSmoothingEnabled = true;
+              ctx.imageSmoothingQuality = 'medium';
+              ctx.drawImage(img, 0, 0, smallerWidth, smallerHeight);
+              
+              const finalQuality = 0.4;
+              const finalDataUrl = canvas.toDataURL('image/jpeg', finalQuality);
+              const finalBase64 = finalDataUrl.split(',')[1];
+              
+              if (!finalBase64 || !/^[A-Za-z0-9+/=]+$/.test(finalBase64)) {
+                console.error('Invalid final base64 data');
+                // Fall back to compressed base64 if final compression fails
+                resolve(compressedBase64);
+                return;
+              }
+              
+              console.log(`Final compression: ${(finalBase64.length / 1024).toFixed(2)}KB with ${smallerWidth}x${smallerHeight} at ${finalQuality} quality`);
+              resolve(finalBase64);
+            } else {
+              resolve(compressedBase64);
+            }
+          } else {
+            console.log(`Compressed image size: ${(base64.length / 1024).toFixed(2)}KB - good quality for vision API`);
+            resolve(base64);
+          }
+        } catch (canvasError) {
+          console.error('Canvas operation error:', canvasError);
+          reject(canvasError);
         }
       };
       

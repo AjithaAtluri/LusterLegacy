@@ -87,7 +87,24 @@ export const generateContent = async (req: Request, res: Response) => {
     console.log(`Image URLs received: ${imageUrls?.length || 0}`);
     if (hasImages) {
       console.log(`First image data length: ${imageUrls[0]?.length || 0} characters`);
-      console.log(`Is valid base64?: ${/^[A-Za-z0-9+/=]+$/.test(imageUrls[0] || '')}`);
+      const isValidBase64 = /^[A-Za-z0-9+/=]+$/.test(imageUrls[0] || '');
+      console.log(`Is valid base64?: ${isValidBase64}`);
+      
+      // Check for API key presence early
+      if (!process.env.OPENAI_API_KEY) {
+        console.error("OPENAI_API_KEY is not set in environment");
+        return res.status(500).json({
+          message: "OpenAI API key is not configured",
+        });
+      }
+      
+      // Also check API key validity by checking the first few characters
+      // Most OpenAI keys start with "sk-" and have a specific format
+      const apiKey = process.env.OPENAI_API_KEY || '';
+      console.log(`API key set: ${apiKey ? 'Yes' : 'No'}, starts with 'sk-': ${apiKey.startsWith('sk-')}`);
+      
+      // Log the version of OpenAI module we're using
+      console.log(`OpenAI module version: ${OpenAI.VERSION || 'unknown'}`);
     }
     
     let messages;
@@ -151,19 +168,29 @@ export const generateContent = async (req: Request, res: Response) => {
             console.log(`Adding image with data length: ${imageUrl.length} characters`);
             
             try {
-              // Test if the base64 string is actually valid
-              // This will throw an error if it's not valid base64
-              Buffer.from(imageUrl, 'base64');
-              
-              // Add the image to the content parts
-              contentParts.push({
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageUrl}`
+              try {
+                // Test if the base64 string is actually valid
+                const buffer = Buffer.from(imageUrl, 'base64');
+                
+                // Only proceed if we have a valid buffer with actual content
+                if (buffer.length > 0) {
+                  console.log(`Valid base64 image data with buffer length: ${buffer.length}`);
+                  
+                  // Add the image to the content parts
+                  contentParts.push({
+                    type: "image_url",
+                    image_url: {
+                      url: `data:image/jpeg;base64,${imageUrl}`
+                    }
+                  });
+                  
+                  console.log("Image successfully added to OpenAI request");
+                } else {
+                  console.error("Base64 data created an empty buffer");
                 }
-              });
-              
-              console.log("Image successfully added to OpenAI request");
+              } catch (base64Error) {
+                console.error("Failed to convert base64 to buffer:", base64Error);
+              }
             } catch (base64Error) {
               console.error("Invalid base64 image data:", base64Error);
             }
