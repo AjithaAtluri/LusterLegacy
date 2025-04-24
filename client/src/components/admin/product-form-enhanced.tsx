@@ -460,11 +460,9 @@ export default function ProductFormEnhanced({ initialData, productId, onSuccess 
                             <span className="font-medium text-sm">{stoneType.name}</span>
                           </div>
                         </div>
-                        {stoneType.priceModifier > 0 && (
-                          <div className="mt-1 text-xs text-muted-foreground ml-6">
-                            +{stoneType.priceModifier}% price modifier
-                          </div>
-                        )}
+                        <div className="mt-1 text-xs text-muted-foreground ml-6">
+                          ₹{stoneType.priceModifier}/ct
+                        </div>
                       </div>
                     ))}
                   </div>
