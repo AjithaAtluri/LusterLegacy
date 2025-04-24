@@ -83,6 +83,13 @@ export const generateContent = async (req: Request, res: Response) => {
     // Check if we have images to analyze
     const hasImages = imageUrls && imageUrls.length > 0;
     
+    // Log detailed info about received images
+    console.log(`Image URLs received: ${imageUrls?.length || 0}`);
+    if (hasImages) {
+      console.log(`First image data length: ${imageUrls[0]?.length || 0} characters`);
+      console.log(`Is valid base64?: ${/^[A-Za-z0-9+/=]+$/.test(imageUrls[0] || '')}`);
+    }
+    
     let messages;
     
     // If there are images, we'll use the vision API approach

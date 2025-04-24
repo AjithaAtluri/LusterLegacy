@@ -152,35 +152,60 @@ export default function AIContentGenerator({
     });
   };
   
-  // Helper function to fetch and convert a blob URL to base64
+  // Enhanced helper function to fetch and convert a blob URL to base64
   const fetchImageAsBase64 = async (url: string): Promise<string> => {
     try {
+      console.log(`Processing image URL type: ${url.substring(0, 20)}...`);
+      
       // Only process blob URLs (created with URL.createObjectURL)
       if (url.startsWith('blob:')) {
+        console.log('Processing blob URL');
         const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch blob: ${response.status} ${response.statusText}`);
+        }
+        
         const blob = await response.blob();
+        console.log(`Blob fetched successfully: ${(blob.size / 1024).toFixed(2)}KB, type: ${blob.type}`);
         
         // Resize the image before converting to base64
-        return await resizeAndConvertToBase64(blob);
+        const base64 = await resizeAndConvertToBase64(blob);
+        console.log(`Converted blob to base64: ${(base64.length / 1024).toFixed(2)}KB`);
+        return base64;
       } else if (url.startsWith('data:')) {
-        // It's already a data URL, extract the base64 part, but convert it to a blob first to resize
-        const base64Data = url.split(',')[1];
-        const byteString = window.atob(base64Data);
-        const mimeType = url.split(',')[0].split(':')[1].split(';')[0];
-        
-        // Convert base64 to blob
-        const ab = new ArrayBuffer(byteString.length);
-        const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) {
-          ia[i] = byteString.charCodeAt(i);
+        console.log('Processing data URL');
+        // It's already a data URL, extract the base64 part
+        try {
+          const base64Data = url.split(',')[1];
+          if (!base64Data) {
+            throw new Error('Invalid data URL format');
+          }
+          
+          const mimeType = url.split(',')[0].split(':')[1].split(';')[0];
+          console.log(`Image MIME type: ${mimeType}`);
+          
+          // Convert base64 to blob for processing
+          const byteString = atob(base64Data);
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          
+          const blob = new Blob([ab], { type: mimeType || 'image/jpeg' });
+          console.log(`Created blob from data URL: ${(blob.size / 1024).toFixed(2)}KB`);
+          
+          // Resize the blob and convert back to base64
+          return await resizeAndConvertToBase64(blob);
+        } catch (dataUrlError) {
+          console.error('Error processing data URL:', dataUrlError);
+          throw new Error('Failed to process data URL');
         }
-        const blob = new Blob([ab], { type: mimeType });
-        
-        // Resize the blob and convert back to base64
-        return await resizeAndConvertToBase64(blob);
+      } else {
+        console.log(`Unsupported URL format: ${url.substring(0, 10)}...`);
+        throw new Error('Unsupported URL format');
       }
-      // Return empty string for URLs we can't process
-      return '';
     } catch (error) {
       console.error('Error converting image to base64:', error);
       return '';
@@ -224,12 +249,31 @@ export default function AIContentGenerator({
             // Try just the first image
             if (imagesToProcess.length > 0) {
               console.log(`Attempting to process image 1 of ${imageUrls.length}`);
-              const base64 = await fetchImageAsBase64(imagesToProcess[0]);
-              if (base64 && base64.length > 0) { // Accept any valid image now that we have better compression
-                processedImageUrls.push(base64);
-                console.log(`Successfully processed image with final size ${(base64.length / 1024).toFixed(2)}KB`);
-              } else {
-                console.log(`Failed to process image: ${base64 ? (base64.length / 1024).toFixed(2) + 'KB' : 'empty result'}`);
+              try {
+                const base64 = await fetchImageAsBase64(imagesToProcess[0]);
+                
+                // More detailed logging
+                console.log(`Base64 image result length: ${base64?.length || 0}`);
+                console.log(`Is empty: ${!base64 || base64.length === 0}`);
+                
+                // Verify the base64 string is valid
+                if (base64 && base64.length > 0) {
+                  // Additional validation - only include valid base64 characters
+                  const isValidBase64 = /^[A-Za-z0-9+/=]+$/.test(base64);
+                  
+                  if (isValidBase64) {
+                    console.log(`Successfully processed image with final size ${(base64.length / 1024).toFixed(2)}KB - valid base64: ✓`);
+                    processedImageUrls.push(base64);
+                  } else {
+                    console.error(`Image data contains invalid base64 characters`);
+                    fallbackToNoImages = true;
+                  }
+                } else {
+                  console.log(`Failed to process image: ${base64 ? (base64.length / 1024).toFixed(2) + 'KB' : 'empty result'}`);
+                  fallbackToNoImages = true;
+                }
+              } catch (imageError) {
+                console.error("Image processing error:", imageError);
                 fallbackToNoImages = true;
               }
             }
@@ -430,7 +474,7 @@ export default function AIContentGenerator({
                           )}
                         </div>
                       )}
-                      {imageUrls && imageUrls.length > 0 && (
+                      {generatedPreview?.imageInsights && (
                         <div className="flex items-center text-xs text-green-600">
                           <svg 
                             xmlns="http://www.w3.org/2000/svg" 
@@ -448,7 +492,7 @@ export default function AIContentGenerator({
                             <circle cx="9" cy="9" r="2" />
                             <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                           </svg>
-                          Using {generatedPreview?.imageInsights ? "1" : "0"} image{generatedPreview?.imageInsights ? "" : "s"} for enhanced descriptions
+                          AI vision analysis included for enhanced descriptions
                         </div>
                       )}
                     </div>
