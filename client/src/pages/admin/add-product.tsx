@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Upload, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AIContentGenerator from "@/components/admin/ai-content-generator";
 import { useToast } from "@/hooks/use-toast";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
+import { useDropzone } from "react-dropzone";
 
 interface FormValues {
   title: string;
@@ -33,6 +34,7 @@ interface FormValues {
   detailedDescription: string;
   metalType: string;
   metalWeight: string;
+  userDescription: string;
   isNew: boolean;
   isBestseller: boolean;
   isFeatured: boolean;
@@ -42,6 +44,10 @@ export default function AddProduct() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedStoneTypes, setSelectedStoneTypes] = useState<string[]>([]);
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
+  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
   
   // Initialize form with default values
   const form = useForm<FormValues>({
@@ -55,6 +61,7 @@ export default function AddProduct() {
       detailedDescription: "",
       metalType: "",
       metalWeight: "",
+      userDescription: "",
       isNew: false,
       isBestseller: false,
       isFeatured: false,
@@ -94,6 +101,65 @@ export default function AddProduct() {
     name: stone,
     // We would normally have carats here, but keeping it simple for now
   }));
+  
+  // Main image dropzone
+  const onMainImageDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+      setMainImageFile(file);
+      
+      // Create preview for the image
+      const objectUrl = URL.createObjectURL(file);
+      setMainImagePreview(objectUrl);
+      
+      toast({
+        title: "Main Image Uploaded",
+        description: "The main product image has been uploaded successfully.",
+      });
+    }
+  }, [toast]);
+  
+  const { getRootProps: getMainImageRootProps, getInputProps: getMainImageInputProps } = useDropzone({
+    onDrop: onMainImageDrop,
+    accept: {
+      'image/jpeg': [],
+      'image/png': [],
+    },
+    maxFiles: 1,
+  });
+  
+  // Additional images dropzone
+  const onAdditionalImagesDrop = useCallback((acceptedFiles: File[]) => {
+    setAdditionalImageFiles(prev => [...prev, ...acceptedFiles]);
+    
+    // Create previews for the images
+    const objectUrls = acceptedFiles.map(file => URL.createObjectURL(file));
+    setAdditionalImagePreviews(prev => [...prev, ...objectUrls]);
+    
+    toast({
+      title: "Additional Images Uploaded",
+      description: `${acceptedFiles.length} additional images have been uploaded successfully.`,
+    });
+  }, [toast]);
+  
+  const { getRootProps: getAdditionalImagesRootProps, getInputProps: getAdditionalImagesInputProps } = useDropzone({
+    onDrop: onAdditionalImagesDrop,
+    accept: {
+      'image/jpeg': [],
+      'image/png': [],
+    },
+  });
+  
+  // Remove additional image
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImageFiles(prev => prev.filter((_, i) => i !== index));
+    
+    // Revoke object URL and remove preview
+    if (additionalImagePreviews[index]) {
+      URL.revokeObjectURL(additionalImagePreviews[index]);
+    }
+    setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <AdminLayout title="Add Product">
@@ -379,12 +445,113 @@ export default function AddProduct() {
                   </Card>
                 </div>
                 
-                <div>
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>AI Content Generator Inputs</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Product Type</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select product type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="rings">Rings</SelectItem>
+                                <SelectItem value="necklaces">Necklaces</SelectItem>
+                                <SelectItem value="earrings">Earrings</SelectItem>
+                                <SelectItem value="bracelets">Bracelets</SelectItem>
+                                <SelectItem value="pendants">Pendants</SelectItem>
+                                <SelectItem value="bridal">Bridal</SelectItem>
+                                <SelectItem value="customized">Customized</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="metalType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Metal Type</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select metal type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="18k Gold">18k Gold</SelectItem>
+                                <SelectItem value="14k Gold">14k Gold</SelectItem>
+                                <SelectItem value="22k Gold">22k Gold</SelectItem>
+                                <SelectItem value="24k Gold">24k Gold</SelectItem>
+                                <SelectItem value="Platinum">Platinum</SelectItem>
+                                <SelectItem value="Sterling Silver">Sterling Silver</SelectItem>
+                                <SelectItem value="Rose Gold 18k">Rose Gold 18k</SelectItem>
+                                <SelectItem value="White Gold 18k">White Gold 18k</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="metalWeight"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Metal Weight (grams)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="userDescription"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Custom Description (Optional)</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Add any specific details you want to include in the AI generation"
+                                className="min-h-[80px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+                  
                   <AIContentGenerator
                     productType={productType}
                     metalType={metalType}
                     metalWeight={metalWeight}
                     primaryGems={primaryGems}
+                    userDescription={form.watch("userDescription")}
                     onContentGenerated={handleContentGenerated}
                   />
                 </div>
@@ -392,14 +559,103 @@ export default function AddProduct() {
             </TabsContent>
             
             <TabsContent value="images">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Images</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Image upload section will be implemented in the next phase.</p>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Main Product Image</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      This will be the primary image shown on product listings
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div
+                      {...getMainImageRootProps()}
+                      className={`border-2 border-dashed rounded-md p-6 ${
+                        mainImagePreview ? "border-green-500" : "border-gray-300"
+                      } hover:border-primary cursor-pointer transition-colors flex flex-col items-center justify-center h-52`}
+                    >
+                      <input {...getMainImageInputProps()} />
+                      
+                      {mainImagePreview ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={mainImagePreview}
+                            alt="Main product"
+                            className="w-full h-full object-contain"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-0 right-0"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              URL.revokeObjectURL(mainImagePreview);
+                              setMainImageFile(null);
+                              setMainImagePreview(null);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            Drag & drop your main product image here or click to browse
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            JPG or PNG, recommended size: 1000x1000px
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Additional Product Images</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      These will be shown in the product detail gallery
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div
+                      {...getAdditionalImagesRootProps()}
+                      className="border-2 border-dashed rounded-md p-6 border-gray-300 hover:border-primary cursor-pointer transition-colors flex flex-col items-center justify-center h-32 mb-4"
+                    >
+                      <input {...getAdditionalImagesInputProps()} />
+                      <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Drag & drop additional product images here or click to browse
+                      </p>
+                    </div>
+                    
+                    {additionalImagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mt-4">
+                        {additionalImagePreviews.map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={preview}
+                              alt={`Product view ${index + 1}`}
+                              className="w-full h-20 object-cover rounded-md"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6"
+                              onClick={() => removeAdditionalImage(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </Form>
