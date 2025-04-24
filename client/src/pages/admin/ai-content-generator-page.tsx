@@ -338,14 +338,40 @@ export default function AIContentGeneratorPage() {
   // Test the OpenAI connection
   const testOpenAIConnection = async () => {
     try {
+      // Start by showing a loading toast
+      toast({
+        title: "Testing OpenAI Connection",
+        description: "Please wait while we test the connection...",
+      });
+      
+      // Make the API request
       const response = await fetch("/api/test-openai");
       
+      // Check for HTTP errors
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        const errorText = await response.text();
+        let errorMessage;
+        
+        try {
+          // Try to parse as JSON, but fall back to text if it fails
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || "Failed to connect to OpenAI API.";
+        } catch (jsonError) {
+          errorMessage = errorText || `HTTP error ${response.status}`;
+        }
+        
+        toast({
+          title: "OpenAI Connection Test Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
       }
       
+      // Parse the response
       const data = await response.json();
       
+      // Show success or failure based on the response
       if (data.success) {
         toast({
           title: "OpenAI Connection Test",
