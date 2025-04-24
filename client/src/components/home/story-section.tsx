@@ -39,15 +39,23 @@ export default function StorySection() {
           <div>
             <div className="relative">
               <img 
-                src="https://images.pexels.com/photos/3861964/pexels-photo-3861964.jpeg?auto=compress&cs=tinysrgb&w=800" 
+                src="/images/story/cad-design.jpg" 
                 alt="Designer working on jewelry CAD design" 
                 className="rounded-lg shadow-xl"
+                onError={(e) => {
+                  // Fallback image in case the custom one fails to load
+                  e.currentTarget.src = "https://images.pexels.com/photos/3861964/pexels-photo-3861964.jpeg?auto=compress&cs=tinysrgb&w=800";
+                }}
               />
                 
               <img 
-                src="https://images.pexels.com/photos/11640323/pexels-photo-11640323.jpeg?auto=compress&cs=tinysrgb&w=400" 
-                alt="Finished luxury blue gemstone ring" 
+                src="/images/story/finished-jewelry.jpg" 
+                alt="Finished luxury jewelry piece" 
                 className="absolute -bottom-10 -right-10 w-48 h-48 object-cover rounded-lg shadow-xl border-4 border-background"
+                onError={(e) => {
+                  // Fallback image in case the custom one fails to load
+                  e.currentTarget.src = "https://images.pexels.com/photos/11640323/pexels-photo-11640323.jpeg?auto=compress&cs=tinysrgb&w=400";
+                }}
               />
             </div>
           </div>
