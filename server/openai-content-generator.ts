@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { Request, Response } from "express";
 import { ChatCompletionMessageParam } from "openai/resources";
+import { calculateJewelryPrice } from "./utils/price-calculator";
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -20,64 +21,6 @@ interface JewelryContentResponse {
   detailedDescription: string;
   priceUSD: number;
   priceINR: number;
-}
-
-// USD to INR conversion rate
-const USD_TO_INR_RATE = 83.5;
-
-// Base prices for different metals (per gram in USD)
-const METAL_PRICES = {
-  "18k Gold": 64,
-  "14k Gold": 50,
-  "22k Gold": 78,
-  "24k Gold": 85,
-  "Platinum": 34,
-  "Sterling Silver": 1,
-  "Rose Gold 18k": 64,
-  "White Gold 18k": 65,
-};
-
-// Base prices for common gems (per carat in USD)
-const GEM_PRICES = {
-  "Diamond": 3500,
-  "Ruby": 1200,
-  "Sapphire": 1000,
-  "Emerald": 800,
-  "Amethyst": 300,
-  "Aquamarine": 500,
-  "Tanzanite": 600,
-  "Topaz": 200,
-  "Opal": 400,
-  "Pearl": 150,
-  "Garnet": 250,
-  "Peridot": 300,
-  "Tourmaline": 350,
-  "Citrine": 150,
-  "Morganite": 300,
-};
-
-// Calculate price based on materials
-function calculateEstimatedPrice(
-  metalType: string,
-  metalWeight: number = 5,
-  gems: Array<{ name: string; carats?: number }> = []
-): number {
-  // Base metal price
-  const metalPricePerGram = METAL_PRICES[metalType as keyof typeof METAL_PRICES] || 50;
-  const metalPrice = metalPricePerGram * metalWeight;
-  
-  // Gem prices
-  let gemPrice = 0;
-  for (const gem of gems) {
-    const pricePerCarat = GEM_PRICES[gem.name as keyof typeof GEM_PRICES] || 200;
-    gemPrice += pricePerCarat * (gem.carats || 0.1);
-  }
-  
-  // Add craftsmanship premium (30%)
-  const craftmanshipPremium = (metalPrice + gemPrice) * 0.3;
-  
-  // Total price with minimum of $100
-  return Math.max(metalPrice + gemPrice + craftmanshipPremium, 100);
 }
 
 // Generate jewelry content
@@ -103,8 +46,13 @@ export async function generateJewelryContent(req: Request, res: Response) {
     
     console.log(`Processing request for ${productType} in ${metalType}`);
     
-    // Calculate price
-    const estimatedUSDPrice = calculateEstimatedPrice(metalType, metalWeight, primaryGems);
+    // Calculate price using the centralized price calculator
+    const { priceUSD: estimatedUSDPrice, priceINR: estimatedINRPrice } = calculateJewelryPrice({
+      productType,
+      metalType,
+      metalWeight,
+      primaryGems
+    });
     
     // OpenAI API key validation
     if (!process.env.OPENAI_API_KEY) {
@@ -208,7 +156,7 @@ Please generate elegant marketing content with the exact JSON structure and fiel
     
     // Add pricing to the result
     const priceUSD = Math.round(estimatedUSDPrice);
-    const priceINR = Math.round(estimatedUSDPrice * USD_TO_INR_RATE / 10) * 10;
+    const priceINR = Math.round(estimatedINRPrice);
     
     const finalResponse: JewelryContentResponse = {
       ...result,

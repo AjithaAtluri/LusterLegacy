@@ -1,43 +1,10 @@
 import OpenAI from "openai";
 import { Request, Response } from "express";
 import { ChatCompletionMessageParam, ChatCompletionContentPart } from "openai/resources";
+import { calculateJewelryPrice } from "./utils/price-calculator";
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// USD to INR conversion rate (this would be updated regularly in a production app)
-const USD_TO_INR_RATE = 83.5;
-
-// Base prices for different metals (per gram in USD)
-const METAL_PRICES = {
-  "18k Gold": 64,
-  "14k Gold": 50,
-  "22k Gold": 78,
-  "24k Gold": 85,
-  "Platinum": 34,
-  "Sterling Silver": 1,
-  "Rose Gold 18k": 64,
-  "White Gold 18k": 65,
-};
-
-// Base prices for common gems (per carat in USD)
-const GEM_PRICES = {
-  "Diamond": 3500,
-  "Ruby": 1200,
-  "Sapphire": 1000,
-  "Emerald": 800,
-  "Amethyst": 300,
-  "Aquamarine": 500,
-  "Tanzanite": 600,
-  "Topaz": 200,
-  "Opal": 400,
-  "Pearl": 150,
-  "Garnet": 250,
-  "Peridot": 300,
-  "Tourmaline": 350,
-  "Citrine": 150,
-  "Morganite": 300,
-};
 
 interface Gem {
   name: string;
