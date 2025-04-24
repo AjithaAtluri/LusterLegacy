@@ -861,47 +861,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Testing OpenAI API connection...");
       
-      const OpenAI = (await import("openai")).default;
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      
-      // Log API key presence (not the actual key)
-      console.log("OpenAI API key configured:", process.env.OPENAI_API_KEY ? "✓ Yes" : "✗ No");
+      // Check if OpenAI API key is configured
       if (!process.env.OPENAI_API_KEY) {
+        console.error("OpenAI API key is not configured");
         return res.status(400).json({ 
           success: false, 
           message: "OpenAI API key is not configured"
         });
       }
       
-      // Simple test completion to verify the API key works
-      const testResponse = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo", // Use a simpler model for the test
-        messages: [
-          { role: "system", content: "You are a test assistant." },
-          { role: "user", content: "Return the text 'OpenAI API connection successful' if you can read this." }
-        ],
-        max_tokens: 15
+      console.log("OpenAI API key is configured. Testing connection...");
+      
+      const OpenAI = (await import("openai")).default;
+      const openai = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY 
       });
       
-      if (testResponse.choices && testResponse.choices.length > 0) {
-        console.log("OpenAI API test successful:", testResponse.choices[0].message);
-        res.status(200).json({ 
-          success: true, 
-          message: "OpenAI API connection successful",
-          response: testResponse.choices[0].message
+      // Simple test completion with error handling
+      try {
+        const testResponse = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo", // Use a simpler model for the test
+          messages: [
+            { role: "system", content: "You are a test assistant." },
+            { role: "user", content: "Respond with 'Connection successful' if you receive this message." }
+          ],
+          max_tokens: 15,
+          temperature: 0.1,
         });
-      } else {
-        console.error("OpenAI API test failed: Unexpected response format");
-        res.status(500).json({ 
-          success: false, 
-          message: "OpenAI API test failed: Unexpected response format"
-        });
+        
+        if (testResponse.choices && testResponse.choices.length > 0) {
+          const responseContent = testResponse.choices[0].message.content;
+          console.log("OpenAI API test successful. Response:", responseContent);
+          
+          return res.status(200).json({ 
+            success: true, 
+            message: "OpenAI API connection successful",
+            response: responseContent
+          });
+        } else {
+          console.error("OpenAI API test failed: Unexpected response format");
+          return res.status(500).json({ 
+            success: false, 
+            message: "OpenAI API test failed: Unexpected response format",
+            details: JSON.stringify(testResponse)
+          });
+        }
+      } catch (apiError: any) {
+        console.error("OpenAI API request error:", apiError);
+        // Check for specific error types
+        if (apiError.status === 401) {
+          return res.status(401).json({
+            success: false,
+            message: "OpenAI API authentication failed. Check your API key.",
+            error: apiError.message
+          });
+        } else if (apiError.status === 429) {
+          return res.status(429).json({
+            success: false,
+            message: "OpenAI API rate limit exceeded or insufficient quota.",
+            error: apiError.message
+          });
+        } else {
+          return res.status(500).json({
+            success: false,
+            message: "OpenAI API request failed",
+            error: apiError.message || "Unknown API error"
+          });
+        }
       }
-    } catch (error) {
-      console.error("OpenAI API test error:", error);
-      res.status(500).json({ 
+    } catch (error: any) {
+      console.error("OpenAI connection test general error:", error);
+      return res.status(500).json({ 
         success: false, 
-        message: "OpenAI API test failed",
+        message: "Failed to test OpenAI API connection",
         error: error.message || "Unknown error"
       });
     }

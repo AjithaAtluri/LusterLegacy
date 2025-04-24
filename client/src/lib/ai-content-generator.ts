@@ -59,15 +59,28 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
-    // Try alternate endpoint for development testing first
+    // Try our new improved jewelry content endpoint first
     try {
-      console.log("Trying test endpoint first...");
+      console.log("Trying improved jewelry content endpoint first...");
+      const improvedResponse = await apiRequest("POST", "/api/admin/generate-jewelry-content", data);
+      if (improvedResponse.ok) {
+        console.log("Improved endpoint successful");
+        return await improvedResponse.json();
+      }
+      console.log("Improved endpoint failed (status: " + improvedResponse.status + "), falling back to main endpoint");
+    } catch (e) {
+      console.log("Improved endpoint error:", e);
+    }
+    
+    // Then try the test endpoint as a backup option
+    try {
+      console.log("Trying test endpoint next...");
       const testResponse = await apiRequest("POST", "/api/test-content-generation", data);
       if (testResponse.ok) {
         console.log("Test endpoint successful");
         return await testResponse.json();
       }
-      console.log("Test endpoint failed, falling back to main endpoint");
+      console.log("Test endpoint failed, falling back to standard endpoint");
     } catch (e) {
       console.log("Test endpoint error:", e);
     }

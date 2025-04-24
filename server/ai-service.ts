@@ -288,16 +288,46 @@ export const generateContent = async (req: Request, res: Response) => {
         });
       }
       
-      // Parse the JSON content
+      // Parse the JSON content with improved error handling
       let result;
       try {
-        result = JSON.parse(content);
-        console.log("Successfully parsed AI response JSON");
+        // Clean the response - remove markdown formatting if present
+        const cleanedContent = content
+          .replace(/```json/g, '')  // Remove markdown json code blocks start
+          .replace(/```/g, '')      // Remove any remaining markdown code blocks
+          .trim();                  // Trim whitespace
+          
+        console.log("Attempting to parse cleaned AI response");
+        
+        // Try to parse the cleaned content
+        try {
+          result = JSON.parse(cleanedContent);
+          console.log("Successfully parsed AI response JSON");
+        } catch (initialParseError) {
+          console.error("Failed to parse cleaned content, trying fallback methods:", initialParseError);
+          
+          // Try to find a JSON object in the response if direct parsing fails
+          const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              result = JSON.parse(jsonMatch[0]);
+              console.log("Successfully extracted and parsed JSON from response");
+            } catch (extractError) {
+              console.error("Failed to parse extracted JSON pattern:", extractError);
+              throw new Error("Could not parse JSON after extraction attempt");
+            }
+          } else {
+            throw new Error("No valid JSON structure found in response");
+          }
+        }
       } catch (parseError: any) {
-        console.error("Failed to parse AI response as JSON:", content, parseError);
+        console.error("All JSON parsing attempts failed. Raw content:", content);
+        console.error("Parse error:", parseError.message);
+        
         return res.status(500).json({
           message: "Failed to parse AI response as JSON",
           details: parseError.message || "Unknown parsing error",
+          // Don't include the raw content in the response to avoid leaking potentially large data
         });
       }
       
@@ -305,6 +335,30 @@ export const generateContent = async (req: Request, res: Response) => {
       const priceUSD = Math.round(estimatedUSDPrice);
       const priceINR = Math.round(estimatedUSDPrice * USD_TO_INR_RATE / 10) * 10; // Round to nearest 10 rupees
 
+      // Validate that all required fields are present
+      const requiredFields = ['title', 'tagline', 'shortDescription', 'detailedDescription'];
+      const missingFields = requiredFields.filter(field => !result[field]);
+      
+      if (missingFields.length > 0) {
+        console.error(`AI response missing required fields: ${missingFields.join(', ')}`);
+        console.log("Partial AI response received:", result);
+        
+        // Create default values for missing fields to ensure we can still return a response
+        const defaults: Record<string, string> = {
+          title: `${basicInfo.productType} in ${basicInfo.metalType}`,
+          tagline: "Elegant craftsmanship meets timeless design",
+          shortDescription: `Beautifully crafted ${basicInfo.productType.toLowerCase()} made with premium ${basicInfo.metalType.toLowerCase()}.`,
+          detailedDescription: `This exquisite ${basicInfo.productType.toLowerCase()} is meticulously crafted from the finest ${basicInfo.metalType.toLowerCase()}, weighing approximately ${basicInfo.metalWeight}g. A perfect addition to any jewelry collection.`
+        };
+        
+        // Fill in any missing fields with defaults
+        missingFields.forEach(field => {
+          result[field] = defaults[field] || `Generated ${field}`;
+        });
+        
+        console.log("Added default values for missing fields");
+      }
+      
       // Construct the final response
       const finalResponse = {
         ...result,
