@@ -46,6 +46,50 @@ export default function AIContentGenerator({
   const [regenerateCount, setRegenerateCount] = useState(0);
   const { toast } = useToast();
 
+  // Helper function to resize an image and convert to base64
+  const resizeAndConvertToBase64 = async (blob: Blob, maxWidth = 800, maxHeight = 800, quality = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        // Calculate new dimensions while maintaining aspect ratio
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round(height * (maxWidth / width));
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round(width * (maxHeight / height));
+            height = maxHeight;
+          }
+        }
+        
+        // Create canvas and draw resized image
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to base64 with reduced quality
+        const base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
+        resolve(base64);
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(blob);
+    });
+  };
+  
   // Helper function to fetch and convert a blob URL to base64
   const fetchImageAsBase64 = async (url: string): Promise<string> => {
     try {
@@ -54,23 +98,24 @@ export default function AIContentGenerator({
         const response = await fetch(url);
         const blob = await response.blob();
         
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-              // Extract only the base64 part without the data URL prefix
-              const base64 = reader.result.split(',')[1];
-              resolve(base64);
-            } else {
-              reject(new Error('Failed to convert image to base64'));
-            }
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
+        // Resize the image before converting to base64
+        return await resizeAndConvertToBase64(blob);
       } else if (url.startsWith('data:')) {
-        // It's already a data URL, extract the base64 part
-        return url.split(',')[1];
+        // It's already a data URL, extract the base64 part, but convert it to a blob first to resize
+        const base64Data = url.split(',')[1];
+        const byteString = window.atob(base64Data);
+        const mimeType = url.split(',')[0].split(':')[1].split(';')[0];
+        
+        // Convert base64 to blob
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([ab], { type: mimeType });
+        
+        // Resize the blob and convert back to base64
+        return await resizeAndConvertToBase64(blob);
       }
       // Return empty string for URLs we can't process
       return '';
@@ -97,19 +142,32 @@ export default function AIContentGenerator({
       setStartTime(Date.now());
       setRegenerateCount(prev => prev + 1);
       
-      // Process all image URLs to convert them to base64
+      // Process image URLs to convert them to base64, limiting to 2 images max to avoid API size limits
       const processedImageUrls: string[] = [];
       if (imageUrls && imageUrls.length > 0) {
+        // Limit to max 2 images to avoid payload size issues
+        const maxImages = 2;
+        const imagesToProcess = imageUrls.slice(0, maxImages);
+        
         toast({
           title: "Processing Images",
-          description: `Converting ${imageUrls.length} images for AI analysis...`,
+          description: `Converting ${imagesToProcess.length}${imageUrls.length > maxImages ? ` of ${imageUrls.length}` : ''} images for AI analysis...`,
         });
         
-        for (const url of imageUrls) {
-          const base64 = await fetchImageAsBase64(url);
-          if (base64) {
-            processedImageUrls.push(base64);
+        for (const url of imagesToProcess) {
+          try {
+            const base64 = await fetchImageAsBase64(url);
+            if (base64) {
+              processedImageUrls.push(base64);
+            }
+          } catch (error) {
+            console.error("Failed to process image:", error);
+            // Continue with other images even if one fails
           }
+        }
+        
+        if (imageUrls.length > maxImages) {
+          console.log(`Only using ${maxImages} of ${imageUrls.length} images to stay within API limits`);
         }
       }
       
@@ -291,7 +349,7 @@ export default function AIContentGenerator({
                             <circle cx="9" cy="9" r="2" />
                             <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                           </svg>
-                          Using {Math.min(imageUrls.length, 4)} image{imageUrls.length > 1 ? "s" : ""} for enhanced descriptions
+                          Using {Math.min(imageUrls.length, 2)} image{imageUrls.length > 1 ? "s" : ""} for enhanced descriptions
                         </div>
                       )}
                     </div>
@@ -331,9 +389,9 @@ export default function AIContentGenerator({
                       (Multiple images will provide better accuracy)
                     </span>
                   )}
-                  {imageUrls.length > 4 && (
+                  {imageUrls.length > 2 && (
                     <p className="text-xs text-amber-600 mt-1">
-                      Note: Only the first 4 images will be analyzed due to API limitations
+                      Note: Only the first 2 images will be analyzed to stay within API size limits
                     </p>
                   )}
                 </div>
@@ -419,7 +477,7 @@ export default function AIContentGenerator({
                         <circle cx="9" cy="9" r="2" />
                         <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                       </svg>
-                      {Math.min(imageUrls.length, 4)} image{imageUrls.length > 1 ? "s" : ""} analyzed
+                      {Math.min(imageUrls.length, 2)} image{imageUrls.length > 1 ? "s" : ""} analyzed
                     </span>
                   )}
                 </div>
