@@ -379,3 +379,33 @@ export const insertInspirationGallerySchema = createInsertSchema(inspirationGall
 
 export type InspirationGalleryItem = typeof inspirationGallery.$inferSelect;
 export type InsertInspirationGalleryItem = z.infer<typeof insertInspirationGallerySchema>;
+
+// Product types schema
+export const productTypes = pgTable("product_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  icon: text("icon"), // icon name from Lucide icons
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const insertProductTypeSchema = createInsertSchema(productTypes).pick({
+  name: true,
+  description: true,
+  displayOrder: true,
+  isActive: true,
+  icon: true,
+});
+
+export type ProductType = typeof productTypes.$inferSelect;
+export type InsertProductType = z.infer<typeof insertProductTypeSchema>;
+
+// Product types relations 
+export const productTypesRelations = relations(productTypes, ({ many }) => ({
+  products: many(products, {
+    fields: [productTypes.name],
+    references: [products.category],
+  }),
+}));

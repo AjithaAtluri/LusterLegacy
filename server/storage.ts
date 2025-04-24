@@ -22,6 +22,8 @@ import {
   ProductStone,
   InspirationGalleryItem,
   InsertInspirationGalleryItem,
+  ProductType,
+  InsertProductType,
   users,
   products,
   designRequests,
@@ -33,7 +35,8 @@ import {
   metalTypes,
   stoneTypes,
   productStones,
-  inspirationGallery
+  inspirationGallery,
+  productTypes
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, SQL } from "drizzle-orm";
@@ -123,6 +126,14 @@ export interface IStorage {
   createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem>;
   updateInspirationItem(id: number, item: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined>;
   deleteInspirationItem(id: number): Promise<boolean>;
+  
+  // Product Type methods
+  getProductType(id: number): Promise<ProductType | undefined>;
+  getAllProductTypes(): Promise<ProductType[]>;
+  getActiveProductTypes(): Promise<ProductType[]>;
+  createProductType(productType: InsertProductType): Promise<ProductType>;
+  updateProductType(id: number, productType: Partial<InsertProductType>): Promise<ProductType | undefined>;
+  deleteProductType(id: number): Promise<boolean>;
 }
 
 // In-memory storage implementation
@@ -151,6 +162,8 @@ export class MemStorage implements IStorage {
   private currentMetalTypeId: number;
   private currentStoneTypeId: number;
   private currentInspirationItemId: number;
+  private currentProductTypeId: number;
+  private productTypes: Map<number, ProductType>;
 
   constructor() {
     this.users = new Map();
@@ -165,6 +178,7 @@ export class MemStorage implements IStorage {
     this.stoneTypes = new Map();
     this.productStones = new Map();
     this.inspirationItems = new Map();
+    this.productTypes = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;
@@ -177,6 +191,7 @@ export class MemStorage implements IStorage {
     this.currentMetalTypeId = 1;
     this.currentStoneTypeId = 1;
     this.currentInspirationItemId = 1;
+    this.currentProductTypeId = 1;
     
     // Initialize with sample data
     this.initSampleData();
@@ -587,6 +602,44 @@ export class MemStorage implements IStorage {
 
   async deleteInspirationItem(id: number): Promise<boolean> {
     return this.inspirationItems.delete(id);
+  }
+  
+  // Product Type methods
+  async getProductType(id: number): Promise<ProductType | undefined> {
+    return this.productTypes.get(id);
+  }
+  
+  async getAllProductTypes(): Promise<ProductType[]> {
+    return Array.from(this.productTypes.values()).sort((a, b) => 
+      (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name)
+    );
+  }
+  
+  async getActiveProductTypes(): Promise<ProductType[]> {
+    return Array.from(this.productTypes.values())
+      .filter(type => type.isActive)
+      .sort((a, b) => (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name));
+  }
+  
+  async createProductType(productType: InsertProductType): Promise<ProductType> {
+    const id = this.currentProductTypeId++;
+    const createdAt = new Date();
+    const newProductType: ProductType = { ...productType, id, createdAt };
+    this.productTypes.set(id, newProductType);
+    return newProductType;
+  }
+  
+  async updateProductType(id: number, productTypeUpdate: Partial<InsertProductType>): Promise<ProductType | undefined> {
+    const productType = this.productTypes.get(id);
+    if (!productType) return undefined;
+    
+    const updatedProductType = { ...productType, ...productTypeUpdate };
+    this.productTypes.set(id, updatedProductType);
+    return updatedProductType;
+  }
+  
+  async deleteProductType(id: number): Promise<boolean> {
+    return this.productTypes.delete(id);
   }
 
   // Initialize sample data
