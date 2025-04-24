@@ -837,6 +837,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Advanced AI product content generator with image analysis
+  app.post('/api/admin/generate-product-content', validateAdmin, async (req, res) => {
+    try {
+      console.log("Using advanced product content generator with image analysis");
+      // Pass the request to the product content generator
+      await generateProductContent(req, res);
+    } catch (error) {
+      console.error('Error generating product content:', error);
+      res.status(500).json({ message: 'Failed to generate product content' });
+    }
+  });
+  
   // Test endpoint to directly generate content (non-admin, for testing only)
   app.post('/api/test-content-generation', async (req, res) => {
     try {
@@ -1216,6 +1228,21 @@ Respond in JSON format:
     }
   });
   
+  // Get product types for admin
+  app.get('/api/admin/product-types', async (req, res) => {
+    try {
+      const productTypes = await storage.getAllProductTypes();
+      res.json(productTypes);
+    } catch (error) {
+      console.error('Error fetching product types:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching product types',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Test endpoint for OpenAI API
   app.get("/api/test-openai", async (req, res) => {
     try {

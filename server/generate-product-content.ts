@@ -114,7 +114,7 @@ export const generateProductContent = async (req: Request, res: Response) => {
         if (secondaryStoneType) {
           stoneInfo.push({
             type: secondaryStoneType,
-            weight: secondaryStoneWeight,
+            weight: secondaryStoneWeight || 0.5,
             position: 'secondary'
           });
         }
@@ -122,7 +122,7 @@ export const generateProductContent = async (req: Request, res: Response) => {
         if (otherStoneType) {
           stoneInfo.push({
             type: otherStoneType,
-            weight: otherStoneWeight,
+            weight: otherStoneWeight || 0.2,
             position: 'other'
           });
         }
