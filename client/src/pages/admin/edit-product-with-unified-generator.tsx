@@ -25,6 +25,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ProductType, StoneType } from "@shared/schema";
 
+interface ProductData {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  basePriceINR?: number;
+  tagline?: string;
+  details?: string;
+  metalType?: string;
+  metalWeight?: number;
+  userDescription?: string;
+  imageUrl?: string;
+  additionalImages?: string[];
+  isNew?: boolean;
+  isBestseller?: boolean;
+  isFeatured?: boolean;
+  productTypeId?: number;
+  productType?: string;
+  category?: string; // Legacy field
+  stoneTypes?: string[] | Array<{name: string, carats?: number}>;
+}
+
 interface FormValues {
   title: string;
   tagline: string;
@@ -90,7 +112,7 @@ export default function EditProduct() {
   });
   
   // Fetch product data
-  const { data: productData, isLoading, error } = useQuery({
+  const { data: productData, isLoading, error } = useQuery<ProductData>({
     queryKey: ['/api/admin/products', params.id],
     enabled: !!params.id
   });
@@ -120,7 +142,7 @@ export default function EditProduct() {
       if (productData.stoneTypes && Array.isArray(productData.stoneTypes)) {
         // Handle if stoneTypes is an array of strings
         if (typeof productData.stoneTypes[0] === 'string') {
-          setSelectedStoneTypes(productData.stoneTypes);
+          setSelectedStoneTypes(productData.stoneTypes as string[]);
         } 
         // Handle if stoneTypes is an array of objects with name property
         else if (productData.stoneTypes[0] && typeof productData.stoneTypes[0] === 'object') {
