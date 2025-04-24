@@ -97,19 +97,17 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
       formData.append("name", data.name);
       formData.append("priceModifier", data.priceModifier.toString());
       
-      if (data.description) {
-        formData.append("description", data.description);
-      }
-      
-      if (data.color) {
-        formData.append("color", data.color);
-      }
+      // Always include optional fields, even if empty
+      formData.append("description", data.description || "");
+      formData.append("color", data.color || "");
       
       // Add image if present
       if (uploadedImage) {
         formData.append("image", uploadedImage);
       } else if (data.imageUrl) {
         formData.append("imageUrl", data.imageUrl);
+      } else {
+        formData.append("imageUrl", "");
       }
       
       if (stoneTypeId) {

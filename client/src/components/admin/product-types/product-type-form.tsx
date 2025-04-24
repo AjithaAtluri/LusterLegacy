@@ -24,11 +24,11 @@ import { Loader2 } from "lucide-react";
 // Form schema validation
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be 50 characters or less"),
-  description: z.string().max(200, "Description must be 200 characters or less").nullable().optional(),
+  description: z.string().max(200, "Description must be 200 characters or less").default(""),
   displayOrder: z.coerce.number().int().min(0).default(100),
   isActive: z.boolean().default(true),
-  icon: z.string().max(30, "Icon name must be 30 characters or less").nullable().optional(),
-  color: z.string().max(20, "Color code must be 20 characters or less").nullable().optional(),
+  icon: z.string().max(30, "Icon name must be 30 characters or less").default(""),
+  color: z.string().max(20, "Color code must be 20 characters or less").default(""),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -121,12 +121,13 @@ export function ProductTypeForm({ productType, onSuccess, onCancel }: ProductTyp
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const onSubmit = (data: FormValues) => {
-    // Process form data
+    // Process form data before submitting
+    // Convert empty strings to empty strings (not null) to prevent Zod validation errors
     const formData = {
       ...data,
-      description: data.description || null,
-      icon: data.icon || null,
-      color: data.color || null,
+      description: data.description ?? "",
+      icon: data.icon ?? "",
+      color: data.color ?? "",
     };
 
     if (productType) {
