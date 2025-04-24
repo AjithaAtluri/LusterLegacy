@@ -33,7 +33,7 @@ interface Product {
 }
 
 export default function Collections() {
-  const [category, setCategory] = useState<string>("all");
+  const [productType, setProductType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
   
@@ -49,8 +49,8 @@ export default function Collections() {
   
   // Filter and sort products
   const filteredProducts = allProducts.filter((product) => {
-    // Filter by category
-    if (category !== "all" && product.productTypeId !== parseInt(category)) {
+    // Filter by product type
+    if (productType !== "all" && product.productTypeId !== parseInt(productType)) {
       return false;
     }
     
@@ -78,8 +78,8 @@ export default function Collections() {
     }
   });
   
-  // Create categories list from product types plus "All Collections"
-  const categories = [
+  // Create product types list plus "All Collections"
+  const productTypeOptions = [
     { id: "all", name: "All Collections" },
     ...productTypes.map(type => ({ 
       id: type.id.toString(), 
@@ -106,11 +106,11 @@ export default function Collections() {
       
       <div className="container mx-auto px-4 md:px-8 py-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <Tabs defaultValue="all" value={category} onValueChange={setCategory} className="w-full md:w-auto">
+          <Tabs defaultValue="all" value={productType} onValueChange={setProductType} className="w-full md:w-auto">
             <TabsList className="h-auto flex flex-wrap">
-              {categories.map((cat) => (
-                <TabsTrigger key={cat.id} value={cat.id} className="data-[state=active]:bg-primary data-[state=active]:text-background">
-                  {cat.name}
+              {productTypeOptions.map((type) => (
+                <TabsTrigger key={type.id} value={type.id} className="data-[state=active]:bg-primary data-[state=active]:text-background">
+                  {type.name}
                 </TabsTrigger>
               ))}
             </TabsList>
