@@ -39,7 +39,7 @@ export default function AdminProducts() {
   
   // Fetch products
   const { data: products, isLoading } = useQuery({
-    queryKey: ['/api/products'],
+    queryKey: ['/api/admin/products'],
   });
   
   // Filter products by search query
@@ -78,7 +78,7 @@ export default function AdminProducts() {
     setIsDeleting(true);
     
     try {
-      await apiRequest("DELETE", `/api/products/${selectedProduct.id}`, {});
+      await apiRequest("DELETE", `/api/admin/products/${selectedProduct.id}`, {});
       
       toast({
         title: "Product deleted",
@@ -86,7 +86,7 @@ export default function AdminProducts() {
       });
       
       // Invalidate products query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
       
       // Close dialog
       setIsDeleteDialogOpen(false);
