@@ -20,6 +20,7 @@ import fs from "fs";
 import { validateAdmin } from "./utils";
 import { v4 as uuidv4 } from "uuid";
 import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal";
+import { generateContent } from "./ai-service";
 
 // Set up multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
