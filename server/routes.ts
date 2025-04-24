@@ -2031,5 +2031,167 @@ Respond in JSON format:
     }
   });
 
+  /**
+   * Product Types routes
+   */
+  // Get all product types
+  app.get("/api/product-types", async (req, res) => {
+    try {
+      const productTypes = await storage.getAllProductTypes();
+      return res.status(200).json(productTypes);
+    } catch (error: any) {
+      console.error("Error fetching product types:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch product types",
+        error: error.message
+      });
+    }
+  });
+
+  // Get only active product types (for customer-facing pages)
+  app.get("/api/product-types/active", async (req, res) => {
+    try {
+      const productTypes = await storage.getActiveProductTypes();
+      return res.status(200).json(productTypes);
+    } catch (error: any) {
+      console.error("Error fetching active product types:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch active product types",
+        error: error.message
+      });
+    }
+  });
+
+  // Get a specific product type by ID
+  app.get("/api/product-types/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid product type ID"
+        });
+      }
+
+      const productType = await storage.getProductType(id);
+      if (!productType) {
+        return res.status(404).json({
+          success: false,
+          message: "Product type not found"
+        });
+      }
+
+      return res.status(200).json(productType);
+    } catch (error: any) {
+      console.error(`Error fetching product type with ID ${req.params.id}:`, error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch product type",
+        error: error.message
+      });
+    }
+  });
+
+  // Create a new product type
+  app.post("/api/product-types", validateAdmin, async (req, res) => {
+    try {
+      const validatedData = insertProductTypeSchema.parse(req.body);
+      const newProductType = await storage.createProductType(validatedData);
+      
+      return res.status(201).json(newProductType);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      
+      console.error("Error creating product type:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create product type",
+        error: error.message
+      });
+    }
+  });
+
+  // Update an existing product type
+  app.put("/api/product-types/:id", validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid product type ID"
+        });
+      }
+
+      // Partial validation for update
+      const validatedData = insertProductTypeSchema.partial().parse(req.body);
+      
+      const updatedProductType = await storage.updateProductType(id, validatedData);
+      if (!updatedProductType) {
+        return res.status(404).json({
+          success: false,
+          message: "Product type not found"
+        });
+      }
+
+      return res.status(200).json(updatedProductType);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.errors
+        });
+      }
+      
+      console.error(`Error updating product type with ID ${req.params.id}:`, error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update product type",
+        error: error.message
+      });
+    }
+  });
+
+  // Delete a product type
+  app.delete("/api/product-types/:id", validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid product type ID"
+        });
+      }
+
+      const success = await storage.deleteProductType(id);
+      if (!success) {
+        return res.status(404).json({
+          success: false,
+          message: "Product type not found or could not be deleted"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Product type deleted successfully"
+      });
+    } catch (error: any) {
+      console.error(`Error deleting product type with ID ${req.params.id}:`, error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete product type",
+        error: error.message
+      });
+    }
+  });
+
   return httpServer;
 }
