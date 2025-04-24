@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import DesignForm from "@/components/custom-design/design-form";
+import { Button } from "@/components/ui/button";
 
 export default function CustomDesignSection() {
   return (
@@ -16,42 +16,56 @@ export default function CustomDesignSection() {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Design Form (right on mobile, left on desktop) */}
-          <div className="order-2 lg:order-1">
-            <DesignForm />
+        <div className="max-w-3xl mx-auto">
+          <div className="relative mb-16">
+            <img 
+              src="https://images.unsplash.com/photo-1600701707248-20e17cdf1e2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+              alt="Custom jewelry design process" 
+              className="rounded-lg shadow-xl w-full"
+            />
           </div>
           
-          {/* Process Image and Steps (left on mobile, right on desktop) */}
-          <div className="order-1 lg:order-2">
-            <div className="relative">
-              <img 
-                src="https://images.unsplash.com/photo-1600701707248-20e17cdf1e2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-                alt="Custom jewelry design process" 
-                className="rounded-lg shadow-xl w-full"
-              />
-                
-              <div className="absolute -bottom-8 -right-8 bg-background p-6 rounded-lg shadow-lg max-w-xs">
-                <h4 className="font-playfair text-lg font-semibold text-foreground mb-2">Our Design Process</h4>
-                <ul className="font-montserrat text-sm text-foreground/80 space-y-2">
-                  <li className="flex items-start">
-                    <span className="inline-block bg-primary text-pearl w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">1</span>
-                    <span>Submit your design & preferences</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block bg-primary text-pearl w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">2</span>
-                    <span>Receive CAD model & detailed quote</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block bg-primary text-pearl w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">3</span>
-                    <span>Approve design & pay 50% advance</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block bg-primary text-pearl w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">4</span>
-                    <span>Receive your finished masterpiece</span>
-                  </li>
-                </ul>
+          <div className="bg-background p-8 rounded-lg shadow-xl">
+            <h4 className="font-playfair text-2xl font-semibold text-foreground mb-6 text-center">Our Design Process</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</div>
+                <div>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Submit your design</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">Share your inspiration and preferences with our design team</p>
+                </div>
               </div>
+              
+              <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</div>
+                <div>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Receive CAD model</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">Get a detailed 3D visualization and quote for your custom piece</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</div>
+                <div>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Approve & pay 50%</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">Confirm your design and pay the advance to begin production</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">4</div>
+                <div>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Receive your masterpiece</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">Your perfectly crafted jewelry is delivered to your doorstep</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center mt-8">
+              <Button asChild className="bg-primary hover:bg-accent text-background font-montserrat px-8 py-6 h-auto text-lg">
+                <Link href="/custom-design">Start Your Custom Design</Link>
+              </Button>
             </div>
           </div>
         </div>
