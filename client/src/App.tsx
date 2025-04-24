@@ -28,6 +28,7 @@ const FAQ = lazy(() => import("@/pages/faq"));
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/products"));
+const AdminAddProduct = lazy(() => import("@/pages/admin/add-product"));
 const AdminMetalTypes = lazy(() => import("@/pages/admin/metal-types"));
 const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminOrders = lazy(() => import("@/pages/admin/orders"));
@@ -68,6 +69,7 @@ function App() {
             <Route path="/admin" component={AdminLogin} />
             <Route path="/admin/dashboard" component={AdminDashboard} />
             <Route path="/admin/products" component={AdminProducts} />
+            <Route path="/admin/add-product" component={AdminAddProduct} />
             <Route path="/admin/metal-types" component={AdminMetalTypes} />
             <Route path="/admin/stone-types" component={AdminStoneTypes} />
             <Route path="/admin/orders" component={AdminOrders} />
