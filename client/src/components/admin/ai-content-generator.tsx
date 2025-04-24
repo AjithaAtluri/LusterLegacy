@@ -41,6 +41,9 @@ export default function AIContentGenerator({
   const [generatedPreview, setGeneratedPreview] = useState<AIGeneratedContent | null>(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [generationTime, setGenerationTime] = useState<string | null>(null);
+  const [regenerateCount, setRegenerateCount] = useState(0);
   const { toast } = useToast();
 
   const handleGenerateContent = async () => {
@@ -54,8 +57,11 @@ export default function AIContentGenerator({
     }
 
     try {
+      // Track generation stats
       setIsGenerating(true);
       setGenerationError(null);
+      setStartTime(Date.now());
+      setRegenerateCount(prev => prev + 1);
       
       const request: AIContentRequest = {
         productType,
@@ -66,7 +72,19 @@ export default function AIContentGenerator({
         imageUrls
       };
 
+      // Add some analytics info
+      const imgCount = imageUrls?.length || 0;
+      const hasPrimaryGems = primaryGems && primaryGems.length > 0;
+      const gemNames = hasPrimaryGems ? primaryGems.map(g => g.name).join(', ') : 'none';
+      
+      console.log(`Generating AI content for: ${productType}, Metal: ${metalType}, Images: ${imgCount}, Gems: ${gemNames}`);
+      
       const generatedContent = await generateProductContent(request);
+      
+      // Calculate and store generation time
+      const elapsed = Date.now() - (startTime || Date.now());
+      const timeString = (elapsed / 1000).toFixed(1);
+      setGenerationTime(timeString);
       
       // Store the generated content for preview
       setGeneratedPreview(generatedContent);
@@ -74,15 +92,19 @@ export default function AIContentGenerator({
       
       toast({
         title: "Content Generated",
-        description: "AI has successfully generated content for your product!",
+        description: `AI successfully generated content in ${timeString} seconds!`,
         variant: "default"
       });
     } catch (error: any) {
       console.error("Error generating content:", error);
       setGenerationError(error.message || "Failed to generate content");
+      
+      // More detailed error toast with helpful suggestions
       toast({
         title: "Generation Failed",
-        description: "Failed to generate content. Please try again or adjust your inputs.",
+        description: error.message?.includes("OpenAI") 
+          ? "OpenAI API error. Check your connection and API key." 
+          : "Failed to generate content. Verify your inputs are complete and try again.",
         variant: "destructive"
       });
     } finally {
@@ -172,17 +194,68 @@ export default function AIContentGenerator({
               <Alert className="mb-4 bg-green-50 border-green-200">
                 <Check className="h-4 w-4 text-green-500" />
                 <AlertTitle>Content Generated Successfully</AlertTitle>
-                <AlertDescription className="flex justify-between items-center">
-                  <span>Preview and apply the generated content to your product form.</span>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-2 border-green-200 text-green-700 hover:bg-green-100"
-                    onClick={() => setShowPreviewDialog(true)}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Preview
-                  </Button>
+                <AlertDescription>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div className="space-y-1">
+                      <span>Content ready to preview and apply.</span>
+                      {generationTime && (
+                        <div className="flex items-center text-xs text-green-600">
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="12" 
+                            height="12" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            className="mr-1"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          Generated in {generationTime} seconds
+                          {regenerateCount > 1 && (
+                            <span className="ml-2">
+                              • Generation #{regenerateCount}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {imageUrls && imageUrls.length > 0 && (
+                        <div className="flex items-center text-xs text-green-600">
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="12" 
+                            height="12" 
+                            viewBox="0 0 24 24"
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            className="mr-1"
+                          >
+                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                            <circle cx="9" cy="9" r="2" />
+                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                          </svg>
+                          Using {Math.min(imageUrls.length, 4)} image{imageUrls.length > 1 ? "s" : ""} for enhanced descriptions
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-green-200 text-green-700 hover:bg-green-100"
+                      onClick={() => setShowPreviewDialog(true)}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      Preview
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
@@ -274,8 +347,33 @@ export default function AIContentGenerator({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generated Content Preview</DialogTitle>
-            <DialogDescription>
-              Review the AI-generated content before applying it to your product form
+            <DialogDescription className="space-y-1">
+              <p>Review the AI-generated content before applying it to your product form</p>
+              
+              {generationTime && (
+                <div className="flex items-center text-xs text-muted-foreground mt-2">
+                  {generationTime && (
+                    <span className="flex items-center mr-3">
+                      <svg className="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      Generated in {generationTime}s
+                    </span>
+                  )}
+                  
+                  {imageUrls && imageUrls.length > 0 && (
+                    <span className="flex items-center">
+                      <svg className="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                        <circle cx="9" cy="9" r="2" />
+                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                      </svg>
+                      {Math.min(imageUrls.length, 4)} image{imageUrls.length > 1 ? "s" : ""} analyzed
+                    </span>
+                  )}
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
           
@@ -339,6 +437,35 @@ export default function AIContentGenerator({
                     </p>
                   </div>
                 </TabsContent>
+                
+                {generatedPreview.imageInsights && (
+                  <TabsContent value="imageInsights">
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-1">AI Image Analysis Insights</h4>
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="bg-blue-100 p-2 rounded-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
+                                <circle cx="9" cy="9" r="2"></circle>
+                                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                              </svg>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-blue-900">Visual Elements Detected</h5>
+                              <p className="text-sm text-blue-700 whitespace-pre-line mt-1">{generatedPreview.imageInsights}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="text-xs text-blue-600 italic mt-4">
+                            These insights show how the AI analyzed your product images to generate more accurate descriptions.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           )}
