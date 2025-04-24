@@ -411,38 +411,38 @@ export default function CustomDesignSection() {
           
           {/* Our Design Process */}
           <div className="bg-background p-8 rounded-lg shadow-xl">
-            <h4 className="font-playfair text-2xl font-semibold text-foreground mb-6 text-center">Our Design Process</h4>
+            <h4 className="font-playfair text-2xl font-semibold text-foreground mb-6 text-center">Our Design Consultation Process</h4>
             
             <div className="space-y-4">
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</div>
                 <div>
-                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Submit your design</h5>
-                  <p className="font-montserrat text-sm text-foreground/70">Share your inspiration and preferences with our design team</p>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Initial Design Consultation</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">Share your vision with our expert designers who will guide you through the possibilities</p>
                 </div>
               </div>
               
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</div>
                 <div>
-                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Receive CAD model</h5>
-                  <p className="font-montserrat text-sm text-foreground/70">Get a detailed 3D visualization and quote for your custom piece</p>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">CAD Design Development</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">Our designers create detailed 3D renderings of your custom piece for your review</p>
                 </div>
               </div>
               
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</div>
                 <div>
-                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Approve & pay 50%</h5>
-                  <p className="font-montserrat text-sm text-foreground/70">Confirm your design and pay the advance to begin production</p>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Design Refinements</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">We'll incorporate your feedback to perfect every detail until you're completely satisfied</p>
                 </div>
               </div>
               
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
                 <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">4</div>
                 <div>
-                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Receive your masterpiece</h5>
-                  <p className="font-montserrat text-sm text-foreground/70">Your perfectly crafted jewelry is delivered to your doorstep</p>
+                  <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Final Design Approval</h5>
+                  <p className="font-montserrat text-sm text-foreground/70">Approve your custom design to proceed to creation with a 50% advance payment</p>
                 </div>
               </div>
             </div>
