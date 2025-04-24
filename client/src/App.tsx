@@ -16,6 +16,9 @@ const Product = lazy(() => import("@/pages/product"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 
+// Tools and utilities
+const ImageTest = lazy(() => import("@/pages/tools/image-test"));
+
 // Info pages
 const Privacy = lazy(() => import("@/pages/privacy"));
 const Terms = lazy(() => import("@/pages/terms"));
@@ -56,6 +59,9 @@ function App() {
             <Route path="/product/:id" component={Product} />
             <Route path="/checkout" component={Checkout} />
             <Route path="/inspiration" component={InspirationGallery} />
+            
+            {/* Tools */}
+            <Route path="/tools/image-test" component={ImageTest} />
             
             {/* Information pages */}
             <Route path="/privacy" component={Privacy} />
