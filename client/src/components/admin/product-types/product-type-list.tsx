@@ -52,20 +52,13 @@ export function ProductTypeList() {
   const [editingProductType, setEditingProductType] = useState<ProductType | null>(null);
   const [deletingProductTypeId, setDeletingProductTypeId] = useState<number | null>(null);
   
-  const { data: productTypes, isLoading } = useQuery({
+  const { data: productTypes, isLoading } = useQuery<ProductType[]>({
     queryKey: ["/api/product-types"],
-    queryFn: async ({ signal }) => {
-      const res = await apiRequest("GET", "/api/product-types", undefined, { signal });
-      if (!res.ok) throw new Error("Failed to fetch product types");
-      return res.json() as Promise<ProductType[]>;
-    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const res = await apiRequest("DELETE", `/api/product-types/${id}`);
-      if (!res.ok) throw new Error("Failed to delete product type");
-      return res.json();
+      return await apiRequest("DELETE", `/api/product-types/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/product-types"] });
@@ -86,9 +79,7 @@ export function ProductTypeList() {
   
   const toggleActiveMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const res = await apiRequest("PUT", `/api/product-types/${id}`, { isActive });
-      if (!res.ok) throw new Error("Failed to update product type");
-      return res.json();
+      return await apiRequest("PUT", `/api/product-types/${id}`, { isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/product-types"] });
