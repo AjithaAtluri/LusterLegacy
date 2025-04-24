@@ -43,6 +43,8 @@ const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminProductTypes = lazy(() => import("@/pages/admin/product-types"));
 const AdminOrders = lazy(() => import("@/pages/admin/orders"));
 const AdminDesigns = lazy(() => import("@/pages/admin/designs"));
+// AI Content Generator
+const AIContentGenerator = lazy(() => import("@/pages/admin/ai-content-generator-page"));
 
 // Loading component
 const PageLoader = () => (
@@ -90,6 +92,7 @@ function App() {
             <Route path="/admin/product-types" component={AdminProductTypes} />
             <Route path="/admin/orders" component={AdminOrders} />
             <Route path="/admin/designs" component={AdminDesigns} />
+            <Route path="/admin/ai-generator" component={AIContentGenerator} />
             
             {/* Fallback to 404 */}
             <Route component={NotFound} />

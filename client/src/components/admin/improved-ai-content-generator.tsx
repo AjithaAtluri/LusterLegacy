@@ -128,8 +128,8 @@ export default function ImprovedAIContentGenerator({
   
   // Form state
   const [formData, setFormData] = useState({
-    productType: "",
-    metalType: "",
+    productTypes: [] as string[],  // Changed to array for multiple selection
+    metalTypes: [] as string[],    // Changed to array for multiple selection
     metalWeight: 5,
     userDescription: "",
   });
