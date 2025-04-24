@@ -38,6 +38,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet";
+import AdminLayout from "@/components/admin/admin-layout";
 
 // Define the generated content interface
 interface AIGeneratedContent {
@@ -50,7 +52,6 @@ interface AIGeneratedContent {
   imageInsights?: string;
 }
 
-// Define the stone type interface
 interface StoneType {
   id: number;
   name: string;
@@ -58,7 +59,6 @@ interface StoneType {
   description?: string;
 }
 
-// Define the metal type interface
 interface MetalType {
   id: number;
   name: string;
@@ -66,64 +66,58 @@ interface MetalType {
   description?: string;
 }
 
-// Define the product type interface
 interface ProductType {
   id: number;
   name: string;
   description?: string;
 }
 
-// Component for image upload
-const ImageUpload = ({ 
-  label, 
-  onChange, 
-  onRemove, 
-  imagePreview 
-}: { 
-  label: string; 
+// Image upload component
+interface ImageUploadProps {
+  label: string;
   onChange: (file: File) => void; 
-  onRemove: () => void; 
+  onRemove: () => void;
   imagePreview?: string;
-}) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onChange(file);
-    }
-  };
-  
+}
+
+const ImageUpload: React.FC<ImageUploadProps> = ({ label, onChange, onRemove, imagePreview }) => {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      
       {imagePreview ? (
         <div className="relative border rounded-md overflow-hidden aspect-square">
           <img 
             src={imagePreview} 
-            alt="Preview" 
+            alt={label} 
             className="w-full h-full object-cover"
           />
           <Button
             type="button"
             variant="destructive"
             size="icon"
-            className="absolute top-2 right-2 h-8 w-8 rounded-full"
+            className="absolute top-2 right-2 h-7 w-7 rounded-full"
             onClick={onRemove}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
       ) : (
-        <div className="border border-dashed rounded-md p-4 flex flex-col items-center justify-center text-muted-foreground hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => document.getElementById(label.replace(/\s+/g, ''))?.click()}>
-          <ImageIcon className="h-10 w-10 mb-2 opacity-50" />
-          <p className="text-sm mb-1">Click to upload or drag and drop</p>
-          <p className="text-xs">JPG, PNG, WEBP, AVIF (max 10MB)</p>
+        <div 
+          onClick={() => document.getElementById('mainImage')?.click()}
+          className="border border-dashed rounded-md aspect-square flex flex-col items-center justify-center gap-2 p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+        >
+          <Upload className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Click to upload image</p>
+          <p className="text-xs text-muted-foreground">JPG, PNG, WEBP up to 5MB</p>
           <Input 
-            id={label.replace(/\s+/g, '')} 
+            id="mainImage" 
             type="file" 
             accept="image/*" 
             className="hidden" 
-            onChange={handleFileChange}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onChange(file);
+            }}
           />
         </div>
       )}
@@ -132,9 +126,6 @@ const ImageUpload = ({
 };
 
 // Main AI Content Generator Page
-import { Helmet } from "react-helmet";
-import AdminLayout from "@/components/admin/admin-layout";
-
 export default function AIContentGeneratorPage() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -566,7 +557,7 @@ export default function AIContentGeneratorPage() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="none" disabled>No stone types available</SelectItem>
+                        <SelectItem value="no_types" disabled>No stone types available</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -599,7 +590,7 @@ export default function AIContentGeneratorPage() {
                       <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select secondary stone"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {stoneTypesError ? (
                         <SelectItem value="error" disabled>Error loading stone types</SelectItem>
                       ) : isLoadingStoneTypes ? (
@@ -611,7 +602,7 @@ export default function AIContentGeneratorPage() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="none" disabled>No stone types available</SelectItem>
+                        <SelectItem value="no_types" disabled>No stone types available</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -627,7 +618,7 @@ export default function AIContentGeneratorPage() {
                     placeholder="0.5"
                     value={formData.secondaryStoneWeight}
                     onChange={handleInputChange}
-                    disabled={!formData.secondaryStoneType}
+                    disabled={!formData.secondaryStoneType || formData.secondaryStoneType === 'none'}
                   />
                 </div>
               </div>
@@ -644,7 +635,7 @@ export default function AIContentGeneratorPage() {
                       <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select other stone"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {stoneTypesError ? (
                         <SelectItem value="error" disabled>Error loading stone types</SelectItem>
                       ) : isLoadingStoneTypes ? (
@@ -656,7 +647,7 @@ export default function AIContentGeneratorPage() {
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="none" disabled>No stone types available</SelectItem>
+                        <SelectItem value="no_types" disabled>No stone types available</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -672,7 +663,7 @@ export default function AIContentGeneratorPage() {
                     placeholder="0.2"
                     value={formData.otherStoneWeight}
                     onChange={handleInputChange}
-                    disabled={!formData.otherStoneType}
+                    disabled={!formData.otherStoneType || formData.otherStoneType === 'none'}
                   />
                 </div>
               </div>
@@ -684,117 +675,98 @@ export default function AIContentGeneratorPage() {
               <Textarea
                 id="additionalDetails"
                 name="additionalDetails"
-                placeholder="Provide any additional details about the jewelry item..."
-                rows={3}
+                placeholder="Add any other details or specific instructions for the AI..."
                 value={formData.additionalDetails}
                 onChange={handleInputChange}
+                className="min-h-[100px]"
               />
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button 
               variant="outline" 
+              type="button" 
               onClick={testOpenAIConnection}
             >
               Test API Connection
             </Button>
             <Button 
+              type="button" 
               onClick={generateContent} 
-              disabled={isGenerating || formData.productTypes.length === 0 || formData.metalTypes.length === 0 || !formData.mainStoneType || !mainImage}
+              disabled={isGenerating}
+              className="gap-2"
             >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                'Generate Content'
-              )}
+              {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isGenerating ? "Generating..." : "Generate Content"}
             </Button>
           </CardFooter>
         </Card>
         
-        {/* Preview Dialog */}
+        {/* Result Preview Dialog */}
         {generatedContent && (
           <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-3xl">
               <DialogHeader>
-                <DialogTitle className="flex items-center">
-                  <span>AI Generated Content</span>
+                <DialogTitle className="flex items-center gap-2">
+                  Generated Content
                   {isModelFallback && (
-                    <Badge variant="outline" className="ml-2 text-xs">
-                      Used Fallback Model
+                    <Badge variant="outline" className="ml-2 text-xs bg-yellow-50 text-yellow-800 border-yellow-200">
+                      Used fallback model
                     </Badge>
                   )}
                 </DialogTitle>
                 <DialogDescription>
-                  Preview the generated content before applying it to your product.
+                  AI-generated content based on your jewelry details
                 </DialogDescription>
               </DialogHeader>
-
-              <Tabs defaultValue="content" className="w-full">
-                <TabsList className="grid grid-cols-3">
-                  <TabsTrigger value="content">Content</TabsTrigger>
-                  <TabsTrigger value="pricing">Pricing</TabsTrigger>
+              
+              <Tabs defaultValue="formatted">
+                <TabsList>
+                  <TabsTrigger value="formatted">Formatted</TabsTrigger>
                   <TabsTrigger value="raw">Raw JSON</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="content" className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Title</h3>
-                    <p className="border p-3 rounded-md bg-muted/50">{generatedContent.title}</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Tagline</h3>
-                    <p className="border p-3 rounded-md bg-muted/50">{generatedContent.tagline}</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Short Description</h3>
-                    <p className="border p-3 rounded-md bg-muted/50">{generatedContent.shortDescription}</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold">Detailed Description</h3>
-                    <p className="border p-3 rounded-md bg-muted/50 whitespace-pre-line">{generatedContent.detailedDescription}</p>
-                  </div>
-                  
-                  {generatedContent.imageInsights && (
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-semibold">Image Insights</h3>
-                      <p className="border p-3 rounded-md bg-muted/50 whitespace-pre-line">{generatedContent.imageInsights}</p>
+                <TabsContent value="formatted" className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-medium text-lg">{generatedContent.title}</h3>
+                      <p className="text-muted-foreground italic">{generatedContent.tagline}</p>
                     </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="pricing" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-xl">USD Price</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">${generatedContent.priceUSD.toLocaleString()}</div>
-                      </CardContent>
-                    </Card>
                     
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-xl">INR Price</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">₹{generatedContent.priceINR.toLocaleString()}</div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="border rounded-md p-4 bg-muted/30">
-                    <h3 className="font-medium mb-2">Price Details</h3>
-                    <p className="text-sm">
-                      Prices are estimated based on current market values for the specified materials, craftsmanship, and design complexity.
-                      The USD price will be used for orders shipping to the US, while the INR price will be used for orders shipping to India.
-                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Short Description</h4>
+                        <p className="text-sm">{generatedContent.shortDescription}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Price</h4>
+                        <div className="flex gap-3">
+                          <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
+                            USD ${generatedContent.priceUSD.toFixed(2)}
+                          </Badge>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                            INR ₹{generatedContent.priceINR.toFixed(2)}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Detailed Description</h4>
+                      <div className="text-sm border rounded-md p-3 bg-muted/20 whitespace-pre-wrap">
+                        {generatedContent.detailedDescription}
+                      </div>
+                    </div>
+                    
+                    {generatedContent.imageInsights && (
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Image Insights</h4>
+                        <div className="text-sm border rounded-md p-3 bg-muted/20">
+                          {generatedContent.imageInsights}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
                 
