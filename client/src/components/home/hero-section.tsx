@@ -61,11 +61,11 @@ export default function HeroSection() {
             <span className="block mt-2 text-shadow-lg text-white">Designed by You</span>
           </h1>
           
-          {/* Tagline with elegant styling and enhanced readability */}
+          {/* Tagline with elegant styling and enhanced readability - all in gold for better visibility */}
           <div className="mb-12 max-w-xl">
-            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4 text-shadow-sm">
-              <span className="text-primary font-semibold">Experience bespoke luxury in every piece.</span>{" "}
-              <span className="text-pearl font-medium">Timeless elegance reimagined for the modern connoisseur.</span>
+            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4 text-primary text-glow">
+              <span className="font-semibold">Experience bespoke luxury in every piece.</span>{" "}
+              <span className="font-medium">Timeless elegance reimagined for the modern connoisseur.</span>
             </p>
           </div>
           
