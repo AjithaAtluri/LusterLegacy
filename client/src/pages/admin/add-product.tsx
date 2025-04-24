@@ -6,7 +6,6 @@ import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save, Upload, X } from "lucide-react";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // No longer using tabs
 import {
   Form,
   FormControl,
@@ -20,9 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import AIContentGenerator from "@/components/admin/ai-content-generator";
-// Temporarily disabled until fixed
-// import ImprovedAIContentGenerator from "@/components/admin/improved-ai-content-generator";
+import UnifiedAIGenerator from "@/components/admin/unified-ai-generator";
 import { useToast } from "@/hooks/use-toast";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
