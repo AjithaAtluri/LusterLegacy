@@ -103,8 +103,8 @@ export const generateContent = async (req: Request, res: Response) => {
       const apiKey = process.env.OPENAI_API_KEY || '';
       console.log(`API key set: ${apiKey ? 'Yes' : 'No'}, starts with 'sk-': ${apiKey.startsWith('sk-')}`);
       
-      // Log the version of OpenAI module we're using
-      console.log(`OpenAI module version: ${OpenAI.VERSION || 'unknown'}`);
+      // Log information about OpenAI configuration
+      console.log(`OpenAI module initialized and configured`);
     }
     
     let messages;
@@ -168,31 +168,46 @@ export const generateContent = async (req: Request, res: Response) => {
             console.log(`Adding image with data length: ${imageUrl.length} characters`);
             
             try {
-              try {
-                // Test if the base64 string is actually valid
-                const buffer = Buffer.from(imageUrl, 'base64');
+              // Test if the base64 string is actually valid
+              const buffer = Buffer.from(imageUrl, 'base64');
+              
+              // Only proceed if we have a valid buffer with actual content
+              if (buffer.length > 0) {
+                console.log(`Valid base64 image data with buffer length: ${buffer.length}`);
                 
-                // Only proceed if we have a valid buffer with actual content
-                if (buffer.length > 0) {
-                  console.log(`Valid base64 image data with buffer length: ${buffer.length}`);
-                  
-                  // Add the image to the content parts
-                  contentParts.push({
-                    type: "image_url",
-                    image_url: {
-                      url: `data:image/jpeg;base64,${imageUrl}`
-                    }
-                  });
-                  
-                  console.log("Image successfully added to OpenAI request");
-                } else {
-                  console.error("Base64 data created an empty buffer");
+                // Create the image data URL with proper format
+                // Important: We must use data:image/jpeg;base64, prefix exactly
+                const imageDataUrl = `data:image/jpeg;base64,${imageUrl}`;
+                
+                // Make sure the data URL format is correct
+                if (!imageDataUrl.startsWith('data:image/jpeg;base64,')) {
+                  throw new Error("Invalid image data URL format");
                 }
-              } catch (base64Error) {
-                console.error("Failed to convert base64 to buffer:", base64Error);
+                
+                // Log the first part of the URL for debugging (don't log the entire base64 string)
+                console.log(`Image data URL format correct: ${imageDataUrl.substring(0, 30)}...`);
+                
+                // Add the image part according to the OpenAI API specification
+                // Reference: https://platform.openai.com/docs/guides/vision
+                const imagePart: ChatCompletionContentPart = {
+                  type: "image_url", 
+                  image_url: {
+                    url: imageDataUrl,
+                  }
+                };
+                
+                // Add the image to the contentParts array
+                contentParts.push(imagePart);
+                
+                console.log("Image successfully added to OpenAI request");
+                console.log("Content parts now contains:", contentParts.length, "parts");
+                console.log("First part type:", contentParts[0].type);
+                console.log("Second part type:", contentParts[1]?.type || "missing");
+              } else {
+                console.error("Base64 data created an empty buffer");
               }
             } catch (base64Error) {
-              console.error("Invalid base64 image data:", base64Error);
+              console.error("Base64 processing error:", base64Error);
             }
           }
         }
