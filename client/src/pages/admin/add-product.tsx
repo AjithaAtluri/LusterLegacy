@@ -525,9 +525,9 @@ export default function AddProduct() {
                 </Card>
               </div>
               
-              {/* Section Heading for Description & AI */}
+              {/* Section Heading for Product Description */}
               <div className="border-b pb-2 pt-6">
-                <h2 className="text-xl font-semibold">Description & AI Content</h2>
+                <h2 className="text-xl font-semibold">Product Description</h2>
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
