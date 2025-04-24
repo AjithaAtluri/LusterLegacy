@@ -1380,7 +1380,8 @@ Respond in JSON format:
         imageUrl: mainImageUrl || '',
         additionalImages: additionalImages,
         details: req.body.detailedDescription || '', // Map detailedDescription to details
-        category: req.body.category,
+        category: req.body.category, // Keep for backward compatibility
+        productTypeId: req.body.productTypeId ? parseInt(req.body.productTypeId) : null, // New field for proper product type relation
         isNew: isNew,
         isBestseller: isBestseller,
         isFeatured: isFeatured
@@ -1421,7 +1422,14 @@ Respond in JSON format:
     try {
       const id = parseInt(req.params.id);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      // Create an updated data object from request body
       let updateData = { ...req.body };
+      
+      // Handle productTypeId parsing to integer if present
+      if (updateData.productTypeId) {
+        updateData.productTypeId = parseInt(updateData.productTypeId);
+      }
       
       // Get existing product for old image cleanup
       const existingProduct = await storage.getProduct(id);
