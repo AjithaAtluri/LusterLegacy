@@ -22,6 +22,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  console.log("Product data:", product);
   const { 
     metalTypeId, 
     stoneTypeId,
