@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDropzone } from "react-dropzone";
 import { isImageFile, getFileExtension } from "@/lib/utils";
 import type { SubmitHandler } from "react-hook-form";
+import designProcessImage from "@/assets/WhatsApp Image 2025-03-21 at 10.26.13 PM.jpeg";
 
 const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -448,7 +449,7 @@ export default function CustomDesignSection() {
             
             <div className="mt-8 text-center">
               <img 
-                src="https://images.unsplash.com/photo-1600701707248-20e17cdf1e2c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                src={designProcessImage} 
                 alt="Custom jewelry design process" 
                 className="rounded-lg shadow-md w-full h-40 object-cover"
               />
