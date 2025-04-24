@@ -26,6 +26,7 @@ import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal
 import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
+import { generateProductContent } from "./generate-product-content";
 
 // Set up multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
