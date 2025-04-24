@@ -55,14 +55,14 @@ export async function analyzeJewelryImage(req: Request, res: Response) {
       messages: [
         {
           role: "system",
-          content: "You are a luxury jewelry expert and copywriter for a high-end brand called Luster Legacy."
+          content: "You are a luxury e-commerce copywriter specializing in high-end jewelry product listings for Luster Legacy's online store. Your content must be engaging, concise, and optimized for web display. Focus on creating content that converts browsers to buyers with enticing product descriptions."
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Analyze this jewelry image and create complete product content based on what you see and these details:
+              text: `Analyze this jewelry image and create a complete e-commerce product listing based on what you see and these details:
               
               Product Information:
               - Type: ${productType}
@@ -70,22 +70,22 @@ export async function analyzeJewelryImage(req: Request, res: Response) {
               - Gems: ${gemsDescription}
               - Additional Notes: ${userDescription || "None provided"}
               
-              Create the following for this luxury jewelry item:
-              1. A sophisticated product name (max 5 words)
-              2. A compelling tagline (max 15 words)
-              3. A concise 3-sentence description capturing its essence
-              4. A detailed 150-200 word description including:
-                 - Materials and craftsmanship details you can see in the image
-                 - Design highlights and unique features visible in the photo
-                 - Who would wear this piece and for what occasions
-                 - What makes it special and luxurious
-              5. Design highlights section specifically noting shape, setting, and structure
-              6. Materials section details
-              7. Brief notes on what you observed in the image that informed your description
+              Create the following for this luxury jewelry e-commerce listing:
+              1. A SEO-friendly product name (max 5 words) that would stand out in search results
+              2. A compelling tagline that would entice clicks (max 15 words)
+              3. A concise 3-sentence description perfect for product cards and thumbnails
+              4. A detailed product description (150-200 words) optimized for e-commerce that includes:
+                 - Key selling points visible in the image
+                 - Materials and craftsmanship details shoppers would want to know
+                 - Style information (occasion, outfit pairing, etc.)
+                 - Value proposition (why this piece is worth the investment)
+              5. Bullet-point design highlights perfect for quick scanning by online shoppers
+              6. Key materials summary formatted for product specifications section
+              7. Brief notes on the visual elements that influenced your description
               
-              The tone should be elegant, sophisticated, and emotional. Focus on craftsmanship, uniqueness, and how it makes the wearer feel.
+              The tone should be elegant yet persuasive. Focus on benefits to the shopper, the emotions the piece evokes, and why it's a must-have addition to their collection.
               
-              Format your response as JSON with these exact fields:
+              Format your response as JSON ready for immediate integration into our e-commerce platform:
               {
                 "title": "Product Name",
                 "tagline": "Product Tagline",
