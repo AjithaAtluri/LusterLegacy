@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const stoneTypeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
-  priceModifier: z.coerce.number().min(0, "Price modifier cannot be negative"),
+  priceModifier: z.coerce.number().min(0, "Price per carat cannot be negative"),
   imageUrl: z.string().optional(),
   color: z.string().optional(),
 });
@@ -196,18 +196,18 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
               name="priceModifier"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price Modifier (%) *</FormLabel>
+                  <FormLabel>Price per Carat in INR *</FormLabel>
                   <FormControl>
                     <Input 
                       {...field} 
                       type="number" 
                       min={0}
-                      step={1}
-                      placeholder="20" 
+                      step={100}
+                      placeholder="10000" 
                     />
                   </FormControl>
                   <FormDescription>
-                    Price adjustment percentage relative to base price (0 = no change, 20 = +20%)
+                    Base price per carat of this stone in Indian Rupees (INR)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

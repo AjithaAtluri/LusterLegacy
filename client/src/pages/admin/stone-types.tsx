@@ -159,7 +159,7 @@ export default function AdminStoneTypes() {
                     <h3 className="font-playfair font-medium">{stoneType.name}</h3>
                   </div>
                   <span className="text-sm font-medium">
-                    +{stoneType.priceModifier}%
+                    ₹{stoneType.priceModifier}/ct
                   </span>
                 </div>
                 
@@ -270,7 +270,7 @@ export default function AdminStoneTypes() {
               )}
               <div>
                 <h3 className="font-medium">{selectedStoneType.name}</h3>
-                <p className="text-sm text-muted-foreground">Price Modifier: +{selectedStoneType.priceModifier}%</p>
+                <p className="text-sm text-muted-foreground">Price per Carat: ₹{selectedStoneType.priceModifier}</p>
               </div>
             </div>
           )}
