@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 // Define the expected response structure from the AI
 interface AIGeneratedContent {
@@ -49,17 +50,47 @@ interface AIGeneratedContent {
   imageInsights?: string;
 }
 
-// Available stone type options for the form
-const stoneTypeOptions = [
+// Define the stone type interface
+interface StoneType {
+  id: number;
+  name: string;
+  pricePerCarat: number; 
+  description?: string;
+}
+
+// Define the metal type interface
+interface MetalType {
+  id: number;
+  name: string;
+  priceFactor: number;
+  description?: string;
+}
+
+// Define the product type interface
+interface ProductType {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+// The hardcoded options below will be used as fallback only
+// if API fetch fails or during development
+const fallbackStoneTypeOptions = [
   "Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", 
   "Aquamarine", "Tanzanite", "Topaz", "Opal", "Pearl",
   "Garnet", "Peridot", "Tourmaline", "Citrine", "Morganite"
 ];
 
-// Available metal options for the form
-const metalOptions = [
+// Fallback metal options
+const fallbackMetalOptions = [
   "18k Gold", "14k Gold", "22k Gold", "24k Gold", 
   "Platinum", "Sterling Silver", "Rose Gold 18k", "White Gold 18k"
+];
+
+// Fallback product type options
+const fallbackProductTypeOptions = [
+  "Ring", "Necklace", "Bracelet", "Earrings", "Pendant",
+  "Anklet", "Brooch", "Cufflinks", "Tiara", "Bangle"
 ];
 
 /**
@@ -76,6 +107,24 @@ export default function ImprovedAIContentGenerator({
   const [generatedContent, setGeneratedContent] = useState<AIGeneratedContent | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [stoneTypeFields, setStoneTypeFields] = useState([{ name: "", carats: 0.1 }]);
+  
+  // Fetch stone types from the API
+  const { data: stoneTypes, isLoading: isLoadingStoneTypes, error: stoneTypesError } = useQuery<StoneType[]>({
+    queryKey: ['/api/admin/stone-types'],
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+  
+  // Fetch metal types from the API
+  const { data: metalTypes, isLoading: isLoadingMetalTypes, error: metalTypesError } = useQuery<MetalType[]>({
+    queryKey: ['/api/admin/metal-types'],
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+  
+  // Fetch product types from the API
+  const { data: productTypes, isLoading: isLoadingProductTypes, error: productTypesError } = useQuery<ProductType[]>({
+    queryKey: ['/api/admin/product-types'],
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
   
   // Form state
   const [formData, setFormData] = useState({
@@ -269,15 +318,27 @@ export default function ImprovedAIContentGenerator({
                 value={formData.metalType} 
                 onValueChange={(value) => handleSelectChange("metalType", value)}
               >
-                <SelectTrigger id="metalType">
-                  <SelectValue placeholder="Select metal type" />
+                <SelectTrigger id="metalType" className={isLoadingMetalTypes ? "opacity-70" : ""}>
+                  <SelectValue placeholder={isLoadingMetalTypes ? "Loading metal types..." : "Select metal type"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {metalOptions.map((metal) => (
-                    <SelectItem key={metal} value={metal}>
-                      {metal}
-                    </SelectItem>
-                  ))}
+                  {metalTypesError ? (
+                    <SelectItem value="error" disabled>Error loading metal types</SelectItem>
+                  ) : isLoadingMetalTypes ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : metalTypes && metalTypes.length > 0 ? (
+                    metalTypes.map((metalType) => (
+                      <SelectItem key={metalType.id} value={metalType.name}>
+                        {metalType.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    fallbackMetalOptions.map((metalType) => (
+                      <SelectItem key={metalType} value={metalType}>
+                        {metalType} (Fallback)
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -318,15 +379,27 @@ export default function ImprovedAIContentGenerator({
                     value={stone.name} 
                     onValueChange={(value) => updateStoneTypeField(index, 'name', value)}
                   >
-                    <SelectTrigger id={`stoneName-${index}`}>
-                      <SelectValue placeholder="Select stone type" />
+                    <SelectTrigger id={`stoneName-${index}`} className={isLoadingStoneTypes ? "opacity-70" : ""}>
+                      <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select stone type"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {stoneTypeOptions.map((stoneType) => (
-                        <SelectItem key={stoneType} value={stoneType}>
-                          {stoneType}
-                        </SelectItem>
-                      ))}
+                      {stoneTypesError ? (
+                        <SelectItem value="error" disabled>Error loading stone types</SelectItem>
+                      ) : isLoadingStoneTypes ? (
+                        <SelectItem value="loading" disabled>Loading...</SelectItem>
+                      ) : stoneTypes && stoneTypes.length > 0 ? (
+                        stoneTypes.map((stoneType) => (
+                          <SelectItem key={stoneType.id} value={stoneType.name}>
+                            {stoneType.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        fallbackStoneTypeOptions.map((stoneType) => (
+                          <SelectItem key={stoneType} value={stoneType}>
+                            {stoneType} (Fallback)
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
