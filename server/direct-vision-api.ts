@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { Request, Response } from "express";
+import { calculateJewelryPrice } from "./utils/price-calculator";
 
 /**
  * Direct implementation of OpenAI's vision API for jewelry image analysis
@@ -134,24 +135,16 @@ export async function analyzeJewelryImage(req: Request, res: Response) {
     try {
       const parsedContent = JSON.parse(content);
       
-      // Calculate estimated price based on materials
-      const basePrice = 1000; // Base price in USD
+      // Use the centralized price calculator with 2025 market rates
       const metalWeight = req.body.metalWeight || 5;
-      const metalPricePerGram = metalType.toLowerCase().includes('gold') ? 60 : 30;
-      const gemPriceMultiplier = (primaryGems || []).reduce((acc, gem) => {
-        let multiplier = 1;
-        if (gem.name.toLowerCase().includes('diamond')) multiplier = 1000;
-        else if (gem.name.toLowerCase().includes('ruby') || 
-                gem.name.toLowerCase().includes('sapphire') || 
-                gem.name.toLowerCase().includes('emerald')) multiplier = 800;
-        else multiplier = 200;
-        
-        return acc + (gem.carats || 0.5) * multiplier;
-      }, 0);
       
-      const calculatedPrice = basePrice + (metalWeight * metalPricePerGram) + gemPriceMultiplier;
-      const priceUSD = Math.round(calculatedPrice);
-      const priceINR = Math.round(priceUSD * 75); // Approximate exchange rate
+      // Calculate prices using the utility function
+      const { priceUSD, priceINR } = calculateJewelryPrice({
+        productType,
+        metalType,
+        metalWeight,
+        primaryGems
+      });
       
       // Add prices to the response
       const finalResult = {
