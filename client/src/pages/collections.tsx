@@ -6,7 +6,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
+
+// Define product type interface
+interface ProductType {
+  id: number;
+  name: string;
+  description: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  icon: string | null;
+  color: string | null;
+}
+
+// Define product interface
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  imageUrl: string;
+  details?: string;
+  dimensions?: string;
+  productTypeId: number;
+  category?: string;
+}
 
 export default function Collections() {
   const [category, setCategory] = useState<string>("all");
@@ -14,14 +38,19 @@ export default function Collections() {
   const [sortBy, setSortBy] = useState<string>("default");
   
   // Fetch all products
-  const { data: allProducts, isLoading } = useQuery({
+  const { data: allProducts = [], isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ['/api/products'],
   });
   
+  // Fetch active product types
+  const { data: productTypes = [], isLoading: typesLoading } = useQuery<ProductType[]>({
+    queryKey: ['/api/product-types/active'],
+  });
+  
   // Filter and sort products
-  const filteredProducts = allProducts?.filter((product) => {
+  const filteredProducts = allProducts.filter((product) => {
     // Filter by category
-    if (category !== "all" && product.category !== category) {
+    if (category !== "all" && product.productTypeId !== parseInt(category)) {
       return false;
     }
     
@@ -34,7 +63,7 @@ export default function Collections() {
     return true;
   });
   
-  const sortedProducts = [...(filteredProducts || [])].sort((a, b) => {
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case "price-asc":
         return a.basePrice - b.basePrice;
@@ -49,14 +78,13 @@ export default function Collections() {
     }
   });
   
-  // Categories
+  // Create categories list from product types plus "All Collections"
   const categories = [
     { id: "all", name: "All Collections" },
-    { id: "necklace", name: "Necklaces" },
-    { id: "earrings", name: "Earrings" },
-    { id: "ring", name: "Rings" },
-    { id: "bracelet", name: "Bracelets" },
-    { id: "pendant", name: "Pendants" }
+    ...productTypes.map(type => ({ 
+      id: type.id.toString(), 
+      name: type.name 
+    }))
   ];
   
   return (
@@ -115,7 +143,7 @@ export default function Collections() {
           </div>
         </div>
         
-        {isLoading ? (
+        {productsLoading || typesLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {Array(6).fill(0).map((_, index) => (
               <div key={index} className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
