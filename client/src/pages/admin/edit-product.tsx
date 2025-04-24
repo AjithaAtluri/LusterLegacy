@@ -40,6 +40,46 @@ export default function EditProduct() {
     setLocation('/admin/products');
   };
   
+  // State to track modified AI input values
+  const [aiInputs, setAiInputs] = useState({
+    productType: '',
+    metalType: '',
+    metalWeight: undefined as number | undefined,
+    userDescription: ''
+  });
+  
+  // Set up event listener for AI field updates
+  useEffect(() => {
+    // Initialize with product data when it's loaded
+    if (product) {
+      setAiInputs({
+        productType: product.category || '',
+        metalType: product.metalType || '',
+        metalWeight: product.metalWeight ? parseFloat(product.metalWeight) : undefined,
+        userDescription: product.userDescription || ''
+      });
+    }
+    
+    // Add event listener for AI field updates from the component
+    const handleAiFieldUpdate = (event: CustomEvent) => {
+      const { field, value } = event.detail;
+      
+      setAiInputs(prev => ({
+        ...prev,
+        [field]: value
+      }));
+      
+      console.log(`AI field updated: ${field} = ${value}`);
+    };
+    
+    document.addEventListener('ai-field-update', handleAiFieldUpdate as EventListener);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('ai-field-update', handleAiFieldUpdate as EventListener);
+    };
+  }, [product]);
+
   // Handle AI generated content
   const handleContentGenerated = async (content: AIGeneratedContent) => {
     try {
@@ -51,7 +91,12 @@ export default function EditProduct() {
         name: content.title,
         description: content.shortDescription,
         details: content.detailedDescription,
-        basePrice: content.priceINR
+        basePrice: content.priceINR,
+        // Also update the product's category and metal type with the values from AI inputs
+        category: aiInputs.productType || product?.category,
+        metalType: aiInputs.metalType || product?.metalType,
+        metalWeight: aiInputs.metalWeight !== undefined ? aiInputs.metalWeight : product?.metalWeight,
+        userDescription: aiInputs.userDescription || product?.userDescription
       };
       
       // Update the product in state
@@ -74,10 +119,10 @@ export default function EditProduct() {
     }
   };
   
-  // Get values for AI content generator
-  const getProductType = () => product?.category || "";
-  const getMetalType = () => product?.metalType || "";
-  const getMetalWeight = () => product?.metalWeight ? parseFloat(product.metalWeight) : undefined;
+  // Get values for AI content generator - use aiInputs state which is updated by UI interactions
+  const getProductType = () => aiInputs.productType || product?.category || "";
+  const getMetalType = () => aiInputs.metalType || product?.metalType || "";
+  const getMetalWeight = () => aiInputs.metalWeight !== undefined ? aiInputs.metalWeight : product?.metalWeight ? parseFloat(product.metalWeight) : undefined;
   
   // Create gems array for AI content generator
   const getPrimaryGems = () => {
@@ -168,7 +213,7 @@ export default function EditProduct() {
                     metalType={getMetalType()}
                     metalWeight={getMetalWeight()}
                     primaryGems={getPrimaryGems()}
-                    userDescription={product?.userDescription || ""}
+                    userDescription={aiInputs.userDescription || product?.userDescription || ""}
                     imageUrls={product?.imageUrl ? [product.imageUrl] : []}
                     onContentGenerated={handleContentGenerated}
                   />

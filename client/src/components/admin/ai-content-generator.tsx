@@ -564,37 +564,132 @@ export default function AIContentGenerator({
               </Alert>
             )}
             
-            <div className="text-sm space-y-2">
-              <p><strong>Product Type:</strong> {productType || "Not specified"} <span className="text-red-500">*</span></p>
-              <p><strong>Metal Type:</strong> {metalType || "Not specified"} <span className="text-red-500">*</span></p>
-              <p><strong>Metal Weight:</strong> {metalWeight ? `${metalWeight}g` : "Not specified"} <span className="text-xs text-muted-foreground">(optional)</span></p>
-              <p><strong>Gems:</strong> {primaryGems?.length ? primaryGems.map(gem => 
-                `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`
-              ).join(', ') : "None specified"} <span className="text-xs text-muted-foreground">(optional)</span></p>
-              <div>
-                <strong>Your Description:</strong> <span className="text-xs text-muted-foreground">(optional)</span>
-                {userDescription ? (
-                  <p className="mt-1 italic text-muted-foreground">{userDescription}</p>
-                ) : (
-                  <p className="mt-1 text-xs text-muted-foreground">Add a custom description if you want the AI to include specific details or features about this product</p>
-                )}
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Product Type <span className="text-red-500">*</span></label>
+                <select 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={productType || ""}
+                  onChange={(e) => {
+                    // We're using a custom event since we can't modify props directly
+                    if (typeof window !== 'undefined') {
+                      // Update a hidden field that the edit-product page can access
+                      const event = new CustomEvent('ai-field-update', {
+                        detail: {
+                          field: 'productType',
+                          value: e.target.value
+                        }
+                      });
+                      document.dispatchEvent(event);
+                    }
+                  }}
+                >
+                  <option value="">Select Product Type</option>
+                  <option value="necklace">Necklace</option>
+                  <option value="earrings">Earrings</option>
+                  <option value="ring">Ring</option>
+                  <option value="bracelet">Bracelet</option>
+                  <option value="pendant">Pendant</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
-              <div>
-                <strong>Images for Analysis:</strong> <span className="text-xs text-muted-foreground">(optional)</span>
-                {imageUrls?.length ? (
-                  <>
-                    <p>{imageUrls.length} image{imageUrls.length > 1 ? 's' : ''} uploaded</p>
-                    {imageUrls.length > 1 && (
-                      <p className="text-xs text-amber-600 mt-1">
-                        Note: Due to API size limits, only the first image can be processed. Multiple images are still saved with the product.
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Images help the AI generate more accurate descriptions but are not required.
-                  </p>
-                )}
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Metal Type <span className="text-red-500">*</span></label>
+                <select 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  value={metalType || ""}
+                  onChange={(e) => {
+                    if (typeof window !== 'undefined') {
+                      const event = new CustomEvent('ai-field-update', {
+                        detail: {
+                          field: 'metalType',
+                          value: e.target.value
+                        }
+                      });
+                      document.dispatchEvent(event);
+                    }
+                  }}
+                >
+                  <option value="">Select Metal Type</option>
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                  <option value="platinum">Platinum</option>
+                  <option value="white gold">White Gold</option>
+                  <option value="rose gold">Rose Gold</option>
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Metal Weight (g) <span className="text-xs text-muted-foreground">(optional)</span></label>
+                <input 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={metalWeight || ""}
+                  onChange={(e) => {
+                    if (typeof window !== 'undefined') {
+                      const newValue = e.target.value ? parseFloat(e.target.value) : undefined;
+                      const event = new CustomEvent('ai-field-update', {
+                        detail: {
+                          field: 'metalWeight',
+                          value: newValue
+                        }
+                      });
+                      document.dispatchEvent(event);
+                    }
+                  }}
+                  placeholder="Enter weight in grams"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Gems <span className="text-xs text-muted-foreground">(optional)</span></label>
+                <div className="px-3 py-2 border rounded-md bg-muted/20 text-sm">
+                  {primaryGems?.length ? primaryGems.map(gem => 
+                    `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`
+                  ).join(', ') : "None specified"}
+                  <div className="text-xs mt-1 text-muted-foreground">(Select gems from the stone types section below)</div>
+                </div>
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium">Your Description <span className="text-xs text-muted-foreground">(optional)</span></label>
+                <textarea 
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
+                  value={userDescription || ""}
+                  onChange={(e) => {
+                    if (typeof window !== 'undefined') {
+                      const event = new CustomEvent('ai-field-update', {
+                        detail: {
+                          field: 'userDescription',
+                          value: e.target.value
+                        }
+                      });
+                      document.dispatchEvent(event);
+                    }
+                  }}
+                  placeholder="Add a custom description if you want the AI to include specific details or features about this product"
+                />
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium">Images for Analysis <span className="text-xs text-muted-foreground">(optional)</span></label>
+                <div className="px-3 py-2 border rounded-md bg-muted/20 text-sm">
+                  {imageUrls?.length ? (
+                    <>
+                      <p>{imageUrls.length} image{imageUrls.length > 1 ? 's' : ''} uploaded</p>
+                      {imageUrls.length > 1 && (
+                        <p className="text-xs text-amber-600 mt-1">
+                          Note: Due to API size limits, only the first image can be processed. Multiple images are still saved with the product.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground">No images provided for content generation. Adding an image can help improve the quality of generated content.</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
