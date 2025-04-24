@@ -50,29 +50,80 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
     // Show detailed error handling for any issues
     const startTime = Date.now();
     
+    // Log what we're sending to the server for diagnostics
+    console.log("Sending AI content request with:", {
+      productType: data.productType,
+      metalType: data.metalType, 
+      gems: data.primaryGems?.length || 0,
+      hasDescription: !!data.userDescription,
+      imageCount: data.imageUrls?.length || 0
+    });
+    
     const response = await apiRequest("POST", "/api/admin/generate-content", data);
     
     if (!response.ok) {
       let errorMessage = "Failed to generate content";
+      let errorDetails = "";
+      
       try {
         const errorData = await response.json();
+        
+        // Get more detailed error information if available
         errorMessage = errorData.message || errorMessage;
+        errorDetails = errorData.details || errorData.error || "";
+        
+        // Specific error handling based on status code
+        if (response.status === 401 || response.status === 402) {
+          errorMessage = "OpenAI API key issue. Please verify your API key is valid and has sufficient credits.";
+        } else if (response.status === 429) {
+          errorMessage = "Rate limit exceeded. Please try again in a few moments.";
+        } else if (response.status === 413) {
+          errorMessage = "Request too large. Try with fewer or smaller images.";
+        } else if (response.status >= 500) {
+          errorMessage = "Server error processing your request. Please try again or use text-only mode.";
+        }
+        
+        // Log more details for debugging
+        console.error("API Error Response:", {
+          status: response.status,
+          errorMessage,
+          errorDetails,
+          rawError: errorData
+        });
+        
       } catch (e) {
         // If JSON parsing fails, use response status text
-        errorMessage += `: ${response.statusText}`;
+        errorDetails = response.statusText;
+        console.error("Failed to parse error response", e);
       }
-      throw new Error(errorMessage);
+      
+      const finalErrorMessage = errorDetails 
+        ? `${errorMessage}: ${errorDetails}`
+        : errorMessage;
+        
+      throw new Error(finalErrorMessage);
     }
     
     const result = await response.json();
+    
+    // Validate the result has the expected fields
+    if (!result.title || !result.tagline || !result.shortDescription || !result.detailedDescription) {
+      console.error("AI response missing required fields:", result);
+      throw new Error("Incomplete content generated. The AI response is missing required fields.");
+    }
     
     // Calculate generation time
     const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`AI content generated in ${generationTime} seconds`);
     
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating content:", error);
-    throw error;
+    // Make sure we always return a proper Error object with message
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error(error?.message || "Unknown error generating content");
+    }
   }
 }
