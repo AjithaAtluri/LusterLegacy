@@ -105,6 +105,14 @@ export default function AddProduct() {
     form.setValue("basePrice", content.priceUSD.toString());
     form.setValue("basePriceINR", content.priceINR.toString());
     
+    // Handle the imageInsights field if available
+    if (content.imageInsights) {
+      // Store image insights in the database - add a note to the description
+      const enhancedDescription = form.getValues("detailedDescription") + 
+        "\n\n-- Image Analysis Notes --\n" + content.imageInsights;
+      form.setValue("detailedDescription", enhancedDescription);
+    }
+    
     toast({
       title: "Content Applied",
       description: "The AI generated content has been applied to the form",
