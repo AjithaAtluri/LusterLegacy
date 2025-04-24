@@ -14,10 +14,16 @@ import { useQueryClient } from "@tanstack/react-query";
 const metalTypeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   priceModifier: z.coerce.number().min(0, "Price modifier cannot be negative"),
-  description: z.string().nullable().optional(),
+  description: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string().max(500, "Description must be 500 characters or less")
+  ),
   displayOrder: z.number().default(0),
   isActive: z.boolean().default(true),
-  color: z.string().nullable().optional(),
+  color: z.preprocess(
+    (val) => val === null || val === undefined ? "" : val,
+    z.string().max(20, "Color code must be 20 characters or less")
+  ),
 });
 
 type MetalTypeFormValues = z.infer<typeof metalTypeFormSchema>;
@@ -33,14 +39,21 @@ export default function MetalTypeForm({ initialData, metalTypeId, onSuccess }: M
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Transform initialData to ensure null values are converted to empty strings
+  const processedInitialData = initialData ? {
+    ...initialData,
+    description: initialData.description || "",
+    color: initialData.color || "",
+  } : {};
+
   const defaultValues: Partial<MetalTypeFormValues> = {
     name: "",
     priceModifier: 0,
-    description: null,
+    description: "",
     displayOrder: 0,
     isActive: true,
-    color: null,
-    ...initialData
+    color: "",
+    ...processedInitialData
   };
   
   const form = useForm<MetalTypeFormValues>({
