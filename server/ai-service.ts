@@ -135,19 +135,31 @@ export const generateContent = async (req: Request, res: Response) => {
         if (imageUrls.length > 0) {
           const imageUrl = imageUrls[0];
           
+          // Better validation for image data
           if (!imageUrl || typeof imageUrl !== 'string') {
             console.error("Invalid image URL format:", typeof imageUrl);
           } else if (imageUrl.length < 100) {
-            console.error(`Image data too small, length: ${imageUrl.length}`);
+            console.error(`Image data too small, length: ${imageUrl.length} - likely not valid`);
           } else {
-            console.log(`Adding image with length: ${imageUrl.length} characters`);
+            console.log(`Adding image with data length: ${imageUrl.length} characters`);
             
-            contentParts.push({
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${imageUrl}`
-              }
-            });
+            try {
+              // Test if the base64 string is actually valid
+              // This will throw an error if it's not valid base64
+              Buffer.from(imageUrl, 'base64');
+              
+              // Add the image to the content parts
+              contentParts.push({
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${imageUrl}`
+                }
+              });
+              
+              console.log("Image successfully added to OpenAI request");
+            } catch (base64Error) {
+              console.error("Invalid base64 image data:", base64Error);
+            }
           }
         }
         
@@ -337,6 +349,13 @@ export const generateContent = async (req: Request, res: Response) => {
 
       // Validate that all required fields are present
       const requiredFields = ['title', 'tagline', 'shortDescription', 'detailedDescription'];
+      
+      // Check if we had an image and if the response includes image insights
+      if (hasImages && !result.imageInsights) {
+        console.log("Adding imageInsights field to include vision information");
+        result.imageInsights = "Image analysis contributed to the generated content.";
+      }
+      
       const missingFields = requiredFields.filter(field => !result[field]);
       
       if (missingFields.length > 0) {

@@ -46,8 +46,8 @@ export default function AIContentGenerator({
   const [regenerateCount, setRegenerateCount] = useState(0);
   const { toast } = useToast();
 
-  // Helper function to resize an image and convert to base64 with extreme compression
-  const resizeAndConvertToBase64 = async (blob: Blob, maxWidth = 300, maxHeight = 300, quality = 0.4): Promise<string> => {
+  // Improved helper function to resize an image and convert to base64 with optimized compression
+  const resizeAndConvertToBase64 = async (blob: Blob, maxWidth = 512, maxHeight = 512, quality = 0.7): Promise<string> => {
     console.log(`Processing image: Original size ${(blob.size / 1024).toFixed(2)}KB`);
     
     return new Promise((resolve, reject) => {
@@ -60,19 +60,25 @@ export default function AIContentGenerator({
         console.log(`Original dimensions: ${width}x${height}`);
         
         // Determine target size based on original image size
+        // OpenAI's Vision API works well with images 512-1024px, so we target that range
         let targetWidth = maxWidth;
         let targetHeight = maxHeight;
         let targetQuality = quality;
         
-        // More aggressive compression for larger images
-        if (blob.size > 1000000) { // 1MB
-          targetWidth = 250;
-          targetHeight = 250;
-          targetQuality = 0.3;
+        // We're being less aggressive with compression because GPT-4o can handle larger images
+        // But still compress large images more
+        if (blob.size > 2000000) { // 2MB
+          targetWidth = 512;
+          targetHeight = 512;
+          targetQuality = 0.6;
+        } else if (blob.size > 1000000) { // 1MB
+          targetWidth = 768;
+          targetHeight = 768;
+          targetQuality = 0.7;
         } else if (blob.size > 500000) { // 500KB
-          targetWidth = 300;
-          targetHeight = 300;
-          targetQuality = 0.4;
+          targetWidth = 1024;
+          targetHeight = 1024;
+          targetQuality = 0.8;
         }
         
         // Apply resize logic
@@ -98,37 +104,45 @@ export default function AIContentGenerator({
           return;
         }
         
-        // Draw image with smoothing for better compression
+        // Draw image with better quality for vision models
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'medium'; // Lower quality for better compression
+        ctx.imageSmoothingQuality = 'high'; // Better quality for vision models
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Convert to base64 with reduced quality
+        // Convert to base64 with appropriate quality
         const base64 = canvas.toDataURL('image/jpeg', targetQuality).split(',')[1];
         
-        // If base64 is still too large, reduce quality and size further
-        if (base64.length > 60000) { // ~60KB in base64 (extremely conservative)
-          console.log(`Base64 still too large: ${(base64.length / 1024).toFixed(2)}KB - applying extreme compression`);
+        // If base64 is still too large, we'll apply more compression but not as extreme as before
+        // Maximum size increased to 150KB which is reasonable for vision API
+        if (base64.length > 150000) { // ~150KB in base64
+          console.log(`Base64 still large: ${(base64.length / 1024).toFixed(2)}KB - applying higher compression`);
           
-          // Resize again on the same canvas with even smaller dimensions
-          const smallerWidth = Math.round(width * 0.7);
-          const smallerHeight = Math.round(height * 0.7);
+          // Reduce quality but keep dimensions the same
+          const higherCompressionQuality = 0.5;
+          const compressedBase64 = canvas.toDataURL('image/jpeg', higherCompressionQuality).split(',')[1];
+          console.log(`After higher compression: ${(compressedBase64.length / 1024).toFixed(2)}KB`);
           
-          canvas.width = smallerWidth;
-          canvas.height = smallerHeight;
-          
-          // Draw again with lower quality
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'low';
-          ctx.drawImage(img, 0, 0, smallerWidth, smallerHeight);
-          
-          // Use extreme compression
-          const extremeQuality = 0.2;
-          const extremeBase64 = canvas.toDataURL('image/jpeg', extremeQuality).split(',')[1];
-          console.log(`After extreme compression: ${(extremeBase64.length / 1024).toFixed(2)}KB`);
-          resolve(extremeBase64);
+          // If still too large, resize and compress further
+          if (compressedBase64.length > 150000) {
+            const smallerWidth = Math.round(width * 0.75);
+            const smallerHeight = Math.round(height * 0.75);
+            
+            canvas.width = smallerWidth;
+            canvas.height = smallerHeight;
+            
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'medium';
+            ctx.drawImage(img, 0, 0, smallerWidth, smallerHeight);
+            
+            const finalQuality = 0.4;
+            const finalBase64 = canvas.toDataURL('image/jpeg', finalQuality).split(',')[1];
+            console.log(`Final compression: ${(finalBase64.length / 1024).toFixed(2)}KB with ${smallerWidth}x${smallerHeight} at ${finalQuality} quality`);
+            resolve(finalBase64);
+          } else {
+            resolve(compressedBase64);
+          }
         } else {
-          console.log(`Compressed image size: ${(base64.length / 1024).toFixed(2)}KB`);
+          console.log(`Compressed image size: ${(base64.length / 1024).toFixed(2)}KB - good quality for vision API`);
           resolve(base64);
         }
       };
@@ -211,11 +225,11 @@ export default function AIContentGenerator({
             if (imagesToProcess.length > 0) {
               console.log(`Attempting to process image 1 of ${imageUrls.length}`);
               const base64 = await fetchImageAsBase64(imagesToProcess[0]);
-              if (base64 && base64.length < 50000) { // ~50KB size limit
+              if (base64 && base64.length > 0) { // Accept any valid image now that we have better compression
                 processedImageUrls.push(base64);
                 console.log(`Successfully processed image with final size ${(base64.length / 1024).toFixed(2)}KB`);
               } else {
-                console.log(`Image too large after compression: ${base64 ? (base64.length / 1024).toFixed(2) + 'KB' : 'failed to process'}`);
+                console.log(`Failed to process image: ${base64 ? (base64.length / 1024).toFixed(2) + 'KB' : 'empty result'}`);
                 fallbackToNoImages = true;
               }
             }
