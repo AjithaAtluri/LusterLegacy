@@ -46,8 +46,10 @@ export default function AIContentGenerator({
   const [regenerateCount, setRegenerateCount] = useState(0);
   const { toast } = useToast();
 
-  // Helper function to resize an image and convert to base64
-  const resizeAndConvertToBase64 = async (blob: Blob, maxWidth = 800, maxHeight = 800, quality = 0.8): Promise<string> => {
+  // Helper function to resize an image and convert to base64 with extreme compression
+  const resizeAndConvertToBase64 = async (blob: Blob, maxWidth = 300, maxHeight = 300, quality = 0.4): Promise<string> => {
+    console.log(`Processing image: Original size ${(blob.size / 1024).toFixed(2)}KB`);
+    
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -55,17 +57,35 @@ export default function AIContentGenerator({
         let width = img.width;
         let height = img.height;
         
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round(height * (maxWidth / width));
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round(width * (maxHeight / height));
-            height = maxHeight;
-          }
+        console.log(`Original dimensions: ${width}x${height}`);
+        
+        // Determine target size based on original image size
+        let targetWidth = maxWidth;
+        let targetHeight = maxHeight;
+        let targetQuality = quality;
+        
+        // More aggressive compression for larger images
+        if (blob.size > 1000000) { // 1MB
+          targetWidth = 250;
+          targetHeight = 250;
+          targetQuality = 0.3;
+        } else if (blob.size > 500000) { // 500KB
+          targetWidth = 300;
+          targetHeight = 300;
+          targetQuality = 0.4;
         }
+        
+        // Apply resize logic
+        const aspectRatio = width / height;
+        if (width > height) {
+          width = targetWidth;
+          height = Math.round(width / aspectRatio);
+        } else {
+          height = targetHeight;
+          width = Math.round(height * aspectRatio);
+        }
+        
+        console.log(`Resizing to: ${width}x${height} with quality ${targetQuality}`);
         
         // Create canvas and draw resized image
         const canvas = document.createElement('canvas');
@@ -78,11 +98,39 @@ export default function AIContentGenerator({
           return;
         }
         
+        // Draw image with smoothing for better compression
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'medium'; // Lower quality for better compression
         ctx.drawImage(img, 0, 0, width, height);
         
         // Convert to base64 with reduced quality
-        const base64 = canvas.toDataURL('image/jpeg', quality).split(',')[1];
-        resolve(base64);
+        const base64 = canvas.toDataURL('image/jpeg', targetQuality).split(',')[1];
+        
+        // If base64 is still too large, reduce quality and size further
+        if (base64.length > 60000) { // ~60KB in base64 (extremely conservative)
+          console.log(`Base64 still too large: ${(base64.length / 1024).toFixed(2)}KB - applying extreme compression`);
+          
+          // Resize again on the same canvas with even smaller dimensions
+          const smallerWidth = Math.round(width * 0.7);
+          const smallerHeight = Math.round(height * 0.7);
+          
+          canvas.width = smallerWidth;
+          canvas.height = smallerHeight;
+          
+          // Draw again with lower quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'low';
+          ctx.drawImage(img, 0, 0, smallerWidth, smallerHeight);
+          
+          // Use extreme compression
+          const extremeQuality = 0.2;
+          const extremeBase64 = canvas.toDataURL('image/jpeg', extremeQuality).split(',')[1];
+          console.log(`After extreme compression: ${(extremeBase64.length / 1024).toFixed(2)}KB`);
+          resolve(extremeBase64);
+        } else {
+          console.log(`Compressed image size: ${(base64.length / 1024).toFixed(2)}KB`);
+          resolve(base64);
+        }
       };
       
       img.onerror = () => reject(new Error('Failed to load image'));
@@ -142,32 +190,53 @@ export default function AIContentGenerator({
       setStartTime(Date.now());
       setRegenerateCount(prev => prev + 1);
       
-      // Process image URLs to convert them to base64, limiting to 2 images max to avoid API size limits
-      const processedImageUrls: string[] = [];
+      // Process images - we'll use a fallback approach if we hit size limits
+      let processedImageUrls: string[] = [];
+      let fallbackToNoImages = false;
+      let initialAttempt = true;
+      
       if (imageUrls && imageUrls.length > 0) {
-        // Limit to max 2 images to avoid payload size issues
-        const maxImages = 2;
-        const imagesToProcess = imageUrls.slice(0, maxImages);
-        
-        toast({
-          title: "Processing Images",
-          description: `Converting ${imagesToProcess.length}${imageUrls.length > maxImages ? ` of ${imageUrls.length}` : ''} images for AI analysis...`,
-        });
-        
-        for (const url of imagesToProcess) {
-          try {
-            const base64 = await fetchImageAsBase64(url);
-            if (base64) {
-              processedImageUrls.push(base64);
+        try {
+          // First attempt - try with images (limit to 1 image only to be ultra-safe)
+          if (initialAttempt) {
+            const maxImages = 1;
+            const imagesToProcess = imageUrls.slice(0, maxImages);
+            
+            toast({
+              title: "Processing Images",
+              description: `Converting ${imagesToProcess.length}${imageUrls.length > maxImages ? ` of ${imageUrls.length}` : ''} images for AI analysis...`,
+            });
+            
+            // Try just the first image
+            if (imagesToProcess.length > 0) {
+              console.log(`Attempting to process image 1 of ${imageUrls.length}`);
+              const base64 = await fetchImageAsBase64(imagesToProcess[0]);
+              if (base64 && base64.length < 50000) { // ~50KB size limit
+                processedImageUrls.push(base64);
+                console.log(`Successfully processed image with final size ${(base64.length / 1024).toFixed(2)}KB`);
+              } else {
+                console.log(`Image too large after compression: ${base64 ? (base64.length / 1024).toFixed(2) + 'KB' : 'failed to process'}`);
+                fallbackToNoImages = true;
+              }
             }
-          } catch (error) {
-            console.error("Failed to process image:", error);
-            // Continue with other images even if one fails
           }
+        } catch (error) {
+          console.error("Failed to process images:", error);
+          fallbackToNoImages = true;
         }
-        
-        if (imageUrls.length > maxImages) {
-          console.log(`Only using ${maxImages} of ${imageUrls.length} images to stay within API limits`);
+
+        // If the first attempt with images failed, try without images
+        if (fallbackToNoImages) {
+          toast({
+            title: "Image Processing Failed",
+            description: "Generating content without images due to size constraints.",
+            variant: "destructive"
+          });
+          
+          processedImageUrls = []; // Clear any processed images
+          console.log("Falling back to no images due to size constraints");
+        } else if (processedImageUrls.length > 0) {
+          console.log(`Proceeding with ${processedImageUrls.length} processed ${processedImageUrls.length === 1 ? 'image' : 'images'}`);
         }
       }
       
@@ -349,7 +418,7 @@ export default function AIContentGenerator({
                             <circle cx="9" cy="9" r="2" />
                             <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                           </svg>
-                          Using {Math.min(imageUrls.length, 2)} image{imageUrls.length > 1 ? "s" : ""} for enhanced descriptions
+                          Using {generatedPreview?.imageInsights ? "1" : "0"} image{generatedPreview?.imageInsights ? "" : "s"} for enhanced descriptions
                         </div>
                       )}
                     </div>
@@ -389,9 +458,9 @@ export default function AIContentGenerator({
                       (Multiple images will provide better accuracy)
                     </span>
                   )}
-                  {imageUrls.length > 2 && (
+                  {imageUrls.length > 1 && (
                     <p className="text-xs text-amber-600 mt-1">
-                      Note: Only the first 2 images will be analyzed to stay within API size limits
+                      Note: Due to API size limits, only 1 image can be processed at a time
                     </p>
                   )}
                 </div>
@@ -477,7 +546,7 @@ export default function AIContentGenerator({
                         <circle cx="9" cy="9" r="2" />
                         <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                       </svg>
-                      {Math.min(imageUrls.length, 2)} image{imageUrls.length > 1 ? "s" : ""} analyzed
+                      {generatedPreview?.imageInsights ? "1" : "0"} image{generatedPreview?.imageInsights ? "" : "s"} analyzed
                     </span>
                   )}
                 </div>
