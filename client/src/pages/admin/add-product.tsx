@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import UnifiedAIGenerator from "@/components/admin/unified-ai-generator";
+// import UnifiedAIGenerator from "@/components/admin/unified-ai-generator";
 import { useToast } from "@/hooks/use-toast";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
