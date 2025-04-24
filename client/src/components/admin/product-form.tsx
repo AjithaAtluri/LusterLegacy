@@ -26,7 +26,8 @@ const productFormSchema = z.object({
   isNew: z.boolean().default(false),
   isBestseller: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
-  category: z.string().min(1, "Category is required"),
+  productTypeId: z.string().min(1, "Product Type is required"),
+  category: z.string().optional(), // Legacy field being phased out
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -54,7 +55,8 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
     isNew: false,
     isBestseller: false,
     isFeatured: false,
-    category: "",
+    productTypeId: "",
+    category: "", // Legacy field
     ...initialData
   };
   
@@ -132,7 +134,8 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
     }
   };
   
-  const categories = [
+  // Product types data - this will be replaced with dynamic data from the API
+  const productTypes = [
     { id: "necklace", name: "Necklace" },
     { id: "earrings", name: "Earrings" },
     { id: "ring", name: "Ring" },
@@ -209,12 +212,16 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
                   
                   <FormField
                     control={form.control}
-                    name="category"
+                    name="productTypeId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Product Type *</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Also set the legacy category field for backward compatibility
+                            form.setValue("category", value);
+                          }}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -223,9 +230,9 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.name}
+                            {productTypes.map((productType) => (
+                              <SelectItem key={productType.id} value={productType.id}>
+                                {productType.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
