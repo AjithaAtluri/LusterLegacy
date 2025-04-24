@@ -432,24 +432,24 @@ export default function CheckoutForm({ cart }: CheckoutFormProps) {
                 </div>
                 
                 {/* Customer Assurance */}
-                <div className="bg-secondary/30 p-4 rounded-lg space-y-2">
-                  <h4 className="font-playfair font-medium flex items-center">
-                    <Check className="h-4 w-4 text-green-600 mr-2" />
-                    Customer Assurance
+                <div className="bg-white p-4 rounded-lg shadow-sm space-y-3 border">
+                  <h4 className="font-playfair font-medium text-center">
+                    Our Customer Assurance
                   </h4>
-                  <ul className="text-sm space-y-1">
+                  <ul className="text-sm space-y-3">
                     <li className="flex items-start">
-                      <Check className="h-3 w-3 text-green-600 mr-2 mt-1" />
-                      <span>Free repairs for any manufacturing defects</span>
+                      <div className="bg-amber-500 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
+                        <span className="text-white font-semibold text-xs">F</span>
+                      </div>
+                      <span>We offer complimentary repairs for any manufacturing defects throughout the lifetime of your jewelry.</span>
                     </li>
                     <li className="flex items-start">
-                      <Check className="h-3 w-3 text-green-600 mr-2 mt-1" />
-                      <span>100% exchange value on metal and stones</span>
+                      <div className="bg-amber-500 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mr-3 mt-0.5">
+                        <span className="text-white font-semibold text-xs">%</span>
+                      </div>
+                      <span>Full current value of metal and stones can be credited toward future purchases or upgrades.</span>
                     </li>
-                    <li className="flex items-start">
-                      <Check className="h-3 w-3 text-green-600 mr-2 mt-1" />
-                      <span>Secure, insured shipping included</span>
-                    </li>
+
                   </ul>
                 </div>
               </div>

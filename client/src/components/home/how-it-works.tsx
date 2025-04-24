@@ -50,63 +50,37 @@ export default function HowItWorks() {
           ))}
         </div>
         
-        <div className="mt-16 bg-card rounded-lg shadow-md p-8">
-          <h3 className="font-playfair text-2xl font-semibold text-foreground mb-4 text-center">
+        <div className="mt-16 bg-white rounded-lg shadow-md p-8">
+          <h3 className="font-playfair text-2xl font-semibold text-foreground mb-8 text-center">
             Our Customer Assurance
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-6">
-            <div className="flex">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-6">
+            <div className="flex items-start">
               <div className="flex-shrink-0 mr-4">
-                <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                  <Drill className="h-5 w-5 text-background" />
+                <div className="bg-amber-500 w-10 h-10 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">F</span>
                 </div>
               </div>
               <div>
                 <h4 className="font-playfair text-lg font-semibold text-foreground mb-2">Free Repairs</h4>
                 <p className="font-montserrat text-foreground/70">
-                  Complimentary repairs for manufacturing defects.
+                  We offer complimentary repairs for any manufacturing defects throughout 
+                  the lifetime of your jewelry.
                 </p>
               </div>
             </div>
             
-            <div className="flex">
+            <div className="flex items-start">
               <div className="flex-shrink-0 mr-4">
-                <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                  <RotateCcw className="h-5 w-5 text-background" />
+                <div className="bg-amber-500 w-10 h-10 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">%</span>
                 </div>
               </div>
               <div>
-                <h4 className="font-playfair text-lg font-semibold text-foreground mb-2">Exchange Value</h4>
+                <h4 className="font-playfair text-lg font-semibold text-foreground mb-2">100% Exchange Value</h4>
                 <p className="font-montserrat text-foreground/70">
-                  Full metal and stone value toward future purchases.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex">
-              <div className="flex-shrink-0 mr-4">
-                <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                  <PackageCheck className="h-5 w-5 text-background" />
-                </div>
-              </div>
-              <div>
-                <h4 className="font-playfair text-lg font-semibold text-foreground mb-2">Secure Shipping</h4>
-                <p className="font-montserrat text-foreground/70">
-                  Fully insured delivery to your doorstep.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex">
-              <div className="flex-shrink-0 mr-4">
-                <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                  <CreditCard className="h-5 w-5 text-background" />
-                </div>
-              </div>
-              <div>
-                <h4 className="font-playfair text-lg font-semibold text-foreground mb-2">Secure Payment</h4>
-                <p className="font-montserrat text-foreground/70">
-                  Protected transactions in USD and INR.
+                  Full current value of metal and stones can be credited toward future 
+                  purchases or upgrades.
                 </p>
               </div>
             </div>
