@@ -59,6 +59,20 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
+    // Try alternate endpoint for development testing first
+    try {
+      console.log("Trying test endpoint first...");
+      const testResponse = await apiRequest("POST", "/api/test-content-generation", data);
+      if (testResponse.ok) {
+        console.log("Test endpoint successful");
+        return await testResponse.json();
+      }
+      console.log("Test endpoint failed, falling back to main endpoint");
+    } catch (e) {
+      console.log("Test endpoint error:", e);
+    }
+    
+    // Fall back to the normal admin endpoint
     const response = await apiRequest("POST", "/api/admin/generate-content", data);
     
     if (!response.ok) {

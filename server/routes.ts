@@ -804,6 +804,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Test endpoint to directly generate content (non-admin, for testing only)
+  app.post('/api/test-content-generation', async (req, res) => {
+    try {
+      console.log("Testing content generation with data:", req.body);
+      
+      // Set content type to ensure JSON response
+      res.setHeader('Content-Type', 'application/json');
+      
+      // Verify we have required parameters
+      const { productType, metalType } = req.body;
+      if (!productType || !metalType) {
+        return res.status(400).json({
+          message: "Missing required fields",
+          details: "productType and metalType are required"
+        });
+      }
+      
+      // Create a default request if minimal fields missing
+      const testRequest = {
+        ...req.body,
+        metalWeight: req.body.metalWeight || 5,
+        primaryGems: req.body.primaryGems || [{ name: "Diamond", carats: 0.5 }],
+      };
+      
+      console.log("Processed test request:", testRequest);
+      
+      // Pass the request to the OpenAI service
+      await generateContent({ body: testRequest } as Request, res);
+    } catch (error) {
+      console.error('Error in test content generation:', error);
+      // Force JSON response
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ 
+        message: 'Failed to generate content', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
   // Test endpoint for OpenAI API
   app.get("/api/test-openai", async (req, res) => {
     try {

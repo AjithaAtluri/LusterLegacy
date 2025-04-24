@@ -226,12 +226,47 @@ export const generateContent = async (req: Request, res: Response) => {
       
       const requestStart = Date.now();
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: messages,
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-      });
+      // Try with gpt-4o first, then fallback to gpt-4 if that fails, and finally gpt-3.5-turbo as last resort
+      let response;
+      try {
+        console.log("Attempting with primary model: gpt-4o");
+        response = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+          messages: messages,
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+        });
+      } catch (error: any) {
+        // Check if the error is specifically about the model not being available
+        if (error.message && (
+            error.message.includes("model") || 
+            error.message.includes("not found") || 
+            error.message.includes("gpt-4o")
+          )) {
+          console.log("gpt-4o model failed, trying fallback to gpt-4...");
+          try {
+            // Fallback to gpt-4
+            response = await openai.chat.completions.create({
+              model: "gpt-4",
+              messages: messages,
+              response_format: { type: "json_object" },
+              temperature: 0.7,
+            });
+          } catch (fallbackError: any) {
+            console.log("gpt-4 model also failed, trying final fallback to gpt-3.5-turbo...");
+            // Final fallback to gpt-3.5-turbo
+            response = await openai.chat.completions.create({
+              model: "gpt-3.5-turbo",
+              messages: messages,
+              response_format: { type: "json_object" },
+              temperature: 0.7,
+            });
+          }
+        } else {
+          // If it's not a model-specific error, rethrow it
+          throw error;
+        }
+      }
       
       const requestDuration = Date.now() - requestStart;
       console.log(`OpenAI response received successfully in ${requestDuration}ms`);
