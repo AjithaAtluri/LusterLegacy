@@ -1,4 +1,3 @@
-import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -387,22 +386,13 @@ export default function CustomDesignSection() {
                   )}
                 />
                 
-                <div className="flex flex-col space-y-3">
+                <div className="flex flex-col">
                   <Button 
                     type="submit"
                     disabled={isSubmitting}
                     className="w-full font-montserrat font-medium bg-primary text-background hover:bg-accent transition duration-300"
                   >
                     {isSubmitting ? "Submitting..." : "Submit Design Request"}
-                  </Button>
-                  
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    asChild
-                    className="w-full font-montserrat"
-                  >
-                    <Link href="/custom-design">View More Design Options</Link>
                   </Button>
                 </div>
               </form>
