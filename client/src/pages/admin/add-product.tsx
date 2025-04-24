@@ -320,7 +320,7 @@ export default function AddProduct() {
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
+                                <SelectValue placeholder="Select product type" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>

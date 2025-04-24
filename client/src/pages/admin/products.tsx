@@ -62,8 +62,8 @@ export default function AdminProducts() {
   
   // Handle edit product
   const handleEditProduct = (product: any) => {
-    setSelectedProduct(product);
-    setIsEditing(true);
+    // Navigate to the edit product page
+    setLocation(`/admin/edit-product/${product.id}`);
   };
   
   // Handle delete product
