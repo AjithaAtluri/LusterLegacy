@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   Diamond,
-  Gem
+  Gem,
+  Wand2
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -91,6 +92,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Stone Types", 
       icon: <Gem className="h-5 w-5" />, 
       href: "/admin/stone-types" 
+    },
+    { 
+      title: "AI Generator", 
+      icon: <Wand2 className="h-5 w-5" />, 
+      href: "/admin/ai-generator" 
     },
     { 
       title: "Custom Designs", 
