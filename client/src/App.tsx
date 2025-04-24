@@ -33,8 +33,9 @@ const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/products"));
 // Product pages
-const AdminAddProduct = lazy(() => import("@/pages/admin/add-product"));
-// Unified version available but not currently used
+const AdminAddProduct = lazy(() => import("@/pages/admin/add-product-simple"));
+// Other versions available but not currently used
+// const AdminAddProductOriginal = lazy(() => import("@/pages/admin/add-product"));
 // const AdminAddProductUnified = lazy(() => import("@/pages/admin/add-product-with-unified-generator"));
 const AdminEditProduct = lazy(() => import("@/pages/admin/edit-product"));
 const AdminMetalTypes = lazy(() => import("@/pages/admin/metal-types"));
