@@ -29,7 +29,8 @@ interface Product {
   details?: string;
   dimensions?: string;
   productTypeId: number;
-  category?: string;
+  productType?: string;
+  category?: string; // Legacy field
 }
 
 export default function Collections() {
@@ -49,9 +50,17 @@ export default function Collections() {
   
   // Filter and sort products
   const filteredProducts = allProducts.filter((product) => {
-    // Filter by product type
-    if (productType !== "all" && product.productTypeId !== parseInt(productType)) {
-      return false;
+    // Filter by product type (with backward compatibility for legacy category field)
+    if (productType !== "all") {
+      // Try to match by productTypeId first (new way)
+      const typeIdMatch = product.productTypeId === parseInt(productType);
+      
+      // If no productTypeId match, try to match by category (old way) for backward compatibility
+      const categoryMatch = product.category === productType;
+      
+      if (!typeIdMatch && !categoryMatch) {
+        return false;
+      }
     }
     
     // Filter by search query

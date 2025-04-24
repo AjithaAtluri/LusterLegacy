@@ -48,7 +48,9 @@ interface ProductCardProps {
     isNew?: boolean;
     isBestseller?: boolean;
     isFeatured?: boolean;
-    category?: string;
+    productTypeId?: number;
+    productType?: string;
+    category?: string; // Legacy field
     details?: string;
   };
 }
@@ -134,9 +136,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         {/* Display product type and status badges */}
         <div className="flex flex-wrap gap-1 mb-4">
-          {product.category && (
+          {/* Use productType if available, fall back to category for backward compatibility */}
+          {(product.productType || product.category) && (
             <Badge variant="outline" className="capitalize text-xs">
-              {product.category}
+              {product.productType || product.category}
             </Badge>
           )}
           {product.isFeatured && (
