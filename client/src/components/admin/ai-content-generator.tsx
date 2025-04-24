@@ -46,6 +46,40 @@ export default function AIContentGenerator({
   const [regenerateCount, setRegenerateCount] = useState(0);
   const { toast } = useToast();
 
+  // Helper function to fetch and convert a blob URL to base64
+  const fetchImageAsBase64 = async (url: string): Promise<string> => {
+    try {
+      // Only process blob URLs (created with URL.createObjectURL)
+      if (url.startsWith('blob:')) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+              // Extract only the base64 part without the data URL prefix
+              const base64 = reader.result.split(',')[1];
+              resolve(base64);
+            } else {
+              reject(new Error('Failed to convert image to base64'));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } else if (url.startsWith('data:')) {
+        // It's already a data URL, extract the base64 part
+        return url.split(',')[1];
+      }
+      // Return empty string for URLs we can't process
+      return '';
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return '';
+    }
+  };
+
   const handleGenerateContent = async () => {
     if (!productType || !metalType) {
       toast({
@@ -63,17 +97,33 @@ export default function AIContentGenerator({
       setStartTime(Date.now());
       setRegenerateCount(prev => prev + 1);
       
+      // Process all image URLs to convert them to base64
+      const processedImageUrls: string[] = [];
+      if (imageUrls && imageUrls.length > 0) {
+        toast({
+          title: "Processing Images",
+          description: `Converting ${imageUrls.length} images for AI analysis...`,
+        });
+        
+        for (const url of imageUrls) {
+          const base64 = await fetchImageAsBase64(url);
+          if (base64) {
+            processedImageUrls.push(base64);
+          }
+        }
+      }
+      
       const request: AIContentRequest = {
         productType,
         metalType,
         metalWeight,
         primaryGems,
         userDescription,
-        imageUrls
+        imageUrls: processedImageUrls
       };
 
       // Add some analytics info
-      const imgCount = imageUrls?.length || 0;
+      const imgCount = processedImageUrls.length || 0;
       const hasPrimaryGems = primaryGems && primaryGems.length > 0;
       const gemNames = hasPrimaryGems ? primaryGems.map(g => g.name).join(', ') : 'none';
       
