@@ -388,6 +388,7 @@ export const productTypes = pgTable("product_types", {
   displayOrder: integer("display_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   icon: text("icon"), // icon name from Lucide icons
+  color: text("color"), // color code for UI representation
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -397,6 +398,7 @@ export const insertProductTypeSchema = createInsertSchema(productTypes).pick({
   displayOrder: true,
   isActive: true,
   icon: true,
+  color: true,
 });
 
 export type ProductType = typeof productTypes.$inferSelect;
