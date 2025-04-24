@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDropzone } from "react-dropzone";
 import { isImageFile, getFileExtension } from "@/lib/utils";
 import type { SubmitHandler } from "react-hook-form";
-import designProcessImage from "@/assets/WhatsApp Image 2025-03-21 at 10.26.13 PM.jpeg";
+import designProcessImage from "@/assets/amethyst-necklace-design.png";
 
 const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -451,8 +451,11 @@ export default function CustomDesignSection() {
               <img 
                 src={designProcessImage} 
                 alt="Custom jewelry design process" 
-                className="rounded-lg shadow-md w-full h-40 object-cover"
+                className="rounded-lg shadow-md w-full h-60 object-cover hover:scale-[1.02] transition-transform duration-300"
               />
+              <p className="font-montserrat text-xs text-foreground/70 mt-2 italic">
+                From raw amethyst gemstones to exquisite handcrafted necklace
+              </p>
             </div>
           </div>
         </div>
