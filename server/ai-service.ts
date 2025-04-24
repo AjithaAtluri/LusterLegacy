@@ -161,6 +161,7 @@ export const generateContent = async (req: Request, res: Response) => {
                 
                 // Add the image part according to the OpenAI API specification
                 // Reference: https://platform.openai.com/docs/guides/vision
+                // This matches the direct-vision-api.ts approach which works correctly
                 const imagePart: ChatCompletionContentPart = {
                   type: "image_url", 
                   image_url: {

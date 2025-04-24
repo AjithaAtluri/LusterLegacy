@@ -228,6 +228,12 @@ export default function AIContentGenerator({
             throw new Error('Invalid data URL format');
           }
           
+          // Return base64 directly if it's already valid (using a more conservative approach)
+          if (/^[A-Za-z0-9+/=]+$/.test(base64Data)) {
+            console.log(`Using existing valid base64 data: ${(base64Data.length / 1024).toFixed(2)}KB`);
+            return base64Data;
+          }
+          
           const mimeType = url.split(',')[0].split(':')[1].split(';')[0];
           console.log(`Image MIME type: ${mimeType}`);
           
