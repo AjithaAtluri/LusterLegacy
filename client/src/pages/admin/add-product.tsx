@@ -467,100 +467,158 @@ export default function AddProduct() {
                   <Card>
                     <CardHeader>
                       <CardTitle>AI Content Generator Inputs</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Fill in details and upload an image to generate AI content
+                      </p>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="category"
-                        render={({ field }) => (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Product Type</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select product type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="rings">Rings</SelectItem>
+                                    <SelectItem value="necklaces">Necklaces</SelectItem>
+                                    <SelectItem value="earrings">Earrings</SelectItem>
+                                    <SelectItem value="bracelets">Bracelets</SelectItem>
+                                    <SelectItem value="pendants">Pendants</SelectItem>
+                                    <SelectItem value="bridal">Bridal</SelectItem>
+                                    <SelectItem value="customized">Customized</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="metalType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Metal Type</FormLabel>
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select metal type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="18k Gold">18k Gold</SelectItem>
+                                    <SelectItem value="14k Gold">14k Gold</SelectItem>
+                                    <SelectItem value="22k Gold">22k Gold</SelectItem>
+                                    <SelectItem value="24k Gold">24k Gold</SelectItem>
+                                    <SelectItem value="Platinum">Platinum</SelectItem>
+                                    <SelectItem value="Sterling Silver">Sterling Silver</SelectItem>
+                                    <SelectItem value="Rose Gold 18k">Rose Gold 18k</SelectItem>
+                                    <SelectItem value="White Gold 18k">White Gold 18k</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="metalWeight"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Metal Weight (grams)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="userDescription"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Custom Description (Optional)</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Add any specific details you want to include in the AI generation"
+                                    className="min-h-[80px]"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="space-y-4">
                           <FormItem>
-                            <FormLabel>Product Type</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
+                            <FormLabel>Product Image (for AI analysis)</FormLabel>
+                            <div
+                              {...getMainImageRootProps()}
+                              className={`border-2 border-dashed rounded-md p-4 ${
+                                mainImagePreview ? "border-green-500" : "border-gray-300"
+                              } hover:border-primary cursor-pointer transition-colors flex flex-col items-center justify-center h-[240px]`}
                             >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select product type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="rings">Rings</SelectItem>
-                                <SelectItem value="necklaces">Necklaces</SelectItem>
-                                <SelectItem value="earrings">Earrings</SelectItem>
-                                <SelectItem value="bracelets">Bracelets</SelectItem>
-                                <SelectItem value="pendants">Pendants</SelectItem>
-                                <SelectItem value="bridal">Bridal</SelectItem>
-                                <SelectItem value="customized">Customized</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
+                              <input {...getMainImageInputProps()} />
+                              
+                              {mainImagePreview ? (
+                                <div className="relative w-full h-full">
+                                  <img
+                                    src={mainImagePreview}
+                                    alt="Main product"
+                                    className="w-full h-full object-contain"
+                                  />
+                                  <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-0 right-0"
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      URL.revokeObjectURL(mainImagePreview);
+                                      setMainImageFile(null);
+                                      setMainImagePreview(null);
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+                                  <p className="text-sm text-muted-foreground text-center">
+                                    Upload product image for AI analysis
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    JPG or PNG, recommended size: 1000x1000px
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                            <FormDescription>
+                              Adding an image will help the AI generate more accurate descriptions
+                            </FormDescription>
                           </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="metalType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Metal Type</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select metal type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="18k Gold">18k Gold</SelectItem>
-                                <SelectItem value="14k Gold">14k Gold</SelectItem>
-                                <SelectItem value="22k Gold">22k Gold</SelectItem>
-                                <SelectItem value="24k Gold">24k Gold</SelectItem>
-                                <SelectItem value="Platinum">Platinum</SelectItem>
-                                <SelectItem value="Sterling Silver">Sterling Silver</SelectItem>
-                                <SelectItem value="Rose Gold 18k">Rose Gold 18k</SelectItem>
-                                <SelectItem value="White Gold 18k">White Gold 18k</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="metalWeight"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Metal Weight (grams)</FormLabel>
-                            <FormControl>
-                              <Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="userDescription"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Custom Description (Optional)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Add any specific details you want to include in the AI generation"
-                                className="min-h-[80px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                   
@@ -581,53 +639,58 @@ export default function AddProduct() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Main Product Image</CardTitle>
+                    <CardTitle>Product Images Status</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      This will be the primary image shown on product listings
+                      Manage all product images from this tab
                     </p>
                   </CardHeader>
                   <CardContent>
-                    <div
-                      {...getMainImageRootProps()}
-                      className={`border-2 border-dashed rounded-md p-6 ${
-                        mainImagePreview ? "border-green-500" : "border-gray-300"
-                      } hover:border-primary cursor-pointer transition-colors flex flex-col items-center justify-center h-52`}
-                    >
-                      <input {...getMainImageInputProps()} />
-                      
-                      {mainImagePreview ? (
-                        <div className="relative w-full h-full">
-                          <img
-                            src={mainImagePreview}
-                            alt="Main product"
-                            className="w-full h-full object-contain"
-                          />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-0 right-0"
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              URL.revokeObjectURL(mainImagePreview);
-                              setMainImageFile(null);
-                              setMainImagePreview(null);
-                            }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                    <div className="space-y-4">
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${mainImagePreview ? 'bg-green-500' : 'bg-amber-500'}`}>
+                          {mainImagePreview ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="12" y1="8" x2="12" y2="16"></line>
+                              <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                          )}
                         </div>
-                      ) : (
-                        <>
-                          <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+                        <div>
+                          <h4 className="text-sm font-medium">Main Product Image</h4>
                           <p className="text-sm text-muted-foreground">
-                            Drag & drop your main product image here or click to browse
+                            {mainImagePreview ? 'Uploaded in the "Description & AI" tab' : 'Not yet uploaded'}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            JPG or PNG, recommended size: 1000x1000px
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${additionalImageFiles.length > 0 ? 'bg-green-500' : 'bg-amber-500'}`}>
+                          {additionalImageFiles.length > 0 ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="12" y1="8" x2="12" y2="16"></line>
+                              <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium">Additional Product Images</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {additionalImageFiles.length > 0 
+                              ? `${additionalImageFiles.length} images uploaded` 
+                              : 'No additional images yet'}
                           </p>
-                        </>
-                      )}
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
