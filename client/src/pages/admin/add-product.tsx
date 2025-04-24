@@ -5,7 +5,7 @@ import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save, Upload, X } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // No longer using tabs
 import {
   Form,
   FormControl,
@@ -268,14 +268,12 @@ export default function AddProduct() {
         </div>
         
         <Form {...form}>
-          <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid grid-cols-3 mb-6">
-              <TabsTrigger value="details">Basic Details</TabsTrigger>
-              <TabsTrigger value="description">Description & AI</TabsTrigger>
-              <TabsTrigger value="images">Images</TabsTrigger>
-            </TabsList>
+          <div className="w-full space-y-8">
+            {/* Section Heading for Basic Details */}
+            <div className="border-b pb-2">
+              <h2 className="text-xl font-semibold">Basic Details</h2>
+            </div>
             
-            <TabsContent value="details">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
@@ -509,9 +507,12 @@ export default function AddProduct() {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="description">
+              
+              {/* Section Heading for Description & AI */}
+              <div className="border-b pb-2 pt-6">
+                <h2 className="text-xl font-semibold">Description & AI Content</h2>
+              </div>
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-6">
                   <Card>
@@ -738,9 +739,12 @@ export default function AddProduct() {
                   />
                 </div>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="images">
+              
+              {/* Section Heading for Product Images */}
+              <div className="border-b pb-2 pt-6">
+                <h2 className="text-xl font-semibold">Product Images</h2>
+              </div>
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
