@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import type { ProductType } from "@shared/schema";
 
 // Define the form schema
 const productFormSchema = z.object({
@@ -43,6 +44,12 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
   const [additionalImageUrl, setAdditionalImageUrl] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Fetch product types from database
+  const { data: productTypesData, isLoading: isLoadingProductTypes } = useQuery<ProductType[]>({
+    queryKey: ['/api/admin/product-types'],
+    refetchOnWindowFocus: false,
+  });
   
   const defaultValues: Partial<ProductFormValues> = {
     name: "",
