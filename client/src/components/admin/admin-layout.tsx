@@ -24,7 +24,7 @@ interface AdminLayoutProps {
   title: string;
 }
 
-export default function AdminLayout({ children, title }: AdminLayoutProps) {
+export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { toast } = useToast();
@@ -76,6 +76,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Products", 
       icon: <GalleryHorizontal className="h-5 w-5" />, 
       href: "/admin/products" 
+    },
+    {
+      title: "Product Types",
+      icon: <Package className="h-5 w-5" />,
+      href: "/admin/product-types"
     },
     { 
       title: "Metal Types", 
@@ -165,7 +170,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           </div>
           
           <div className="flex-1">
-            <h1 className="font-playfair text-xl font-semibold tracking-tight">{title}</h1>
+            <h1 className="font-playfair text-xl font-semibold tracking-tight">Admin Dashboard</h1>
           </div>
           
           <div className="flex items-center gap-4">
