@@ -1,4 +1,5 @@
 import type { Express, Request, Response } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as z from "zod";
@@ -58,6 +59,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  
   /**
    * Session management - basic approach using session IDs in cookies
    * In a real production app, you'd use express-session with a proper session store
