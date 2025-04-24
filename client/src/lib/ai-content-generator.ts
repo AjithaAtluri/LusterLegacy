@@ -23,8 +23,8 @@ export interface AIGeneratedContent {
 }
 
 /**
- * Convert a File object to a base64 string
- * This version includes more robust validation and logging
+ * Convert a File object to a base64 string with compression
+ * This version includes image compression to reduce payload size
  */
 export const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -44,69 +44,168 @@ export const fileToBase64 = (file: File): Promise<string> => {
       return;
     }
     
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 8MB)
+    if (file.size > 8 * 1024 * 1024) {
       console.error('File is too large:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
-      reject(new Error('File size exceeds 5MB limit'));
+      reject(new Error('File size exceeds 8MB limit'));
       return;
     }
 
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      try {
-        if (typeof reader.result === 'string') {
-          // Validate the data URL format
-          if (!reader.result.startsWith('data:image/')) {
-            console.error('Invalid data URL format:', reader.result.substring(0, 30) + '...');
-            reject(new Error('Invalid data URL format'));
+    // Use image compression before converting to base64
+    const compressImage = (imageFile: File): Promise<Blob> => {
+      return new Promise((resolveCompress, rejectCompress) => {
+        // Create an image element to load the file
+        const img = new Image();
+        img.onload = () => {
+          // Get the image dimensions
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+          
+          // Calculate new dimensions while maintaining aspect ratio
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+          
+          // Create a canvas and draw the resized image
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            rejectCompress(new Error('Failed to get canvas context'));
             return;
           }
           
-          // Log success details
-          console.log(`File loaded successfully, data URL length: ${reader.result.length}`);
+          // Draw image with white background (for transparent PNGs)
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, width, height);
           
-          // Extract the base64 content after the comma
-          const parts = reader.result.split(',');
-          if (parts.length !== 2) {
-            console.error('Invalid data URL structure:', reader.result.substring(0, 30) + '...');
-            reject(new Error('Invalid data URL structure'));
-            return;
+          // Convert to blob with quality adjustment
+          // Use 85% quality for JPEG which is a good balance between quality and size
+          // Default to JPEG format for best compression
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                console.log(`Compressed image from ${(file.size / 1024).toFixed(2)}KB to ${(blob.size / 1024).toFixed(2)}KB`);
+                resolveCompress(blob);
+              } else {
+                rejectCompress(new Error('Failed to compress image'));
+              }
+            },
+            'image/jpeg',
+            0.85
+          );
+        };
+        
+        img.onerror = () => {
+          rejectCompress(new Error('Failed to load image for compression'));
+        };
+        
+        // Load the image from the file
+        img.src = URL.createObjectURL(imageFile);
+      });
+    };
+
+    // Process the image with compression first
+    compressImage(file)
+      .then(compressedBlob => {
+        // Now read the compressed blob
+        const reader = new FileReader();
+        
+        reader.onload = () => {
+          try {
+            if (typeof reader.result === 'string') {
+              // Validate the data URL format
+              if (!reader.result.startsWith('data:image/')) {
+                console.error('Invalid data URL format:', reader.result.substring(0, 30) + '...');
+                reject(new Error('Invalid data URL format'));
+                return;
+              }
+              
+              // Log success details
+              console.log(`Compressed file loaded successfully, data URL length: ${reader.result.length}`);
+              
+              // Extract the base64 content after the comma
+              const parts = reader.result.split(',');
+              if (parts.length !== 2) {
+                console.error('Invalid data URL structure:', reader.result.substring(0, 30) + '...');
+                reject(new Error('Invalid data URL structure'));
+                return;
+              }
+              
+              const base64String = parts[1];
+              
+              // Validate that the base64 string only contains valid characters
+              if (!/^[A-Za-z0-9+/=]+$/.test(base64String)) {
+                console.error('Invalid base64 characters in string');
+                reject(new Error('Invalid base64 characters'));
+                return;
+              }
+              
+              console.log(`Base64 string extracted, length: ${base64String.length}`);
+              resolve(base64String);
+            } else {
+              console.error('FileReader result is not a string:', typeof reader.result);
+              reject(new Error('Failed to convert file to base64 - result not a string'));
+            }
+          } catch (err) {
+            console.error('Error processing file:', err);
+            reject(err);
           }
-          
-          const base64String = parts[1];
-          
-          // Validate that the base64 string only contains valid characters
-          if (!/^[A-Za-z0-9+/=]+$/.test(base64String)) {
-            console.error('Invalid base64 characters in string');
-            reject(new Error('Invalid base64 characters'));
-            return;
-          }
-          
-          console.log(`Base64 string extracted, length: ${base64String.length}`);
-          resolve(base64String);
-        } else {
-          console.error('FileReader result is not a string:', typeof reader.result);
-          reject(new Error('Failed to convert file to base64 - result not a string'));
+        };
+        
+        reader.onerror = (error) => {
+          console.error('FileReader error:', error);
+          reject(error);
+        };
+        
+        // Start reading the compressed blob
+        try {
+          reader.readAsDataURL(compressedBlob);
+        } catch (err) {
+          console.error('Error reading compressed blob:', err);
+          reject(err);
         }
-      } catch (err) {
-        console.error('Error processing file:', err);
-        reject(err);
-      }
-    };
-    
-    reader.onerror = (error) => {
-      console.error('FileReader error:', error);
-      reject(error);
-    };
-    
-    // Start reading the file
-    try {
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error('Error reading file:', err);
-      reject(err);
-    }
+      })
+      .catch(compressionError => {
+        console.error('Compression failed, falling back to original file:', compressionError);
+        
+        // If compression fails, fall back to original file
+        const fallbackReader = new FileReader();
+        
+        fallbackReader.onload = () => {
+          try {
+            if (typeof fallbackReader.result === 'string') {
+              const parts = fallbackReader.result.split(',');
+              if (parts.length === 2) {
+                console.log('Using original file as fallback');
+                resolve(parts[1]);
+              } else {
+                reject(new Error('Invalid data URL structure in fallback'));
+              }
+            } else {
+              reject(new Error('FileReader result is not a string in fallback'));
+            }
+          } catch (fallbackErr) {
+            reject(fallbackErr);
+          }
+        };
+        
+        fallbackReader.onerror = reject;
+        fallbackReader.readAsDataURL(file);
+      });
   });
 };
 
