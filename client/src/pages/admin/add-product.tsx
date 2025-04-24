@@ -587,12 +587,101 @@ export default function AddProduct() {
                     <CardHeader>
                       <CardTitle>AI Content Generator Inputs</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        Fill in details and upload an image to generate AI content
+                        Upload images and fill in details to generate AI product content
                       </p>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-4">
+                    <CardContent className="space-y-6">
+                      {/* Image Upload Section - Moved to the top */}
+                      <div className="space-y-4">
+                        <h3 className="text-base font-medium">Main Product Image</h3>
+                        <div
+                          {...getMainImageRootProps()}
+                          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-primary/5 transition-colors flex flex-col items-center justify-center h-[180px]"
+                        >
+                          <input {...getMainImageInputProps()} />
+                          {mainImagePreview ? (
+                            <div className="relative w-full h-full flex items-center justify-center">
+                              <img
+                                src={mainImagePreview}
+                                alt="Product preview"
+                                className="max-h-full max-w-full object-contain rounded-md"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-0 right-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (mainImagePreview) {
+                                    URL.revokeObjectURL(mainImagePreview);
+                                  }
+                                  setMainImageFile(null);
+                                  setMainImagePreview(null);
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground text-center">
+                                Click to upload main product image
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                PNG, JPG or JPEG (max 5MB)
+                              </p>
+                            </>
+                          )}
+                        </div>
+                        <FormDescription>
+                          This will be the primary image shown for the product and used for AI analysis
+                        </FormDescription>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-base font-medium">Additional Images</h3>
+                        <div
+                          {...getAdditionalImagesRootProps()}
+                          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-primary/5 transition-colors h-[120px] flex flex-col items-center justify-center"
+                        >
+                          <input {...getAdditionalImagesInputProps()} />
+                          <Upload className="h-6 w-6 mb-2 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">Add more images</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          You can add up to 3 additional product images
+                        </p>
+                        
+                        {additionalImagePreviews.length > 0 && (
+                          <div className="grid grid-cols-3 gap-4 mt-4">
+                            {additionalImagePreviews.map((preview, index) => (
+                              <div key={index} className="relative">
+                                <img 
+                                  src={preview} 
+                                  alt={`Additional image ${index + 1}`} 
+                                  className="h-24 w-24 rounded-md object-cover"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute -top-2 -right-2 h-6 w-6"
+                                  onClick={() => removeAdditionalImage(index)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="border-t pt-4">
+                        <h3 className="text-base font-medium mb-4">Product Details</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* 1. Product Type */}
                           <FormField
                             control={form.control}
                             name="category"
@@ -609,13 +698,25 @@ export default function AddProduct() {
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="rings">Rings</SelectItem>
-                                    <SelectItem value="necklaces">Necklaces</SelectItem>
-                                    <SelectItem value="earrings">Earrings</SelectItem>
-                                    <SelectItem value="bracelets">Bracelets</SelectItem>
-                                    <SelectItem value="pendants">Pendants</SelectItem>
-                                    <SelectItem value="bridal">Bridal</SelectItem>
-                                    <SelectItem value="customized">Customized</SelectItem>
+                                    {isLoadingProductTypes ? (
+                                      <div className="flex items-center justify-center p-2">
+                                        <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                                      </div>
+                                    ) : productTypes?.length ? (
+                                      productTypes.map(type => (
+                                        <SelectItem key={type.id} value={type.name}>
+                                          {type.name}
+                                        </SelectItem>
+                                      ))
+                                    ) : (
+                                      <>
+                                        <SelectItem value="rings">Rings</SelectItem>
+                                        <SelectItem value="necklaces">Necklaces</SelectItem>
+                                        <SelectItem value="earrings">Earrings</SelectItem>
+                                        <SelectItem value="bracelets">Bracelets</SelectItem>
+                                        <SelectItem value="pendants">Pendants</SelectItem>
+                                      </>
+                                    )}
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -623,6 +724,7 @@ export default function AddProduct() {
                             )}
                           />
                           
+                          {/* 2. Metal Type */}
                           <FormField
                             control={form.control}
                             name="metalType"
@@ -654,6 +756,7 @@ export default function AddProduct() {
                             )}
                           />
                           
+                          {/* 3. Metal Weight */}
                           <FormField
                             control={form.control}
                             name="metalWeight"
@@ -668,74 +771,128 @@ export default function AddProduct() {
                             )}
                           />
                           
-                          <FormField
-                            control={form.control}
-                            name="userDescription"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Custom Description (Optional)</FormLabel>
-                                <FormControl>
-                                  <Textarea 
-                                    placeholder="Add any specific details you want to include in the AI generation"
-                                    className="min-h-[80px]"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="space-y-4">
+                          {/* 4. Main Stone Type */}
                           <FormItem>
-                            <FormLabel>Product Image (for AI analysis)</FormLabel>
-                            <div
-                              {...getMainImageRootProps()}
-                              className={`border-2 border-dashed rounded-md p-4 ${
-                                mainImagePreview ? "border-green-500" : "border-gray-300"
-                              } hover:border-primary cursor-pointer transition-colors flex flex-col items-center justify-center h-[240px]`}
+                            <FormLabel>Main Stone Type</FormLabel>
+                            <Select 
+                              onValueChange={setMainStoneType} 
+                              value={mainStoneType}
                             >
-                              <input {...getMainImageInputProps()} />
-                              
-                              {mainImagePreview ? (
-                                <div className="relative w-full h-full">
-                                  <img
-                                    src={mainImagePreview}
-                                    alt="Main product"
-                                    className="w-full h-full object-contain"
-                                  />
-                                  <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute top-0 right-0"
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      URL.revokeObjectURL(mainImagePreview);
-                                      setMainImageFile(null);
-                                      setMainImagePreview(null);
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <>
-                                  <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
-                                  <p className="text-sm text-muted-foreground text-center">
-                                    Upload product image for AI analysis
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    JPG or PNG, recommended size: 1000x1000px
-                                  </p>
-                                </>
-                              )}
-                            </div>
-                            <FormDescription>
-                              Adding an image will help the AI generate more accurate descriptions
-                            </FormDescription>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select main stone" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {isLoadingStoneTypes ? (
+                                  <div className="flex items-center justify-center p-2">
+                                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                                  </div>
+                                ) : stoneTypes?.length ? (
+                                  stoneTypes.map(stone => (
+                                    <SelectItem key={stone.id} value={stone.name}>
+                                      {stone.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <>
+                                    <SelectItem value="Diamond">Diamond</SelectItem>
+                                    <SelectItem value="Ruby">Ruby</SelectItem>
+                                    <SelectItem value="Sapphire">Sapphire</SelectItem>
+                                    <SelectItem value="Emerald">Emerald</SelectItem>
+                                  </>
+                                )}
+                              </SelectContent>
+                            </Select>
                           </FormItem>
+                          
+                          {/* 5. Main Stone Weight */}
+                          <FormItem>
+                            <FormLabel>Main Stone Weight (carats)</FormLabel>
+                            <Input 
+                              type="number" 
+                              step="0.01" 
+                              placeholder="e.g. 1.25" 
+                              value={mainStoneWeight}
+                              onChange={(e) => setMainStoneWeight(e.target.value)}
+                            />
+                          </FormItem>
+                          
+                          {/* 6. Secondary Stones */}
+                          <div>
+                            <FormLabel>Secondary Stones</FormLabel>
+                            <div className="grid grid-cols-2 gap-2 mt-2 border rounded-md p-2 h-[120px] overflow-y-auto">
+                              {(stoneTypes?.length ? stoneTypes : [
+                                { id: 1, name: "Diamond" },
+                                { id: 2, name: "Ruby" },
+                                { id: 3, name: "Sapphire" },
+                                { id: 4, name: "Emerald" },
+                                { id: 5, name: "Amethyst" },
+                                { id: 6, name: "Aquamarine" },
+                                { id: 7, name: "Tanzanite" },
+                                { id: 8, name: "Topaz" },
+                                { id: 9, name: "Opal" },
+                                { id: 10, name: "Pearl" },
+                                { id: 11, name: "Garnet" }
+                              ]).map((stone) => (
+                                <div key={stone.id} className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    id={`stone-${stone.id}`}
+                                    checked={selectedStoneTypes.includes(stone.name)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedStoneTypes(prev => [...prev, stone.name]);
+                                      } else {
+                                        setSelectedStoneTypes(prev => 
+                                          prev.filter(s => s !== stone.name)
+                                        );
+                                      }
+                                    }}
+                                  />
+                                  <label 
+                                    htmlFor={`stone-${stone.id}`}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                  >
+                                    {stone.name}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* 7. Secondary Stone Weight */}
+                          <FormItem>
+                            <FormLabel>Secondary Stone Weight (total carats)</FormLabel>
+                            <Input 
+                              type="number" 
+                              step="0.01" 
+                              placeholder="e.g. 0.75" 
+                              value={secondaryStoneWeight}
+                              onChange={(e) => setSecondaryStoneWeight(e.target.value)}
+                            />
+                          </FormItem>
+                          
+                          {/* 8. Description for AI */}
+                          <div className="col-span-2">
+                            <FormField
+                              control={form.control}
+                              name="userDescription"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Description for AI</FormLabel>
+                                  <FormControl>
+                                    <Textarea 
+                                      placeholder="Provide details about the product that will help the AI generate better content"
+                                      className="min-h-[120px]"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormDescription>
+                                    This won't be displayed on the product page, just used for AI generation
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -746,7 +903,16 @@ export default function AddProduct() {
                     productType={productType}
                     metalType={metalType}
                     metalWeight={metalWeight}
-                    primaryGems={primaryGems}
+                    primaryGems={[
+                      ...(mainStoneType ? [{
+                        name: mainStoneType,
+                        carats: mainStoneWeight ? parseFloat(mainStoneWeight) : undefined
+                      }] : []),
+                      ...selectedStoneTypes.map(stone => ({
+                        name: stone,
+                        carats: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) / selectedStoneTypes.length : undefined
+                      }))
+                    ]}
                     userDescription={form.watch("userDescription")}
                     imageUrls={[
                       ...(mainImagePreview ? [mainImagePreview] : []),
