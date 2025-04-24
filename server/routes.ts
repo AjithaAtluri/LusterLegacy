@@ -13,7 +13,8 @@ import {
   insertUserSchema,
   insertMetalTypeSchema,
   insertStoneTypeSchema,
-  insertInspirationGallerySchema
+  insertInspirationGallerySchema,
+  insertProductTypeSchema
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";

@@ -1202,6 +1202,73 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Product Type methods
+  async getProductType(id: number): Promise<ProductType | undefined> {
+    try {
+      const [productType] = await db.select().from(productTypes).where(eq(productTypes.id, id));
+      return productType || undefined;
+    } catch (error) {
+      console.error("Error getting product type:", error);
+      return undefined;
+    }
+  }
+  
+  async getAllProductTypes(): Promise<ProductType[]> {
+    try {
+      return await db.select()
+        .from(productTypes)
+        .orderBy(asc(productTypes.displayOrder), asc(productTypes.name));
+    } catch (error) {
+      console.error("Error getting all product types:", error);
+      return [];
+    }
+  }
+  
+  async getActiveProductTypes(): Promise<ProductType[]> {
+    try {
+      return await db.select()
+        .from(productTypes)
+        .where(eq(productTypes.isActive, true))
+        .orderBy(asc(productTypes.displayOrder), asc(productTypes.name));
+    } catch (error) {
+      console.error("Error getting active product types:", error);
+      return [];
+    }
+  }
+  
+  async createProductType(insertProductType: InsertProductType): Promise<ProductType> {
+    try {
+      const [productType] = await db.insert(productTypes).values(insertProductType).returning();
+      return productType;
+    } catch (error) {
+      console.error("Error creating product type:", error);
+      throw error;
+    }
+  }
+  
+  async updateProductType(id: number, productTypeUpdate: Partial<InsertProductType>): Promise<ProductType | undefined> {
+    try {
+      const [productType] = await db.update(productTypes)
+        .set(productTypeUpdate)
+        .where(eq(productTypes.id, id))
+        .returning();
+      return productType || undefined;
+    } catch (error) {
+      console.error("Error updating product type:", error);
+      return undefined;
+    }
+  }
+  
+  async deleteProductType(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(productTypes).where(eq(productTypes.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting product type:", error);
+      return false;
+    }
+  }
 }
 
 // Use database storage implementation
