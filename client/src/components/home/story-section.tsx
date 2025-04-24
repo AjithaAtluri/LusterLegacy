@@ -39,7 +39,7 @@ export default function StorySection() {
           <div>
             <div className="relative">
               <img 
-                src="/images/story/cad-design.jpg" 
+                src="/assets/cad-design.jpg" 
                 alt="Designer working on jewelry CAD design" 
                 className="rounded-lg shadow-xl"
                 onError={(e) => {
@@ -49,7 +49,7 @@ export default function StorySection() {
               />
                 
               <img 
-                src="/images/story/finished-jewelry.jpg" 
+                src="/assets/finished-jewelry.jpg" 
                 alt="Finished luxury jewelry piece" 
                 className="absolute -bottom-10 -right-10 w-48 h-48 object-cover rounded-lg shadow-xl border-4 border-background"
                 onError={(e) => {
