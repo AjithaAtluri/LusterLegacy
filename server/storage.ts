@@ -727,7 +727,11 @@ export class MemStorage implements IStorage {
 
     testimonials.forEach(testimonial => this.createTestimonial(testimonial));
 
-    // Create product types
+    // Don't automatically create product types in dev mode
+    // This allows admin to create them through the UI
+    // In a production environment, you might want to seed these
+    
+    /* Commented out to avoid seeding automatically
     const productTypes: InsertProductType[] = [
       {
         name: "Rings",
@@ -772,6 +776,7 @@ export class MemStorage implements IStorage {
     ];
 
     productTypes.forEach(productType => this.createProductType(productType));
+    */
   }
 }
 
