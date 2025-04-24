@@ -18,9 +18,9 @@ export default function HeroSection() {
       {/* Full-width background image with beautiful jewelry */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.pexels.com/photos/10955653/pexels-photo-10955653.jpeg?auto=compress&cs=tinysrgb&w=1920" 
-          alt="Luxurious diamond necklace on black background" 
-          className="w-full h-full object-cover brightness-110 contrast-105"
+          src="https://cdn.pixabay.com/photo/2016/11/11/18/42/diamond-1817347_1280.jpg" 
+          alt="Luxury diamond necklace on dark background" 
+          className="w-full h-full object-cover brightness-115 contrast-110"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
         />
         {/* Semi-transparent gradient overlay for text readability */}
