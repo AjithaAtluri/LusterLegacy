@@ -318,6 +318,41 @@ export default function AddProduct() {
                         </FormItem>
                       )}
                     />
+                    
+                    <div>
+                      <FormLabel>Gems & Stones</FormLabel>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        {[
+                          "Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", 
+                          "Aquamarine", "Tanzanite", "Topaz", "Opal", "Pearl", "Garnet"
+                        ].map((stone) => (
+                          <div key={stone} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`stone-${stone}`}
+                              checked={selectedStoneTypes.includes(stone)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedStoneTypes(prev => [...prev, stone]);
+                                } else {
+                                  setSelectedStoneTypes(prev => 
+                                    prev.filter(s => s !== stone)
+                                  );
+                                }
+                              }}
+                            />
+                            <label 
+                              htmlFor={`stone-${stone}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {stone}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Select the gems used in this product (optional)
+                      </p>
+                    </div>
                   </CardContent>
                 </Card>
                 
