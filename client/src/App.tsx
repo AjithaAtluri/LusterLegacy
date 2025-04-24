@@ -32,9 +32,9 @@ const FAQ = lazy(() => import("@/pages/faq"));
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/products"));
-// Product pages with unified AI generator
-const AdminAddProduct = lazy(() => import("@/pages/admin/add-product-with-unified-generator"));
-const AdminEditProduct = lazy(() => import("@/pages/admin/edit-product-with-unified-generator"));
+// Original product pages until we fix the unified version
+const AdminAddProduct = lazy(() => import("@/pages/admin/add-product"));
+const AdminEditProduct = lazy(() => import("@/pages/admin/edit-product"));
 const AdminMetalTypes = lazy(() => import("@/pages/admin/metal-types"));
 const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminProductTypes = lazy(() => import("@/pages/admin/product-types"));
