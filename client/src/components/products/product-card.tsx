@@ -8,6 +8,23 @@ import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
 
+// Helper function to handle image URLs
+function getImageUrl(url: string | undefined): string {
+  if (!url) return "https://placehold.co/600x400/png?text=No+Image";
+  
+  // If it's an absolute URL (starts with http/https or //)
+  if (url.match(/^(https?:)?\/\//)) return url;
+  
+  // If it's a relative URL starting with /
+  if (url.startsWith('/')) {
+    // Make sure it's relative to the domain root
+    return url;
+  }
+  
+  // Otherwise, assume it's a relative URL without leading /
+  return `/${url}`;
+}
+
 interface ProductCardProps {
   product: {
     id: number;
@@ -37,9 +54,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
       <div className="relative h-80 overflow-hidden">
         <img 
-          src={product.imageUrl || product.image_url}
+          src={getImageUrl(product.imageUrl || product.image_url)}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+          onError={(e) => {
+            console.error("Image load error:", e);
+            e.currentTarget.src = "https://placehold.co/600x400/png?text=Image+Not+Available";
+          }}
         />
         
         {/* Gemstone sparkle effect on hover */}
