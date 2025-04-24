@@ -85,8 +85,8 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       console.log("Test endpoint error:", e);
     }
     
-    // Fall back to the normal admin endpoint
-    const response = await apiRequest("POST", "/api/admin/generate-content", data);
+    // Try the public content generation endpoint
+    const response = await apiRequest("POST", "/api/generate-content", data);
     
     if (!response.ok) {
       let errorMessage = "Failed to generate content";

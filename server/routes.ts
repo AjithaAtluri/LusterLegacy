@@ -800,7 +800,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Pass the request to the OpenAI service
       await generateContent(req, res);
     } catch (error) {
-      console.error('Error generating content:', error);
+      console.error('Error generating content (admin endpoint):', error);
+      res.status(500).json({ message: 'Failed to generate content' });
+    }
+  });
+  
+  // Public content generation endpoint (no admin required)
+  app.post('/api/generate-content', async (req, res) => {
+    try {
+      console.log("Using public content generation endpoint");
+      // Pass the request to the OpenAI service
+      await generateContent(req, res);
+    } catch (error) {
+      console.error('Error generating content (public endpoint):', error);
       res.status(500).json({ message: 'Failed to generate content' });
     }
   });
