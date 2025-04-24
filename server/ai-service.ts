@@ -66,48 +66,91 @@ export const generateContent = async (req: Request, res: Response) => {
     // Calculate estimated price
     let estimatedUSDPrice = calculateEstimatedPrice(metalType, metalWeight, primaryGems);
     
-    // Prepare content generation prompt
-    const prompt = `
-    You are a luxury jewelry expert specializing in crafting elegant product descriptions and marketing content.
+    // Check if we have images to analyze
+    const hasImages = imageUrls && imageUrls.length > 0;
     
-    Item details:
-    - Product Type: ${productType}
-    - Metal: ${metalType}${metalWeight ? ` (${metalWeight}g)` : ''}
-    - Gems: ${primaryGems.map(gem => `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`).join(', ')}
-    - Additional Information: ${userDescription}
+    // Prepare messages array
+    const messages = [
+      {
+        role: "system" as const,
+        content: "You are a luxury jewelry expert who creates elegant, compelling product descriptions."
+      }
+    ];
     
-    Please generate the following for this jewelry piece:
-    1. A catchy and sophisticated product title (max 10 words)
-    2. An elegant tagline that highlights the uniqueness (max 15 words)
-    3. A short 3-line description that captures the essence of the piece
-    4. A detailed website-friendly description (150-200 words) that:
-       - Describes the craftsmanship and materials in detail
-       - Mentions potential occasions to wear this piece
-       - Highlights who would appreciate this jewelry
-       - Emphasizes the luxury aspects and quality
-    
-    Respond with JSON in this format:
-    {
-      "title": "Product Title",
-      "tagline": "Product Tagline",
-      "shortDescription": "3-line description",
-      "detailedDescription": "Detailed description for website listing"
+    // If there are images, we'll use the vision API approach
+    if (hasImages) {
+      // Add a message describing the task with the image
+      messages.push({
+        role: "user" as const,
+        content: [
+          {
+            type: "text" as const,
+            text: `Analyze this jewelry image and create product content based on what you see and the following details:
+            
+            Item details:
+            - Product Type: ${productType}
+            - Metal: ${metalType}${metalWeight ? ` (${metalWeight}g)` : ''}
+            - Gems: ${primaryGems.map(gem => `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`).join(', ')}
+            - Additional Information: ${userDescription}
+            
+            Create the following content:
+            1. A catchy and sophisticated product title (max 10 words)
+            2. An elegant tagline that highlights the uniqueness (max 15 words)
+            3. A short 3-line description that captures the essence of the piece
+            4. A detailed website-friendly description (150-200 words) describing craftsmanship, materials, occasions, and luxury aspects
+            
+            Respond with JSON in this format:
+            {
+              "title": "Product Title",
+              "tagline": "Product Tagline",
+              "shortDescription": "3-line description",
+              "detailedDescription": "Detailed description for website listing"
+            }`
+          },
+          {
+            type: "image_url" as const,
+            image_url: {
+              url: `data:image/jpeg;base64,${imageUrls[0]}`
+            }
+          }
+        ]
+      });
+    } else {
+      // Text-only prompt if no images
+      messages.push({
+        role: "user" as const,
+        content: `You are a luxury jewelry expert specializing in crafting elegant product descriptions and marketing content.
+        
+        Item details:
+        - Product Type: ${productType}
+        - Metal: ${metalType}${metalWeight ? ` (${metalWeight}g)` : ''}
+        - Gems: ${primaryGems.map(gem => `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`).join(', ')}
+        - Additional Information: ${userDescription}
+        
+        Please generate the following for this jewelry piece:
+        1. A catchy and sophisticated product title (max 10 words)
+        2. An elegant tagline that highlights the uniqueness (max 15 words)
+        3. A short 3-line description that captures the essence of the piece
+        4. A detailed website-friendly description (150-200 words) that:
+           - Describes the craftsmanship and materials in detail
+           - Mentions potential occasions to wear this piece
+           - Highlights who would appreciate this jewelry
+           - Emphasizes the luxury aspects and quality
+        
+        Respond with JSON in this format:
+        {
+          "title": "Product Title",
+          "tagline": "Product Tagline",
+          "shortDescription": "3-line description",
+          "detailedDescription": "Detailed description for website listing"
+        }`
+      });
     }
-    `;
 
     // Use the newest OpenAI model (gpt-4o)
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      messages: [
-        {
-          role: "system",
-          content: "You are a luxury jewelry expert who creates elegant, compelling product descriptions."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
+      messages: messages,
       response_format: { type: "json_object" },
     });
 

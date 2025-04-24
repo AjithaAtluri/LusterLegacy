@@ -76,8 +76,26 @@ export default function AddProduct() {
     console.log(data);
   };
 
+  // Convert file to base64 for API submission
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          // Extract the base64 part by removing the data URL prefix
+          const base64String = reader.result.split(',')[1];
+          resolve(base64String);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
+
   // Handle AI generated content
-  const handleContentGenerated = (content: AIGeneratedContent) => {
+  const handleContentGenerated = async (content: AIGeneratedContent) => {
     form.setValue("title", content.title);
     form.setValue("tagline", content.tagline);
     form.setValue("description", content.shortDescription);
@@ -114,7 +132,7 @@ export default function AddProduct() {
       
       toast({
         title: "Main Image Uploaded",
-        description: "The main product image has been uploaded successfully.",
+        description: "The main product image has been uploaded successfully and will be used for AI content generation.",
       });
     }
   }, [toast]);
@@ -552,6 +570,7 @@ export default function AddProduct() {
                     metalWeight={metalWeight}
                     primaryGems={primaryGems}
                     userDescription={form.watch("userDescription")}
+                    imageUrls={mainImagePreview ? [mainImagePreview] : []}
                     onContentGenerated={handleContentGenerated}
                   />
                 </div>
