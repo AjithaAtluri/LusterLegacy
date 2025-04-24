@@ -302,14 +302,34 @@ export default function ImprovedAIContentGenerator({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="productType">Product Type <span className="text-destructive">*</span></Label>
-              <Input
-                id="productType"
-                name="productType"
-                placeholder="Ring, Necklace, Bracelet, etc."
-                value={formData.productType}
-                onChange={handleInputChange}
-                required
-              />
+              <Select 
+                name="productType" 
+                value={formData.productType} 
+                onValueChange={(value) => handleSelectChange("productType", value)}
+              >
+                <SelectTrigger id="productType" className={isLoadingProductTypes ? "opacity-70" : ""}>
+                  <SelectValue placeholder={isLoadingProductTypes ? "Loading product types..." : "Select product type"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {productTypesError ? (
+                    <SelectItem value="error" disabled>Error loading product types</SelectItem>
+                  ) : isLoadingProductTypes ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : productTypes && productTypes.length > 0 ? (
+                    productTypes.map((productType) => (
+                      <SelectItem key={productType.id} value={productType.name}>
+                        {productType.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    fallbackProductTypeOptions.map((productType) => (
+                      <SelectItem key={productType} value={productType}>
+                        {productType} (Fallback)
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="metalType">Metal Type <span className="text-destructive">*</span></Label>
