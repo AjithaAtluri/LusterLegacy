@@ -39,13 +39,13 @@ export default function StorySection() {
           <div>
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1616527546362-2f53e6fe420e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                src="https://images.pexels.com/photos/5370706/pexels-photo-5370706.jpeg?auto=compress&cs=tinysrgb&w=800" 
                 alt="Jewelry craftsman at work" 
                 className="rounded-lg shadow-xl"
               />
                 
               <img 
-                src="https://images.unsplash.com/photo-1617038260897-43df0edad120?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80" 
+                src="https://images.pexels.com/photos/14113212/pexels-photo-14113212.jpeg?auto=compress&cs=tinysrgb&w=400" 
                 alt="Finished luxury jewelry piece" 
                 className="absolute -bottom-10 -right-10 w-48 h-48 object-cover rounded-lg shadow-xl border-4 border-background"
               />
