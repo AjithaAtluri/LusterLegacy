@@ -225,7 +225,14 @@ export default function AddProduct() {
           basePriceINR: parseInt(data.basePriceINR) || 0,
           metalType: data.metalType || '',
           metalWeight: parseFloat(data.metalWeight) || 0,
-          stoneTypes: selectedStoneTypes.map(stone => stone.name)
+          stoneTypes: selectedStoneTypes.map(stone => stone.name),
+          mainStoneType: mainStoneType || '',
+          mainStoneWeight: parseFloat(mainStoneWeight) || 0,
+          secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
+          secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
+          productTypeId: data.productTypeId || '',
+          userDescription: data.userDescription || '',
+          dimensions: data.dimensions || ''
         }
       };
       formData.append('details', JSON.stringify(detailsObject));
