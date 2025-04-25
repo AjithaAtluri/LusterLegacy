@@ -80,7 +80,7 @@ export default function EditProductNew() {
         width: "0",
         height: "0",
       },
-      mainStoneType: "",
+      mainStoneType: "none_selected",
       mainStoneWeight: "",
       secondaryStoneTypes: [],
       secondaryStoneWeight: "",
@@ -142,7 +142,7 @@ export default function EditProductNew() {
           width: details?.dimensions?.width?.toString() || "0",
           height: details?.dimensions?.height?.toString() || "0",
         },
-        mainStoneType: details?.mainStoneType || "",
+        mainStoneType: details?.mainStoneType || "none_selected",
         mainStoneWeight: details?.mainStoneWeight?.toString() || "",
         secondaryStoneTypes: secondaryStones,
         secondaryStoneWeight: details?.secondaryStoneWeight?.toString() || "",
@@ -306,7 +306,7 @@ export default function EditProductNew() {
           tagline: values.tagline,
           detailedDescription: values.detailedDescription,
           dimensions: values.dimensions,
-          mainStoneType: values.mainStoneType,
+          mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
           mainStoneWeight: values.mainStoneWeight,
           secondaryStoneWeight: values.secondaryStoneWeight,
           userDescription: values.userDescription,
@@ -804,7 +804,7 @@ export default function EditProductNew() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">None</SelectItem>
+                              <SelectItem value="none_selected">None</SelectItem>
                               {stoneTypes?.map(stone => (
                                 <SelectItem key={stone.id} value={stone.name}>
                                   {stone.name}
@@ -830,7 +830,7 @@ export default function EditProductNew() {
                               step="0.01"
                               placeholder="Enter stone weight" 
                               {...field}
-                              disabled={!form.watch("mainStoneType")}
+                              disabled={!form.watch("mainStoneType") || form.watch("mainStoneType") === "none_selected"}
                             />
                           </FormControl>
                           <FormMessage />

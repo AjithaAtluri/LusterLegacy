@@ -1,14 +1,12 @@
-import { useState, useCallback, useEffect } from "react";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { useState, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, X } from "lucide-react";
-import { useDropzone } from "react-dropzone";
+import { Loader2, Image as ImageIcon, Plus, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import AIContentGenerator from "@/components/admin/ai-content-generator";
+import { useDropzone } from "react-dropzone";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
+import type { StoneType } from "@shared/schema";
 
 interface EditProductAIGeneratorProps {
   productType: string;
@@ -16,7 +14,7 @@ interface EditProductAIGeneratorProps {
   metalWeight: string;
   mainStoneType: string;
   mainStoneWeight: string;
-  secondaryStoneTypes: { id: number; name: string }[];
+  secondaryStoneTypes: StoneType[];
   secondaryStoneWeight: string;
   userDescription: string;
   mainImageUrl: string | null;
@@ -26,9 +24,9 @@ interface EditProductAIGeneratorProps {
   onAdditionalImagesChange: (files: File[], previews: string[]) => void;
 }
 
-export default function EditProductAIGenerator({
+const EditProductAIGenerator = ({
   productType,
-  metalType,
+  metalType, 
   metalWeight,
   mainStoneType,
   mainStoneWeight,
@@ -40,29 +38,15 @@ export default function EditProductAIGenerator({
   onContentGenerated,
   onMainImageChange,
   onAdditionalImagesChange
-}: EditProductAIGeneratorProps) {
+}: EditProductAIGeneratorProps) => {
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
-  const [generatingContent, setGeneratingContent] = useState(false);
-  const [modifiedUserDescription, setModifiedUserDescription] = useState(userDescription || "");
   
-  // Process images
-  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
-  const [mainImagePreview, setMainImagePreview] = useState<string | null>(mainImageUrl);
-  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
-  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>(additionalImageUrls || []);
-
-  // Keep description in sync with props
-  useEffect(() => {
-    setModifiedUserDescription(userDescription || "");
-  }, [userDescription]);
-
-  // Main image dropzone
+  // Main image handling
   const onMainImageDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
-      setMainImageFile(file);
       const previewUrl = URL.createObjectURL(file);
-      setMainImagePreview(previewUrl);
       onMainImageChange(file, previewUrl);
     }
   }, [onMainImageChange]);
@@ -74,18 +58,26 @@ export default function EditProductAIGenerator({
     },
     maxFiles: 1
   });
-
-  // Additional images dropzone
+  
+  // Additional images handling
   const onAdditionalImagesDrop = useCallback((acceptedFiles: File[]) => {
-    // Limit to 3 additional images
-    const files = acceptedFiles.slice(0, 3);
-    setAdditionalImageFiles(prev => [...prev, ...files].slice(0, 3));
+    // Limit to 3 additional images total
+    const remainingSlots = 3 - additionalImageUrls.length;
     
+    if (remainingSlots <= 0) {
+      toast({
+        title: "Maximum Images Reached",
+        description: "You can upload a maximum of 3 additional images.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const files = acceptedFiles.slice(0, remainingSlots);
     const previews = files.map(file => URL.createObjectURL(file));
-    const newPreviews = [...additionalImagePreviews, ...previews].slice(0, 3);
-    setAdditionalImagePreviews(newPreviews);
-    onAdditionalImagesChange([...additionalImageFiles, ...files].slice(0, 3), newPreviews);
-  }, [additionalImagePreviews, additionalImageFiles, onAdditionalImagesChange]);
+    
+    onAdditionalImagesChange(files, [...additionalImageUrls, ...previews]);
+  }, [additionalImageUrls, onAdditionalImagesChange, toast]);
 
   const { getRootProps: getAdditionalImagesRootProps, getInputProps: getAdditionalImagesInputProps } = useDropzone({
     onDrop: onAdditionalImagesDrop,
@@ -94,123 +86,158 @@ export default function EditProductAIGenerator({
     },
     maxFiles: 3
   });
-
-  // Remove an additional image
+  
+  // Removing additional images
   const removeAdditionalImage = (index: number) => {
-    const newFiles = [...additionalImageFiles];
-    newFiles.splice(index, 1);
-    setAdditionalImageFiles(newFiles);
-    
-    const newPreviews = [...additionalImagePreviews];
-    if (newPreviews[index]) URL.revokeObjectURL(newPreviews[index]);
+    const newPreviews = [...additionalImageUrls];
     newPreviews.splice(index, 1);
-    setAdditionalImagePreviews(newPreviews);
     
-    onAdditionalImagesChange(newFiles, newPreviews);
+    // When removing an image, we assume it's from the server and not a newly added file
+    onAdditionalImagesChange([], newPreviews);
   };
-
-  // Handle AI content generation
-  const handleGenerateContent = async () => {
-    if (!productType || !metalType) {
-      toast({
-        title: "Missing Information",
-        description: "Please select a product type and metal type before generating content.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Get the primary gems
-    const primaryGems = [
-      ...(mainStoneType ? [{
-        name: mainStoneType,
-        carats: mainStoneWeight ? parseFloat(mainStoneWeight) : undefined
-      }] : []),
-      ...secondaryStoneTypes.map(stone => ({
-        name: stone.name,
-        carats: secondaryStoneWeight 
-          ? parseFloat(secondaryStoneWeight) / secondaryStoneTypes.length 
-          : undefined
-      }))
-    ];
-
-    // Get image URLs
-    const imageUrls = [
-      ...(mainImagePreview ? [mainImagePreview] : []),
-      ...additionalImagePreviews
-    ];
-
-    setGeneratingContent(true);
-
+  
+  // Generate content with AI
+  const generateContent = async () => {
     try {
-      const response = await apiRequest("POST", "/api/generate-content", {
+      setIsGenerating(true);
+
+      // Filter out invalid values
+      let filteredMainStoneType = mainStoneType;
+      if (filteredMainStoneType === "none_selected") {
+        filteredMainStoneType = "";
+      }
+      
+      // Prepare form data for image upload and content generation
+      const formData = new FormData();
+      
+      // Add product details
+      const productData = {
         productType,
         metalType,
-        metalWeight: metalWeight ? parseFloat(metalWeight) : undefined,
-        primaryGems,
-        userDescription: modifiedUserDescription,
-        imageUrls
+        metalWeight,
+        mainStoneType: filteredMainStoneType,
+        mainStoneWeight,
+        secondaryStoneTypes: secondaryStoneTypes.map(stone => stone.name),
+        secondaryStoneWeight,
+        userDescription
+      };
+      
+      formData.append('data', JSON.stringify(productData));
+      
+      // Add image URLs (if they are from server)
+      if (mainImageUrl) {
+        formData.append('existingMainImage', mainImageUrl);
+      }
+      
+      additionalImageUrls.forEach((url, index) => {
+        formData.append(`existingAdditionalImage${index + 1}`, url);
       });
-
-      if (!response.ok) {
+      
+      // Make the API request
+      const response = await apiRequest(
+        "POST", 
+        "/api/admin/generate-product-content", 
+        formData,
+        true // isFormData flag
+      );
+      
+      const data = await response.json();
+      
+      // Handle the response
+      if (data) {
+        onContentGenerated(data);
+      } else {
         throw new Error("Failed to generate content");
       }
-
-      const content: AIGeneratedContent = await response.json();
-      onContentGenerated(content);
-      
-      toast({
-        title: "Content Generated",
-        description: "AI has successfully generated content for your product."
-      });
     } catch (error) {
-      console.error("Error generating content:", error);
+      console.error("AI generation error:", error);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate content. Please try again.",
+        description: "Failed to generate content. Please check your inputs and try again.",
         variant: "destructive"
       });
     } finally {
-      setGeneratingContent(false);
+      setIsGenerating(false);
     }
   };
 
+  // Check if enough data is provided for generation
+  const canGenerate = !!(productType && metalType && (mainImageUrl || additionalImageUrls.length > 0));
+  
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Product Details for AI</CardTitle>
+          <CardTitle>Product Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Custom Description</label>
-              <Textarea
-                value={modifiedUserDescription}
-                onChange={(e) => setModifiedUserDescription(e.target.value)}
-                placeholder="Describe the product in your own words to help the AI generate better content..."
-                className="min-h-[120px]"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Provide any specific details or style preferences you want to be included in the AI-generated content.
+              <h3 className="font-medium mb-2">Product Type</h3>
+              <p className="text-muted-foreground">{productType || "Not selected"}</p>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Metal Type</h3>
+              <p className="text-muted-foreground">{metalType || "Not selected"}</p>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Metal Weight</h3>
+              <p className="text-muted-foreground">{metalWeight || "Not specified"} g</p>
+            </div>
+            
+            <div>
+              <h3 className="font-medium mb-2">Main Stone</h3>
+              <p className="text-muted-foreground">
+                {mainStoneType && mainStoneType !== "none_selected" 
+                  ? `${mainStoneType} (${mainStoneWeight || "0"} carat)` 
+                  : "None"}
               </p>
             </div>
           </div>
+          
+          <div>
+            <h3 className="font-medium mb-2">Secondary Stones</h3>
+            {secondaryStoneTypes.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {secondaryStoneTypes.map(stone => (
+                  <div key={stone.id} className="px-2 py-1 bg-muted rounded-md text-sm">
+                    {stone.name}
+                  </div>
+                ))}
+                {secondaryStoneWeight && (
+                  <div className="px-2 py-1 bg-muted rounded-md text-sm">
+                    Total: {secondaryStoneWeight} carat
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No secondary stones selected</p>
+            )}
+          </div>
+          
+          {userDescription && (
+            <div>
+              <h3 className="font-medium mb-2">Custom Description</h3>
+              <p className="text-muted-foreground whitespace-pre-wrap">{userDescription}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
-
+      
       <Card>
         <CardHeader>
           <CardTitle>Product Images</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Main Product Image</label>
-            {mainImagePreview ? (
+            <h3 className="font-medium mb-3">Main Image</h3>
+            {mainImageUrl ? (
               <div className="relative w-full h-[300px] rounded-md overflow-hidden border border-input">
-                <img
-                  src={mainImagePreview}
-                  alt="Product preview"
+                <img 
+                  src={mainImageUrl} 
+                  alt="Main product" 
                   className="w-full h-full object-cover"
                 />
                 <Button
@@ -219,9 +246,6 @@ export default function EditProductAIGenerator({
                   size="icon"
                   className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1"
                   onClick={() => {
-                    if (mainImagePreview && !mainImageUrl) URL.revokeObjectURL(mainImagePreview);
-                    setMainImagePreview(null);
-                    setMainImageFile(null);
                     onMainImageChange(null, null);
                   }}
                 >
@@ -235,22 +259,22 @@ export default function EditProductAIGenerator({
               >
                 <input {...getMainImageInputProps()} />
                 <div className="flex flex-col items-center">
-                  <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                  <ImageIcon className="h-10 w-10 text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground mb-1">Drag & drop or click to upload</p>
                   <p className="text-xs text-muted-foreground">Recommended size: 1200x1200px</p>
                 </div>
               </div>
             )}
           </div>
-
+          
           <div>
-            <label className="block text-sm font-medium mb-2">Additional Images (Up to 3)</label>
+            <h3 className="font-medium mb-3">Additional Images (Up to 3)</h3>
             <div className="grid grid-cols-3 gap-4">
-              {additionalImagePreviews.map((preview, index) => (
+              {additionalImageUrls.map((url, index) => (
                 <div key={index} className="relative w-full h-[120px] rounded-md overflow-hidden border border-input">
                   <img
-                    src={preview}
-                    alt={`Additional preview ${index + 1}`}
+                    src={url}
+                    alt={`Additional product ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                   <Button
@@ -264,50 +288,40 @@ export default function EditProductAIGenerator({
                   </Button>
                 </div>
               ))}
-              {additionalImagePreviews.length < 3 && (
+              
+              {additionalImageUrls.length < 3 && (
                 <div
                   {...getAdditionalImagesRootProps()}
                   className="border-2 border-dashed border-input rounded-md p-4 text-center hover:border-primary/50 cursor-pointer transition-colors h-[120px] flex flex-col items-center justify-center"
                 >
                   <input {...getAdditionalImagesInputProps()} />
-                  <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                  <p className="text-xs text-muted-foreground">Upload</p>
+                  <Plus className="h-6 w-6 text-muted-foreground mb-1" />
+                  <p className="text-xs text-muted-foreground">Add Image</p>
                 </div>
               )}
             </div>
           </div>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate Content</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Click the button below to generate AI content for your product based on the details provided above.
-            The AI will create a title, tagline, short description, detailed description, and suggested pricing.
-          </p>
-
-          <div className="flex justify-center">
-            <Button 
-              onClick={handleGenerateContent}
-              disabled={generatingContent || !productType || !metalType}
-              className="w-full max-w-md"
-              size="lg"
-            >
-              {generatingContent ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Content...
-                </>
-              ) : (
-                "Generate AI Content"
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      
+      <div className="flex justify-end">
+        <Button
+          onClick={generateContent}
+          disabled={isGenerating || !canGenerate}
+          className="min-w-[180px]"
+        >
+          {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isGenerating ? "Generating..." : "Generate Content"}
+        </Button>
+      </div>
+      
+      {!canGenerate && (
+        <p className="text-center text-sm text-muted-foreground">
+          Please select at least a product type, metal type, and add an image to generate content.
+        </p>
+      )}
     </div>
   );
-}
+};
+
+export default EditProductAIGenerator;
