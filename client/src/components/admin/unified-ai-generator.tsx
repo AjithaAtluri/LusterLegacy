@@ -685,7 +685,7 @@ export default function UnifiedAIGenerator({
               carats: mainStoneWeight ? parseFloat(mainStoneWeight) : undefined
             }] : []),
             ...selectedStoneTypes.map(stone => ({
-              name: stone,
+              name: stone.name,
               carats: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) / selectedStoneTypes.length : undefined
             }))
           ]}
