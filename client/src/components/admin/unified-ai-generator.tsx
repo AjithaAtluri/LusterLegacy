@@ -42,6 +42,7 @@ interface UnifiedAIGeneratorProps {
   getAdditionalImagesInputProps: () => any;
   removeAdditionalImage: (index: number) => void;
   isEditMode?: boolean;
+  hideInputSection?: boolean; // New prop to hide the input section
 }
 
 export default function UnifiedAIGenerator({
