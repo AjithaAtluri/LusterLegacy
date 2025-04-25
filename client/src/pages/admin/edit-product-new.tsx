@@ -98,20 +98,36 @@ export default function EditProductNew() {
 
   // Define a custom query function to properly fetch product data
   const fetchProduct = async () => {
+    if (!params.id) {
+      throw new Error("No product ID provided");
+    }
+    
     try {
+      console.log(`Fetching product data for ID: ${params.id}`);
+      
+      // Make sure cookies are included for authentication
       const response = await fetch(`/api/admin/products/${params.id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
         credentials: 'include', // Important for authentication cookies
       });
       
+      console.log(`Product fetch response status: ${response.status}`);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Server error response: ${errorText}`);
         throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log(`Product data retrieved successfully:`, data);
+      return data;
     } catch (error) {
       console.error('Error fetching product data:', error);
       throw error;
