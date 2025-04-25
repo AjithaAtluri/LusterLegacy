@@ -46,6 +46,7 @@ interface StoneType {
 // Create product schema for form validation
 const productSchema = z.object({
   name: z.string().min(3, "Product name must be at least 3 characters"),
+  tagline: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
   basePrice: z.coerce.number().min(1, "Price must be greater than 0"),
   details: z.string().optional(),
@@ -147,6 +148,7 @@ export default function AddProductPage() {
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: "",
+      tagline: "",
       description: "",
       basePrice: 0,
       details: "",
@@ -170,6 +172,7 @@ export default function AddProductPage() {
         
         // Pre-fill form with AI generated content
         form.setValue('name', parsedContent.title);
+        form.setValue('tagline', parsedContent.tagline);
         form.setValue('description', parsedContent.shortDescription);
         form.setValue('details', parsedContent.detailedDescription);
         form.setValue('basePrice', Math.round(parsedContent.priceINR)); // Use INR as base price
@@ -343,6 +346,7 @@ export default function AddProductPage() {
     
     // Reset form fields that might have been populated by AI
     form.setValue('name', '');
+    form.setValue('tagline', '');
     form.setValue('description', '');
     form.setValue('details', '');
     
@@ -385,6 +389,9 @@ export default function AddProductPage() {
               <div className="flex flex-wrap gap-2">
                 <div className="px-3 py-1 bg-primary/10 rounded-full text-xs">
                   Title: {savedContent.title}
+                </div>
+                <div className="px-3 py-1 bg-primary/10 rounded-full text-xs">
+                  Tagline: {savedContent.tagline}
                 </div>
                 <div className="px-3 py-1 bg-primary/10 rounded-full text-xs">
                   Price USD: ${savedContent.priceUSD.toFixed(2)}
@@ -529,6 +536,24 @@ export default function AddProductPage() {
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Tagline */}
+                <FormField
+                  control={form.control}
+                  name="tagline"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product Tagline</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        A catchy tagline that highlights the product's unique selling points
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
