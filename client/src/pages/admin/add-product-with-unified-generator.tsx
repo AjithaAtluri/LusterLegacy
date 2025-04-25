@@ -37,6 +37,7 @@ interface FormValues {
   metalType: string;
   metalWeight: string;
   userDescription: string;
+  dimensions: string; // Add dimensions field for product measurements
   isNew: boolean;
   isBestseller: boolean;
   isFeatured: boolean;
@@ -45,7 +46,7 @@ interface FormValues {
 export default function AddProduct() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [selectedStoneTypes, setSelectedStoneTypes] = useState<string[]>([]);
+  const [selectedStoneTypes, setSelectedStoneTypes] = useState<Array<{id: number, name: string}>>([]);
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
@@ -215,7 +216,18 @@ export default function AddProduct() {
       formData.append('description', data.description.toString());
       formData.append('basePrice', data.basePrice.toString());
       formData.append('basePriceINR', data.basePriceINR.toString());
-      formData.append('details', data.detailedDescription.toString());
+      // Format details as a JSON structure with detailedDescription and additionalData
+      const detailsObject = {
+        detailedDescription: data.detailedDescription,
+        additionalData: {
+          tagline: data.tagline || '',
+          basePriceINR: parseInt(data.basePriceINR) || 0,
+          metalType: data.metalType || '',
+          metalWeight: parseFloat(data.metalWeight) || 0,
+          stoneTypes: selectedStoneTypes.map(stone => stone.name)
+        }
+      };
+      formData.append('details', JSON.stringify(detailsObject));
       formData.append('productTypeId', data.productTypeId.toString());
       formData.append('isNew', data.isNew.toString());
       formData.append('isBestseller', data.isBestseller.toString());
