@@ -161,8 +161,8 @@ export default function UnifiedAIGenerator({
       </div>
       
       {!hideInputSection && (
-      <div className="space-y-6 mb-6">
-        {/* Image Upload Section */}
+        <div className="space-y-6 mb-6">
+          {/* Image Upload Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Image Upload */}
           <Card>
@@ -697,6 +697,7 @@ export default function UnifiedAIGenerator({
           onContentGenerated={handleContentGenerated}
         />
       </div>
+      )}
     </>
   );
 }

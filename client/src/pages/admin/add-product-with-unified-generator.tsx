@@ -602,64 +602,6 @@ export default function AddProduct() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Images Status</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Manage all product images from this tab
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${mainImagePreview ? 'bg-green-500' : 'bg-amber-500'}`}>
-                        {mainImagePreview ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                          </svg>
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium">Main Product Image</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {mainImagePreview ? 'Uploaded in the "AI Content Generator" section' : 'Not yet uploaded'}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${additionalImagePreviews.length > 0 ? 'bg-green-500' : 'bg-amber-500'}`}>
-                        {additionalImagePreviews.length > 0 ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                          </svg>
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium">Additional Images</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {additionalImagePreviews.length > 0 
-                            ? `${additionalImagePreviews.length} additional images uploaded` 
-                            : 'No additional images uploaded yet'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
               {mainImagePreview && (
                 <Card>
                   <CardHeader>
