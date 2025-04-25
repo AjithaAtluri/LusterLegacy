@@ -96,6 +96,16 @@ export default function EditProductNew() {
     },
   });
 
+  // Access location state for redirection if needed
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  // First fetch user data to ensure we have admin authentication
+  const { data: userData } = useQuery({
+    queryKey: ['/api/auth/me'],
+    retry: 1
+  });
+
   // Define a custom query function to properly fetch product data
   const fetchProduct = async () => {
     if (!params.id) {
@@ -104,6 +114,7 @@ export default function EditProductNew() {
     
     try {
       console.log(`Fetching product data for ID: ${params.id}`);
+      console.log(`Current authenticated user:`, userData);
       
       // Make sure cookies are included for authentication
       const response = await fetch(`/api/admin/products/${params.id}`, {
@@ -122,6 +133,18 @@ export default function EditProductNew() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Server error response: ${errorText}`);
+        
+        // If authentication error, redirect to login
+        if (response.status === 401) {
+          toast({
+            title: "Authentication Required",
+            description: "Please log in to access this product",
+            variant: "destructive"
+          });
+          setLocation('/admin');
+          throw new Error('Authentication required');
+        }
+        
         throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
       }
       

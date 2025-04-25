@@ -1369,18 +1369,34 @@ Respond in JSON format:
 
   app.get('/api/admin/products/:id', validateAdmin, async (req, res) => {
     try {
+      console.log(`GET /api/admin/products/${req.params.id} - Admin: ${req.user?.username}`);
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        console.log(`Invalid product ID: ${req.params.id}`);
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      console.log(`Fetching product with ID ${id}`);
       const product = await storage.getProduct(id);
       
       if (product) {
-        // Get the associated stone types for the product
-        const productStones = await storage.getProductStones(id);
+        console.log(`Found product: ${product.name} (ID: ${product.id})`);
         
-        res.json({
+        // Get the associated stone types for the product
+        console.log(`Fetching stone types for product ${id}`);
+        const productStones = await storage.getProductStones(id);
+        console.log(`Found ${productStones.length} stone types for product ${id}`);
+        
+        const responseData = {
           ...product,
           stoneTypes: productStones
-        });
+        };
+        
+        console.log(`Sending product data with ${productStones.length} stone types`);
+        res.json(responseData);
       } else {
+        console.log(`Product with ID ${id} not found`);
         res.status(404).json({ message: 'Product not found' });
       }
     } catch (error) {
