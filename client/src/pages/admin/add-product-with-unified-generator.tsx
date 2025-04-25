@@ -232,6 +232,16 @@ export default function AddProduct() {
           secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
           productTypeId: data.productTypeId || '',
           userDescription: data.userDescription || '',
+          // Save all AI generator inputs explicitly
+          aiInputs: {
+            metalType: data.metalType || '',
+            metalWeight: parseFloat(data.metalWeight) || 0,
+            mainStoneType: mainStoneType || '',
+            mainStoneWeight: parseFloat(mainStoneWeight) || 0,
+            secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
+            secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
+            userDescription: data.userDescription || '',
+          },
           dimensions: data.dimensions || ''
         }
       };
