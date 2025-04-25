@@ -906,6 +906,20 @@ export default function AIContentGeneratorPage() {
                   // Store in localStorage for persistence
                   localStorage.setItem('aiGeneratedContent', JSON.stringify(generatedContent));
                   
+                  // Save the input values that were used to generate the content
+                  localStorage.setItem('aiGeneratorInputs', JSON.stringify({
+                    productTypes: formData.productTypes,
+                    metalTypes: formData.metalTypes,
+                    metalWeight: formData.metalWeight,
+                    mainStoneType: formData.mainStoneType,
+                    mainStoneWeight: formData.mainStoneWeight,
+                    secondaryStoneType: formData.secondaryStoneType,
+                    secondaryStoneWeight: formData.secondaryStoneWeight,
+                    otherStoneType: formData.otherStoneType,
+                    otherStoneWeight: formData.otherStoneWeight,
+                    additionalDetails: formData.additionalDetails
+                  }));
+                  
                   // Save main image preview URL to localStorage
                   if (mainImagePreview) {
                     localStorage.setItem('aiGeneratedImagePreview', mainImagePreview);
