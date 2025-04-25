@@ -316,6 +316,40 @@ export default function EditProductNew() {
     form.setValue("priceUSD", content.priceUSD);
     form.setValue("priceINR", content.priceINR);
 
+    // Handle the imageInsights field if available
+    if (content.imageInsights) {
+      // Store image insights in the database - add a note to the description
+      const enhancedDescription = content.detailedDescription + 
+        "\n\n-- Image Analysis Notes --\n" + content.imageInsights;
+      form.setValue("detailedDescription", enhancedDescription);
+    }
+
+    // Save this info to localStorage for potential regeneration
+    localStorage.setItem('aiGeneratedContent', JSON.stringify(content));
+    
+    // Save inputs for potential regeneration
+    const aiGeneratorInputs = {
+      productType: form.getValues("productType"),
+      metalType: form.getValues("metalType"),
+      metalWeight: form.getValues("metalWeight"),
+      mainStoneType: form.getValues("mainStoneType"),
+      mainStoneWeight: form.getValues("mainStoneWeight"),
+      secondaryStoneTypes: form.getValues("secondaryStoneTypes"),
+      secondaryStoneWeight: form.getValues("secondaryStoneWeight"),
+      userDescription: form.getValues("userDescription")
+    };
+    localStorage.setItem('aiGeneratorInputs', JSON.stringify(aiGeneratorInputs));
+
+    // Save the image data if available
+    if (mainImagePreview) {
+      localStorage.setItem('aiGeneratedImagePreview', mainImagePreview);
+    }
+    
+    // Save additional images if available
+    if (additionalImagePreviews.length > 0) {
+      localStorage.setItem('aiGeneratedAdditionalImages', JSON.stringify(additionalImagePreviews));
+    }
+
     setStep("form");
 
     // Show success notification
@@ -445,11 +479,13 @@ export default function EditProductNew() {
             basePriceINR: values.priceINR,
             priceUSD: values.priceUSD,
             metalType: values.metalType,
-            metalWeight: values.metalWeight,
+            metalWeight: parseFloat(values.metalWeight) || 0,
             stoneTypes: values.secondaryStoneTypes,
             mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
-            mainStoneWeight: values.mainStoneWeight,
-            secondaryStoneWeight: values.secondaryStoneWeight,
+            mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
+            secondaryStoneTypes: values.secondaryStoneTypes,
+            secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
+            productTypeId: values.productType || '',
             userDescription: values.userDescription,
             dimensions: values.dimensions,
           }
