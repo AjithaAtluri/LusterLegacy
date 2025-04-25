@@ -26,19 +26,39 @@ import { useQuery } from "@tanstack/react-query";
 
 // AI Generator component specifically for editing products
 export default function EditProductAIGenerator({
-  productId,
-  initialAiInputs,
+  productType,
+  metalType,
+  metalWeight,
+  mainStoneType,
+  mainStoneWeight,
+  secondaryStoneTypes,
+  secondaryStoneWeight,
+  userDescription,
+  mainImageUrl,
+  additionalImageUrls = [],
   onContentGenerated,
-  onCancel
+  onMainImageChange,
+  onAdditionalImagesChange
 }: {
-  productId: number;
-  initialAiInputs?: AIInputs | null;
+  productType: string;
+  metalType: string;
+  metalWeight: string;
+  mainStoneType: string;
+  mainStoneWeight: string;
+  secondaryStoneTypes: any[];
+  secondaryStoneWeight: string;
+  userDescription: string;
+  mainImageUrl: string | null;
+  additionalImageUrls: string[];
   onContentGenerated: (content: any) => void;
-  onCancel: () => void;
+  onMainImageChange: (file: File | null, preview: string | null) => void;
+  onAdditionalImagesChange: (files: File[], previews: string[]) => void;
 }) {
   const { toast } = useToast();
   const [primaryGemsInput, setPrimaryGemsInput] = useState('');
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(mainImageUrl);
+  const params = new URLSearchParams(window.location.search);
+  const productId = parseInt(params.get('id') || '0');
 
   // Fetch product types for selection
   const { data: productTypes } = useQuery<any[]>({
@@ -70,39 +90,31 @@ export default function EditProductAIGenerator({
     })
   ).optional();
 
-  // Initialize form with existing AI inputs if available
+  // Initialize form with provided prop values
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      productType: initialAiInputs?.productType || "",
-      metalType: initialAiInputs?.metalType || "",
-      metalWeight: initialAiInputs?.metalWeight?.toString() || "",
-      userDescription: initialAiInputs?.userDescription || "",
+      productType: productType || "",
+      metalType: metalType || "",
+      metalWeight: metalWeight || "",
+      userDescription: userDescription || "",
     },
   });
 
   // Setup stone multi-select
   const { selectedItems: selectedGems, setSelectedItems: setSelectedGems } = useMultiSelect([]);
 
-  // Parse and set primary gems from initial data
+  // Set up the primary gems using secondaryStoneTypes
   useEffect(() => {
-    if (initialAiInputs?.primaryGems && initialAiInputs.primaryGems.length > 0) {
-      // Map gem names to make them selectable in the UI
-      const gemNames = initialAiInputs.primaryGems.map(gem => gem.name);
-      
-      // Set as selected items for multi-select
-      if (stoneTypes) {
-        const matchingStones = stoneTypes.filter(stone => 
-          gemNames.includes(stone.name)
-        );
-        setSelectedGems(matchingStones);
-      }
+    if (secondaryStoneTypes && secondaryStoneTypes.length > 0) {
+      // Set selected gems based on secondaryStoneTypes
+      setSelectedGems(secondaryStoneTypes);
       
       // Format gems text for display
-      const gemsText = initialAiInputs.primaryGems
+      const gemsText = secondaryStoneTypes
         .map(gem => {
-          if (gem.carats) {
-            return `${gem.name} (${gem.carats} carats)`;
+          if (gem.weight) {
+            return `${gem.name} (${gem.weight} carats)`;
           }
           return gem.name;
         })
@@ -110,7 +122,7 @@ export default function EditProductAIGenerator({
       
       setPrimaryGemsInput(gemsText);
     }
-  }, [initialAiInputs, stoneTypes]);
+  }, [secondaryStoneTypes]);
 
   // Handle file upload for AI processing
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
