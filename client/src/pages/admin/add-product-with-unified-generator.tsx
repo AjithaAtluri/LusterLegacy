@@ -85,6 +85,104 @@ export default function AddProduct() {
       isFeatured: false,
     },
   });
+  
+  // Load AI generated content and input values from localStorage
+  useEffect(() => {
+    const savedContentJson = localStorage.getItem('aiGeneratedContent');
+    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
+
+    // Load AI generated content
+    if (savedContentJson) {
+      try {
+        const parsedContent = JSON.parse(savedContentJson) as AIGeneratedContent;
+        
+        form.setValue('title', parsedContent.title);
+        form.setValue('tagline', parsedContent.tagline);
+        form.setValue('description', parsedContent.shortDescription);
+        form.setValue('detailedDescription', parsedContent.detailedDescription);
+        form.setValue('basePrice', parsedContent.priceUSD.toString());
+        form.setValue('basePriceINR', parsedContent.priceINR.toString());
+        
+        // Load the saved image preview
+        const savedImagePreview = localStorage.getItem('aiGeneratedImagePreview');
+        if (savedImagePreview) {
+          setMainImagePreview(savedImagePreview);
+        }
+        
+        // Load the saved image data and convert it back to a File object
+        const savedImageData = localStorage.getItem('aiGeneratedImageData');
+        if (savedImageData) {
+          fetch(savedImageData)
+            .then(res => res.blob())
+            .then(blob => {
+              const file = new File([blob], "product-image.jpg", { type: "image/jpeg" });
+              setMainImageFile(file);
+            })
+            .catch(err => {
+              console.error('Error converting saved image data to File:', err);
+            });
+        }
+
+        // Load additional images
+        const savedAdditionalImagesJson = localStorage.getItem('aiGeneratedAdditionalImages');
+        if (savedAdditionalImagesJson) {
+          const parsedImages = JSON.parse(savedAdditionalImagesJson);
+          setAdditionalImagePreviews(parsedImages);
+        }
+
+        toast({
+          title: "AI Content Loaded",
+          description: "AI-generated content has been loaded into the form.",
+        });
+      } catch (error) {
+        console.error('Error parsing saved content from localStorage:', error);
+      }
+    }
+    
+    // Load saved input values
+    if (savedInputsJson) {
+      try {
+        const parsedInputs = JSON.parse(savedInputsJson);
+        
+        // Set input values if they exist
+        if (parsedInputs.productType) {
+          setProductType(parsedInputs.productType);
+        }
+        
+        if (parsedInputs.metalType) {
+          form.setValue('metalType', parsedInputs.metalType);
+          setMetalType(parsedInputs.metalType);
+        }
+        
+        if (parsedInputs.metalWeight) {
+          form.setValue('metalWeight', parsedInputs.metalWeight);
+          setMetalWeight(parsedInputs.metalWeight);
+        }
+        
+        if (parsedInputs.mainStoneType) {
+          setMainStoneType(parsedInputs.mainStoneType);
+        }
+        
+        if (parsedInputs.mainStoneWeight) {
+          setMainStoneWeight(parsedInputs.mainStoneWeight);
+        }
+        
+        if (parsedInputs.secondaryStoneTypes) {
+          setSelectedStoneTypes(parsedInputs.secondaryStoneTypes);
+        }
+        
+        if (parsedInputs.secondaryStoneWeight) {
+          setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight);
+        }
+
+        if (parsedInputs.userDescription) {
+          form.setValue('userDescription', parsedInputs.userDescription);
+        }
+      } catch (error) {
+        console.error('Error parsing saved inputs from localStorage:', error);
+      }
+    }
+  }, [form]);
 
   const onSubmit = async (data: FormValues) => {
     try {

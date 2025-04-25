@@ -836,7 +836,8 @@ export default function AIContentGeneratorPage() {
               <Button
                 onClick={() => {
                   // Navigate to the updated add product page with unified generator, which will use the saved content
-                  navigate('/admin/add-product-with-unified-generator');
+                  // Use window.location to force a full page reload to ensure localStorage is read properly
+                  window.location.href = '/admin/add-product-with-unified-generator';
                   toast({
                     title: "Content Ready",
                     description: "Use the AI-generated content to create your new product.",
