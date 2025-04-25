@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -59,6 +59,7 @@ interface FormValues {
 
 export default function EditProductNew() {
   const params = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [step, setStep] = useState<"loading" | "ai-generator" | "form">("loading");
   const [isSubmitting, setIsSubmitting] = useState(false);
