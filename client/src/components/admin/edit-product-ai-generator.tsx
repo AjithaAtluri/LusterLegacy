@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AIInputs } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -80,13 +80,6 @@ export default function EditProductAIGenerator({
     userDescription: z.string().optional(),
   });
 
-  const primaryGemsSchema = z.array(
-    z.object({
-      name: z.string(),
-      carats: z.number().optional(),
-    })
-  ).optional();
-
   // Initialize form with provided prop values
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -98,12 +91,12 @@ export default function EditProductAIGenerator({
     },
   });
 
-  // Set up the gems input from secondary stone types
-  useEffect(() => {
+  // Set up the gems input from secondary stone types when component mounts
+  React.useEffect(() => {
     if (secondaryStoneTypes && secondaryStoneTypes.length > 0) {
       // Format gems text for display
       const gemsText = secondaryStoneTypes
-        .map((gem: any) => {
+        .map((gem: { name: string; weight?: number }) => {
           if (gem.weight) {
             return `${gem.name} (${gem.weight} carats)`;
           }
@@ -153,7 +146,7 @@ export default function EditProductAIGenerator({
     // Parse the text input for gems
     if (primaryGemsInput) {
       // Basic parsing of input like "Diamond (2 carats), Ruby"
-      return primaryGemsInput.split(",").map(item => {
+      return primaryGemsInput.split(",").map((item: string) => {
         const trimmed = item.trim();
         const match = trimmed.match(/(.+?)\s*\((\d+(?:\.\d+)?)\s*carats?\)/i);
         
@@ -170,7 +163,7 @@ export default function EditProductAIGenerator({
     
     // Return secondary stone types directly if available
     if (secondaryStoneTypes && secondaryStoneTypes.length > 0) {
-      return secondaryStoneTypes.map((gem: any) => ({
+      return secondaryStoneTypes.map((gem: { name: string; weight?: number }) => ({
         name: gem.name,
         carats: gem.weight
       }));
@@ -179,12 +172,7 @@ export default function EditProductAIGenerator({
     return [];
   };
 
-  // Extract carats value from the primary gems input for a specific gem
-  const extractCaratsForGem = (gemName: string) => {
-    const regex = new RegExp(`${gemName}\\s*\\((\\d+(?:\\.\\d+)?)\\s*carats?\\)`, 'i');
-    const match = primaryGemsInput.match(regex);
-    return match ? parseFloat(match[1]) : undefined;
-  };
+  // No longer needed with simplified implementation
 
   // Mutation for generating content
   const generateContentMutation = useMutation({
@@ -310,29 +298,18 @@ export default function EditProductAIGenerator({
               )}
             />
 
-            {/* Primary Gems (using multi-select) */}
+            {/* Primary Gems */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Primary Gems</label>
               <div className="flex flex-col space-y-2">
-                <MultiSelect
-                  options={stoneTypes?.map(stone => ({
-                    label: stone.name,
-                    value: stone.id.toString(),
-                    data: stone
-                  })) || []}
-                  selected={selectedGems}
-                  onChange={setSelectedGems}
-                  placeholder="Select gems"
-                />
                 <Input
                   value={primaryGemsInput}
                   onChange={(e) => setPrimaryGemsInput(e.target.value)}
-                  placeholder="Or manually enter gems with carats: Diamond (2 carats), Ruby"
-                  className="mt-2"
+                  placeholder="Enter gems with carats: Diamond (2 carats), Ruby, Sapphire (1.5 carats)"
                 />
               </div>
               <p className="text-xs text-gray-500">
-                Select stones or manually enter with carat details (e.g., "Diamond (2 carats)")
+                Manually enter with carat details (e.g., "Diamond (2 carats)")
               </p>
             </div>
 
