@@ -325,7 +325,7 @@ export default function UnifiedAIGenerator({
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="">No product types found</SelectItem>
+                            <SelectItem value="no-product-types">No product types found</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -394,7 +394,7 @@ export default function UnifiedAIGenerator({
                       <SelectValue placeholder="Select main stone" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No Main Stone</SelectItem>
+                      <SelectItem value="no-main-stone">No Main Stone</SelectItem>
                       {isLoadingStoneTypes ? (
                         <div className="flex items-center justify-center p-2">
                           <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>

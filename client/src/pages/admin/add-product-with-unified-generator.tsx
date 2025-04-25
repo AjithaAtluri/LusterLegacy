@@ -322,7 +322,7 @@ export default function AddProduct() {
                                 </SelectItem>
                               ))
                             ) : (
-                              <SelectItem value="">No product types found</SelectItem>
+                              <SelectItem value="no-types">No product types found</SelectItem>
                             )}
                           </SelectContent>
                         </Select>
