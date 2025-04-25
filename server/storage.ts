@@ -50,11 +50,13 @@ export interface IStorage {
 
   // Product methods
   getProduct(id: number): Promise<Product | undefined>;
+  getProductById(id: number): Promise<Product | undefined>; // Alias for getProduct
   getAllProducts(): Promise<Product[]>;
   getFeaturedProducts(): Promise<Product[]>;
   getProductsByCategory(category: string): Promise<Product[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined>;
+  updateProductAiInputs(id: number, aiInputs: any): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
 
   // Design Request methods
@@ -221,6 +223,11 @@ export class MemStorage implements IStorage {
     return this.products.get(id);
   }
 
+  async getProductById(id: number): Promise<Product | undefined> {
+    // Alias for getProduct
+    return this.getProduct(id);
+  }
+
   async getAllProducts(): Promise<Product[]> {
     return Array.from(this.products.values());
   }
@@ -250,6 +257,15 @@ export class MemStorage implements IStorage {
     if (!product) return undefined;
     
     const updatedProduct = { ...product, ...productUpdate };
+    this.products.set(id, updatedProduct);
+    return updatedProduct;
+  }
+
+  async updateProductAiInputs(id: number, aiInputs: any): Promise<Product | undefined> {
+    const product = this.products.get(id);
+    if (!product) return undefined;
+    
+    const updatedProduct = { ...product, aiInputs };
     this.products.set(id, updatedProduct);
     return updatedProduct;
   }
@@ -820,19 +836,37 @@ export class DatabaseStorage implements IStorage {
     const [product] = await db.insert(products).values(insertProduct).returning();
     return product;
   }
-
+  
   async updateProduct(id: number, productUpdate: Partial<InsertProduct>): Promise<Product | undefined> {
-    const [product] = await db.update(products)
+    const [updatedProduct] = await db
+      .update(products)
       .set(productUpdate)
       .where(eq(products.id, id))
       .returning();
-    return product || undefined;
+    return updatedProduct || undefined;
   }
-
+  
+  async getProductById(id: number): Promise<Product | undefined> {
+    // Alias for getProduct
+    return this.getProduct(id);
+  }
+  
+  async updateProductAiInputs(id: number, aiInputs: any): Promise<Product | undefined> {
+    console.log("Updating AI inputs for product:", id, aiInputs);
+    const [updatedProduct] = await db
+      .update(products)
+      .set({ aiInputs })
+      .where(eq(products.id, id))
+      .returning();
+    return updatedProduct || undefined;
+  }
+  
   async deleteProduct(id: number): Promise<boolean> {
     const result = await db.delete(products).where(eq(products.id, id));
-    return result.rowCount > 0;
+    return !!result;
   }
+
+// These methods are already defined above
 
   // Design Request methods
   async getDesignRequest(id: number): Promise<DesignRequest | undefined> {

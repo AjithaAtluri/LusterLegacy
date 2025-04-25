@@ -895,6 +895,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Regenerate content for an existing product (with aiInputs)
+  app.post('/api/products/:id/regenerate-content', validateAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+
+      // Get the existing product
+      const product = await storage.getProductById(productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      console.log("Regenerating content for product ID:", productId);
+      
+      // Use the AI inputs provided in the request
+      const aiInputs = {
+        productType: req.body.productType,
+        metalType: req.body.metalType,
+        metalWeight: req.body.metalWeight,
+        primaryGems: req.body.primaryGems || [],
+        userDescription: req.body.userDescription,
+        imageUrls: req.body.imageUrls || [],
+      };
+
+      // If storeAiInputs is true, save these inputs to the product
+      const storeInputs = req.body.storeAiInputs === true;
+      
+      // Pass the request to the OpenAI content generator
+      // We'll use the product content generator for consistency
+      req.body.existingProductId = productId; // Pass product ID for context
+      
+      try {
+        await generateProductContent(req, res);
+        
+        // Note: The AI response is already sent by generateProductContent
+        // If we get here, we need to separately update the aiInputs if requested
+        if (storeInputs) {
+          await storage.updateProductAiInputs(productId, aiInputs);
+          console.log("Stored AI inputs for product ID:", productId);
+        }
+      } catch (genError) {
+        console.error('Error generating content:', genError);
+        
+        // If we had an error during generation but after response was sent,
+        // we still want to try to save the AI inputs
+        if (storeInputs && !res.headersSent) {
+          await storage.updateProductAiInputs(productId, aiInputs);
+          console.log("Stored AI inputs despite generation error for product ID:", productId);
+          res.status(500).json({ 
+            message: 'Failed to generate content, but saved AI inputs',
+            error: genError instanceof Error ? genError.message : 'Unknown error'
+          });
+        } else if (!res.headersSent) {
+          res.status(500).json({ 
+            message: 'Failed to generate content',
+            error: genError instanceof Error ? genError.message : 'Unknown error'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error in content regeneration:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          message: 'Failed to process content regeneration request',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    }
+  });
+  
   // Test endpoint to directly generate content (non-admin, for testing only)
   app.post('/api/test-content-generation', async (req, res) => {
     try {
