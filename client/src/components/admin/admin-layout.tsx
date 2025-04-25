@@ -16,7 +16,8 @@ import {
   X,
   Diamond,
   Gem,
-  Wand2
+  Wand2,
+  PlusCircle
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
