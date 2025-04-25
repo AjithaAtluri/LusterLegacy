@@ -1,338 +1,408 @@
-import { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Image as ImageIcon, Plus, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { AIInputs } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { useDropzone } from "react-dropzone";
-import type { AIGeneratedContent } from "@/lib/ai-content-generator";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useMultiSelect } from "@/hooks/use-multi-select";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { useQuery } from "@tanstack/react-query";
 
-// Define a simplified StoneType interface for the component
-// Since we only need id and name from the StoneType data
-type SimpleStoneType = {
-  id: number;
-  name: string;
-};
-
-interface EditProductAIGeneratorProps {
-  productType: string;
-  metalType: string;
-  metalWeight: string;
-  mainStoneType: string;
-  mainStoneWeight: string;
-  secondaryStoneTypes: SimpleStoneType[];
-  secondaryStoneWeight: string;
-  userDescription: string;
-  mainImageUrl: string | null;
-  additionalImageUrls: string[];
-  onContentGenerated: (content: AIGeneratedContent) => void;
-  onMainImageChange: (file: File | null, preview: string | null) => void;
-  onAdditionalImagesChange: (files: File[], previews: string[]) => void;
-}
-
-const EditProductAIGenerator = ({
-  productType,
-  metalType, 
-  metalWeight,
-  mainStoneType,
-  mainStoneWeight,
-  secondaryStoneTypes,
-  secondaryStoneWeight,
-  userDescription,
-  mainImageUrl,
-  additionalImageUrls,
+// AI Generator component specifically for editing products
+export default function EditProductAIGenerator({
+  productId,
+  initialAiInputs,
   onContentGenerated,
-  onMainImageChange,
-  onAdditionalImagesChange
-}: EditProductAIGeneratorProps) => {
-  const [isGenerating, setIsGenerating] = useState(false);
+  onCancel
+}: {
+  productId: number;
+  initialAiInputs?: AIInputs | null;
+  onContentGenerated: (content: any) => void;
+  onCancel: () => void;
+}) {
   const { toast } = useToast();
-  
-  // Main image handling
-  const onMainImageDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      onMainImageChange(file, previewUrl);
-    }
-  }, [onMainImageChange]);
+  const [primaryGemsInput, setPrimaryGemsInput] = useState('');
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
 
-  const { getRootProps: getMainImageRootProps, getInputProps: getMainImageInputProps } = useDropzone({
-    onDrop: onMainImageDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-    },
-    maxFiles: 1
+  // Fetch product types for selection
+  const { data: productTypes } = useQuery<any[]>({
+    queryKey: ['/api/product-types'],
   });
-  
-  // Additional images handling
-  const onAdditionalImagesDrop = useCallback((acceptedFiles: File[]) => {
-    // Limit to 3 additional images total
-    const remainingSlots = 3 - additionalImageUrls.length;
-    
-    if (remainingSlots <= 0) {
-      toast({
-        title: "Maximum Images Reached",
-        description: "You can upload a maximum of 3 additional images.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const files = acceptedFiles.slice(0, remainingSlots);
-    const previews = files.map(file => URL.createObjectURL(file));
-    
-    onAdditionalImagesChange(files, [...additionalImageUrls, ...previews]);
-  }, [additionalImageUrls, onAdditionalImagesChange, toast]);
 
-  const { getRootProps: getAdditionalImagesRootProps, getInputProps: getAdditionalImagesInputProps } = useDropzone({
-    onDrop: onAdditionalImagesDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
-    },
-    maxFiles: 3
+  // Fetch metal types for selection
+  const { data: metalTypes } = useQuery<any[]>({
+    queryKey: ['/api/metal-types'],
   });
-  
-  // Removing additional images
-  const removeAdditionalImage = (index: number) => {
-    const newPreviews = [...additionalImageUrls];
-    newPreviews.splice(index, 1);
-    
-    // When removing an image, we assume it's from the server and not a newly added file
-    onAdditionalImagesChange([], newPreviews);
-  };
-  
-  // Generate content with AI
-  const generateContent = async () => {
+
+  // Fetch stone types for selection
+  const { data: stoneTypes } = useQuery<any[]>({
+    queryKey: ['/api/stone-types'],
+  });
+
+  // Setup form for AI input parameters
+  const formSchema = z.object({
+    productType: z.string().min(1, "Product type is required"),
+    metalType: z.string().min(1, "Metal type is required"),
+    metalWeight: z.string().optional(),
+    userDescription: z.string().optional(),
+  });
+
+  const primaryGemsSchema = z.array(
+    z.object({
+      name: z.string(),
+      carats: z.number().optional(),
+    })
+  ).optional();
+
+  // Initialize form with existing AI inputs if available
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      productType: initialAiInputs?.productType || "",
+      metalType: initialAiInputs?.metalType || "",
+      metalWeight: initialAiInputs?.metalWeight?.toString() || "",
+      userDescription: initialAiInputs?.userDescription || "",
+    },
+  });
+
+  // Setup stone multi-select
+  const { selectedItems: selectedGems, setSelectedItems: setSelectedGems } = useMultiSelect([]);
+
+  // Parse and set primary gems from initial data
+  useEffect(() => {
+    if (initialAiInputs?.primaryGems && initialAiInputs.primaryGems.length > 0) {
+      // Map gem names to make them selectable in the UI
+      const gemNames = initialAiInputs.primaryGems.map(gem => gem.name);
+      
+      // Set as selected items for multi-select
+      if (stoneTypes) {
+        const matchingStones = stoneTypes.filter(stone => 
+          gemNames.includes(stone.name)
+        );
+        setSelectedGems(matchingStones);
+      }
+      
+      // Format gems text for display
+      const gemsText = initialAiInputs.primaryGems
+        .map(gem => {
+          if (gem.carats) {
+            return `${gem.name} (${gem.carats} carats)`;
+          }
+          return gem.name;
+        })
+        .join(", ");
+      
+      setPrimaryGemsInput(gemsText);
+    }
+  }, [initialAiInputs, stoneTypes]);
+
+  // Handle file upload for AI processing
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("image", file);
+
     try {
-      setIsGenerating(true);
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-      // Filter out invalid values
-      let filteredMainStoneType = mainStoneType;
-      if (filteredMainStoneType === "none_selected") {
-        filteredMainStoneType = "";
+      if (!response.ok) {
+        throw new Error("Image upload failed");
       }
-      
-      // Prepare form data for image upload and content generation
-      const formData = new FormData();
-      
-      // Add product details
-      const productData = {
-        productType,
-        metalType,
-        metalWeight,
-        mainStoneType: filteredMainStoneType,
-        mainStoneWeight,
-        secondaryStoneTypes: secondaryStoneTypes.map(stone => stone.name),
-        secondaryStoneWeight,
-        userDescription
-      };
-      
-      formData.append('data', JSON.stringify(productData));
-      
-      // Add image URLs (if they are from server)
-      if (mainImageUrl) {
-        formData.append('existingMainImage', mainImageUrl);
-      }
-      
-      additionalImageUrls.forEach((url, index) => {
-        formData.append(`existingAdditionalImage${index + 1}`, url);
-      });
-      
-      // Make the API request
-      const response = await apiRequest(
-        "POST", 
-        "/api/admin/generate-product-content", 
-        formData,
-        true // isFormData flag
-      );
-      
+
       const data = await response.json();
-      
-      // Handle the response
-      if (data) {
-        onContentGenerated(data);
-      } else {
-        throw new Error("Failed to generate content");
-      }
-    } catch (error) {
-      console.error("AI generation error:", error);
+      setUploadedImageUrl(data.url);
       toast({
-        title: "Generation Failed",
-        description: "Failed to generate content. Please check your inputs and try again.",
-        variant: "destructive"
+        title: "Image upload successful",
+        description: "The image has been uploaded and will be used for content generation.",
       });
-    } finally {
-      setIsGenerating(false);
+    } catch (error) {
+      toast({
+        title: "Image upload failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
     }
   };
 
-  // Check if enough data is provided for generation
-  const canGenerate = !!(productType && metalType && (mainImageUrl || additionalImageUrls.length > 0));
-  
+  // Process primary gems input field
+  const processPrimaryGems = () => {
+    // If using multi-select UI
+    if (selectedGems && selectedGems.length > 0) {
+      return selectedGems.map(gem => ({
+        name: gem.name,
+        // Extract carats from input if available
+        carats: extractCaratsForGem(gem.name)
+      }));
+    }
+    
+    // If using text field
+    if (primaryGemsInput) {
+      // Basic parsing of input like "Diamond (2 carats), Ruby"
+      return primaryGemsInput.split(",").map(item => {
+        const trimmed = item.trim();
+        const match = trimmed.match(/(.+?)\s*\((\d+(?:\.\d+)?)\s*carats?\)/i);
+        
+        if (match) {
+          return {
+            name: match[1].trim(),
+            carats: parseFloat(match[2])
+          };
+        }
+        
+        return { name: trimmed };
+      });
+    }
+    
+    return [];
+  };
+
+  // Extract carats value from the primary gems input for a specific gem
+  const extractCaratsForGem = (gemName: string) => {
+    const regex = new RegExp(`${gemName}\\s*\\((\\d+(?:\\.\\d+)?)\\s*carats?\\)`, 'i');
+    const match = primaryGemsInput.match(regex);
+    return match ? parseFloat(match[1]) : undefined;
+  };
+
+  // Mutation for generating content
+  const generateContentMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      const response = await apiRequest("POST", `/api/products/${productId}/regenerate-content`, formData);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Content generated successfully",
+        description: "The AI has created new content for your product.",
+      });
+      onContentGenerated(data);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Content generation failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form submission
+  const onSubmit = (formData: z.infer<typeof formSchema>) => {
+    const primaryGems = processPrimaryGems();
+
+    // Save these inputs for future regeneration
+    const aiInputs: AIInputs = {
+      productType: formData.productType,
+      metalType: formData.metalType,
+      metalWeight: formData.metalWeight ? parseFloat(formData.metalWeight) : undefined,
+      primaryGems,
+      userDescription: formData.userDescription,
+      imageUrls: uploadedImageUrl ? [uploadedImageUrl] : undefined,
+    };
+
+    // Pass to API for content generation along with aiInputs for storage
+    generateContentMutation.mutate({
+      ...aiInputs,
+      storeAiInputs: true  // Flag to store these inputs with the product
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Product Details for Regeneration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md mb-3 border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              The AI will use these details from your product to regenerate content. Any changes made here will be reflected in the new content.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-medium mb-2">Product Type</h3>
-              <p className="text-muted-foreground">{productType || "Not selected"}</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Metal Type</h3>
-              <p className="text-muted-foreground">{metalType || "Not selected"}</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Metal Weight</h3>
-              <p className="text-muted-foreground">{metalWeight || "Not specified"} g</p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium mb-2">Main Stone</h3>
-              <p className="text-muted-foreground">
-                {mainStoneType && mainStoneType !== "none_selected" 
-                  ? `${mainStoneType} (${mainStoneWeight || "0"} carat)` 
-                  : "None"}
+    <Card className="w-full mx-auto max-w-4xl">
+      <CardHeader>
+        <CardTitle className="text-2xl">Regenerate Product Content</CardTitle>
+        <CardDescription>
+          Use AI to generate new product descriptions based on your jewelry details. The content will include a product title, tagline, short description, detailed description, and a suggested price.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Product Type */}
+            <FormField
+              control={form.control}
+              name="productType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Type*</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      {...field}
+                    >
+                      <option value="">Select a product type</option>
+                      {productTypes?.map((type) => (
+                        <option key={type.id} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Metal Type */}
+            <FormField
+              control={form.control}
+              name="metalType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Metal Type*</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      {...field}
+                    >
+                      <option value="">Select a metal type</option>
+                      {metalTypes?.map((type) => (
+                        <option key={type.id} value={type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Metal Weight */}
+            <FormField
+              control={form.control}
+              name="metalWeight"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Metal Weight (in grams)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter metal weight"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Primary Gems (using multi-select) */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Primary Gems</label>
+              <div className="flex flex-col space-y-2">
+                <MultiSelect
+                  options={stoneTypes?.map(stone => ({
+                    label: stone.name,
+                    value: stone.id.toString(),
+                    data: stone
+                  })) || []}
+                  selected={selectedGems}
+                  onChange={setSelectedGems}
+                  placeholder="Select gems"
+                />
+                <Input
+                  value={primaryGemsInput}
+                  onChange={(e) => setPrimaryGemsInput(e.target.value)}
+                  placeholder="Or manually enter gems with carats: Diamond (2 carats), Ruby"
+                  className="mt-2"
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Select stones or manually enter with carat details (e.g., "Diamond (2 carats)")
               </p>
             </div>
-          </div>
-          
-          <div>
-            <h3 className="font-medium mb-2">Secondary Stones</h3>
-            {secondaryStoneTypes.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {secondaryStoneTypes.map(stone => (
-                  <div key={stone.id} className="px-2 py-1 bg-muted rounded-md text-sm">
-                    {stone.name}
-                  </div>
-                ))}
-                {secondaryStoneWeight && (
-                  <div className="px-2 py-1 bg-muted rounded-md text-sm">
-                    Total: {secondaryStoneWeight} carat
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">No secondary stones selected</p>
-            )}
-          </div>
-          
-          {userDescription && (
-            <div>
-              <h3 className="font-medium mb-2">Custom Description</h3>
-              <p className="text-muted-foreground whitespace-pre-wrap">{userDescription}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Product Images</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <h3 className="font-medium mb-3">Main Image</h3>
-            {mainImageUrl ? (
-              <div className="relative w-full h-[300px] rounded-md overflow-hidden border border-input">
-                <img 
-                  src={mainImageUrl} 
-                  alt="Main product" 
-                  className="w-full h-full object-cover"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1"
-                  onClick={() => {
-                    onMainImageChange(null, null);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div
-                {...getMainImageRootProps()}
-                className="border-2 border-dashed border-input rounded-md p-10 text-center hover:border-primary/50 cursor-pointer transition-colors"
-              >
-                <input {...getMainImageInputProps()} />
-                <div className="flex flex-col items-center">
-                  <ImageIcon className="h-10 w-10 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-1">Drag & drop or click to upload</p>
-                  <p className="text-xs text-muted-foreground">Recommended size: 1200x1200px</p>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div>
-            <h3 className="font-medium mb-3">Additional Images (Up to 3)</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {additionalImageUrls.map((url, index) => (
-                <div key={index} className="relative w-full h-[120px] rounded-md overflow-hidden border border-input">
+
+            {/* User Description */}
+            <FormField
+              control={form.control}
+              name="userDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Details (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter any additional details about the product, e.g., design inspiration, special features..."
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Product Image (Optional)</label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="cursor-pointer"
+              />
+              <p className="text-xs text-gray-500">
+                Upload a high-quality image of the product for better AI analysis
+              </p>
+              {uploadedImageUrl && (
+                <div className="mt-2 relative">
                   <img
-                    src={url}
-                    alt={`Additional product ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    src={uploadedImageUrl}
+                    alt="Uploaded product"
+                    className="w-32 h-32 object-cover rounded-md"
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1"
-                    onClick={() => removeAdditionalImage(index)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-              
-              {additionalImageUrls.length < 3 && (
-                <div
-                  {...getAdditionalImagesRootProps()}
-                  className="border-2 border-dashed border-input rounded-md p-4 text-center hover:border-primary/50 cursor-pointer transition-colors h-[120px] flex flex-col items-center justify-center"
-                >
-                  <input {...getAdditionalImagesInputProps()} />
-                  <Plus className="h-6 w-6 text-muted-foreground mb-1" />
-                  <p className="text-xs text-muted-foreground">Add Image</p>
                 </div>
               )}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="flex justify-end">
-        <Button
-          onClick={generateContent}
-          disabled={isGenerating || !canGenerate}
-          className="min-w-[180px]"
-        >
-          {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isGenerating ? "Regenerating..." : "Regenerate Content"}
-        </Button>
-      </div>
-      
-      {!canGenerate && (
-        <p className="text-center text-sm text-muted-foreground">
-          Please select at least a product type, metal type, and add an image to generate content.
-        </p>
-      )}
-    </div>
-  );
-};
 
-export default EditProductAIGenerator;
+            {/* Submit buttons */}
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={generateContentMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={generateContentMutation.isPending}
+                className={cn(
+                  "relative",
+                  generateContentMutation.isPending ? "text-transparent" : ""
+                )}
+              >
+                {generateContentMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin absolute" />
+                )}
+                Regenerate Content
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}

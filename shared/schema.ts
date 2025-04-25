@@ -25,6 +25,16 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 // Products schema
+// Define the AI inputs interface
+export interface AIInputs {
+  productType: string;
+  metalType: string;
+  metalWeight?: number;
+  primaryGems?: Array<{ name: string; carats?: number }>;
+  userDescription?: string;
+  imageUrls?: string[];
+}
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -39,6 +49,8 @@ export const products = pgTable("products", {
   isFeatured: boolean("is_featured").default(false),
   category: text("category"), // Legacy field for backward compatibility
   productTypeId: integer("product_type_id").references(() => productTypes.id), // Reference to product types table
+  // Store AI input parameters for regeneration
+  aiInputs: json("ai_inputs").$type<AIInputs>(),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -57,6 +69,7 @@ export const insertProductSchema = createInsertSchema(products).pick({
   isFeatured: true,
   category: true,
   productTypeId: true,
+  aiInputs: true,
 });
 
 // Custom design requests schema
