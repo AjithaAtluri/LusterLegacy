@@ -64,8 +64,8 @@ export default function HeroSection() {
         </div>
       </div>
       
-      {/* Content */}
-      <div className="relative z-20 container h-full mx-auto px-6 flex flex-col justify-center">
+      {/* Content - only displays after image is loaded */}
+      <div className={`relative z-20 container h-full mx-auto px-6 flex flex-col justify-center transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <div className="max-w-2xl md:ml-10 lg:ml-20">
           {/* Small luxury badge */}
           <div className="mb-4">
@@ -117,12 +117,12 @@ export default function HeroSection() {
         </div>
       </div>
       
-      {/* Decorative corner elements */}
-      <div className="absolute top-6 left-6 h-16 w-16 border-t-2 border-l-2 border-primary/40 pointer-events-none"></div>
-      <div className="absolute bottom-6 right-6 h-16 w-16 border-b-2 border-r-2 border-primary/40 pointer-events-none"></div>
+      {/* Decorative corner elements - only shows after image loads */}
+      <div className={`absolute top-6 left-6 h-16 w-16 border-t-2 border-l-2 border-primary/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
+      <div className={`absolute bottom-6 right-6 h-16 w-16 border-b-2 border-r-2 border-primary/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
       
-      {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-0 right-0 flex justify-center z-20">
+      {/* Scroll indicator - only shows after image loads */}
+      <div className={`absolute bottom-6 left-0 right-0 flex justify-center z-20 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <a href="#collections" className="flex flex-col items-center group">
           <span className="text-xs text-pearl/70 uppercase tracking-widest mb-2 font-montserrat group-hover:text-primary transition-colors duration-300">Discover</span>
           <div className="relative w-6 h-10 border-2 border-pearl/30 rounded-full flex justify-center p-1">
