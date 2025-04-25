@@ -167,6 +167,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Product not found' });
       }
 
+      // Log the structure and image URLs for debugging
+      console.log(`Product ${productId} found:`, {
+        id: product.id,
+        name: product.name,
+        image_url: product.image_url,
+        imageUrl: (product as any).imageUrl,
+        keys: Object.keys(product)
+      });
+
       res.json(product);
     } catch (error) {
       console.error('Error fetching product:', error);

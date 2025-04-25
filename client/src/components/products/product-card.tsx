@@ -10,7 +10,7 @@ import GemSparkle from "@/components/ui/gem-sparkle";
 
 // Helper function to handle image URLs
 function getImageUrl(url: string | undefined): string {
-  console.log("ProductCard - getImageUrl input:", url);
+  console.log("ProductCard - getImageUrl input:", url, "type:", typeof url);
   
   if (!url) {
     console.log("ProductCard - No image URL provided, returning placeholder");
@@ -25,10 +25,26 @@ function getImageUrl(url: string | undefined): string {
   
   // If it's a relative URL starting with /
   if (url.startsWith('/')) {
+    // Check for uploads directory specifically
+    if (url.includes('uploads')) {
+      console.log("ProductCard - URL contains 'uploads', ensuring proper path");
+      // Ensure standard format: /uploads/filename.ext
+      const uploadPath = url.replace(/\/+uploads\/+/g, '/uploads/');
+      console.log("ProductCard - Normalized upload path:", uploadPath);
+      return uploadPath;
+    }
+    
     // Fix double slashes if any
     const cleanUrl = url.replace(/\/+/g, '/');
     console.log("ProductCard - URL starts with /, normalized to:", cleanUrl);
     return cleanUrl;
+  }
+  
+  // If it includes 'uploads' but doesn't have leading slash
+  if (url.includes('uploads')) {
+    const uploadPath = `/uploads/${url.split('uploads/').pop()}`;
+    console.log("ProductCard - Extracted uploads path without leading slash:", uploadPath);
+    return uploadPath;
   }
   
   // Otherwise, assume it's a relative URL without leading /

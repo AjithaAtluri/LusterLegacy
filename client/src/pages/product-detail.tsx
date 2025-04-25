@@ -15,7 +15,7 @@ import GemSparkle from "@/components/ui/gem-sparkle";
 
 // Helper function to handle image URLs
 function getImageUrl(url: string | undefined): string {
-  console.log("getImageUrl input:", url);
+  console.log("getImageUrl input:", url, "type:", typeof url);
   
   if (!url) {
     console.log("No image URL provided, returning placeholder");
@@ -30,10 +30,26 @@ function getImageUrl(url: string | undefined): string {
   
   // If it's a relative URL starting with /
   if (url.startsWith('/')) {
+    // Check for uploads directory specifically
+    if (url.includes('uploads')) {
+      console.log("URL contains 'uploads', ensuring proper path");
+      // Ensure standard format: /uploads/filename.ext
+      const uploadPath = url.replace(/\/+uploads\/+/g, '/uploads/');
+      console.log("Normalized upload path:", uploadPath);
+      return uploadPath;
+    }
+    
     // Fix double slashes if any
     const cleanUrl = url.replace(/\/+/g, '/');
     console.log("URL starts with /, normalized to:", cleanUrl);
     return cleanUrl;
+  }
+  
+  // If it includes 'uploads' but doesn't have leading slash
+  if (url.includes('uploads')) {
+    const uploadPath = `/uploads/${url.split('uploads/').pop()}`;
+    console.log("Extracted uploads path without leading slash:", uploadPath);
+    return uploadPath;
   }
   
   // Otherwise, assume it's a relative URL without leading /
@@ -118,15 +134,21 @@ export default function ProductDetail() {
   };
   
   useEffect(() => {
-    if (product?.imageUrl) {
-      console.log("Product image URL before processing:", product.imageUrl);
-      const processedUrl = getImageUrl(product.imageUrl);
-      console.log("Product image URL after processing:", processedUrl);
-      setSelectedImage(processedUrl);
-    } else {
-      console.log("No product image URL available");
+    if (product) {
+      // Try both camelCase and snake_case versions of the property
+      const imageUrl = product.imageUrl || (product as any).image_url;
+      console.log("Product image URL before processing:", imageUrl);
+      console.log("Product object structure:", Object.keys(product));
+      
+      if (imageUrl) {
+        const processedUrl = getImageUrl(imageUrl);
+        console.log("Product image URL after processing:", processedUrl);
+        setSelectedImage(processedUrl);
+      } else {
+        console.log("No product image URL available in either format");
+      }
     }
-  }, [product?.imageUrl]);
+  }, [product]);
   
   // Try to parse the details JSON
   useEffect(() => {
@@ -201,9 +223,14 @@ export default function ProductDetail() {
   
   // Compile all images if product exists
   const allImages = product ? 
-    [product.imageUrl, ...(product.additionalImages || [])]
+    [
+      product.imageUrl || (product as any).image_url, 
+      ...((product.additionalImages || (product as any).additional_images) || [])
+    ]
       .filter(img => img) // Filter out null/undefined images
     : [];
+    
+  console.log("All compiled images:", allImages);
   
   return (
     <>
