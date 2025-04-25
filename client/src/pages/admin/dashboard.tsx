@@ -326,7 +326,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link href="/admin/add-product">
+                <Link href="/admin/add-product-with-unified-generator">
                   Create New Product with AI
                 </Link>
               </Button>
