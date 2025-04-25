@@ -134,9 +134,11 @@ export default function AIContentGeneratorPage() {
   const [generatedContent, setGeneratedContent] = useState<AIGeneratedContent | null>(null);
   const [savedContent, setSavedContent] = useState<AIGeneratedContent | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [hasSavedInputs, setHasSavedInputs] = useState(!!localStorage.getItem('aiGeneratorInputs'));
   
-  // Use effect to load saved content from localStorage on component mount
+  // Use effect to load saved content and inputs from localStorage on component mount
   React.useEffect(() => {
+    // Load saved content
     const savedContentJson = localStorage.getItem('aiGeneratedContent');
     if (savedContentJson) {
       try {
@@ -144,6 +146,26 @@ export default function AIContentGeneratorPage() {
         setSavedContent(parsedContent);
       } catch (error) {
         console.error('Error parsing saved content from localStorage:', error);
+      }
+    }
+    
+    // Load saved input values
+    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
+    if (savedInputsJson) {
+      try {
+        const parsedInputs = JSON.parse(savedInputsJson);
+        setFormData(prevFormData => ({
+          ...prevFormData,
+          ...parsedInputs
+        }));
+        
+        // Load saved main image preview
+        const savedImagePreview = localStorage.getItem('aiGeneratedImagePreview');
+        if (savedImagePreview) {
+          setMainImagePreview(savedImagePreview);
+        }
+      } catch (error) {
+        console.error('Error parsing saved inputs from localStorage:', error);
       }
     }
   }, []);
@@ -420,6 +442,11 @@ export default function AIContentGeneratorPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Product Details & Image Upload
+              {hasSavedInputs && (
+                <Badge variant="outline" className="bg-primary/10 text-primary">
+                  Using saved input values
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>
               Upload images and provide details about the jewelry item to generate creative product content
@@ -792,9 +819,11 @@ export default function AIContentGeneratorPage() {
                 onClick={() => {
                   // Clear saved content from state and localStorage
                   setSavedContent(null);
+                  setHasSavedInputs(false);
                   localStorage.removeItem('aiGeneratedContent');
                   localStorage.removeItem('aiGeneratedImagePreview');
                   localStorage.removeItem('aiGeneratedImageData');
+                  localStorage.removeItem('aiGeneratorInputs');
                   
                   toast({
                     title: "Content Cleared",
@@ -919,6 +948,9 @@ export default function AIContentGeneratorPage() {
                     otherStoneWeight: formData.otherStoneWeight,
                     additionalDetails: formData.additionalDetails
                   }));
+                  
+                  // Update the state to show the badge
+                  setHasSavedInputs(true);
                   
                   // Save main image preview URL to localStorage
                   if (mainImagePreview) {
