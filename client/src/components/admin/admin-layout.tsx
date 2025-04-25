@@ -78,6 +78,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       icon: <GalleryHorizontal className="h-5 w-5" />, 
       href: "/admin/products" 
     },
+    { 
+      title: "Add Product", 
+      icon: <PlusCircle className="h-5 w-5" />, 
+      href: "/admin/add-product" 
+    },
     {
       title: "Product Types",
       icon: <Package className="h-5 w-5" />,
