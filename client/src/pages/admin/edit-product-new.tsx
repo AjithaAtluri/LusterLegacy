@@ -244,19 +244,117 @@ export default function EditProductNew() {
       const additionalData = details?.additionalData || {};
       console.log("Additional data:", additionalData); // Add debug logging
       
-      // Extract stone types from the product data or additionalData
-      const secondaryStones = productData.stoneTypes 
-        ? Array.isArray(productData.stoneTypes) 
-          ? productData.stoneTypes 
-          : [] 
-        : additionalData.stoneTypes 
-          ? Array.isArray(additionalData.stoneTypes)
-            ? additionalData.stoneTypes
-            : []
-          : [];
-      console.log("Secondary stones:", secondaryStones); // Add debug logging
+      // Get AI inputs if available
+      const aiInputs = additionalData.aiInputs || {};
+      console.log("AI inputs:", aiInputs); // Add debug logging
+      
+      // Extract metal type with better fallbacks
+      let metalType = '';
+      if (aiInputs.metalType) {
+        console.log("Using metalType from aiInputs:", aiInputs.metalType);
+        metalType = aiInputs.metalType;
+      } else if (additionalData.metalType) {
+        console.log("Using metalType from additionalData:", additionalData.metalType);
+        metalType = additionalData.metalType;
+      } else if (productData.metalType) {
+        console.log("Using metalType from productData:", productData.metalType);
+        metalType = productData.metalType;
+      } else {
+        console.log("No metalType found, using default");
+        metalType = "18K Yellow Gold";
+      }
+      
+      // Extract metal weight with better fallbacks
+      let metalWeight = '';
+      if (aiInputs.metalWeight) {
+        console.log("Using metalWeight from aiInputs:", aiInputs.metalWeight);
+        metalWeight = aiInputs.metalWeight.toString();
+      } else if (additionalData.metalWeight) {
+        console.log("Using metalWeight from additionalData:", additionalData.metalWeight);
+        metalWeight = additionalData.metalWeight.toString();
+      } else if (productData.metalWeight) {
+        console.log("Using metalWeight from productData:", productData.metalWeight);
+        metalWeight = productData.metalWeight.toString();
+      } else {
+        console.log("No metalWeight found, using default");
+        metalWeight = "0";
+      }
+      
+      // Extract stone types with better fallbacks
+      let mainStoneType = 'none_selected';
+      if (aiInputs.mainStoneType) {
+        console.log("Using mainStoneType from aiInputs:", aiInputs.mainStoneType);
+        mainStoneType = aiInputs.mainStoneType;
+      } else if (additionalData.mainStoneType) {
+        console.log("Using mainStoneType from additionalData:", additionalData.mainStoneType);
+        mainStoneType = additionalData.mainStoneType;
+      } else if (details?.mainStoneType) {
+        console.log("Using mainStoneType from details:", details.mainStoneType);
+        mainStoneType = details.mainStoneType;
+      }
+      
+      // Extract main stone weight with better fallbacks
+      let mainStoneWeight = '';
+      if (aiInputs.mainStoneWeight) {
+        console.log("Using mainStoneWeight from aiInputs:", aiInputs.mainStoneWeight);
+        mainStoneWeight = aiInputs.mainStoneWeight.toString();
+      } else if (additionalData.mainStoneWeight) {
+        console.log("Using mainStoneWeight from additionalData:", additionalData.mainStoneWeight);
+        mainStoneWeight = additionalData.mainStoneWeight.toString();
+      } else if (details?.mainStoneWeight) {
+        console.log("Using mainStoneWeight from details:", details.mainStoneWeight);
+        mainStoneWeight = details.mainStoneWeight.toString();
+      } else {
+        mainStoneWeight = "0";
+      }
+      
+      // Extract secondary stone types with better fallbacks and proper formatting
+      let secondaryStoneTypes = [];
+      if (aiInputs.secondaryStoneTypes && Array.isArray(aiInputs.secondaryStoneTypes)) {
+        console.log("Using secondaryStoneTypes from aiInputs:", aiInputs.secondaryStoneTypes);
+        // Convert array of strings to array of objects with id and name
+        secondaryStoneTypes = aiInputs.secondaryStoneTypes.map((name, index) => ({
+          id: index + 1, // Use index as ID for now
+          name: name
+        }));
+      } else if (additionalData.secondaryStoneTypes && Array.isArray(additionalData.secondaryStoneTypes)) {
+        console.log("Using secondaryStoneTypes from additionalData:", additionalData.secondaryStoneTypes);
+        secondaryStoneTypes = additionalData.secondaryStoneTypes.map((name, index) => ({
+          id: index + 1,
+          name: name
+        }));
+      } else if (productData.stoneTypes && Array.isArray(productData.stoneTypes)) {
+        console.log("Using stoneTypes from productData:", productData.stoneTypes);
+        secondaryStoneTypes = productData.stoneTypes;
+      }
+      
+      // Format the secondaryStoneTypes properly if they're not already in the right format
+      if (secondaryStoneTypes.length > 0 && typeof secondaryStoneTypes[0] === 'string') {
+        console.log("Converting secondaryStoneTypes from strings to objects");
+        secondaryStoneTypes = secondaryStoneTypes.map((name, index) => ({
+          id: index + 1,
+          name: name
+        }));
+      }
+      
+      console.log("Final secondaryStoneTypes:", secondaryStoneTypes);
+      
+      // Extract secondary stone weight with better fallbacks
+      let secondaryStoneWeight = '';
+      if (aiInputs.secondaryStoneWeight) {
+        console.log("Using secondaryStoneWeight from aiInputs:", aiInputs.secondaryStoneWeight);
+        secondaryStoneWeight = aiInputs.secondaryStoneWeight.toString();
+      } else if (additionalData.secondaryStoneWeight) {
+        console.log("Using secondaryStoneWeight from additionalData:", additionalData.secondaryStoneWeight);
+        secondaryStoneWeight = additionalData.secondaryStoneWeight.toString();
+      } else if (details?.secondaryStoneWeight) {
+        console.log("Using secondaryStoneWeight from details:", details.secondaryStoneWeight);
+        secondaryStoneWeight = details.secondaryStoneWeight.toString();
+      } else {
+        secondaryStoneWeight = "0";
+      }
 
-      // Set form values from product data
+      // Set form values from product data with improved fallbacks
       const formValues = {
         title: productData.name || "",
         tagline: additionalData.tagline || details?.tagline || "",
@@ -265,19 +363,19 @@ export default function EditProductNew() {
         priceUSD: productData.priceUSD || 0,
         priceINR: additionalData.basePriceINR || productData.basePrice || 0,
         productType: productData.productTypeId?.toString() || "",
-        metalType: additionalData.metalType || productData.metalType || "",
-        metalWeight: (additionalData.metalWeight || productData.metalWeight)?.toString() || "",
+        metalType: metalType,
+        metalWeight: metalWeight,
         dimensions: {
           length: details?.dimensions?.length?.toString() || "0",
           width: details?.dimensions?.width?.toString() || "0",
           height: details?.dimensions?.height?.toString() || "0",
         },
-        mainStoneType: details?.mainStoneType || additionalData.mainStoneType || "none_selected",
-        mainStoneWeight: (details?.mainStoneWeight || additionalData.mainStoneWeight)?.toString() || "",
-        secondaryStoneTypes: secondaryStones,
-        secondaryStoneWeight: (details?.secondaryStoneWeight || additionalData.secondaryStoneWeight)?.toString() || "",
+        mainStoneType: mainStoneType,
+        mainStoneWeight: mainStoneWeight,
+        secondaryStoneTypes: secondaryStoneTypes,
+        secondaryStoneWeight: secondaryStoneWeight,
         featured: productData.isFeatured || productData.featured || false,
-        userDescription: details?.userDescription || additionalData.userDescription || "",
+        userDescription: aiInputs.userDescription || additionalData.userDescription || details?.userDescription || "",
         inStock: productData.inStock !== false, // default to true if undefined
       };
 
