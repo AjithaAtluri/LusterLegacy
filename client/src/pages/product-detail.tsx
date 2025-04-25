@@ -496,60 +496,80 @@ export default function ProductDetail() {
                   </TabsContent>
                   <TabsContent value="specifications" className="p-6 bg-card rounded-lg shadow-sm">
                     <div className="space-y-4">
-                      <h3 className="font-playfair text-lg font-semibold mb-4">Material & Stone Specifications</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <h3 className="font-playfair text-lg font-semibold mb-4">Material Specifications</h3>
+                      <div className="space-y-4">
+                        {/* Metal Information in a card-like format */}
                         {productMetalType && (
-                          <div className="border-b pb-2">
-                            <span className="font-montserrat font-semibold block text-sm text-foreground/60">Metal Type</span>
-                            <span className="font-cormorant text-lg">{productMetalType}</span>
+                          <div className="bg-background border border-border rounded-md p-4">
+                            <div className="flex items-center justify-between">
+                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Metal Type</span>
+                              {productMetalWeight > 0 && (
+                                <Badge variant="secondary" className="text-xs">{productMetalWeight}g</Badge>
+                              )}
+                            </div>
+                            <div className="font-cormorant text-xl mt-1">{productMetalType}</div>
                           </div>
                         )}
-                        {productMetalWeight > 0 && (
-                          <div className="border-b pb-2">
-                            <span className="font-montserrat font-semibold block text-sm text-foreground/60">Metal Weight</span>
-                            <span className="font-cormorant text-lg">{productMetalWeight}g</span>
-                          </div>
-                        )}
+                        
+                        {/* Product Category */}
                         {(product.productType || product.category) && (
-                          <div className="border-b pb-2">
-                            <span className="font-montserrat font-semibold block text-sm text-foreground/60">Category</span>
-                            <span className="font-cormorant text-lg capitalize">{product.productType || product.category}</span>
+                          <div className="bg-background border border-border rounded-md p-4">
+                            <div className="flex items-center justify-between">
+                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Product Category</span>
+                            </div>
+                            <div className="font-cormorant text-xl mt-1 capitalize">{product.productType || product.category}</div>
                           </div>
                         )}
+                        
+                        {/* Dimensions */}
                         {product.dimensions && (
-                          <div className="border-b pb-2">
-                            <span className="font-montserrat font-semibold block text-sm text-foreground/60">Dimensions</span>
-                            <span className="font-cormorant text-lg">{product.dimensions}</span>
+                          <div className="bg-background border border-border rounded-md p-4">
+                            <div className="flex items-center justify-between">
+                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Dimensions</span>
+                            </div>
+                            <div className="font-cormorant text-xl mt-1">{product.dimensions}</div>
                           </div>
                         )}
                       </div>
                       {/* Main Stone Information */}
-                      {mainStoneType && (
-                        <div className="border-b pb-2">
-                          <span className="font-montserrat font-semibold block text-sm text-foreground/60">Main Stone</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-cormorant text-lg">{mainStoneType}</span>
-                            {mainStoneWeight > 0 && (
-                              <Badge variant="secondary" className="text-xs">{mainStoneWeight} carats</Badge>
-                            )}
-                          </div>
+                      {/* Stone Information Section - Restructured for better display */}
+                      <div className="mt-6">
+                        <h3 className="font-playfair text-lg font-semibold mb-4">Stone Details</h3>
+                        <div className="space-y-4">
+                          {/* Main Stone */}
+                          {mainStoneType && (
+                            <div className="bg-background border border-border rounded-md p-4">
+                              <div className="flex items-center justify-between">
+                                <span className="font-montserrat font-semibold text-sm text-foreground/80">Main Stone</span>
+                                {mainStoneWeight > 0 && (
+                                  <Badge variant="secondary" className="text-xs">{mainStoneWeight} carats</Badge>
+                                )}
+                              </div>
+                              <div className="font-cormorant text-xl mt-1">{mainStoneType}</div>
+                            </div>
+                          )}
+                          
+                          {/* Secondary Stones - Listed individually with better styling */}
+                          {secondaryStoneTypes && secondaryStoneTypes.length > 0 && (
+                            <div className="bg-background border border-border rounded-md p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-montserrat font-semibold text-sm text-foreground/80">Secondary Stones</span>
+                                {secondaryStoneWeight > 0 && (
+                                  <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats total</Badge>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                {secondaryStoneTypes.map((stone, index) => (
+                                  <div key={index} className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <span className="font-cormorant text-lg">{stone}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      
-                      {/* Secondary Stones Information */}
-                      {secondaryStoneTypes && secondaryStoneTypes.length > 0 && (
-                        <div className="border-b pb-2">
-                          <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-1">Secondary Stones</span>
-                          <div className="flex flex-wrap gap-2">
-                            {secondaryStoneTypes.map((stone, index) => (
-                              <Badge key={index} variant="outline">{stone}</Badge>
-                            ))}
-                            {secondaryStoneWeight > 0 && (
-                              <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats total</Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                      </div>
                       
                       {/* All Stones Collection */}
                       {productStones && productStones.length > 0 && (

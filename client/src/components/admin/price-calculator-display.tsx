@@ -123,12 +123,32 @@ export function PriceCalculatorDisplay({
                   <span>{formatCurrency(breakdown.primaryStoneCost)}</span>
                 )}
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Secondary Stones</span>
-                {isCalculating ? (
-                  <Skeleton className="h-4 w-16" />
-                ) : (
-                  <span>{formatCurrency(breakdown.secondaryStoneCost)}</span>
+              {/* Secondary Stones with detail display */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm font-medium">
+                  <span className="text-muted-foreground">Secondary Stones</span>
+                  {isCalculating ? (
+                    <Skeleton className="h-4 w-16" />
+                  ) : (
+                    <span>{formatCurrency(breakdown.secondaryStoneCost)}</span>
+                  )}
+                </div>
+                {secondaryStoneTypes && secondaryStoneTypes.length > 0 && (
+                  <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">
+                    {secondaryStoneTypes.map((stone, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mr-1.5"></div>
+                          {stone.name}
+                        </span>
+                      </div>
+                    ))}
+                    {secondaryStoneWeight && Number(secondaryStoneWeight) > 0 && (
+                      <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
+                        Total: {secondaryStoneWeight} carats
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="flex justify-between text-sm">
