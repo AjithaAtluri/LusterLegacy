@@ -835,8 +835,8 @@ export default function AIContentGeneratorPage() {
               </Button>
               <Button
                 onClick={() => {
-                  // Navigate to the add product page, which will automatically use the saved content
-                  navigate('/admin/add-product');
+                  // Navigate to the updated add product page with unified generator, which will use the saved content
+                  navigate('/admin/add-product-with-unified-generator');
                   toast({
                     title: "Content Ready",
                     description: "Use the AI-generated content to create your new product.",
