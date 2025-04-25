@@ -1036,8 +1036,35 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getMetalTypeById(id: number): Promise<MetalType | undefined> {
-    return this.getMetalType(id);
+  async getMetalTypeByName(name: string): Promise<MetalType | undefined> {
+    try {
+      // Convert string like "18kt-gold" to "18K Gold" format for searching
+      const formattedName = name
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+        .replace(/kt/i, 'K');
+      
+      const [metalType] = await db
+        .select()
+        .from(metalTypes)
+        .where(sql`LOWER(${metalTypes.name}) LIKE LOWER(${`%${formattedName}%`})`);
+      
+      return metalType;
+    } catch (error) {
+      console.error("Error getting metal type by name:", error);
+      return undefined;
+    }
+  }
+  
+  async getMetalTypeById(id: number | string): Promise<MetalType | undefined> {
+    // If id is a number, use getMetalType
+    if (typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id))) {
+      return this.getMetalType(typeof id === 'string' ? parseInt(id) : id);
+    }
+    
+    // Otherwise, try to look up by name
+    return this.getMetalTypeByName(id as string);
   }
   
   async getAllMetalTypes(): Promise<MetalType[]> {
