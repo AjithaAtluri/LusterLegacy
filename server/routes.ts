@@ -1391,7 +1391,9 @@ Respond in JSON format:
 
   app.post('/api/admin/products', validateAdmin, upload.fields([
     { name: 'mainImage', maxCount: 1 },
-    { name: 'additionalImages', maxCount: 5 }
+    { name: 'additionalImage1', maxCount: 1 },
+    { name: 'additionalImage2', maxCount: 1 },
+    { name: 'additionalImage3', maxCount: 1 }
   ]), async (req, res) => {
     try {
       console.log('Received product creation request:', req.body);
@@ -1403,68 +1405,71 @@ Respond in JSON format:
       
       // Process additional images
       let additionalImages: string[] = [];
-      if (files.additionalImages) {
-        additionalImages = files.additionalImages.map(file => `/uploads/${file.filename}`);
-        console.log('Additional images:', additionalImages);
+      
+      // Check for the individual additional images
+      if (files.additionalImage1) {
+        additionalImages.push(`/uploads/${files.additionalImage1[0].filename}`);
       }
+      
+      if (files.additionalImage2) {
+        additionalImages.push(`/uploads/${files.additionalImage2[0].filename}`);
+      }
+      
+      if (files.additionalImage3) {
+        additionalImages.push(`/uploads/${files.additionalImage3[0].filename}`);
+      }
+      
+      console.log('Additional images:', additionalImages);
 
-      // Parse stone types from request body
-      let stoneTypes: string[] = [];
-      if (req.body.stoneTypes) {
+      // Parse selected stones from request body (uses different name in our new form)
+      let selectedStones: number[] = [];
+      if (req.body.selectedStones) {
         try {
-          stoneTypes = JSON.parse(req.body.stoneTypes);
-          console.log('Parsed stone types:', stoneTypes);
+          selectedStones = JSON.parse(req.body.selectedStones);
+          console.log('Parsed selected stone IDs:', selectedStones);
         } catch (e) {
-          console.error('Error parsing stoneTypes:', e);
-          stoneTypes = [];
+          console.error('Error parsing selectedStones:', e);
+          selectedStones = [];
         }
       }
       
       // Extract numeric values
-      const basePrice = parseFloat(req.body.basePrice) || 0;
-      const basePriceINR = parseFloat(req.body.basePriceINR) || 0;
-      const metalWeight = parseFloat(req.body.metalWeight) || 0;
+      const basePrice = parseInt(req.body.basePrice) || 0;
       
-      // Convert boolean values
+      // Convert boolean values from form submission
       const isNew = req.body.isNew === 'true';
       const isBestseller = req.body.isBestseller === 'true';
       const isFeatured = req.body.isFeatured === 'true';
       
-      // Prepare product data - map form fields to schema fields
+      // Prepare product data - using our new form field names
       const productData = {
-        name: req.body.title, // Map title to name field
+        name: req.body.name, 
         description: req.body.description || '',
         basePrice: basePrice,
         imageUrl: mainImageUrl || '',
         additionalImages: additionalImages,
-        details: req.body.detailedDescription || '', // Map detailedDescription to details
-        category: req.body.category, // Keep for backward compatibility
-        productTypeId: req.body.productTypeId ? parseInt(req.body.productTypeId) : null, // New field for proper product type relation
+        details: req.body.details || '',
+        dimensions: req.body.dimensions || '',
+        category: req.body.category || '', // Keep for backward compatibility
+        productTypeId: req.body.productTypeId ? parseInt(req.body.productTypeId) : null,
         isNew: isNew,
         isBestseller: isBestseller,
         isFeatured: isFeatured
       };
       
-      // Store additional data in the details field as JSON
-      const additionalData = {
-        tagline: req.body.tagline,
-        basePriceINR: basePriceINR,
-        metalType: req.body.metalType,
-        metalWeight: metalWeight,
-        stoneTypes: stoneTypes
-      };
-      
-      // Add the additional data to the details field
-      productData.details = JSON.stringify({
-        detailedDescription: req.body.detailedDescription || '',
-        additionalData
-      });
-      
       console.log('Creating product with data:', productData);
       
-      // Create the product
+      // Create the product first
       const product = await storage.createProduct(productData);
       console.log('Product created:', product);
+      
+      // Now add the stone associations
+      if (selectedStones.length > 0 && product.id) {
+        for (const stoneTypeId of selectedStones) {
+          await storage.addProductStone(product.id, stoneTypeId);
+        }
+        console.log(`Added ${selectedStones.length} stone type associations to product ${product.id}`);
+      }
       
       res.status(201).json(product);
     } catch (error) {

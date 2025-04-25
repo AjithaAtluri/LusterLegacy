@@ -1,1035 +1,723 @@
-import { useState, useCallback, useEffect } from "react";
-import { useLocation } from "wouter";
-import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
-import AdminLayout from "@/components/admin/admin-layout";
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Save, Upload, X } from "lucide-react";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-// import UnifiedAIGenerator from "@/components/admin/unified-ai-generator";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { AlertCircle, CheckCircle, Loader2, Upload, X, PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { AIGeneratedContent } from "@/lib/ai-content-generator";
-import { useDropzone } from "react-dropzone";
-import type { ProductType, StoneType } from "@shared/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import AdminLayout from "@/components/admin/admin-layout";
+import { Helmet } from "react-helmet";
 
-interface FormValues {
+// AI Generated Content interface (same as in AI content generator)
+interface AIGeneratedContent {
   title: string;
   tagline: string;
-  category: string;
-  basePrice: string;
-  basePriceINR: string;
-  description: string;
+  shortDescription: string;
   detailedDescription: string;
-  metalType: string;
-  metalWeight: string;
-  userDescription: string;
-  isNew: boolean;
-  isBestseller: boolean;
-  isFeatured: boolean;
+  priceUSD: number;
+  priceINR: number;
+  imageInsights?: string;
 }
 
-export default function AddProduct() {
-  const [, setLocation] = useLocation();
+// Define interfaces for form data types
+interface ProductType {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+interface StoneType {
+  id: number;
+  name: string;
+  priceModifier: number;
+  description?: string;
+}
+
+// Create product schema for form validation
+const productSchema = z.object({
+  name: z.string().min(3, "Product name must be at least 3 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  basePrice: z.coerce.number().min(1, "Price must be greater than 0"),
+  details: z.string().optional(),
+  dimensions: z.string().optional(),
+  isNew: z.boolean().default(false),
+  isBestseller: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
+  category: z.string().optional(),
+  productTypeId: z.coerce.number().min(1, "Product type is required"),
+  selectedStones: z.array(z.number()).optional(),
+});
+
+type ProductFormValues = z.infer<typeof productSchema>;
+
+// Simple image upload component
+interface ImageUploadProps {
+  label: string;
+  onChange: (file: File) => void;
+  onRemove: () => void;
+  imagePreview?: string;
+}
+
+const ImageUpload: React.FC<ImageUploadProps> = ({ label, onChange, onRemove, imagePreview }) => {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {imagePreview ? (
+        <div className="relative border rounded-md overflow-hidden aspect-square">
+          <img 
+            src={imagePreview} 
+            alt={label} 
+            className="w-full h-full object-cover"
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2 h-7 w-7 rounded-full"
+            onClick={onRemove}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : (
+        <div 
+          onClick={() => document.getElementById('mainImage')?.click()}
+          className="border border-dashed rounded-md aspect-square flex flex-col items-center justify-center gap-2 p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+        >
+          <Upload className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Click to upload image</p>
+          <p className="text-xs text-muted-foreground">JPG, PNG, WEBP up to 5MB</p>
+          <Input 
+            id="mainImage" 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onChange(file);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function AddProductPage() {
   const { toast } = useToast();
-  const [selectedStoneTypes, setSelectedStoneTypes] = useState<string[]>([]);
-  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  // Load saved AI content from localStorage
+  const [savedContent, setSavedContent] = useState<AIGeneratedContent | null>(null);
+  
+  // State for image management
+  const [mainImage, setMainImage] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
-  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
+  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
-  const [mainStoneType, setMainStoneType] = useState<string>("");
-  const [mainStoneWeight, setMainStoneWeight] = useState<string>("");
-  const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<string>("");
   
-  // Fetch product types from database
-  const { data: productTypes, isLoading: isLoadingProductTypes } = useQuery<ProductType[]>({
+  // State for upload tracking
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Load product types and stone types
+  const { data: productTypes, isLoading: loadingProductTypes } = useQuery<ProductType[]>({
     queryKey: ['/api/admin/product-types'],
-    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
-  // Fetch stone types from database
-  const { data: stoneTypes, isLoading: isLoadingStoneTypes } = useQuery<StoneType[]>({
+  const { data: stoneTypes, isLoading: loadingStoneTypes } = useQuery<StoneType[]>({
     queryKey: ['/api/admin/stone-types'],
-    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
-  // Initialize form with default values
-  const form = useForm<FormValues>({
+  // Initialize react-hook-form
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productSchema),
     defaultValues: {
-      title: "",
-      tagline: "",
-      category: "",
-      basePrice: "",
-      basePriceINR: "",
+      name: "",
       description: "",
-      detailedDescription: "",
-      metalType: "",
-      metalWeight: "",
-      userDescription: "",
-      isNew: false,
+      basePrice: 0,
+      details: "",
+      dimensions: "",
+      isNew: true,
       isBestseller: false,
       isFeatured: false,
-    },
+      category: "",
+      productTypeId: 0,
+      selectedStones: [],
+    }
   });
-
-  const onSubmit = async (data: FormValues) => {
-    try {
-      // Show loading toast
-      toast({
-        title: "Saving Product",
-        description: "Please wait while your product is being saved...",
-      });
-      
-      // Convert images to base64 for API submission
-      const formData = new FormData();
-      
-      // Add all form fields
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value.toString());
-      });
-      
-      // Add stone types as a JSON string
-      formData.append('stoneTypes', JSON.stringify(selectedStoneTypes));
-      
-      // Add main image if available
-      if (mainImageFile) {
-        formData.append('mainImage', mainImageFile);
+  
+  // Load AI generated content from localStorage
+  useEffect(() => {
+    const savedContentJson = localStorage.getItem('aiGeneratedContent');
+    if (savedContentJson) {
+      try {
+        const parsedContent: AIGeneratedContent = JSON.parse(savedContentJson);
+        setSavedContent(parsedContent);
+        
+        // Pre-fill form with AI generated content
+        form.setValue('name', parsedContent.title);
+        form.setValue('description', parsedContent.shortDescription);
+        form.setValue('details', parsedContent.detailedDescription);
+        form.setValue('basePrice', Math.round(parsedContent.priceINR)); // Use INR as base price
+      } catch (error) {
+        console.error('Error parsing saved content:', error);
       }
-      
-      // Add additional images if available
-      if (additionalImageFiles.length > 0) {
-        additionalImageFiles.forEach((file) => {
-          formData.append('additionalImages', file);
-        });
-      }
-      
-      // Send the API request
-      const response = await fetch('/api/admin/products', {
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type, browser will set it with the correct boundary for FormData
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to save product: ${response.status} ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      
-      // Show success toast
+    }
+  }, [form]);
+  
+  // Handle image uploads
+  const handleMainImageChange = (file: File) => {
+    setMainImage(file);
+    const imageUrl = URL.createObjectURL(file);
+    setMainImagePreview(imageUrl);
+  };
+  
+  const handleAdditionalImageChange = (file: File) => {
+    if (additionalImages.length < 3) {
+      setAdditionalImages([...additionalImages, file]);
+      const imageUrl = URL.createObjectURL(file);
+      setAdditionalImagePreviews([...additionalImagePreviews, imageUrl]);
+    } else {
       toast({
-        title: "Product Saved",
-        description: "Your product has been saved successfully.",
-      });
-      
-      // Redirect to products list
-      setLocation('/admin/products');
-    } catch (error) {
-      console.error('Error saving product:', error);
-      
-      // Show error toast
-      toast({
-        title: "Error Saving Product",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Image Limit Reached",
+        description: "Maximum 3 additional images allowed.",
         variant: "destructive",
       });
     }
   };
-
-  // Convert file to base64 for API submission
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          // Extract the base64 part by removing the data URL prefix
-          const base64String = reader.result.split(',')[1];
-          resolve(base64String);
-        } else {
-          reject(new Error('Failed to convert file to base64'));
-        }
-      };
-      reader.onerror = error => reject(error);
-    });
-  };
-
-  // Handle AI generated content
-  const handleContentGenerated = async (content: AIGeneratedContent) => {
-    form.setValue("title", content.title);
-    form.setValue("tagline", content.tagline);
-    form.setValue("description", content.shortDescription);
-    form.setValue("detailedDescription", content.detailedDescription);
-    form.setValue("basePrice", content.priceUSD.toString());
-    form.setValue("basePriceINR", content.priceINR.toString());
-    
-    // Handle the imageInsights field if available
-    if (content.imageInsights) {
-      // Store image insights in the database - add a note to the description
-      const enhancedDescription = form.getValues("detailedDescription") + 
-        "\n\n-- Image Analysis Notes --\n" + content.imageInsights;
-      form.setValue("detailedDescription", enhancedDescription);
+  
+  const removeMainImage = () => {
+    setMainImage(null);
+    if (mainImagePreview) {
+      URL.revokeObjectURL(mainImagePreview);
+      setMainImagePreview(null);
     }
-    
-    toast({
-      title: "Content Applied",
-      description: "The AI generated content has been applied to the form",
-    });
   };
-
-  // Get values for AI content generator
-  const productType = form.watch("category");
-  const metalType = form.watch("metalType");
-  const metalWeight = form.watch("metalWeight") ? parseFloat(form.watch("metalWeight")) : undefined;
   
-  // Create gems array for AI content generator
-  const primaryGems = selectedStoneTypes.map(stone => ({
-    name: stone,
-    // We would normally have carats here, but keeping it simple for now
-  }));
+  const removeAdditionalImage = (index: number) => {
+    const newImages = [...additionalImages];
+    newImages.splice(index, 1);
+    setAdditionalImages(newImages);
+    
+    const newPreviews = [...additionalImagePreviews];
+    if (newPreviews[index]) {
+      URL.revokeObjectURL(newPreviews[index]);
+    }
+    newPreviews.splice(index, 1);
+    setAdditionalImagePreviews(newPreviews);
+  };
   
-  // Main image dropzone
-  const onMainImageDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0];
-      setMainImageFile(file);
+  // Mutation for creating a product
+  const createProductMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        body: data,
+      });
       
-      // Create preview for the image
-      const objectUrl = URL.createObjectURL(file);
-      setMainImagePreview(objectUrl);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create product");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Show success toast
+      toast({
+        title: "Product Created",
+        description: "Product has been created successfully.",
+      });
+      
+      // Clear the saved AI content from localStorage
+      localStorage.removeItem('aiGeneratedContent');
+      
+      // Invalidate products cache
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      
+      // Navigate to products list
+      navigate('/admin/products');
+    },
+    onError: (error) => {
+      // Show error toast
+      toast({
+        title: "Product Creation Failed",
+        description: error instanceof Error ? error.message : "Failed to create product.",
+        variant: "destructive",
+      });
+      
+      setUploadError(error instanceof Error ? error.message : "Unknown error");
+      setIsUploading(false);
+    }
+  });
+  
+  // Form submission handler
+  const onSubmit = async (values: ProductFormValues) => {
+    try {
+      setIsUploading(true);
+      setUploadError(null);
+      
+      // Validate required fields
+      if (!mainImage) {
+        throw new Error("Main product image is required");
+      }
+      
+      // Create form data for file upload
+      const formData = new FormData();
+      
+      // Add all form fields
+      Object.entries(values).forEach(([key, value]) => {
+        if (key === 'selectedStones') {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
+      });
+      
+      // Add images
+      formData.append('mainImage', mainImage);
+      
+      additionalImages.forEach((image, index) => {
+        formData.append(`additionalImage${index + 1}`, image);
+      });
+      
+      // Create the product
+      await createProductMutation.mutateAsync(formData);
+    } catch (err) {
+      console.error("Error creating product:", err);
+      setUploadError(err instanceof Error ? err.message : "An unknown error occurred");
+      setIsUploading(false);
       
       toast({
-        title: "Main Image Uploaded",
-        description: "The main product image has been uploaded successfully and will be used for AI content generation.",
+        title: "Product Creation Failed",
+        description: err instanceof Error ? err.message : "Failed to create product.",
+        variant: "destructive",
       });
     }
-  }, [toast]);
+  };
   
-  const { getRootProps: getMainImageRootProps, getInputProps: getMainImageInputProps } = useDropzone({
-    onDrop: onMainImageDrop,
-    accept: {
-      'image/jpeg': [],
-      'image/png': [],
-    },
-    maxFiles: 1,
-  });
-  
-  // Additional images dropzone
-  const onAdditionalImagesDrop = useCallback((acceptedFiles: File[]) => {
-    setAdditionalImageFiles(prev => [...prev, ...acceptedFiles]);
+  // Clear AI content
+  const clearAIContent = () => {
+    localStorage.removeItem('aiGeneratedContent');
+    setSavedContent(null);
     
-    // Create previews for the images
-    const objectUrls = acceptedFiles.map(file => URL.createObjectURL(file));
-    setAdditionalImagePreviews(prev => [...prev, ...objectUrls]);
+    // Reset form fields that might have been populated by AI
+    form.setValue('name', '');
+    form.setValue('description', '');
+    form.setValue('details', '');
     
     toast({
-      title: "Additional Images Uploaded",
-      description: `${acceptedFiles.length} additional images have been uploaded successfully.`,
+      title: "AI Content Cleared",
+      description: "AI generated content has been cleared.",
     });
-  }, [toast]);
-  
-  const { getRootProps: getAdditionalImagesRootProps, getInputProps: getAdditionalImagesInputProps } = useDropzone({
-    onDrop: onAdditionalImagesDrop,
-    accept: {
-      'image/jpeg': [],
-      'image/png': [],
-    },
-  });
-  
-  // Remove additional image
-  const removeAdditionalImage = (index: number) => {
-    setAdditionalImageFiles(prev => prev.filter((_, i) => i !== index));
-    
-    // Revoke object URL and remove preview
-    if (additionalImagePreviews[index]) {
-      URL.revokeObjectURL(additionalImagePreviews[index]);
-    }
-    setAdditionalImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
-
+  
+  // Generate a new AI product
+  const navigateToAIGenerator = () => {
+    navigate('/admin/ai-generator');
+  };
+  
   return (
-    <AdminLayout title="Add Product">
-      <div className="container p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline"
-              size="sm"
-              onClick={() => setLocation('/admin/products')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Products
-            </Button>
-            <h1 className="text-2xl font-semibold">Add New Product</h1>
-          </div>
-          
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Product
-          </Button>
-        </div>
+    <AdminLayout title="Add New Product">
+      <Helmet>
+        <title>Add New Product | Luster Legacy Admin</title>
+      </Helmet>
+      
+      <div className="space-y-6">
+        {/* AI Generated Content Card */}
+        {savedContent && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={20} className="text-primary" />
+                  AI Generated Content
+                </div>
+              </CardTitle>
+              <CardDescription>
+                The form has been pre-filled with AI generated content. You can edit it as needed.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <div className="px-3 py-1 bg-primary/10 rounded-full text-xs">
+                  Title: {savedContent.title}
+                </div>
+                <div className="px-3 py-1 bg-primary/10 rounded-full text-xs">
+                  Price USD: ${savedContent.priceUSD.toFixed(2)}
+                </div>
+                <div className="px-3 py-1 bg-primary/10 rounded-full text-xs">
+                  Price INR: ₹{savedContent.priceINR.toFixed(2)}
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" size="sm" onClick={clearAIContent}>
+                Clear AI Content
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
         
-        <Form {...form}>
-          <div className="w-full space-y-8">
-            {/* Section Heading for Basic Details */}
-            <div className="border-b pb-2">
-              <h2 className="text-xl font-semibold">Basic Details</h2>
-            </div>
-            
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Basic Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Product Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. Diamond Solitaire Ring" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="tagline"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tagline</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. Timeless elegance for every occasion" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Product Type</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select product type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="rings">Rings</SelectItem>
-                              <SelectItem value="necklaces">Necklaces</SelectItem>
-                              <SelectItem value="earrings">Earrings</SelectItem>
-                              <SelectItem value="bracelets">Bracelets</SelectItem>
-                              <SelectItem value="pendants">Pendants</SelectItem>
-                              <SelectItem value="bridal">Bridal</SelectItem>
-                              <SelectItem value="customized">Customized</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="metalType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Metal Type</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select metal type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="18k Gold">18k Gold</SelectItem>
-                              <SelectItem value="14k Gold">14k Gold</SelectItem>
-                              <SelectItem value="22k Gold">22k Gold</SelectItem>
-                              <SelectItem value="24k Gold">24k Gold</SelectItem>
-                              <SelectItem value="Platinum">Platinum</SelectItem>
-                              <SelectItem value="Sterling Silver">Sterling Silver</SelectItem>
-                              <SelectItem value="Rose Gold 18k">Rose Gold 18k</SelectItem>
-                              <SelectItem value="White Gold 18k">White Gold 18k</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="metalWeight"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Metal Weight (grams)</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div>
-                      <FormLabel>Gems & Stones</FormLabel>
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        {[
-                          "Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", 
-                          "Aquamarine", "Tanzanite", "Topaz", "Opal", "Pearl", "Garnet"
-                        ].map((stone) => (
-                          <div key={stone} className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`stone-${stone}`}
-                              checked={selectedStoneTypes.includes(stone)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedStoneTypes(prev => [...prev, stone]);
-                                } else {
-                                  setSelectedStoneTypes(prev => 
-                                    prev.filter(s => s !== stone)
-                                  );
-                                }
-                              }}
-                            />
-                            <label 
-                              htmlFor={`stone-${stone}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {stone}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Select the gems used in this product (optional)
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Pricing & Flags</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="basePrice"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Base Price (USD)</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="e.g. 1299" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="basePriceINR"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Base Price (INR)</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="e.g. 95999" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2 mt-4">
-                      <FormField
-                        control={form.control}
-                        name="isNew"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox 
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormLabel>Mark as New Arrival</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="isBestseller"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox 
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormLabel>Mark as Bestseller</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="isFeatured"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox 
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormLabel>Feature on Homepage</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+        {/* Main Product Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              Product Information
+              <Button variant="outline" onClick={navigateToAIGenerator}>
+                Generate With AI
+              </Button>
+            </CardTitle>
+            <CardDescription>
+              Enter the product details to create a new product listing
+            </CardDescription>
+            {uploadError && (
+              <div className="mt-2 flex items-center gap-2 text-destructive bg-destructive/10 p-2 rounded-md">
+                <AlertCircle size={16} />
+                <p className="text-sm">{uploadError}</p>
               </div>
-              
-              {/* Section Heading for Product Description */}
-              <div className="border-b pb-2 pt-6">
-                <h2 className="text-xl font-semibold">Product Description</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Product Description</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Short Description</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Brief description of the product (3-5 lines)"
-                                className="min-h-[100px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              This will appear in product listings and cards
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+            )}
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Image Upload Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <ImageUpload
+                    label="Main Product Image *"
+                    onChange={handleMainImageChange}
+                    onRemove={removeMainImage}
+                    imagePreview={mainImagePreview || undefined}
+                  />
+                  
+                  <div className="space-y-2">
+                    <Label>Additional Images (Optional)</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {additionalImagePreviews.map((preview, index) => (
+                        <div key={index} className="relative border rounded-md overflow-hidden aspect-square">
+                          <img 
+                            src={preview} 
+                            alt={`Additional ${index + 1}`} 
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                            onClick={() => removeAdditionalImage(index)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
                       
-                      <FormField
-                        control={form.control}
-                        name="detailedDescription"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Detailed Description</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Detailed description with materials, craftsmanship and usage information"
-                                className="min-h-[200px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              This will appear on the product detail page
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
+                      {additionalImagePreviews.length < 3 && (
+                        <div 
+                          className="border border-dashed rounded-md aspect-square flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => document.getElementById('additionalImage')?.click()}
+                        >
+                          <PlusCircle className="h-6 w-6 opacity-50" />
+                          <Input 
+                            id="additionalImage" 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleAdditionalImageChange(file);
+                              // Reset the input value to allow selecting the same file again
+                              e.target.value = '';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>AI Content Generator Inputs</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Upload images and fill in details to generate AI product content
-                      </p>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      {/* Image Upload Section - Moved to the top */}
-                      <div className="space-y-4">
-                        <h3 className="text-base font-medium">Main Product Image</h3>
-                        <div
-                          {...getMainImageRootProps()}
-                          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-primary/5 transition-colors flex flex-col items-center justify-center h-[180px]"
-                        >
-                          <input {...getMainImageInputProps()} />
-                          {mainImagePreview ? (
-                            <div className="relative w-full h-full flex items-center justify-center">
-                              <img
-                                src={mainImagePreview}
-                                alt="Product preview"
-                                className="max-h-full max-w-full object-contain rounded-md"
-                              />
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                className="absolute top-0 right-0"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (mainImagePreview) {
-                                    URL.revokeObjectURL(mainImagePreview);
-                                  }
-                                  setMainImageFile(null);
-                                  setMainImagePreview(null);
-                                }}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
+                {/* Product Type */}
+                <FormField
+                  control={form.control}
+                  name="productTypeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product Type *</FormLabel>
+                      <Select 
+                        disabled={loadingProductTypes}
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value ? String(field.value) : undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select product type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {loadingProductTypes ? (
+                            <SelectItem value="loading" disabled>
+                              Loading...
+                            </SelectItem>
+                          ) : productTypes && productTypes.length > 0 ? (
+                            productTypes.map((type) => (
+                              <SelectItem key={type.id} value={String(type.id)}>
+                                {type.name}
+                              </SelectItem>
+                            ))
                           ) : (
-                            <>
-                              <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
-                              <p className="text-sm text-muted-foreground text-center">
-                                Click to upload main product image
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-2">
-                                PNG, JPG or JPEG (max 5MB)
-                              </p>
-                            </>
+                            <SelectItem value="none" disabled>
+                              No product types available
+                            </SelectItem>
                           )}
-                        </div>
-                        <FormDescription>
-                          This will be the primary image shown for the product and used for AI analysis
-                        </FormDescription>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <h3 className="text-base font-medium">Additional Images</h3>
-                        <div
-                          {...getAdditionalImagesRootProps()}
-                          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-primary/5 transition-colors h-[120px] flex flex-col items-center justify-center"
-                        >
-                          <input {...getAdditionalImagesInputProps()} />
-                          <Upload className="h-6 w-6 mb-2 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">Add more images</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          You can add up to 3 additional product images
-                        </p>
-                        
-                        {additionalImagePreviews.length > 0 && (
-                          <div className="grid grid-cols-3 gap-4 mt-4">
-                            {additionalImagePreviews.map((preview, index) => (
-                              <div key={index} className="relative">
-                                <img 
-                                  src={preview} 
-                                  alt={`Additional image ${index + 1}`} 
-                                  className="h-24 w-24 rounded-md object-cover"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  size="icon"
-                                  className="absolute -top-2 -right-2 h-6 w-6"
-                                  onClick={() => removeAdditionalImage(index)}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="border-t pt-4">
-                        <h3 className="text-base font-medium mb-4">Product Details</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* 1. Product Type */}
-                          <FormField
-                            control={form.control}
-                            name="category"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Product Type</FormLabel>
-                                <Select 
-                                  onValueChange={field.onChange} 
-                                  defaultValue={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select product type" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {isLoadingProductTypes ? (
-                                      <div className="flex items-center justify-center p-2">
-                                        <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                                      </div>
-                                    ) : productTypes?.length ? (
-                                      productTypes.map(type => (
-                                        <SelectItem key={type.id} value={type.name}>
-                                          {type.name}
-                                        </SelectItem>
-                                      ))
-                                    ) : (
-                                      <>
-                                        <SelectItem value="rings">Rings</SelectItem>
-                                        <SelectItem value="necklaces">Necklaces</SelectItem>
-                                        <SelectItem value="earrings">Earrings</SelectItem>
-                                        <SelectItem value="bracelets">Bracelets</SelectItem>
-                                        <SelectItem value="pendants">Pendants</SelectItem>
-                                      </>
-                                    )}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          {/* 2. Metal Type */}
-                          <FormField
-                            control={form.control}
-                            name="metalType"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Metal Type</FormLabel>
-                                <Select 
-                                  onValueChange={field.onChange} 
-                                  defaultValue={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select metal type" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="18k Gold">18k Gold</SelectItem>
-                                    <SelectItem value="14k Gold">14k Gold</SelectItem>
-                                    <SelectItem value="22k Gold">22k Gold</SelectItem>
-                                    <SelectItem value="24k Gold">24k Gold</SelectItem>
-                                    <SelectItem value="Platinum">Platinum</SelectItem>
-                                    <SelectItem value="Sterling Silver">Sterling Silver</SelectItem>
-                                    <SelectItem value="Rose Gold 18k">Rose Gold 18k</SelectItem>
-                                    <SelectItem value="White Gold 18k">White Gold 18k</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          {/* 3. Metal Weight */}
-                          <FormField
-                            control={form.control}
-                            name="metalWeight"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Metal Weight (grams)</FormLabel>
-                                <FormControl>
-                                  <Input type="number" step="0.1" placeholder="e.g. 4.5" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          {/* 4. Main Stone Type */}
-                          <FormItem>
-                            <FormLabel>Main Stone Type</FormLabel>
-                            <Select 
-                              onValueChange={setMainStoneType} 
-                              value={mainStoneType}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select main stone" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {isLoadingStoneTypes ? (
-                                  <div className="flex items-center justify-center p-2">
-                                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
-                                  </div>
-                                ) : stoneTypes?.length ? (
-                                  stoneTypes.map(stone => (
-                                    <SelectItem key={stone.id} value={stone.name}>
-                                      {stone.name}
-                                    </SelectItem>
-                                  ))
-                                ) : (
-                                  <>
-                                    <SelectItem value="Diamond">Diamond</SelectItem>
-                                    <SelectItem value="Ruby">Ruby</SelectItem>
-                                    <SelectItem value="Sapphire">Sapphire</SelectItem>
-                                    <SelectItem value="Emerald">Emerald</SelectItem>
-                                  </>
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </FormItem>
-                          
-                          {/* 5. Main Stone Weight */}
-                          <FormItem>
-                            <FormLabel>Main Stone Weight (carats)</FormLabel>
-                            <Input 
-                              type="number" 
-                              step="0.01" 
-                              placeholder="e.g. 1.25" 
-                              value={mainStoneWeight}
-                              onChange={(e) => setMainStoneWeight(e.target.value)}
-                            />
-                          </FormItem>
-                          
-                          {/* 6. Secondary Stones */}
-                          <div>
-                            <FormLabel>Secondary Stones</FormLabel>
-                            <div className="grid grid-cols-2 gap-2 mt-2 border rounded-md p-2 h-[120px] overflow-y-auto">
-                              {(stoneTypes?.length ? stoneTypes : [
-                                { id: 1, name: "Diamond" },
-                                { id: 2, name: "Ruby" },
-                                { id: 3, name: "Sapphire" },
-                                { id: 4, name: "Emerald" },
-                                { id: 5, name: "Amethyst" },
-                                { id: 6, name: "Aquamarine" },
-                                { id: 7, name: "Tanzanite" },
-                                { id: 8, name: "Topaz" },
-                                { id: 9, name: "Opal" },
-                                { id: 10, name: "Pearl" },
-                                { id: 11, name: "Garnet" }
-                              ]).map((stone) => (
-                                <div key={stone.id} className="flex items-center space-x-2">
-                                  <Checkbox 
-                                    id={`stone-${stone.id}`}
-                                    checked={selectedStoneTypes.includes(stone.name)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setSelectedStoneTypes(prev => [...prev, stone.name]);
-                                      } else {
-                                        setSelectedStoneTypes(prev => 
-                                          prev.filter(s => s !== stone.name)
-                                        );
-                                      }
-                                    }}
-                                  />
-                                  <label 
-                                    htmlFor={`stone-${stone.id}`}
-                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                  >
-                                    {stone.name}
-                                  </label>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {/* 7. Secondary Stone Weight */}
-                          <FormItem>
-                            <FormLabel>Secondary Stone Weight (total carats)</FormLabel>
-                            <Input 
-                              type="number" 
-                              step="0.01" 
-                              placeholder="e.g. 0.75" 
-                              value={secondaryStoneWeight}
-                              onChange={(e) => setSecondaryStoneWeight(e.target.value)}
-                            />
-                          </FormItem>
-                          
-                          {/* 8. Description for AI */}
-                          <div className="col-span-2">
-                            <FormField
-                              control={form.control}
-                              name="userDescription"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>Description for AI</FormLabel>
-                                  <FormControl>
-                                    <Textarea 
-                                      placeholder="Provide details about the product that will help the AI generate better content"
-                                      className="min-h-[120px]"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormDescription>
-                                    This won't be displayed on the product page, just used for AI generation
-                                  </FormDescription>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Name */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product Name *</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Price */}
+                <FormField
+                  control={form.control}
+                  name="basePrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Base Price (INR) *</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        The base price in Indian Rupees (₹)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Short Description */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Short Description *</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} className="min-h-[100px]" />
+                      </FormControl>
+                      <FormDescription>
+                        A brief description that will appear on product cards and search results
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Detailed Description */}
+                <FormField
+                  control={form.control}
+                  name="details"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Detailed Description</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} className="min-h-[150px]" />
+                      </FormControl>
+                      <FormDescription>
+                        A comprehensive description with all product details
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Dimensions */}
+                <FormField
+                  control={form.control}
+                  name="dimensions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dimensions</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        The dimensions of the product (e.g., "25mm x 15mm")
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Category (Legacy) */}
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category (Legacy)</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Optional category for backwards compatibility
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* Stone Types (Multi-select) */}
+                <div className="space-y-3">
+                  <FormLabel>Stone Types</FormLabel>
+                  <FormDescription>
+                    Select all stone types available for this product
+                  </FormDescription>
                   
-                  {/* Standard AI Content Generator */}
-                  <AIContentGenerator
-                    productType={productType}
-                    metalType={metalType}
-                    metalWeight={metalWeight}
-                    primaryGems={[
-                      ...(mainStoneType ? [{
-                        name: mainStoneType,
-                        carats: mainStoneWeight ? parseFloat(mainStoneWeight) : undefined
-                      }] : []),
-                      ...selectedStoneTypes.map(stone => ({
-                        name: stone,
-                        carats: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) / selectedStoneTypes.length : undefined
-                      }))
-                    ]}
-                    userDescription={form.watch("userDescription")}
-                    imageUrls={[
-                      ...(mainImagePreview ? [mainImagePreview] : []),
-                      ...additionalImagePreviews
-                    ]}
-                    onContentGenerated={handleContentGenerated}
+                  <div className="border rounded-md p-3 max-h-[200px] overflow-y-auto grid grid-cols-2 gap-2">
+                    {loadingStoneTypes ? (
+                      <div className="col-span-2 flex items-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Loading stone types...
+                      </div>
+                    ) : stoneTypes && stoneTypes.length > 0 ? (
+                      stoneTypes.map((stoneType) => (
+                        <div key={stoneType.id} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`stone-type-${stoneType.id}`} 
+                            checked={form.watch('selectedStones')?.includes(stoneType.id)}
+                            onCheckedChange={(checked) => {
+                              const currentValues = form.watch('selectedStones') || [];
+                              if (checked) {
+                                form.setValue('selectedStones', [...currentValues, stoneType.id]);
+                              } else {
+                                form.setValue('selectedStones', currentValues.filter(id => id !== stoneType.id));
+                              }
+                            }}
+                          />
+                          <label 
+                            htmlFor={`stone-type-${stoneType.id}`}
+                            className="text-sm cursor-pointer"
+                          >
+                            {stoneType.name}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-2">No stone types available</div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Flags */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="isNew"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1">
+                          <FormLabel>New Item</FormLabel>
+                          <FormDescription>
+                            Mark as a new product
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="isBestseller"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1">
+                          <FormLabel>Bestseller</FormLabel>
+                          <FormDescription>
+                            Mark as a bestselling item
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="isFeatured"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox 
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1">
+                          <FormLabel>Featured</FormLabel>
+                          <FormDescription>
+                            Show in featured sections
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
-              
-              {/* Section Heading for Product Images */}
-              <div className="border-b pb-2 pt-6">
-                <h2 className="text-xl font-semibold">Product Images</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Product Images Status</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Manage all product images from this tab
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-start space-x-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${mainImagePreview ? 'bg-green-500' : 'bg-amber-500'}`}>
-                          {mainImagePreview ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="10"></circle>
-                              <line x1="12" y1="8" x2="12" y2="16"></line>
-                              <line x1="8" y1="12" x2="16" y2="12"></line>
-                            </svg>
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium">Main Product Image</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {mainImagePreview ? 'Uploaded in the "Description & AI" tab' : 'Not yet uploaded'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${additionalImageFiles.length > 0 ? 'bg-green-500' : 'bg-amber-500'}`}>
-                          {additionalImageFiles.length > 0 ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="10"></circle>
-                              <line x1="12" y1="8" x2="12" y2="16"></line>
-                              <line x1="8" y1="12" x2="16" y2="12"></line>
-                            </svg>
-                          )}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium">Additional Product Images</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {additionalImageFiles.length > 0 
-                              ? `${additionalImageFiles.length} images uploaded` 
-                              : 'No additional images yet'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Additional Product Images</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      These will be shown in the product detail gallery
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div
-                      {...getAdditionalImagesRootProps()}
-                      className="border-2 border-dashed rounded-md p-6 border-gray-300 hover:border-primary cursor-pointer transition-colors flex flex-col items-center justify-center h-32 mb-4"
-                    >
-                      <input {...getAdditionalImagesInputProps()} />
-                      <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        Drag & drop additional product images here or click to browse
-                      </p>
-                    </div>
-                    
-                    {additionalImagePreviews.length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mt-4">
-                        {additionalImagePreviews.map((preview, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={preview}
-                              alt={`Product view ${index + 1}`}
-                              className="w-full h-20 object-cover rounded-md"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute -top-2 -right-2 h-6 w-6"
-                              onClick={() => removeAdditionalImage(index)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </Form>
-        </div>
-      </AdminLayout>
-    );
-  }
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button 
+              onClick={form.handleSubmit(onSubmit)} 
+              disabled={isUploading || !mainImage}
+              className="gap-2"
+            >
+              {isUploading && <Loader2 size={16} className="animate-spin" />}
+              {isUploading ? "Creating..." : "Create Product"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </AdminLayout>
+  );
+}
