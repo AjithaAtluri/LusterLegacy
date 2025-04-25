@@ -239,36 +239,44 @@ export default function EditProductNew() {
         console.error("Failed to parse product details:", e);
       }
 
-      // Extract stone types from the product data
+      // Get additionalData from details if it exists
+      const additionalData = details?.additionalData || {};
+      console.log("Additional data:", additionalData); // Add debug logging
+      
+      // Extract stone types from the product data or additionalData
       const secondaryStones = productData.stoneTypes 
         ? Array.isArray(productData.stoneTypes) 
           ? productData.stoneTypes 
           : [] 
-        : [];
+        : additionalData.stoneTypes 
+          ? Array.isArray(additionalData.stoneTypes)
+            ? additionalData.stoneTypes
+            : []
+          : [];
       console.log("Secondary stones:", secondaryStones); // Add debug logging
 
       // Set form values from product data
       const formValues = {
         title: productData.name || "",
-        tagline: details?.tagline || "",
+        tagline: additionalData.tagline || details?.tagline || "",
         shortDescription: productData.description || "",
         detailedDescription: details?.detailedDescription || "",
         priceUSD: productData.priceUSD || 0,
-        priceINR: productData.basePrice || 0,
+        priceINR: additionalData.basePriceINR || productData.basePrice || 0,
         productType: productData.productTypeId?.toString() || "",
-        metalType: productData.metalType || "",
-        metalWeight: productData.metalWeight?.toString() || "",
+        metalType: additionalData.metalType || productData.metalType || "",
+        metalWeight: (additionalData.metalWeight || productData.metalWeight)?.toString() || "",
         dimensions: {
           length: details?.dimensions?.length?.toString() || "0",
           width: details?.dimensions?.width?.toString() || "0",
           height: details?.dimensions?.height?.toString() || "0",
         },
-        mainStoneType: details?.mainStoneType || "none_selected",
-        mainStoneWeight: details?.mainStoneWeight?.toString() || "",
+        mainStoneType: details?.mainStoneType || additionalData.mainStoneType || "none_selected",
+        mainStoneWeight: (details?.mainStoneWeight || additionalData.mainStoneWeight)?.toString() || "",
         secondaryStoneTypes: secondaryStones,
-        secondaryStoneWeight: details?.secondaryStoneWeight?.toString() || "",
-        featured: productData.featured || false,
-        userDescription: details?.userDescription || "",
+        secondaryStoneWeight: (details?.secondaryStoneWeight || additionalData.secondaryStoneWeight)?.toString() || "",
+        featured: productData.isFeatured || productData.featured || false,
+        userDescription: details?.userDescription || additionalData.userDescription || "",
         inStock: productData.inStock !== false, // default to true if undefined
       };
 
