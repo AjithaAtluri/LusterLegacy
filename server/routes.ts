@@ -28,10 +28,17 @@ import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
 
-// Set up multer for file uploads - using public/uploads to persist between deployments
-const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+// Set up multer for file uploads - using /uploads at root to persist between deployments
+// This directory will be stored in Replit's persistent storage
+const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Create a symbolic link from 'public/uploads' to 'uploads' if it doesn't exist
+const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads');
+if (!fs.existsSync(path.dirname(publicUploadsDir))) {
+  fs.mkdirSync(path.dirname(publicUploadsDir), { recursive: true });
 }
 
 const storage_disk = multer.diskStorage({
@@ -61,8 +68,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
-  // Serve static files from public/uploads directory
-  app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+  // Serve static files from uploads directory (root-level persistent storage)
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
   /**
    * Session management - basic approach using session IDs in cookies
@@ -788,9 +795,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Delete old image if it exists
         const stoneType = await storage.getStoneType(id);
         if (stoneType?.imageUrl) {
-          const oldImagePath = path.join(process.cwd(), stoneType.imageUrl.substring(1));
-          if (fs.existsSync(oldImagePath)) {
-            fs.unlinkSync(oldImagePath);
+          // Extract just the filename from the imageUrl (/uploads/filename.jpg)
+          const filename = stoneType.imageUrl.split('/').pop();
+          if (filename) {
+            const oldImagePath = path.join(process.cwd(), 'uploads', filename);
+            if (fs.existsSync(oldImagePath)) {
+              fs.unlinkSync(oldImagePath);
+            }
           }
         }
       }
@@ -818,9 +829,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (success) {
         // Delete the image file if it exists
         if (stoneType?.imageUrl) {
-          const imagePath = path.join(process.cwd(), stoneType.imageUrl.substring(1));
-          if (fs.existsSync(imagePath)) {
-            fs.unlinkSync(imagePath);
+          // Extract just the filename from the imageUrl (/uploads/filename.jpg)
+          const filename = stoneType.imageUrl.split('/').pop();
+          if (filename) {
+            const imagePath = path.join(process.cwd(), 'uploads', filename);
+            if (fs.existsSync(imagePath)) {
+              fs.unlinkSync(imagePath);
+            }
           }
         }
         res.status(204).send();

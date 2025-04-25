@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
+import { ensureUploadsDirectory } from "./ensure-uploads";
 
 // Extend Express Request interface to include sessionId
 declare global {
@@ -54,6 +55,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Ensure uploads directory exists before setting up routes
+  ensureUploadsDirectory();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
