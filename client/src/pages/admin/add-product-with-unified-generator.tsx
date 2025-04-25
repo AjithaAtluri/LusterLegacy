@@ -209,10 +209,25 @@ export default function AddProduct() {
       // Convert images to base64 for API submission
       const formData = new FormData();
       
-      // Add all form fields
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value.toString());
-      });
+      // Map form fields to what the server expects
+      // The server expects 'name' but our form uses 'title'
+      formData.append('name', data.title.toString());
+      formData.append('description', data.description.toString());
+      formData.append('basePrice', data.basePrice.toString());
+      formData.append('basePriceINR', data.basePriceINR.toString());
+      formData.append('details', data.detailedDescription.toString());
+      formData.append('productTypeId', data.productTypeId.toString());
+      formData.append('isNew', data.isNew.toString());
+      formData.append('isBestseller', data.isBestseller.toString());
+      formData.append('isFeatured', data.isFeatured.toString());
+      formData.append('metalType', data.metalType.toString());
+      formData.append('metalWeight', data.metalWeight.toString());
+      
+      // These fields may not be required but add them anyway
+      if (data.tagline) formData.append('tagline', data.tagline.toString());
+      if (data.category) formData.append('category', data.category.toString());
+      if (data.dimensions) formData.append('dimensions', data.dimensions.toString());
+      if (data.userDescription) formData.append('userDescription', data.userDescription.toString());
       
       // Add stone types as a JSON string
       formData.append('selectedStones', JSON.stringify(selectedStoneTypes));
@@ -240,7 +255,14 @@ export default function AddProduct() {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to save product: ${response.status} ${response.statusText}`);
+        // Try to get detailed error message
+        const errorText = await response.text();
+        console.error('Product save error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorDetails: errorText
+        });
+        throw new Error(`Failed to save product: ${response.status} ${errorText || response.statusText}`);
       }
       
       const result = await response.json();
