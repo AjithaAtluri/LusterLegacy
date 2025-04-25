@@ -102,7 +102,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, onChange, onRemove, im
             type="file" 
             accept="image/*" 
             className="hidden" 
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const file = e.target.files?.[0];
               if (file) onChange(file);
             }}
@@ -115,7 +115,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, onChange, onRemove, im
 
 export default function AddProductPage() {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   
   // Load saved AI content from localStorage
@@ -438,7 +438,7 @@ export default function AddProductPage() {
                             type="file" 
                             accept="image/*" 
                             className="hidden" 
-                            onChange={(e) => {
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               const file = e.target.files?.[0];
                               if (file) handleAdditionalImageChange(file);
                               // Reset the input value to allow selecting the same file again
@@ -460,7 +460,7 @@ export default function AddProductPage() {
                       <FormLabel>Product Type *</FormLabel>
                       <Select 
                         disabled={loadingProductTypes}
-                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        onValueChange={(value: string) => field.onChange(parseInt(value))}
                         value={field.value ? String(field.value) : undefined}
                       >
                         <FormControl>

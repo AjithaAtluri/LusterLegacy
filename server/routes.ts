@@ -1465,9 +1465,7 @@ Respond in JSON format:
       
       // Now add the stone associations
       if (selectedStones.length > 0 && product.id) {
-        for (const stoneTypeId of selectedStones) {
-          await storage.addProductStone(product.id, stoneTypeId);
-        }
+        await storage.updateProductStones(product.id, selectedStones);
         console.log(`Added ${selectedStones.length} stone type associations to product ${product.id}`);
       }
       
