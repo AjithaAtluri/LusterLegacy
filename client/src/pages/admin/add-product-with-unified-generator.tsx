@@ -84,6 +84,7 @@ export default function AddProduct() {
       metalType: "",
       metalWeight: "",
       userDescription: "",
+      dimensions: "", // Add default value for dimensions
       isNew: false,
       isBestseller: false,
       isFeatured: false,

@@ -31,8 +31,8 @@ interface UnifiedAIGeneratorProps {
   setMainStoneType: (type: string) => void;
   mainStoneWeight: string;
   setMainStoneWeight: (weight: string) => void;
-  selectedStoneTypes: string[];
-  setSelectedStoneTypes: (types: string[]) => void;
+  selectedStoneTypes: Array<{id: number, name: string}>;
+  setSelectedStoneTypes: (types: Array<{id: number, name: string}>) => void;
   secondaryStoneWeight: string;
   setSecondaryStoneWeight: (weight: string) => void;
   handleContentGenerated: (content: AIGeneratedContent) => void;
@@ -84,7 +84,7 @@ export default function UnifiedAIGenerator({
   const metalWeight = form.watch("metalWeight") ? parseFloat(form.watch("metalWeight")) : undefined;
   
   // Define type-safe versions of state setters to fix TypeScript issues
-  const handleSetSelectedStoneTypes = (updater: (prev: string[]) => string[]) => {
+  const handleSetSelectedStoneTypes = (updater: (prev: Array<{id: number, name: string}>) => Array<{id: number, name: string}>) => {
     // Create a direct copy, apply the updater function, then set the state
     const currentStoneTypes = [...selectedStoneTypes];
     const updatedStoneTypes = updater(currentStoneTypes);
@@ -474,12 +474,12 @@ export default function UnifiedAIGenerator({
                           <div key={stone.id} className="flex items-center space-x-2">
                             <Checkbox
                               id={`stone-${stone.id}`}
-                              checked={selectedStoneTypes.includes(stone.name)}
+                              checked={selectedStoneTypes.some(s => s.id === stone.id)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  handleSetSelectedStoneTypes((prev) => [...prev, stone.name]);
+                                  handleSetSelectedStoneTypes((prev) => [...prev, {id: stone.id, name: stone.name}]);
                                 } else {
-                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s !== stone.name));
+                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s.id !== stone.id));
                                 }
                               }}
                             />
@@ -493,25 +493,25 @@ export default function UnifiedAIGenerator({
                         )
                       ))
                     ) : (
-                      ["Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", "Aquamarine"].map(stone => (
-                        stone !== mainStoneType && (
-                          <div key={stone} className="flex items-center space-x-2">
+                      ["Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", "Aquamarine"].map((stoneName, idx) => (
+                        stoneName !== mainStoneType && (
+                          <div key={stoneName} className="flex items-center space-x-2">
                             <Checkbox
-                              id={`stone-${stone}`}
-                              checked={selectedStoneTypes.includes(stone)}
+                              id={`stone-${stoneName}`}
+                              checked={selectedStoneTypes.some(s => s.name === stoneName)}
                               onCheckedChange={(checked) => {
                                 if (checked) {
-                                  handleSetSelectedStoneTypes((prev) => [...prev, stone]);
+                                  handleSetSelectedStoneTypes((prev) => [...prev, {id: 1000 + idx, name: stoneName}]);
                                 } else {
-                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s !== stone));
+                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s.name !== stoneName));
                                 }
                               }}
                             />
                             <label
-                              htmlFor={`stone-${stone}`}
+                              htmlFor={`stone-${stoneName}`}
                               className="text-sm cursor-pointer"
                             >
-                              {stone}
+                              {stoneName}
                             </label>
                           </div>
                         )
