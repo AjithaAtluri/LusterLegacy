@@ -53,6 +53,9 @@ export default function AddProduct() {
   const [mainStoneType, setMainStoneType] = useState<string>("");
   const [mainStoneWeight, setMainStoneWeight] = useState<string>("");
   const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<string>("");
+  const [productType, setProductType] = useState<string>("");
+  const [metalType, setMetalType] = useState<string>("");
+  const [metalWeight, setMetalWeight] = useState<string>("");
   
   // Fetch product types from database
   const { data: productTypes, isLoading: isLoadingProductTypes } = useQuery<ProductType[]>({
@@ -146,7 +149,18 @@ export default function AddProduct() {
         
         // Set input values if they exist
         if (parsedInputs.productType) {
+          // Store in local state
           setProductType(parsedInputs.productType);
+          
+          // Select product type by ID if available
+          if (productTypes?.length) {
+            const foundType = productTypes.find(type => 
+              type.name.toLowerCase() === parsedInputs.productType.toLowerCase()
+            );
+            if (foundType) {
+              form.setValue('productTypeId', foundType.id.toString());
+            }
+          }
         }
         
         if (parsedInputs.metalType) {
@@ -182,7 +196,7 @@ export default function AddProduct() {
         console.error('Error parsing saved inputs from localStorage:', error);
       }
     }
-  }, [form]);
+  }, [form, productTypes, toast]);
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -233,6 +247,13 @@ export default function AddProduct() {
         title: "Product Saved",
         description: "Your product has been saved successfully.",
       });
+      
+      // Clear the saved AI content and images from localStorage
+      localStorage.removeItem('aiGeneratedContent');
+      localStorage.removeItem('aiGeneratedImagePreview');
+      localStorage.removeItem('aiGeneratedImageData');
+      localStorage.removeItem('aiGeneratorInputs');
+      localStorage.removeItem('aiGeneratedAdditionalImages');
       
       // Redirect to products list
       setLocation('/admin/products');
