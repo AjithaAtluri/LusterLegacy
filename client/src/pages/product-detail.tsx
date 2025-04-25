@@ -90,6 +90,32 @@ export default function ProductDetail() {
       console.log("Image URL type:", typeof product.imageUrl);
       // Also check for snake_case version
       console.log("Checking image_url property:", (product as any).image_url);
+      
+      // Log product details for debugging
+      console.log("Product details:", product.details);
+      
+      try {
+        if (product.details) {
+          const parsed = JSON.parse(product.details);
+          console.log("Parsed product details:", parsed);
+          
+          if (parsed.additionalData) {
+            console.log("Metal type:", parsed.additionalData.metalType);
+            console.log("Metal weight:", parsed.additionalData.metalWeight);
+            console.log("Main stone type:", parsed.additionalData.mainStoneType);
+            console.log("Main stone weight:", parsed.additionalData.mainStoneWeight);
+            console.log("Secondary stone types:", parsed.additionalData.secondaryStoneTypes);
+            console.log("Secondary stone weight:", parsed.additionalData.secondaryStoneWeight);
+            
+            // Check AI inputs
+            if (parsed.additionalData.aiInputs) {
+              console.log("AI inputs:", parsed.additionalData.aiInputs);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing product details:", e);
+      }
     }
   }, [product]);
   
