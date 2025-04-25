@@ -83,10 +83,10 @@ function App() {
             <Route path="/admin" component={AdminLogin} />
             <Route path="/admin/dashboard" component={AdminDashboard} />
             <Route path="/admin/products" component={AdminProducts} />
-            {/* Redirect old add-product URL to the new unified generator */}
+            {/* Redirect old add-product URL to the AI generator */}
             <Route path="/admin/add-product">
               {() => {
-                window.location.replace("/admin/add-product-with-unified-generator");
+                window.location.replace("/admin/ai-generator");
                 return null;
               }}
             </Route>
