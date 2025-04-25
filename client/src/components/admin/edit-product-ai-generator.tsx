@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AIInputs } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,6 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useMultiSelect } from "@/hooks/use-multi-select";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { useQuery } from "@tanstack/react-query";
 
 // AI Generator component specifically for editing products
 export default function EditProductAIGenerator({
@@ -101,18 +98,12 @@ export default function EditProductAIGenerator({
     },
   });
 
-  // Setup stone multi-select
-  const { selectedItems: selectedGems, setSelectedItems: setSelectedGems } = useMultiSelect([]);
-
-  // Set up the primary gems using secondaryStoneTypes
+  // Set up the gems input from secondary stone types
   useEffect(() => {
     if (secondaryStoneTypes && secondaryStoneTypes.length > 0) {
-      // Set selected gems based on secondaryStoneTypes
-      setSelectedGems(secondaryStoneTypes);
-      
       // Format gems text for display
       const gemsText = secondaryStoneTypes
-        .map(gem => {
+        .map((gem: any) => {
           if (gem.weight) {
             return `${gem.name} (${gem.weight} carats)`;
           }
@@ -159,16 +150,7 @@ export default function EditProductAIGenerator({
 
   // Process primary gems input field
   const processPrimaryGems = () => {
-    // If using multi-select UI
-    if (selectedGems && selectedGems.length > 0) {
-      return selectedGems.map(gem => ({
-        name: gem.name,
-        // Extract carats from input if available
-        carats: extractCaratsForGem(gem.name)
-      }));
-    }
-    
-    // If using text field
+    // Parse the text input for gems
     if (primaryGemsInput) {
       // Basic parsing of input like "Diamond (2 carats), Ruby"
       return primaryGemsInput.split(",").map(item => {
@@ -184,6 +166,14 @@ export default function EditProductAIGenerator({
         
         return { name: trimmed };
       });
+    }
+    
+    // Return secondary stone types directly if available
+    if (secondaryStoneTypes && secondaryStoneTypes.length > 0) {
+      return secondaryStoneTypes.map((gem: any) => ({
+        name: gem.name,
+        carats: gem.weight
+      }));
     }
     
     return [];
@@ -393,10 +383,10 @@ export default function EditProductAIGenerator({
               <Button
                 type="button"
                 variant="outline"
-                onClick={onCancel}
+                onClick={() => window.history.back()}
                 disabled={generateContentMutation.isPending}
               >
-                Cancel
+                Back
               </Button>
               <Button
                 type="submit"
