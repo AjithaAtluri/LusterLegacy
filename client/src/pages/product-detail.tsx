@@ -38,6 +38,13 @@ interface ProductDetails {
     metalType: string;
     metalWeight: number;
     stoneTypes: string[];
+    mainStoneType?: string;
+    mainStoneWeight?: number;
+    secondaryStoneTypes?: string[];
+    secondaryStoneWeight?: number;
+    productTypeId?: string;
+    userDescription?: string;
+    dimensions?: string;
   };
 }
 
@@ -51,6 +58,12 @@ export default function ProductDetail() {
   const [productStones, setProductStones] = useState<string[]>([]);
   const [productMetalType, setProductMetalType] = useState<string>("");
   const [productMetalWeight, setProductMetalWeight] = useState<number>(0);
+  const [mainStoneType, setMainStoneType] = useState<string>("");
+  const [mainStoneWeight, setMainStoneWeight] = useState<number>(0);
+  const [secondaryStoneTypes, setSecondaryStoneTypes] = useState<string[]>([]);
+  const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<number>(0);
+  const [dimensions, setDimensions] = useState<string>("");
+  const [userDescription, setUserDescription] = useState<string>("");
   
   // Defining the product interface
   interface Product {
@@ -95,10 +108,21 @@ export default function ProductDetail() {
         
         // Set individual fields from parsed data
         if (parsed.additionalData) {
+          // Basic info
           setTagline(parsed.additionalData.tagline || "");
           setProductStones(parsed.additionalData.stoneTypes || []);
           setProductMetalType(parsed.additionalData.metalType || "");
           setProductMetalWeight(parsed.additionalData.metalWeight || 0);
+          
+          // Stone details
+          setMainStoneType(parsed.additionalData.mainStoneType || "");
+          setMainStoneWeight(parsed.additionalData.mainStoneWeight || 0);
+          setSecondaryStoneTypes(parsed.additionalData.secondaryStoneTypes || []);
+          setSecondaryStoneWeight(parsed.additionalData.secondaryStoneWeight || 0);
+          
+          // Other details
+          setDimensions(parsed.additionalData.dimensions || "");
+          setUserDescription(parsed.additionalData.userDescription || "");
         }
         
         if (parsed.detailedDescription) {
@@ -110,7 +134,12 @@ export default function ProductDetail() {
         setDetailedDescription(product.details);
       }
     }
-  }, [product?.details]);
+    
+    // Also set dimensions from the top-level field if available
+    if (product?.dimensions) {
+      setDimensions(product.dimensions);
+    }
+  }, [product?.details, product?.dimensions]);
   
   // Calculate price with calculator hook
   const { currentPrice } = usePriceCalculator({
@@ -467,9 +496,38 @@ export default function ProductDetail() {
                           </div>
                         )}
                       </div>
+                      {/* Main Stone Information */}
+                      {mainStoneType && (
+                        <div className="border-b pb-2">
+                          <span className="font-montserrat font-semibold block text-sm text-foreground/60">Main Stone</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-cormorant text-lg">{mainStoneType}</span>
+                            {mainStoneWeight > 0 && (
+                              <Badge variant="secondary" className="text-xs">{mainStoneWeight} carats</Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Secondary Stones Information */}
+                      {secondaryStoneTypes && secondaryStoneTypes.length > 0 && (
+                        <div className="border-b pb-2">
+                          <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-1">Secondary Stones</span>
+                          <div className="flex flex-wrap gap-2">
+                            {secondaryStoneTypes.map((stone, index) => (
+                              <Badge key={index} variant="outline">{stone}</Badge>
+                            ))}
+                            {secondaryStoneWeight > 0 && (
+                              <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats total</Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* All Stones Collection */}
                       {productStones && productStones.length > 0 && (
                         <div className="border-b pb-2">
-                          <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-1">Stones & Gems</span>
+                          <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-1">All Stones & Gems</span>
                           <div className="flex flex-wrap gap-2">
                             {productStones.map((stone, index) => (
                               <Badge key={index} variant="outline">{stone}</Badge>
