@@ -6,7 +6,13 @@ import { Loader2, Image as ImageIcon, Plus, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useDropzone } from "react-dropzone";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
-import type { StoneType } from "@shared/schema";
+
+// Define a simplified StoneType interface for the component
+// Since we only need id and name from the StoneType data
+type SimpleStoneType = {
+  id: number;
+  name: string;
+};
 
 interface EditProductAIGeneratorProps {
   productType: string;
@@ -14,7 +20,7 @@ interface EditProductAIGeneratorProps {
   metalWeight: string;
   mainStoneType: string;
   mainStoneWeight: string;
-  secondaryStoneTypes: StoneType[];
+  secondaryStoneTypes: SimpleStoneType[];
   secondaryStoneWeight: string;
   userDescription: string;
   mainImageUrl: string | null;

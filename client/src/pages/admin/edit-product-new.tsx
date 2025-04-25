@@ -27,6 +27,12 @@ import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
 import type { ProductType, StoneType } from "@shared/schema";
 
+// Simplified Stone Type for the form
+type SimpleStoneType = {
+  id: number;
+  name: string;
+};
+
 interface FormValues {
   title: string;
   tagline: string;
@@ -44,7 +50,7 @@ interface FormValues {
   };
   mainStoneType: string;
   mainStoneWeight: string;
-  secondaryStoneTypes: { id: number; name: string }[];
+  secondaryStoneTypes: SimpleStoneType[];
   secondaryStoneWeight: string;
   featured: boolean;
   userDescription: string;
@@ -72,8 +78,8 @@ export default function EditProductNew() {
       detailedDescription: "",
       priceUSD: 0,
       priceINR: 0,
-      productType: "",
-      metalType: "",
+      productType: "1", // Default to first product type
+      metalType: "18K Yellow Gold", // Default metal type
       metalWeight: "",
       dimensions: {
         length: "0",
