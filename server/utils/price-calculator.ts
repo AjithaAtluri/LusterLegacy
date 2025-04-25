@@ -46,7 +46,17 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     
     // Try to get metal type from database by ID first
     if (params.metalTypeId) {
-      const metalTypeData = await storage.getMetalTypeById(params.metalTypeId);
+      let metalTypeData;
+      if (typeof params.metalTypeId === 'number') {
+        metalTypeData = await storage.getMetalTypeById(params.metalTypeId);
+      } else {
+        // If metalTypeId is a string, it might be a name or ID
+        const metalTypes = await storage.getAllMetalTypes();
+        metalTypeData = metalTypes.find(mt => 
+          mt.id === parseInt(params.metalTypeId as string) || 
+          mt.name.toLowerCase() === (params.metalTypeId as string).toLowerCase()
+        );
+      }
       if (metalTypeData?.priceModifier) {
         metalPriceModifier = metalTypeData.priceModifier / 100; // Convert percentage to decimal
       }
@@ -102,7 +112,17 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       
       // Try to get stone price from database by ID first
       if (gem.stoneTypeId) {
-        const stoneTypeData = await storage.getStoneTypeById(gem.stoneTypeId);
+        let stoneTypeData;
+        if (typeof gem.stoneTypeId === 'number') {
+          stoneTypeData = await storage.getStoneTypeById(gem.stoneTypeId);
+        } else {
+          // If stoneTypeId is a string, it might be a name or ID
+          const stoneTypes = await storage.getAllStoneTypes();
+          stoneTypeData = stoneTypes.find(st => 
+            st.id === parseInt(gem.stoneTypeId as string) || 
+            st.name.toLowerCase() === (gem.stoneTypeId as string).toLowerCase()
+          );
+        }
         if (stoneTypeData?.priceModifier) {
           perCaratPrice = stoneTypeData.priceModifier;
         }
