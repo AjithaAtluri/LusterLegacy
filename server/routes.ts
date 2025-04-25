@@ -71,6 +71,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory (root-level persistent storage)
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
+  // Also serve files from attached_assets as a fallback for missing uploads
+  app.use('/uploads', express.static(path.join(process.cwd(), 'attached_assets')));
+  
+  // Directly serve files from attached_assets folder
+  app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
+  
+  // Special fallback route for handling image requests that can't be found
+  app.use('/api/image-fallback/:filename', (req, res) => {
+    const filename = req.params.filename;
+    
+    // Check if file exists in uploads directory
+    const uploadsPath = path.join(process.cwd(), 'uploads', filename);
+    if (fs.existsSync(uploadsPath)) {
+      return res.sendFile(uploadsPath);
+    }
+    
+    // Check if file exists in attached_assets directory
+    const assetsPath = path.join(process.cwd(), 'attached_assets', filename);
+    if (fs.existsSync(assetsPath)) {
+      return res.sendFile(assetsPath);
+    }
+    
+    // If no file is found, send a placeholder image or a 404
+    res.status(404).json({ error: 'Image not found' });
+  });
+  
   /**
    * Session management - basic approach using session IDs in cookies
    * In a real production app, you'd use express-session with a proper session store

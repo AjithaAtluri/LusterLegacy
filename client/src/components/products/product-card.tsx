@@ -23,33 +23,34 @@ function getImageUrl(url: string | undefined): string {
     return url;
   }
   
+  // Get filename only from URL to try multiple directories
+  let filename = "";
+  if (url.includes('/')) {
+    filename = url.split('/').pop() || "";
+  } else {
+    filename = url;
+  }
+  
+  // If it's a /uploads/ URL
+  if (url.includes('uploads')) {
+    console.log("ProductCard - URL contains 'uploads', ensuring proper path");
+    // Ensure standard format: /uploads/filename.ext
+    const uploadPath = `/uploads/${filename}`;
+    console.log("ProductCard - Normalized upload path:", uploadPath);
+    return uploadPath;
+  }
+  
   // If it's a relative URL starting with /
   if (url.startsWith('/')) {
-    // Check for uploads directory specifically
-    if (url.includes('uploads')) {
-      console.log("ProductCard - URL contains 'uploads', ensuring proper path");
-      // Ensure standard format: /uploads/filename.ext
-      const uploadPath = url.replace(/\/+uploads\/+/g, '/uploads/');
-      console.log("ProductCard - Normalized upload path:", uploadPath);
-      return uploadPath;
-    }
-    
     // Fix double slashes if any
     const cleanUrl = url.replace(/\/+/g, '/');
     console.log("ProductCard - URL starts with /, normalized to:", cleanUrl);
     return cleanUrl;
   }
   
-  // If it includes 'uploads' but doesn't have leading slash
-  if (url.includes('uploads')) {
-    const uploadPath = `/uploads/${url.split('uploads/').pop()}`;
-    console.log("ProductCard - Extracted uploads path without leading slash:", uploadPath);
-    return uploadPath;
-  }
-  
   // Otherwise, assume it's a relative URL without leading /
-  const prefixedUrl = `/${url}`;
-  console.log("ProductCard - Added / prefix to URL:", prefixedUrl);
+  const prefixedUrl = `/uploads/${filename}`;
+  console.log("ProductCard - Added /uploads/ prefix to URL:", prefixedUrl);
   return prefixedUrl;
 }
 
@@ -133,7 +134,28 @@ export default function ProductCard({ product }: ProductCardProps) {
           onError={(e) => {
             console.error("Image load error for product:", product.id, product.name);
             console.error("Attempted image URL:", product.imageUrl || product.image_url);
-            e.currentTarget.src = "https://placehold.co/600x400/png?text=Image+Not+Available";
+            
+            // Try to extract filename from the URL to use with fallback API
+            let filename = '';
+            const url = product.imageUrl || product.image_url || '';
+            if (url.includes('/')) {
+              filename = url.split('/').pop() || '';
+            } else {
+              filename = url;
+            }
+            
+            // If we have a filename, try the fallback API endpoint
+            if (filename) {
+              e.currentTarget.src = `/api/image-fallback/${filename}`;
+              // Add a second error handler for the fallback
+              e.currentTarget.onerror = () => {
+                e.currentTarget.src = "https://placehold.co/600x400/png?text=Image+Not+Available";
+                // Remove the error handler to prevent infinite loop
+                e.currentTarget.onerror = null;
+              };
+            } else {
+              e.currentTarget.src = "https://placehold.co/600x400/png?text=Image+Not+Available";
+            }
           }}
         />
         
