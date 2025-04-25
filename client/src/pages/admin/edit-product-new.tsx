@@ -770,6 +770,32 @@ export default function EditProductNew() {
                         )}
                       />
                     </div>
+                    
+                    {/* Price Calculator */}
+                    <div className="mt-6">
+                      <Card className="border-amber-200">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base flex items-center">
+                            <PiggyBank className="mr-2 h-5 w-5 text-amber-600" />
+                            Real-Time Price Calculator
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <PriceCalculatorDisplay 
+                            metalType={form.watch("metalType")}
+                            metalWeight={form.watch("metalWeight")}
+                            mainStoneType={form.watch("mainStoneType")}
+                            mainStoneWeight={form.watch("mainStoneWeight")}
+                            secondaryStoneTypes={form.watch("secondaryStoneTypes")}
+                            secondaryStoneWeight={form.watch("secondaryStoneWeight")}
+                          />
+                          <div className="mt-3 text-xs text-muted-foreground">
+                            <p>This calculator shows a real-time price estimate based on current gold prices and selected materials.</p>
+                            <p className="mt-1">You can manually adjust the prices above if needed.</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </CardContent>
                 </Card>
 
