@@ -2,61 +2,11 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getImageUrl } from "@/lib/utils";
 import { METAL_TYPES, STONE_TYPES } from "@/lib/constants";
 import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
-
-// Helper function to handle image URLs
-function getImageUrl(url: string | undefined): string {
-  console.log("ProductCard - getImageUrl input:", url, "type:", typeof url);
-  
-  if (!url) {
-    console.log("ProductCard - No image URL provided, returning placeholder");
-    return "/api/image-fallback/placeholder";
-  }
-  
-  // If it's an absolute URL (starts with http/https or //)
-  if (url.match(/^(https?:)?\/\//)) {
-    console.log("ProductCard - URL is already absolute, returning as is:", url);
-    return url;
-  }
-  
-  // Get filename only from URL to try multiple directories
-  let filename = "";
-  if (url.includes('/')) {
-    filename = url.split('/').pop() || "";
-  } else {
-    filename = url;
-  }
-  
-  // If filename is empty, return fallback
-  if (!filename) {
-    console.log("ProductCard - Could not extract filename, using fallback");
-    return "/api/image-fallback/placeholder";
-  }
-  
-  // If it's a /uploads/ URL
-  if (url.includes('uploads')) {
-    console.log("ProductCard - URL contains 'uploads', ensuring proper path");
-    // Try the original URL first, but have fallback ready (handled by onError)
-    return url;
-  }
-  
-  // If it's a relative URL starting with /
-  if (url.startsWith('/')) {
-    // Fix double slashes if any
-    const cleanUrl = url.replace(/\/+/g, '/');
-    console.log("ProductCard - URL starts with /, normalized to:", cleanUrl);
-    return cleanUrl;
-  }
-  
-  // Otherwise, assume it's a relative URL without leading /
-  const prefixedUrl = `/uploads/${filename}`;
-  console.log("ProductCard - Added /uploads/ prefix to URL:", prefixedUrl);
-  return prefixedUrl;
-}
 
 // Interface for product details stored as JSON
 interface ProductDetails {

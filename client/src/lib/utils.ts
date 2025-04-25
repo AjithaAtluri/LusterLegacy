@@ -25,6 +25,41 @@ export function getStoneType(id: string) {
   return STONE_TYPES.find(stone => stone.id === id) || STONE_TYPES[0];
 }
 
+/**
+ * Universal function to handle image URLs across the application
+ * This resolves the inconsistency between how images are stored in the database
+ * and how they need to be served from the filesystem
+ */
+export function getImageUrl(url: string | undefined): string {
+  if (!url) {
+    return "/api/image-fallback/placeholder";
+  }
+  
+  // If it's an absolute URL (starts with http/https or //)
+  if (url.match(/^(https?:)?\/\//)) {
+    return url;
+  }
+  
+  // If it's a URL path starting with /uploads/
+  if (url.startsWith('/uploads/')) {
+    // This is the expected database format, return as is
+    return url;
+  }
+  
+  // If it's a UUID filename without path
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpe?g|png|gif|webp)$/i;
+  if (uuidPattern.test(url)) {
+    return `/uploads/${url}`;
+  }
+  
+  // For any other file path, ensure it has a leading slash
+  if (!url.startsWith('/')) {
+    return `/${url}`;
+  }
+  
+  return url;
+}
+
 // Calculate price based on base price and selected options
 export function calculatePrice(
   basePrice: number, 
