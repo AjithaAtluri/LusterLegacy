@@ -32,8 +32,6 @@ const FAQ = lazy(() => import("@/pages/faq"));
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/products"));
-// Product pages
-const AdminAddProduct = lazy(() => import("@/pages/admin/add-product-simple"));
 // Unified product page with AI generator
 const AdminAddProductUnified = lazy(() => import("@/pages/admin/add-product-with-unified-generator"));
 const AdminEditProduct = lazy(() => import("@/pages/admin/edit-product"));
@@ -85,7 +83,13 @@ function App() {
             <Route path="/admin" component={AdminLogin} />
             <Route path="/admin/dashboard" component={AdminDashboard} />
             <Route path="/admin/products" component={AdminProducts} />
-            <Route path="/admin/add-product" component={AdminAddProduct} />
+            {/* Redirect old add-product URL to the new unified generator */}
+            <Route path="/admin/add-product">
+              {() => {
+                window.location.replace("/admin/add-product-with-unified-generator");
+                return null;
+              }}
+            </Route>
             <Route path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} />
             <Route path="/admin/edit-product/:id" component={AdminEditProductNew} />
             <Route path="/admin/metal-types" component={AdminMetalTypes} />
