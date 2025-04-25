@@ -13,22 +13,23 @@ interface GoldPriceResponse {
  * Returns price per gram in INR for 24K gold
  */
 export function useGoldPrice() {
-  const {
+  const { 
     data,
     isLoading,
     error
   } = useQuery<GoldPriceResponse>({
     queryKey: ['/api/gold-price'],
-    refetchInterval: 60 * 60 * 1000, // Refetch every hour
-    refetchOnWindowFocus: false,
+    // Refresh every hour
+    refetchInterval: 60 * 60 * 1000,
+    // Keep data valid for 2 hours
+    staleTime: 2 * 60 * 60 * 1000
   });
   
   return {
     goldPrice: data?.price,
-    location: data?.location || 'Hyderabad, India',
-    timestamp: data?.timestamp ? new Date(data.timestamp) : new Date(),
+    location: data?.location,
+    timestamp: data?.timestamp,
     isLoading,
-    error: error as Error | null,
-    isError: !!error
+    error: error || (data?.error ? new Error(data.error) : undefined)
   };
 }

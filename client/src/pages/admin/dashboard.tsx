@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { GoldPriceDisplay } from "@/components/admin/gold-price-display";
 import { 
   ShoppingBag, 
   Users, 
@@ -129,6 +130,9 @@ export default function AdminDashboard() {
               <Calendar className="inline-block mr-2 h-4 w-4" />
               {formattedDate}
             </p>
+          </div>
+          <div className="mt-4 md:mt-0 md:w-64">
+            <GoldPriceDisplay />
           </div>
         </div>
         
