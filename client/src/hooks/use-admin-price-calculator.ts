@@ -85,11 +85,19 @@ export function useAdminPriceCalculator({
           return;
         }
         
-        // Map secondary stone types to required format
-        const mappedSecondaryStones = secondaryStoneTypes.map(stone => ({
-          stoneTypeId: typeof stone.id === 'number' ? stone.id.toString() : stone.id,
-          caratWeight: secondaryStoneWeightNum / (secondaryStoneTypes.length || 1) // Distribute weight evenly
-        }));
+        // Map secondary stone types to required format with better handling
+        const mappedSecondaryStones = secondaryStoneTypes.map(stone => {
+          // Handle different possible formats of stone data
+          const stoneId = stone.id ? 
+            (typeof stone.id === 'number' ? stone.id.toString() : stone.id) : 
+            // If no id but we have name, use the name (API will try to match by name)
+            (stone.name ? stone.name : '1');
+            
+          return {
+            stoneTypeId: stoneId,
+            caratWeight: secondaryStoneWeightNum / (secondaryStoneTypes.length || 1) // Distribute weight evenly
+          };
+        });
         
         const requestData = {
           metalTypeId: metalType,

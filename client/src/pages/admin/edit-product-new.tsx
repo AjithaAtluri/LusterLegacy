@@ -313,13 +313,13 @@ export default function EditProductNew() {
       if (aiInputs.secondaryStoneTypes && Array.isArray(aiInputs.secondaryStoneTypes)) {
         console.log("Using secondaryStoneTypes from aiInputs:", aiInputs.secondaryStoneTypes);
         // Convert array of strings to array of objects with id and name
-        secondaryStoneTypes = aiInputs.secondaryStoneTypes.map((name, index) => ({
+        secondaryStoneTypes = aiInputs.secondaryStoneTypes.map((name: string, index: number) => ({
           id: index + 1, // Use index as ID for now
           name: name
         }));
       } else if (additionalData.secondaryStoneTypes && Array.isArray(additionalData.secondaryStoneTypes)) {
         console.log("Using secondaryStoneTypes from additionalData:", additionalData.secondaryStoneTypes);
-        secondaryStoneTypes = additionalData.secondaryStoneTypes.map((name, index) => ({
+        secondaryStoneTypes = additionalData.secondaryStoneTypes.map((name: string, index: number) => ({
           id: index + 1,
           name: name
         }));
@@ -331,7 +331,7 @@ export default function EditProductNew() {
       // Format the secondaryStoneTypes properly if they're not already in the right format
       if (secondaryStoneTypes.length > 0 && typeof secondaryStoneTypes[0] === 'string') {
         console.log("Converting secondaryStoneTypes from strings to objects");
-        secondaryStoneTypes = secondaryStoneTypes.map((name, index) => ({
+        secondaryStoneTypes = secondaryStoneTypes.map((name: string, index: number) => ({
           id: index + 1,
           name: name
         }));
@@ -606,6 +606,7 @@ export default function EditProductNew() {
               secondaryStoneTypes: values.secondaryStoneTypes.map(stone => stone.name),
               secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
               userDescription: values.userDescription,
+              productType: values.productType || '',
             }
           }
         }),
