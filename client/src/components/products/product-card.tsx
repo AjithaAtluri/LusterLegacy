@@ -115,7 +115,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
           onError={(e) => {
-            console.error("Image load error:", e);
+            console.error("Image load error for product:", product.id, product.name);
+            console.error("Attempted image URL:", product.imageUrl || product.image_url);
             e.currentTarget.src = "https://placehold.co/600x400/png?text=Image+Not+Available";
           }}
         />

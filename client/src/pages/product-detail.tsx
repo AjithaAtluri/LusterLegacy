@@ -98,8 +98,19 @@ export default function ProductDetail() {
 
   // Fetch product data
   const { data: product, isLoading, error } = useQuery<Product>({
-    queryKey: [`/api/products/${id}`],
+    queryKey: [`/api/products/${id}`]
   });
+  
+  // Log product data for debugging
+  useEffect(() => {
+    if (product) {
+      console.log("Product data received from API:", product);
+      console.log("Image URL from API:", product.imageUrl);
+      console.log("Image URL type:", typeof product.imageUrl);
+      // Also check for snake_case version
+      console.log("Checking image_url property:", (product as any).image_url);
+    }
+  }, [product]);
   
   // Handle navigation back to collections page
   const handleBackToCollection = () => {
