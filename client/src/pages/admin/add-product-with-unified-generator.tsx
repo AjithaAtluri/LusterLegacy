@@ -704,6 +704,39 @@ export default function AddProduct() {
                 </div>
               </div>
             )}
+            
+            {/* Price Calculator Section */}
+            <div className="mt-8 border-t pt-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <PiggyBank className="mr-2 h-5 w-5 text-primary" />
+                    Real-Time Price Calculator
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PriceCalculatorDisplay 
+                    metalType={form.watch("metalType")}
+                    metalWeight={form.watch("metalWeight")}
+                    mainStoneType={mainStoneType}
+                    mainStoneWeight={mainStoneWeight}
+                    secondaryStoneTypes={selectedStoneTypes}
+                    secondaryStoneWeight={secondaryStoneWeight}
+                  />
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    <p>This calculator shows a real-time price estimate based on current gold prices and selected materials.</p>
+                    <p className="mt-1">The calculated prices will be saved with the product but can be manually adjusted if needed.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Submit Button */}
+            <div className="mt-8 flex justify-end">
+              <Button type="submit" className="w-full sm:w-auto">
+                <Save className="mr-2 h-4 w-4" /> Save Product
+              </Button>
+            </div>
           </div>
         </Form>
       </div>
