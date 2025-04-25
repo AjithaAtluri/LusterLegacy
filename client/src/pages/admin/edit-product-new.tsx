@@ -96,30 +96,109 @@ export default function EditProductNew() {
     },
   });
 
-  // Fetch product data
+  // Define a custom query function to properly fetch product data
+  const fetchProduct = async () => {
+    try {
+      const response = await fetch(`/api/admin/products/${params.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for authentication cookies
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching product data:', error);
+      throw error;
+    }
+  };
+
+  // Fetch product data with custom query function
   const { data: productData, isLoading, error } = useQuery<any>({
     queryKey: ['/api/admin/products', params.id],
-    enabled: !!params.id
+    queryFn: fetchProduct,
+    enabled: !!params.id,
+    retry: 3,
+    refetchOnWindowFocus: false,
+    staleTime: 0 // Force fresh data
   });
 
-  // Fetch product types and stone types from API
+  // Fetch product types with custom query function
+  const fetchProductTypes = async () => {
+    try {
+      const response = await fetch('/api/product-types', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for authentication cookies
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch product types: ${response.status} ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching product types:', error);
+      throw error;
+    }
+  };
+
+  // Fetch stone types with custom query function
+  const fetchStoneTypes = async () => {
+    try {
+      const response = await fetch('/api/stone-types', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for authentication cookies
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stone types: ${response.status} ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching stone types:', error);
+      throw error;
+    }
+  };
+
+  // Use the custom query functions
   const { data: productTypes } = useQuery<ProductType[]>({
     queryKey: ['/api/product-types'],
+    queryFn: fetchProductTypes,
+    retry: 3,
+    refetchOnWindowFocus: false
   });
 
   const { data: stoneTypes } = useQuery<StoneType[]>({
     queryKey: ['/api/stone-types'],
+    queryFn: fetchStoneTypes,
+    retry: 3,
+    refetchOnWindowFocus: false
   });
 
   // Update form when product data is loaded
   useEffect(() => {
     if (productData) {
+      console.log("Product data received:", productData); // Add debug logging
+      
       // Parse the details JSON if it exists and is a string
       let details;
       try {
         details = typeof productData.details === 'string' 
           ? JSON.parse(productData.details) 
           : productData.details;
+        console.log("Parsed details:", details); // Add debug logging
       } catch (e) {
         details = {};
         console.error("Failed to parse product details:", e);
@@ -131,9 +210,10 @@ export default function EditProductNew() {
           ? productData.stoneTypes 
           : [] 
         : [];
+      console.log("Secondary stones:", secondaryStones); // Add debug logging
 
       // Set form values from product data
-      form.reset({
+      const formValues = {
         title: productData.name || "",
         tagline: details?.tagline || "",
         shortDescription: productData.description || "",
@@ -155,19 +235,29 @@ export default function EditProductNew() {
         featured: productData.featured || false,
         userDescription: details?.userDescription || "",
         inStock: productData.inStock !== false, // default to true if undefined
-      });
+      };
+      
+      console.log("Setting form values:", formValues); // Add debug logging
+      form.reset(formValues);
 
       // Set image previews
       if (productData.imageUrl) {
+        console.log("Setting main image preview:", productData.imageUrl); // Add debug logging
         setMainImagePreview(productData.imageUrl);
       }
 
       if (productData.additionalImages && Array.isArray(productData.additionalImages)) {
+        console.log("Setting additional image previews:", productData.additionalImages); // Add debug logging
         setAdditionalImagePreviews(productData.additionalImages);
       }
 
       // Move to the form step
       setStep("form");
+      
+      // Force an update after a small delay to ensure form is populated
+      setTimeout(() => {
+        form.reset(formValues);
+      }, 100);
     }
   }, [productData, form]);
 
