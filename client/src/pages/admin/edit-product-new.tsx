@@ -488,6 +488,16 @@ export default function EditProductNew() {
             productTypeId: values.productType || '',
             userDescription: values.userDescription,
             dimensions: values.dimensions,
+            // Save all AI generator inputs as a dedicated structure for easier retrieval
+            aiInputs: {
+              metalType: values.metalType,
+              metalWeight: parseFloat(values.metalWeight) || 0,
+              mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
+              mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
+              secondaryStoneTypes: values.secondaryStoneTypes.map(stone => stone.name),
+              secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
+              userDescription: values.userDescription,
+            }
           }
         }),
       };
