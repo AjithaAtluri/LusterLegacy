@@ -96,10 +96,6 @@ export default function EditProductNew() {
     },
   });
 
-  // Access location state for redirection if needed
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-
   // First fetch user data to ensure we have admin authentication
   const { data: userData } = useQuery({
     queryKey: ['/api/auth/me'],

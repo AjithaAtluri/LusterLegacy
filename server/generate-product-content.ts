@@ -204,70 +204,151 @@ Format your response as structured JSON with these fields: title, tagline, short
         // Set headers for tracking model fallback
         let usedGpt4 = true;
         
-        // Call the OpenAI API
-        try {
-          const completion = await openai.chat.completions.create({
-            model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-            messages: messages as any,
-            temperature: 0.7,
-            max_tokens: 1500,
-            response_format: { type: "json_object" }
-          });
-          
-          // Parse the response
-          const content = completion.choices[0].message.content;
-          const jsonResponse = JSON.parse(content || "{}");
-          
-          // Clean up temporary files
+        // Perform clean up of temporary files as a separate function
+        const cleanupFiles = () => {
           try {
-            fs.unlinkSync(mainImageFile.path);
-            additionalImages.forEach(img => fs.unlinkSync(img.path));
+            if (mainImageFile && fs.existsSync(mainImageFile.path)) {
+              fs.unlinkSync(mainImageFile.path);
+            }
+            additionalImages.forEach(img => {
+              if (fs.existsSync(img.path)) {
+                fs.unlinkSync(img.path);
+              }
+            });
           } catch (cleanupError) {
             console.error("Error cleaning up temporary files:", cleanupError);
           }
+        };
+
+        // Set a timeout for the API request
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error("OpenAI API request timed out after 30 seconds"));
+          }, 30000); // 30 second timeout
+        });
+
+        // Call the OpenAI API with timeout
+        try {
+          console.log("Calling OpenAI API with primary model (gpt-4o)...");
           
-          // Set header if model fallback occurred
-          if (!usedGpt4) {
-            res.setHeader('X-Model-Fallback', 'true');
+          // Use Promise.race to implement timeout
+          const completion = await Promise.race([
+            openai.chat.completions.create({
+              model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+              messages: messages as any,
+              temperature: 0.7,
+              max_tokens: 1500,
+              response_format: { type: "json_object" }
+            }),
+            timeoutPromise
+          ]) as OpenAI.Chat.Completions.ChatCompletion;
+          
+          console.log("OpenAI API response received successfully");
+          
+          // Parse the response
+          const content = completion.choices[0].message.content;
+          if (!content) {
+            throw new Error("Empty response from OpenAI API");
           }
           
+          console.log("Raw response content:", content.substring(0, 100) + "...");
+          
+          let jsonResponse;
+          try {
+            jsonResponse = JSON.parse(content);
+            console.log("JSON parsed successfully");
+          } catch (parseError) {
+            console.error("JSON parse error:", parseError);
+            // If parsing fails, make a simple object with the raw content
+            jsonResponse = { 
+              title: "Generated Product",
+              error: "Failed to parse AI response properly",
+              rawContent: content
+            };
+          }
+          
+          // Clean up temporary files
+          cleanupFiles();
+          
           // Return the generated content
+          console.log("Returning successful response to client");
           return res.status(200).json(jsonResponse);
           
         } catch (apiError) {
-          console.error("OpenAI API error:", apiError);
+          console.error("OpenAI API error with primary model:", apiError);
           
           // Try with a fallback model
           try {
+            console.log("Attempting fallback to simpler model...");
             usedGpt4 = false;
-            const fallbackCompletion = await openai.chat.completions.create({
-              model: "gpt-3.5-turbo", 
-              messages: messages as any,
-              temperature: 0.7,
-              max_tokens: 1000,
-              response_format: { type: "json_object" }
-            });
+            
+            // Use Promise.race to implement timeout for fallback
+            const fallbackCompletion = await Promise.race([
+              openai.chat.completions.create({
+                model: "gpt-3.5-turbo", 
+                messages: [
+                  {
+                    role: "system",
+                    content: "You are a jewelry product description expert. Generate compelling product descriptions for luxury jewelry."
+                  },
+                  {
+                    role: "user",
+                    content: `Generate content for a ${productTypes[0]} made of ${metalTypes[0]} with ${mainStoneType} stones. Return in JSON format with these fields: title, tagline, shortDescription, detailedDescription, priceUSD (number), priceINR (number).`
+                  }
+                ],
+                temperature: 0.7,
+                max_tokens: 800,
+                response_format: { type: "json_object" }
+              }),
+              timeoutPromise
+            ]) as OpenAI.Chat.Completions.ChatCompletion;
+            
+            console.log("Fallback model response received");
             
             // Parse the response
             const fallbackContent = fallbackCompletion.choices[0].message.content;
-            const fallbackJsonResponse = JSON.parse(fallbackContent || "{}");
+            if (!fallbackContent) {
+              throw new Error("Empty response from fallback model");
+            }
+            
+            console.log("Raw fallback content:", fallbackContent.substring(0, 100) + "...");
+            
+            let fallbackJsonResponse;
+            try {
+              fallbackJsonResponse = JSON.parse(fallbackContent);
+              console.log("Fallback JSON parsed successfully");
+            } catch (parseError) {
+              console.error("Fallback JSON parse error:", parseError);
+              // Use a simple placeholder response
+              fallbackJsonResponse = {
+                title: `${productTypes[0]} with ${mainStoneType}`,
+                tagline: "Elegantly crafted luxury jewelry piece",
+                shortDescription: "A beautiful piece of jewelry crafted with precision and care.",
+                detailedDescription: `This ${productTypes[0]} is made with premium ${metalTypes[0]} and features exquisite ${mainStoneType} stones. It embodies luxury and sophistication.`,
+                priceUSD: 1200,
+                priceINR: 102000
+              };
+            }
             
             // Clean up temporary files
-            try {
-              fs.unlinkSync(mainImageFile.path);
-              additionalImages.forEach(img => fs.unlinkSync(img.path));
-            } catch (cleanupError) {
-              console.error("Error cleaning up temporary files:", cleanupError);
-            }
+            cleanupFiles();
             
             // Set header for model fallback
             res.setHeader('X-Model-Fallback', 'true');
             
             // Return the generated content from the fallback model
+            console.log("Returning fallback response to client");
             return res.status(200).json(fallbackJsonResponse);
           } catch (fallbackError) {
             console.error("Fallback model error:", fallbackError);
-            throw new Error("Failed to generate content with both primary and fallback models");
+            // Clean up temporary files before exiting
+            cleanupFiles();
+            
+            // Return a simpler error response
+            return res.status(500).json({ 
+              success: false, 
+              message: "AI content generation failed. Please try again with simpler inputs or fewer images." 
+            });
           }
         }
         
