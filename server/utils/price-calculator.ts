@@ -1,164 +1,231 @@
 /**
- * 2025 Market-Rate Jewelry Price Calculator
- * Provides accurate pricing estimates for jewelry items based on current market rates
+ * Jewelry Price Calculator using database metal and stone values
+ * Calculates prices based on: 
+ * 1. Metal weight * 24k gold price * metal type modifier
+ * 2. Stone carats * per-carat price for each stone
+ * 3. Applies 25% overhead
  */
+
+import { storage } from "../storage";
 
 interface Gem {
   name: string;
   carats?: number;
+  stoneTypeId?: number; // Stone type ID from the database
 }
 
 interface PriceCalculationParams {
   productType: string;
   metalType: string;
+  metalTypeId?: number; // Metal type ID from the database
   metalWeight: number;
   primaryGems?: Gem[];
 }
 
-export function calculateJewelryPrice(params: PriceCalculationParams): {
+// Base price of 24k gold per gram in INR (2025 rates)
+const GOLD_24K_PRICE_PER_GRAM_INR = 7500;
+
+// USD to INR conversion rate
+const USD_TO_INR_RATE = 83;
+
+export async function calculateJewelryPrice(params: PriceCalculationParams): Promise<{
   priceUSD: number;
   priceINR: number;
-} {
-  const { productType, metalType, metalWeight, primaryGems } = params;
-
-  // Base artisanship price in USD (2025 rates)
-  const basePrice = 1200;
-  
-  // Current 2025 metal prices per gram
-  let metalPricePerGram = 30; // Default for other metals
-  
-  if (metalType.toLowerCase().includes('gold')) {
-    // Gold pricing based on karat
-    if (metalType.toLowerCase().includes('24k') || metalType.toLowerCase().includes('24 k')) {
-      metalPricePerGram = 85; // 24K gold price per gram
-    } else if (metalType.toLowerCase().includes('22k') || metalType.toLowerCase().includes('22 k')) {
-      metalPricePerGram = 78; // 22K gold price per gram
-    } else if (metalType.toLowerCase().includes('18k') || metalType.toLowerCase().includes('18 k')) {
-      metalPricePerGram = 65; // 18K gold price per gram
-    } else if (metalType.toLowerCase().includes('14k') || metalType.toLowerCase().includes('14 k')) {
-      metalPricePerGram = 52; // 14K gold price per gram
-    } else if (metalType.toLowerCase().includes('10k') || metalType.toLowerCase().includes('10 k')) {
-      metalPricePerGram = 38; // 10K gold price per gram
-    } else {
-      metalPricePerGram = 65; // Default to 18K gold if karat not specified
-    }
-  } else if (metalType.toLowerCase().includes('platinum')) {
-    metalPricePerGram = 42; // Platinum price per gram
-  } else if (metalType.toLowerCase().includes('silver')) {
-    metalPricePerGram = 1.2; // Silver price per gram
-  }
-  
-  // Calculate gemstone values with 2025 market rates
-  const gemPriceMultiplier = (primaryGems || []).reduce((acc, gem) => {
-    let multiplier = 200; // Default value for semi-precious stones
-    const gemName = gem.name.toLowerCase();
-    
-    // Diamond pricing (based on average quality)
-    if (gemName.includes('diamond')) {
-      if (gemName.includes('lab') || gemName.includes('synthetic')) {
-        multiplier = 800; // Lab-grown diamonds
-      } else {
-        multiplier = 1500; // Natural diamonds
-      }
-    }
-    // Precious gems
-    else if (gemName.includes('ruby')) multiplier = 1200;
-    else if (gemName.includes('sapphire')) multiplier = 1100;
-    else if (gemName.includes('emerald')) multiplier = 1300;
-    // Semi-precious but valuable gems
-    else if (gemName.includes('tanzanite')) multiplier = 800;
-    else if (gemName.includes('alexandrite')) multiplier = 1500;
-    else if (gemName.includes('paraiba')) multiplier = 2000;
-    else if (gemName.includes('opal')) multiplier = 500;
-    else if (gemName.includes('pearl')) {
-      if (gemName.includes('south sea') || gemName.includes('tahitian')) {
-        multiplier = 700; // Premium pearls
-      } else {
-        multiplier = 300; // Standard pearls
-      }
-    }
-    // Calculate based on carat weight or default to 0.5 carats
-    return acc + (gem.carats || 0.5) * multiplier;
-  }, 0);
-  
-  // Craftsmanship premium based on product type complexity
-  let craftsmanshipMultiplier = 1.0;
-  const productTypeLC = productType.toLowerCase();
-  
-  if (productTypeLC.includes('necklace') || productTypeLC.includes('choker')) {
-    craftsmanshipMultiplier = 1.3;
-  } else if (productTypeLC.includes('bracelet') || productTypeLC.includes('bangle')) {
-    craftsmanshipMultiplier = 1.15;
-  } else if (productTypeLC.includes('earring')) {
-    craftsmanshipMultiplier = 1.1;
-  } else if (productTypeLC.includes('ring')) {
-    craftsmanshipMultiplier = 1.0;
-  } else if (productTypeLC.includes('pendant')) {
-    craftsmanshipMultiplier = 1.05;
-  }
-  
-  const calculatedPrice = (basePrice + (metalWeight * metalPricePerGram) + gemPriceMultiplier) * craftsmanshipMultiplier;
-  const priceUSD = Math.round(calculatedPrice);
-  const priceINR = Math.round(priceUSD * 75); // Approximate exchange rate
-  
-  return {
-    priceUSD,
-    priceINR
+  breakdown?: {
+    metalCost: number;
+    stoneCost: number;
+    overhead: number;
   };
-}
-
-/**
- * Get current price per gram for different metals (2025 rates)
- */
-export function getMetalPricePerGram(metalType: string): number {
-  if (metalType.toLowerCase().includes('gold')) {
-    // Gold pricing based on karat
-    if (metalType.toLowerCase().includes('24k')) return 85;
-    if (metalType.toLowerCase().includes('22k')) return 78;
-    if (metalType.toLowerCase().includes('18k')) return 65;
-    if (metalType.toLowerCase().includes('14k')) return 52;
-    if (metalType.toLowerCase().includes('10k')) return 38;
-    return 65; // Default to 18K gold
-  } else if (metalType.toLowerCase().includes('platinum')) {
-    return 42;
-  } else if (metalType.toLowerCase().includes('silver')) {
-    return 1.2;
+}> {
+  try {
+    const { metalType, metalWeight, primaryGems = [] } = params;
+    
+    // 1. Get metal price modifier from DB or use fallback method
+    let metalPriceModifier = 0;
+    
+    // Try to get metal type from database by ID first
+    if (params.metalTypeId) {
+      const metalTypeData = await storage.getMetalTypeById(params.metalTypeId);
+      if (metalTypeData?.price_modifier) {
+        metalPriceModifier = metalTypeData.price_modifier / 100; // Convert percentage to decimal
+      }
+    }
+    
+    // Fallback: If no modifier found, estimate based on name
+    if (!metalPriceModifier) {
+      if (metalType.toLowerCase().includes('24k') || metalType.toLowerCase().includes('24 k')) {
+        metalPriceModifier = 1.0;
+      } else if (metalType.toLowerCase().includes('22k') || metalType.toLowerCase().includes('22 k')) {
+        metalPriceModifier = 0.91;
+      } else if (metalType.toLowerCase().includes('18k') || metalType.toLowerCase().includes('18 k')) {
+        metalPriceModifier = 0.75;
+      } else if (metalType.toLowerCase().includes('14k') || metalType.toLowerCase().includes('14 k')) {
+        metalPriceModifier = 0.58;
+      } else {
+        // Default to 18K if can't determine
+        metalPriceModifier = 0.75;
+      }
+    }
+    
+    // Calculate metal cost: grams * 24k price * metal modifier
+    const metalCost = metalWeight * GOLD_24K_PRICE_PER_GRAM_INR * metalPriceModifier;
+    
+    // 2. Calculate stone costs by summing each stone's carat * per-carat price
+    let stoneCost = 0;
+    
+    for (const gem of primaryGems) {
+      // Default carat weight if not provided
+      const carats = gem.carats || 0.5;
+      let perCaratPrice = 0;
+      
+      // Try to get stone price from database by ID first
+      if (gem.stoneTypeId) {
+        const stoneTypeData = await storage.getStoneTypeById(gem.stoneTypeId);
+        if (stoneTypeData?.price_modifier) {
+          perCaratPrice = stoneTypeData.price_modifier;
+        }
+      }
+      
+      // Fallback: If no price found, estimate based on name
+      if (!perCaratPrice) {
+        perCaratPrice = await getGemPricePerCaratFromName(gem.name);
+      }
+      
+      stoneCost += carats * perCaratPrice;
+    }
+    
+    // 3. Calculate total with 25% overhead
+    const baseCost = metalCost + stoneCost;
+    const overhead = baseCost * 0.25;
+    const totalPriceINR = Math.round(baseCost + overhead);
+    
+    // Convert to USD
+    const priceUSD = Math.round(totalPriceINR / USD_TO_INR_RATE);
+    
+    return {
+      priceINR: totalPriceINR,
+      priceUSD,
+      breakdown: {
+        metalCost: Math.round(metalCost),
+        stoneCost: Math.round(stoneCost),
+        overhead: Math.round(overhead)
+      }
+    };
+  } catch (error) {
+    console.error("Error calculating jewelry price:", error);
+    // Return fallback price if calculation fails
+    return {
+      priceINR: 95000,
+      priceUSD: 1200
+    };
   }
-  return 30; // Default for other metals
 }
 
 /**
- * Get the current gem price per carat (2025 rates)
+ * Estimate gem price per carat based on name when database value not available
  */
-export function getGemPricePerCarat(gemName: string): number {
-  const name = gemName.toLowerCase();
+async function getGemPricePerCaratFromName(gemName: string): Promise<number> {
+  try {
+    // Try to find in database first
+    const stoneTypes = await storage.getAllStoneTypes();
+    const matchingStone = stoneTypes.find(st => 
+      gemName.toLowerCase().includes(st.name.toLowerCase())
+    );
+    
+    if (matchingStone?.price_modifier) {
+      return matchingStone.price_modifier;
+    }
+  } catch (error) {
+    console.error("Error querying stone types:", error);
+  }
   
-  // Diamond pricing (based on average quality)
+  // Fallback based on name if database query fails
+  const name = (gemName || '').toLowerCase();
+  
+  // Diamond pricing
   if (name.includes('diamond')) {
     if (name.includes('lab') || name.includes('synthetic')) {
-      return 800; // Lab-grown diamonds
+      return 20000; // Lab-grown diamonds
     }
-    return 1500; // Natural diamonds
+    return 56000; // Natural diamonds
+  }
+  
+  // Polki
+  if (name.includes('polki')) {
+    if (name.includes('lab')) {
+      return 7000; // Lab polki
+    }
+    return 15000; // Natural polki
   }
   
   // Precious gems
-  if (name.includes('ruby')) return 1200;
-  if (name.includes('sapphire')) return 1100;
-  if (name.includes('emerald')) return 1300;
+  if (name.includes('ruby')) return 3000;
+  if (name.includes('sapphire')) return 3000;
+  if (name.includes('emerald')) return 3500;
+  if (name.includes('tanzanite')) return 1500;
   
-  // Semi-precious but valuable gems
-  if (name.includes('tanzanite')) return 800;
-  if (name.includes('alexandrite')) return 1500;
-  if (name.includes('paraiba')) return 2000;
-  if (name.includes('opal')) return 500;
+  // Semi-precious 
+  if (name.includes('amethyst') || name.includes('quartz') || name.includes('morganite')) return 1500;
   
   // Pearls
   if (name.includes('pearl')) {
-    if (name.includes('south sea') || name.includes('tahitian')) {
-      return 700; // Premium pearls
+    if (name.includes('south sea')) {
+      return 300; // South sea pearls
     }
-    return 300; // Standard pearls
+    return 100; // Standard pearls
   }
   
-  return 200; // Default for other semi-precious stones
+  // CZ and similar
+  if (name.includes('cz') || name.includes('swarovski')) return 1000;
+  
+  return 500; // Default for other stones
+}
+
+/**
+ * Sample calculation for demo purposes
+ */
+export function getSamplePriceCalculation(): string {
+  const sample = {
+    productName: "Elegant Diamond Necklace",
+    metalType: "18k Yellow Gold",
+    metalWeight: 12, // grams
+    stones: [
+      { name: "Natural Diamond", carats: 2.5 }
+    ]
+  };
+  
+  // Sample calculation
+  const metalCost = sample.metalWeight * GOLD_24K_PRICE_PER_GRAM_INR * 0.75;
+  const stoneCost = 2.5 * 56000; // Natural diamond at ₹56,000 per carat
+  const baseCost = metalCost + stoneCost;
+  const overhead = baseCost * 0.25;
+  const totalPrice = baseCost + overhead;
+  
+  return `
+Sample Price Calculation for "${sample.productName}":
+
+1. Metal Cost: 
+   ${sample.metalWeight} grams × ₹${GOLD_24K_PRICE_PER_GRAM_INR} (24K gold price) × ${0.75} (18K modifier)
+   = ₹${metalCost.toLocaleString('en-IN')}
+
+2. Stone Cost:
+   ${sample.stones[0].carats} carats × ₹${56000}/carat (Natural Diamond)
+   = ₹${stoneCost.toLocaleString('en-IN')}
+
+3. Base Cost:
+   ₹${metalCost.toLocaleString('en-IN')} + ₹${stoneCost.toLocaleString('en-IN')}
+   = ₹${baseCost.toLocaleString('en-IN')}
+
+4. Overhead (25%):
+   ₹${baseCost.toLocaleString('en-IN')} × 0.25
+   = ₹${overhead.toLocaleString('en-IN')}
+
+5. Total Price:
+   ₹${baseCost.toLocaleString('en-IN')} + ₹${overhead.toLocaleString('en-IN')}
+   = ₹${totalPrice.toLocaleString('en-IN')}
+
+6. USD Equivalent (approx.):
+   ₹${totalPrice.toLocaleString('en-IN')} ÷ ${USD_TO_INR_RATE}
+   = $${(totalPrice / USD_TO_INR_RATE).toLocaleString('en-US', {maximumFractionDigits: 0})}
+`;
 }

@@ -1036,6 +1036,10 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async getMetalTypeById(id: number): Promise<MetalType | undefined> {
+    return this.getMetalType(id);
+  }
+  
   async getAllMetalTypes(): Promise<MetalType[]> {
     try {
       return await db.select().from(metalTypes).orderBy(asc(metalTypes.name));
@@ -1088,6 +1092,10 @@ export class DatabaseStorage implements IStorage {
       console.error("Error getting stone type:", error);
       return undefined;
     }
+  }
+  
+  async getStoneTypeById(id: number): Promise<StoneType | undefined> {
+    return this.getStoneType(id);
   }
   
   async getAllStoneTypes(): Promise<StoneType[]> {
