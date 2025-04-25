@@ -74,6 +74,16 @@ interface ProductDetails {
     productTypeId?: string;
     userDescription?: string;
     dimensions?: string;
+    // Add separate section for AI inputs to ensure they persist
+    aiInputs?: {
+      metalType?: string;
+      metalWeight?: number;
+      mainStoneType?: string;
+      mainStoneWeight?: number;
+      secondaryStoneTypes?: string[];
+      secondaryStoneWeight?: number;
+      userDescription?: string;
+    };
   };
 }
 
@@ -162,18 +172,23 @@ export default function ProductDetail() {
           // Basic info
           setTagline(parsed.additionalData.tagline || "");
           setProductStones(parsed.additionalData.stoneTypes || []);
-          setProductMetalType(parsed.additionalData.metalType || "");
-          setProductMetalWeight(parsed.additionalData.metalWeight || 0);
+          
+          // Use AI inputs if available, otherwise fallback to direct properties
+          const aiInputs = parsed.additionalData.aiInputs || {};
+          
+          // Metal information
+          setProductMetalType(aiInputs.metalType || parsed.additionalData.metalType || "");
+          setProductMetalWeight(aiInputs.metalWeight || parsed.additionalData.metalWeight || 0);
           
           // Stone details
-          setMainStoneType(parsed.additionalData.mainStoneType || "");
-          setMainStoneWeight(parsed.additionalData.mainStoneWeight || 0);
-          setSecondaryStoneTypes(parsed.additionalData.secondaryStoneTypes || []);
-          setSecondaryStoneWeight(parsed.additionalData.secondaryStoneWeight || 0);
+          setMainStoneType(aiInputs.mainStoneType || parsed.additionalData.mainStoneType || "");
+          setMainStoneWeight(aiInputs.mainStoneWeight || parsed.additionalData.mainStoneWeight || 0);
+          setSecondaryStoneTypes(aiInputs.secondaryStoneTypes || parsed.additionalData.secondaryStoneTypes || []);
+          setSecondaryStoneWeight(aiInputs.secondaryStoneWeight || parsed.additionalData.secondaryStoneWeight || 0);
           
           // Other details
           setDimensions(parsed.additionalData.dimensions || "");
-          setUserDescription(parsed.additionalData.userDescription || "");
+          setUserDescription(aiInputs.userDescription || parsed.additionalData.userDescription || "");
         }
         
         if (parsed.detailedDescription) {
