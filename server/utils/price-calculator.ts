@@ -46,8 +46,8 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     // Try to get metal type from database by ID first
     if (params.metalTypeId) {
       const metalTypeData = await storage.getMetalTypeById(params.metalTypeId);
-      if (metalTypeData?.price_modifier) {
-        metalPriceModifier = metalTypeData.price_modifier / 100; // Convert percentage to decimal
+      if (metalTypeData?.priceModifier) {
+        metalPriceModifier = metalTypeData.priceModifier / 100; // Convert percentage to decimal
       }
     }
     
@@ -81,8 +81,8 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       // Try to get stone price from database by ID first
       if (gem.stoneTypeId) {
         const stoneTypeData = await storage.getStoneTypeById(gem.stoneTypeId);
-        if (stoneTypeData?.price_modifier) {
-          perCaratPrice = stoneTypeData.price_modifier;
+        if (stoneTypeData?.priceModifier) {
+          perCaratPrice = stoneTypeData.priceModifier;
         }
       }
       
@@ -132,8 +132,8 @@ async function getGemPricePerCaratFromName(gemName: string): Promise<number> {
       gemName.toLowerCase().includes(st.name.toLowerCase())
     );
     
-    if (matchingStone?.price_modifier) {
-      return matchingStone.price_modifier;
+    if (matchingStone?.priceModifier) {
+      return matchingStone.priceModifier;
     }
   } catch (error) {
     console.error("Error querying stone types:", error);
