@@ -28,11 +28,17 @@ import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
 
-// Set up multer for file uploads - using /uploads at root to persist between deployments
-// This directory will be stored in Replit's persistent storage
+// Set up multer for file uploads - using both /uploads and /attached_assets for persistence
+// attached_assets is part of source control and will persist between deployments
 const uploadDir = path.join(process.cwd(), 'uploads');
+const attachedAssetsDir = path.join(process.cwd(), 'attached_assets');
+
+// Ensure both directories exist
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+if (!fs.existsSync(attachedAssetsDir)) {
+  fs.mkdirSync(attachedAssetsDir, { recursive: true });
 }
 
 // Create a symbolic link from 'public/uploads' to 'uploads' if it doesn't exist
@@ -47,7 +53,31 @@ const storage_disk = multer.diskStorage({
   },
   filename: (_req, file, cb) => {
     const uniqueFilename = uuidv4() + path.extname(file.originalname);
-    cb(null, uniqueFilename);
+    
+    // Also save to attached_assets for persistence
+    const fileCallback = (err, filename) => {
+      if (!err && filename) {
+        // Copy to attached_assets
+        const sourcePath = path.join(uploadDir, filename);
+        const destPath = path.join(attachedAssetsDir, filename);
+        
+        // Use setTimeout to ensure the file is written before copying
+        setTimeout(() => {
+          try {
+            if (fs.existsSync(sourcePath)) {
+              fs.copyFileSync(sourcePath, destPath);
+              console.log(`File saved to both uploads and attached_assets: ${filename}`);
+            }
+          } catch (copyError) {
+            console.error(`Error copying file to attached_assets: ${copyError}`);
+          }
+        }, 100);
+      }
+      
+      cb(err, filename);
+    };
+    
+    fileCallback(null, uniqueFilename);
   }
 });
 
