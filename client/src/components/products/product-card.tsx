@@ -193,19 +193,33 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
         
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="font-montserrat text-sm text-foreground/70">Starting from</p>
-            <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
-              {formatCurrency(currentPrice)}
-            </p>
+        <div className="mb-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="font-montserrat text-sm text-foreground/70">Starting from</p>
+              <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
+                {formatCurrency(currentPrice)}
+              </p>
+            </div>
           </div>
+        </div>
+            
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button 
             asChild
             className="font-montserrat bg-foreground hover:bg-primary text-background px-4 py-2 rounded transition duration-300"
           >
             <Link href={`/product/${product.id}?metal=${metalTypeId}&stone=${stoneTypeId}`}>
               Customize
+            </Link>
+          </Button>
+          <Button 
+            asChild
+            variant="outline" 
+            className="font-montserrat"
+          >
+            <Link href={`/product-detail/${product.id}`}>
+              More Details
             </Link>
           </Button>
         </div>

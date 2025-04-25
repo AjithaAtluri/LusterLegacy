@@ -13,6 +13,7 @@ const CustomDesign = lazy(() => import("@/pages/custom-design"));
 const About = lazy(() => import("@/pages/about"));
 const Contact = lazy(() => import("@/pages/contact"));
 const Product = lazy(() => import("@/pages/product"));
+const ProductDetail = lazy(() => import("@/pages/product-detail"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 
@@ -64,6 +65,7 @@ function App() {
             <Route path="/about" component={About} />
             <Route path="/contact" component={Contact} />
             <Route path="/product/:id" component={Product} />
+            <Route path="/product-detail/:id" component={ProductDetail} />
             <Route path="/checkout" component={Checkout} />
             <Route path="/inspiration" component={InspirationGallery} />
             
