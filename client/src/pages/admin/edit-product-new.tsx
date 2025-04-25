@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import UnifiedAIGenerator from "@/components/admin/unified-ai-generator";
+import EditProductAIGenerator from "@/components/admin/edit-product-ai-generator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
@@ -392,20 +392,18 @@ export default function EditProductNew() {
             </div>
           </div>
 
-          <UnifiedAIGenerator
-            initialFormValues={{
-              productType: form.watch("productType"),
-              metalType: form.watch("metalType"),
-              metalWeight: form.watch("metalWeight"),
-              mainStoneType: form.watch("mainStoneType"),
-              mainStoneWeight: form.watch("mainStoneWeight"),
-              secondaryStoneTypes: form.watch("secondaryStoneTypes"),
-              secondaryStoneWeight: form.watch("secondaryStoneWeight"),
-              userDescription: form.watch("userDescription")
-            }}
+          <EditProductAIGenerator
+            productType={form.watch("productType")}
+            metalType={form.watch("metalType")}
+            metalWeight={form.watch("metalWeight")}
+            mainStoneType={form.watch("mainStoneType")}
+            mainStoneWeight={form.watch("mainStoneWeight")}
+            secondaryStoneTypes={form.watch("secondaryStoneTypes")}
+            secondaryStoneWeight={form.watch("secondaryStoneWeight")}
+            userDescription={form.watch("userDescription")}
+            mainImageUrl={mainImagePreview}
+            additionalImageUrls={additionalImagePreviews}
             onContentGenerated={handleContentGenerated}
-            initialMainImageUrl={mainImagePreview}
-            initialAdditionalImageUrls={additionalImagePreviews}
             onMainImageChange={(file, preview) => {
               setMainImageFile(file);
               setMainImagePreview(preview);
