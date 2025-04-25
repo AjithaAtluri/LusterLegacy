@@ -174,9 +174,14 @@ const EditProductAIGenerator = ({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Product Details</CardTitle>
+          <CardTitle>Product Details for Regeneration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-md mb-3 border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              The AI will use these details from your product to regenerate content. Any changes made here will be reflected in the new content.
+            </p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h3 className="font-medium mb-2">Product Type</h3>
@@ -317,7 +322,7 @@ const EditProductAIGenerator = ({
           className="min-w-[180px]"
         >
           {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isGenerating ? "Generating..." : "Generate Content"}
+          {isGenerating ? "Regenerating..." : "Regenerate Content"}
         </Button>
       </div>
       

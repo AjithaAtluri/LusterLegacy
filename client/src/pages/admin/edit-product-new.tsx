@@ -405,8 +405,18 @@ export default function EditProductNew() {
     });
   };
 
-  // Function to go back to AI generator
+  // Function to go to AI generator with current form values
   const goToAIGenerator = () => {
+    // Prepare the form with the current values before going to AI generator
+    // This ensures all the latest values are available to the AI generator
+    
+    // Show toast notification to inform the user
+    toast({
+      title: "AI Content Generator",
+      description: "Use the AI to regenerate product content based on your current specifications."
+    });
+    
+    // Switch to AI generator step
     setStep("ai-generator");
   };
 
