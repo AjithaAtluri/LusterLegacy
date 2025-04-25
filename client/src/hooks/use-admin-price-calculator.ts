@@ -87,7 +87,7 @@ export function useAdminPriceCalculator({
         
         // Map secondary stone types to required format
         const mappedSecondaryStones = secondaryStoneTypes.map(stone => ({
-          stoneTypeId: stone.id.toString(),
+          stoneTypeId: typeof stone.id === 'number' ? stone.id.toString() : stone.id,
           caratWeight: secondaryStoneWeightNum / (secondaryStoneTypes.length || 1) // Distribute weight evenly
         }));
         

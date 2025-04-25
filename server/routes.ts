@@ -1392,7 +1392,7 @@ Respond in JSON format:
           ? Math.round(result.breakdown.stoneCost * 
             (primaryGems.length > 0 ? 0.7 : 0))
           : 0,
-        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones.length > 0
+        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones && secondaryStones.length > 0
           ? Math.round(result.breakdown.stoneCost * 
             (primaryGems.length > 1 ? 0.3 : 0))
           : 0,
