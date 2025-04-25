@@ -6,57 +6,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, ShoppingBag, Heart, Award, Info, Package, Sun, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getImageUrl } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import GemSparkle from "@/components/ui/gem-sparkle";
-
-// Helper function to handle image URLs
-function getImageUrl(url: string | undefined): string {
-  console.log("getImageUrl input:", url, "type:", typeof url);
-  
-  if (!url) {
-    console.log("No image URL provided, returning placeholder");
-    return "https://placehold.co/600x400/png?text=No+Image";
-  }
-  
-  // If it's an absolute URL (starts with http/https or //)
-  if (url.match(/^(https?:)?\/\//)) {
-    console.log("URL is already absolute, returning as is:", url);
-    return url;
-  }
-  
-  // If it's a relative URL starting with /
-  if (url.startsWith('/')) {
-    // Check for uploads directory specifically
-    if (url.includes('uploads')) {
-      console.log("URL contains 'uploads', ensuring proper path");
-      // Ensure standard format: /uploads/filename.ext
-      const uploadPath = url.replace(/\/+uploads\/+/g, '/uploads/');
-      console.log("Normalized upload path:", uploadPath);
-      return uploadPath;
-    }
-    
-    // Fix double slashes if any
-    const cleanUrl = url.replace(/\/+/g, '/');
-    console.log("URL starts with /, normalized to:", cleanUrl);
-    return cleanUrl;
-  }
-  
-  // If it includes 'uploads' but doesn't have leading slash
-  if (url.includes('uploads')) {
-    const uploadPath = `/uploads/${url.split('uploads/').pop()}`;
-    console.log("Extracted uploads path without leading slash:", uploadPath);
-    return uploadPath;
-  }
-  
-  // Otherwise, assume it's a relative URL without leading /
-  const prefixedUrl = `/${url}`;
-  console.log("Added / prefix to URL:", prefixedUrl);
-  return prefixedUrl;
-}
 
 // Extended product details interface
 interface ProductDetails {

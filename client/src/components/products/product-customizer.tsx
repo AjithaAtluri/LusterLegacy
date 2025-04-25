@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { METAL_TYPES, STONE_TYPES } from "@/lib/constants";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getImageUrl } from "@/lib/utils";
 import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -52,7 +52,7 @@ export default function ProductCustomizer({
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(product.imageUrl);
+  const [selectedImage, setSelectedImage] = useState(getImageUrl(product.imageUrl));
   const [parsedDetails, setParsedDetails] = useState<ProductDetails | null>(null);
   const [tagline, setTagline] = useState<string>("");
   const [detailedDescription, setDetailedDescription] = useState<string>("");
@@ -154,11 +154,11 @@ export default function ProductCustomizer({
   };
   
   const changeImage = (image: string) => {
-    setSelectedImage(image);
+    setSelectedImage(getImageUrl(image));
   };
   
   // Compile all images
-  const allImages = [product.imageUrl, ...(product.additionalImages || [])];
+  const allImages = [product.imageUrl, ...(product.additionalImages || [])].filter(Boolean);
   
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -184,7 +184,7 @@ export default function ProductCustomizer({
                 onClick={() => changeImage(image)}
               >
                 <img 
-                  src={image} 
+                  src={getImageUrl(image)} 
                   alt={`${product.name} view ${index + 1}`} 
                   className="w-full h-auto object-cover"
                 />
