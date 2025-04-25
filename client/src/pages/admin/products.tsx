@@ -30,10 +30,10 @@ export default function AdminProducts() {
   const params = new URLSearchParams(window.location.search);
   const action = params.get('action');
   
-  // If action=new, redirect to add-product page
+  // If action=new, redirect to add-product-with-unified-generator page
   useState(() => {
     if (action === 'new') {
-      setLocation("/admin/add-product");
+      setLocation("/admin/add-product-with-unified-generator");
     }
   });
   
@@ -56,8 +56,8 @@ export default function AdminProducts() {
   
   // Handle create product
   const handleCreateProduct = () => {
-    // Instead of opening the modal, navigate to the new add product page
-    setLocation("/admin/add-product");
+    // Navigate to the new add product page with unified AI generator
+    setLocation("/admin/add-product-with-unified-generator");
   };
   
   // Handle edit product

@@ -34,8 +34,7 @@ const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/products"));
 // Product pages
 const AdminAddProduct = lazy(() => import("@/pages/admin/add-product-simple"));
-// Other product page versions
-const AdminAddProductOriginal = lazy(() => import("@/pages/admin/add-product"));
+// Unified product page with AI generator
 const AdminAddProductUnified = lazy(() => import("@/pages/admin/add-product-with-unified-generator"));
 const AdminEditProduct = lazy(() => import("@/pages/admin/edit-product"));
 const AdminEditProductNew = lazy(() => import("@/pages/admin/edit-product-new"));
