@@ -4,10 +4,10 @@ import fs from "fs";
 import path from "path";
 import OpenAI from "openai";
 
-// Set up multer for file uploads
+// Set up multer for file uploads - using public/uploads for persistence between deployments
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), "uploads", "temp");
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "temp");
     
     // Create directory if it doesn't exist
     if (!fs.existsSync(uploadDir)) {

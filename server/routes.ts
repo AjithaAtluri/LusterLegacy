@@ -28,8 +28,8 @@ import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
 
-// Set up multer for file uploads
-const uploadDir = path.join(process.cwd(), 'uploads');
+// Set up multer for file uploads - using public/uploads to persist between deployments
+const uploadDir = path.join(process.cwd(), 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -61,8 +61,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
-  // Serve static files from uploads directory
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  // Serve static files from public/uploads directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
   
   /**
    * Session management - basic approach using session IDs in cookies
