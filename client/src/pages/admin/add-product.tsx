@@ -162,9 +162,12 @@ export default function AddProductPage() {
     }
   });
   
-  // Load AI generated content from localStorage
+  // Load AI generated content and input values from localStorage
   useEffect(() => {
     const savedContentJson = localStorage.getItem('aiGeneratedContent');
+    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
+
+    // Load AI generated content
     if (savedContentJson) {
       try {
         const parsedContent: AIGeneratedContent = JSON.parse(savedContentJson);
@@ -198,7 +201,54 @@ export default function AddProductPage() {
           });
         }
       } catch (error) {
-        console.error('Error parsing saved content:', error);
+        console.error('Error parsing saved content from localStorage:', error);
+      }
+    }
+    
+    // Load saved input values
+    if (savedInputsJson) {
+      try {
+        const parsedInputs = JSON.parse(savedInputsJson);
+        
+        // Set product types
+        if (parsedInputs.productTypes && Array.isArray(parsedInputs.productTypes)) {
+          // If there's only one product type, use it as the main type
+          if (parsedInputs.productTypes.length > 0) {
+            form.setValue('productType', parsedInputs.productTypes[0]);
+          }
+        }
+        
+        // Set metal types
+        if (parsedInputs.metalTypes && Array.isArray(parsedInputs.metalTypes)) {
+          // If there's only one metal type, use it as the main type
+          if (parsedInputs.metalTypes.length > 0) {
+            form.setValue('metalType', parsedInputs.metalTypes[0]);
+          }
+        }
+        
+        // Set metal weight
+        if (parsedInputs.metalWeight) {
+          form.setValue('metalWeight', parsedInputs.metalWeight);
+        }
+        
+        // Set stone information
+        if (parsedInputs.mainStoneType) {
+          form.setValue('mainStoneType', parsedInputs.mainStoneType);
+        }
+        
+        if (parsedInputs.mainStoneWeight) {
+          form.setValue('mainStoneWeight', parsedInputs.mainStoneWeight);
+        }
+        
+        if (parsedInputs.secondaryStoneType) {
+          form.setValue('secondaryStoneType', parsedInputs.secondaryStoneType);
+        }
+        
+        if (parsedInputs.secondaryStoneWeight) {
+          form.setValue('secondaryStoneWeight', parsedInputs.secondaryStoneWeight);
+        }
+      } catch (error) {
+        console.error('Error parsing saved inputs from localStorage:', error);
       }
     }
   }, [form]);
