@@ -38,6 +38,7 @@ const AdminAddProduct = lazy(() => import("@/pages/admin/add-product-simple"));
 const AdminAddProductOriginal = lazy(() => import("@/pages/admin/add-product"));
 const AdminAddProductUnified = lazy(() => import("@/pages/admin/add-product-with-unified-generator"));
 const AdminEditProduct = lazy(() => import("@/pages/admin/edit-product"));
+const AdminEditProductNew = lazy(() => import("@/pages/admin/edit-product-new"));
 const AdminMetalTypes = lazy(() => import("@/pages/admin/metal-types"));
 const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminProductTypes = lazy(() => import("@/pages/admin/product-types"));
@@ -87,7 +88,7 @@ function App() {
             <Route path="/admin/products" component={AdminProducts} />
             <Route path="/admin/add-product" component={AdminAddProduct} />
             <Route path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} />
-            <Route path="/admin/edit-product/:id" component={AdminEditProduct} />
+            <Route path="/admin/edit-product/:id" component={AdminEditProductNew} />
             <Route path="/admin/metal-types" component={AdminMetalTypes} />
             <Route path="/admin/stone-types" component={AdminStoneTypes} />
             <Route path="/admin/product-types" component={AdminProductTypes} />
