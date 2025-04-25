@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import backgroundImage from "../../assets/muhammad-mousavi-X5BY2gmj4nc-unsplash.jpg";
+import backgroundImage from "../../assets/zhang-liven-MbImicTZK54-unsplash.jpg";
 
 export default function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
@@ -20,12 +20,12 @@ export default function HeroSection() {
       <div className="absolute inset-0 z-0">
         <img 
           src={backgroundImage} 
-          alt="Premium luxury yellow diamond and white diamond jewelry set" 
-          className="w-full h-full object-cover brightness-105 contrast-105 saturate-110"
+          alt="Elegant yellow diamond earrings on black stone" 
+          className="w-full h-full object-cover brightness-110 contrast-110 saturate-120"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
         />
         {/* Semi-transparent gradient overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-charcoal/85 via-charcoal/65 to-charcoal/50"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-charcoal/70 via-charcoal/55 to-charcoal/30"></div>
       </div>
       
       {/* Subtle gold accents */}
