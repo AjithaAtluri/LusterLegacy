@@ -522,17 +522,17 @@ export default function ProductDetail() {
                         )}
                         
                         {/* Dimensions */}
-                        {product.dimensions && (
+                        {dimensions && (
                           <div className="bg-background border border-border rounded-md p-4">
                             <div className="flex items-center justify-between">
                               <span className="font-montserrat font-semibold text-sm text-foreground/80">Dimensions</span>
                             </div>
-                            <div className="font-cormorant text-xl mt-1">{product.dimensions}</div>
+                            <div className="font-cormorant text-xl mt-1">{dimensions}</div>
                           </div>
                         )}
                       </div>
-                      {/* Main Stone Information */}
-                      {/* Stone Information Section - Restructured for better display */}
+                      
+                      {/* Stone Information Section */}
                       <div className="mt-6">
                         <h3 className="font-playfair text-lg font-semibold mb-4">Stone Details</h3>
                         <div className="space-y-4">
