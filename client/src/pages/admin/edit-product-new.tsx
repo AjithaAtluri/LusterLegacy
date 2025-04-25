@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useLocation, useParams } from "wouter";
+import { useParams } from "wouter";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -59,7 +59,6 @@ interface FormValues {
 
 export default function EditProductNew() {
   const params = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [step, setStep] = useState<"loading" | "ai-generator" | "form">("loading");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,11 +106,11 @@ export default function EditProductNew() {
     if (!params.id) {
       throw new Error("No product ID provided");
     }
-    
+
     try {
       console.log(`Fetching product data for ID: ${params.id}`);
       console.log(`Current authenticated user:`, userData);
-      
+
       // Make sure cookies are included for authentication
       const response = await fetch(`/api/admin/products/${params.id}`, {
         method: 'GET',
@@ -123,13 +122,13 @@ export default function EditProductNew() {
         },
         credentials: 'include', // Important for authentication cookies
       });
-      
+
       console.log(`Product fetch response status: ${response.status}`);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Server error response: ${errorText}`);
-        
+
         // If authentication error, redirect to login
         if (response.status === 401) {
           toast({
@@ -140,10 +139,10 @@ export default function EditProductNew() {
           setLocation('/admin');
           throw new Error('Authentication required');
         }
-        
+
         throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log(`Product data retrieved successfully:`, data);
       return data;
@@ -173,11 +172,11 @@ export default function EditProductNew() {
         },
         credentials: 'include', // Important for authentication cookies
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch product types: ${response.status} ${response.statusText}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching product types:', error);
@@ -195,11 +194,11 @@ export default function EditProductNew() {
         },
         credentials: 'include', // Important for authentication cookies
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch stone types: ${response.status} ${response.statusText}`);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Error fetching stone types:', error);
@@ -226,7 +225,7 @@ export default function EditProductNew() {
   useEffect(() => {
     if (productData) {
       console.log("Product data received:", productData); // Add debug logging
-      
+
       // Parse the details JSON if it exists and is a string
       let details;
       try {
@@ -271,7 +270,7 @@ export default function EditProductNew() {
         userDescription: details?.userDescription || "",
         inStock: productData.inStock !== false, // default to true if undefined
       };
-      
+
       console.log("Setting form values:", formValues); // Add debug logging
       form.reset(formValues);
 
@@ -288,7 +287,7 @@ export default function EditProductNew() {
 
       // Move to the form step
       setStep("form");
-      
+
       // Force an update after a small delay to ensure form is populated
       setTimeout(() => {
         form.reset(formValues);
@@ -299,7 +298,7 @@ export default function EditProductNew() {
   // Handler for content generation from AI
   const handleContentGenerated = (content: AIGeneratedContent) => {
     setGeneratedContent(content);
-    
+
     // Update form with generated content
     form.setValue("title", content.title);
     form.setValue("tagline", content.tagline);
@@ -307,9 +306,9 @@ export default function EditProductNew() {
     form.setValue("detailedDescription", content.detailedDescription);
     form.setValue("priceUSD", content.priceUSD);
     form.setValue("priceINR", content.priceINR);
-    
+
     setStep("form");
-    
+
     // Show success notification
     toast({
       title: "Content Generated",
@@ -340,7 +339,7 @@ export default function EditProductNew() {
     // Limit to 3 additional images
     const files = acceptedFiles.slice(0, 3);
     setAdditionalImageFiles((prev) => [...prev, ...files].slice(0, 3));
-    
+
     const previews = files.map(file => URL.createObjectURL(file));
     setAdditionalImagePreviews((prev) => [...prev, ...previews].slice(0, 3));
   }, []);
@@ -377,12 +376,12 @@ export default function EditProductNew() {
         formData,
         true  // isFormData flag
       );
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update product");
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {
@@ -408,19 +407,19 @@ export default function EditProductNew() {
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
-      
+
       const formData = new FormData();
-      
+
       // Add main image if there's a new file
       if (mainImageFile) {
         formData.append('mainImage', mainImageFile);
       }
-      
+
       // Add additional images if there are new files
       additionalImageFiles.forEach((file, index) => {
         formData.append(`additionalImage${index + 1}`, file);
       });
-      
+
       // Prepare product data
       const productData = {
         name: values.title,
@@ -443,25 +442,25 @@ export default function EditProductNew() {
           userDescription: values.userDescription,
         }),
       };
-      
+
       // Add product data to form
       formData.append('data', JSON.stringify(productData));
-      
+
       // Add existing image URLs for preservation
       if (mainImagePreview && !mainImageFile) {
         formData.append('existingMainImage', mainImagePreview);
       }
-      
+
       additionalImagePreviews.forEach((url, index) => {
         // Only include URLs for images that weren't replaced with new files
         if (index >= additionalImageFiles.length) {
           formData.append(`existingAdditionalImage${index + 1}`, url);
         }
       });
-      
+
       // Submit the form
       await updateProductMutation.mutateAsync(formData);
-      
+
     } catch (error) {
       console.error("Form submission error:", error);
       toast({
