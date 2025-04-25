@@ -39,7 +39,7 @@ import {
   productTypes
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, SQL } from "drizzle-orm";
+import { eq, desc, asc, and, SQL, sql } from "drizzle-orm";
 
 // Storage interface definition
 export interface IStorage {
@@ -1121,8 +1121,34 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
-  async getStoneTypeById(id: number): Promise<StoneType | undefined> {
-    return this.getStoneType(id);
+  async getStoneTypeByName(name: string): Promise<StoneType | undefined> {
+    try {
+      // Convert string like "natural-polki" to "Natural Polki" format for searching
+      const formattedName = name
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      const [stoneType] = await db
+        .select()
+        .from(stoneTypes)
+        .where(sql`LOWER(${stoneTypes.name}) LIKE LOWER(${`%${formattedName}%`})`);
+      
+      return stoneType;
+    } catch (error) {
+      console.error("Error getting stone type by name:", error);
+      return undefined;
+    }
+  }
+  
+  async getStoneTypeById(id: number | string): Promise<StoneType | undefined> {
+    // If id is a number, use getStoneType
+    if (typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id))) {
+      return this.getStoneType(typeof id === 'string' ? parseInt(id) : id);
+    }
+    
+    // Otherwise, try to look up by name
+    return this.getStoneTypeByName(id as string);
   }
   
   async getAllStoneTypes(): Promise<StoneType[]> {

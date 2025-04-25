@@ -1377,7 +1377,7 @@ Respond in JSON format:
           ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * 
             (primaryGems.length > 0 ? 0.7 : 0)) // Approximate primary stone as 70% of total stone cost
           : 0,
-        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones.length > 0
+        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones && secondaryStones.length > 0
           ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * 
             (primaryGems.length > 1 ? 0.3 : 0)) // Approximate secondary stones as 30% of total stone cost
           : 0,
