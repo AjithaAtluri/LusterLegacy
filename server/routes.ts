@@ -18,9 +18,9 @@ import {
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
+import { calculateJewelryPrice, getSamplePriceCalculation } from "./utils/price-calculator";
 import fs from "fs";
 import { validateAdmin } from "./utils";
-import { calculateJewelryPrice } from "./utils/price-calculator";
 import { v4 as uuidv4 } from "uuid";
 import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal";
 import { generateContent } from "./ai-service";
@@ -1243,7 +1243,7 @@ Respond in JSON format:
       console.log("Price calculator endpoint called");
       
       // Check if we have the required fields before proceeding
-      const { productType, metalType, metalWeight = 5, primaryGems = [] } = req.body;
+      const { productType, metalType, metalTypeId, metalWeight = 5, primaryGems = [] } = req.body;
       
       if (!productType || !metalType) {
         return res.status(400).json({
@@ -1252,18 +1252,20 @@ Respond in JSON format:
         });
       }
       
-      // Use the centralized price calculator utility
-      const { priceUSD, priceINR } = calculateJewelryPrice({
+      // Use the centralized price calculator utility with database pricing
+      const result = await calculateJewelryPrice({
         productType,
         metalType,
+        metalTypeId,
         metalWeight,
         primaryGems
       });
       
       return res.status(200).json({
         success: true,
-        priceUSD,
-        priceINR,
+        priceUSD: result.priceUSD,
+        priceINR: result.priceINR,
+        breakdown: result.breakdown,
         productType,
         metalType,
         metalWeight,
@@ -1274,6 +1276,24 @@ Respond in JSON format:
       res.status(500).json({
         success: false,
         message: error instanceof Error ? error.message : "Unknown error in price calculation"
+      });
+    }
+  });
+  
+  // Get a sample price calculation
+  app.get("/api/sample-price-calculation", (req, res) => {
+    try {
+      const sampleCalculation = getSamplePriceCalculation();
+      res.json({
+        success: true,
+        sampleCalculation
+      });
+    } catch (error) {
+      console.error('Error generating sample price calculation:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error generating sample price calculation',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
