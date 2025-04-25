@@ -1732,6 +1732,17 @@ Respond in JSON format:
     }
   });
 
+  // Get all stone types
+  app.get('/api/admin/stone-types', async (req, res) => {
+    try {
+      const stoneTypes = await storage.getAllStoneTypes();
+      return res.status(200).json(stoneTypes);
+    } catch (error) {
+      console.error('Error fetching stone types:', error);
+      return res.status(500).json({ message: 'Failed to fetch stone types' });
+    }
+  });
+
   // Get stone type by ID
   app.get('/api/admin/stone-types/:id', async (req, res) => {
     try {

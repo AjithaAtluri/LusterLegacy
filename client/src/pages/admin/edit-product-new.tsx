@@ -188,7 +188,7 @@ export default function EditProductNew() {
   // Fetch stone types with custom query function
   const fetchStoneTypes = async () => {
     try {
-      const response = await fetch('/api/stone-types', {
+      const response = await fetch('/api/admin/stone-types', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ export default function EditProductNew() {
   });
 
   const { data: stoneTypes } = useQuery<StoneType[]>({
-    queryKey: ['/api/stone-types'],
+    queryKey: ['/api/admin/stone-types'],
     queryFn: fetchStoneTypes,
     retry: 3,
     refetchOnWindowFocus: false
