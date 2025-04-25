@@ -14,7 +14,7 @@ function getImageUrl(url: string | undefined): string {
   
   if (!url) {
     console.log("ProductCard - No image URL provided, returning placeholder");
-    return "https://placehold.co/600x400/png?text=No+Image";
+    return "/api/image-fallback/placeholder";
   }
   
   // If it's an absolute URL (starts with http/https or //)
@@ -31,13 +31,17 @@ function getImageUrl(url: string | undefined): string {
     filename = url;
   }
   
+  // If filename is empty, return fallback
+  if (!filename) {
+    console.log("ProductCard - Could not extract filename, using fallback");
+    return "/api/image-fallback/placeholder";
+  }
+  
   // If it's a /uploads/ URL
   if (url.includes('uploads')) {
     console.log("ProductCard - URL contains 'uploads', ensuring proper path");
-    // Ensure standard format: /uploads/filename.ext
-    const uploadPath = `/uploads/${filename}`;
-    console.log("ProductCard - Normalized upload path:", uploadPath);
-    return uploadPath;
+    // Try the original URL first, but have fallback ready (handled by onError)
+    return url;
   }
   
   // If it's a relative URL starting with /

@@ -110,20 +110,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Special fallback route for handling image requests that can't be found
   app.use('/api/image-fallback/:filename', (req, res) => {
     const filename = req.params.filename;
+    console.log(`Fallback image request for: ${filename}`);
     
     // Check if file exists in uploads directory
     const uploadsPath = path.join(process.cwd(), 'uploads', filename);
     if (fs.existsSync(uploadsPath)) {
+      console.log(`Found in uploads directory: ${uploadsPath}`);
       return res.sendFile(uploadsPath);
     }
     
     // Check if file exists in attached_assets directory
     const assetsPath = path.join(process.cwd(), 'attached_assets', filename);
     if (fs.existsSync(assetsPath)) {
+      console.log(`Found in attached_assets directory: ${assetsPath}`);
       return res.sendFile(assetsPath);
     }
     
+    // Check for any jpeg files in attached_assets that might be suitable
+    try {
+      // Find sample jewelry images that we can use as fallbacks
+      const defaultImages = fs.readdirSync(path.join(process.cwd(), 'attached_assets'))
+        .filter(file => file.endsWith('.jpeg') || file.endsWith('.jpg'));
+      
+      if (defaultImages.length > 0) {
+        // Return a random image from our available set
+        const randomIndex = Math.floor(Math.random() * defaultImages.length);
+        const fallbackImagePath = path.join(process.cwd(), 'attached_assets', defaultImages[randomIndex]);
+        console.log(`Using fallback image: ${fallbackImagePath}`);
+        return res.sendFile(fallbackImagePath);
+      }
+    } catch (err) {
+      console.error("Error finding fallback images:", err);
+    }
+    
     // If no file is found, send a placeholder image or a 404
+    console.log("No suitable fallback found, returning 404");
     res.status(404).json({ error: 'Image not found' });
   });
   
