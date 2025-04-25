@@ -215,7 +215,7 @@ export default function AddProduct() {
       });
       
       // Add stone types as a JSON string
-      formData.append('stoneTypes', JSON.stringify(selectedStoneTypes));
+      formData.append('selectedStones', JSON.stringify(selectedStoneTypes));
       
       // Add main image if available
       if (mainImageFile) {
@@ -224,8 +224,10 @@ export default function AddProduct() {
       
       // Add additional images if available
       if (additionalImageFiles.length > 0) {
-        additionalImageFiles.forEach((file) => {
-          formData.append('additionalImages', file);
+        additionalImageFiles.forEach((file, index) => {
+          if (index < 3) { // Only add up to 3 additional images
+            formData.append(`additionalImage${index + 1}`, file);
+          }
         });
       }
       
@@ -233,6 +235,7 @@ export default function AddProduct() {
       const response = await fetch('/api/admin/products', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Add credentials to include cookies
         // Don't set Content-Type, browser will set it with the correct boundary for FormData
       });
       
