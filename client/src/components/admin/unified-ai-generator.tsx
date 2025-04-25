@@ -73,7 +73,8 @@ export default function UnifiedAIGenerator({
   getAdditionalImagesRootProps,
   getAdditionalImagesInputProps,
   removeAdditionalImage,
-  isEditMode = false
+  isEditMode = false,
+  hideInputSection = false
 }: UnifiedAIGeneratorProps) {
   // Get values for AI content generator
   const productTypeId = form.watch("productTypeId");
@@ -152,10 +153,14 @@ export default function UnifiedAIGenerator({
       <div className="border-b pb-2 pt-6">
         <h2 className="text-xl font-semibold">AI Content Generator</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Upload images and fill in details to {isEditMode ? "regenerate" : "generate"} product content using AI
+          {hideInputSection 
+            ? "AI content has been loaded from previously generated content" 
+            : `Upload images and fill in details to ${isEditMode ? "regenerate" : "generate"} product content using AI`
+          }
         </p>
       </div>
       
+      {!hideInputSection && (
       <div className="space-y-6 mb-6">
         {/* Image Upload Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

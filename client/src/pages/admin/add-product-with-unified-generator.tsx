@@ -593,6 +593,7 @@ export default function AddProduct() {
               getAdditionalImagesRootProps={getAdditionalImagesRootProps}
               getAdditionalImagesInputProps={getAdditionalImagesInputProps}
               removeAdditionalImage={removeAdditionalImage}
+              hideInputSection={true} /* Hide the input section since we're already using those fields at the top level */
             />
             
             {/* Section Heading for Product Images */}
