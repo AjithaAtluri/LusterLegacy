@@ -7,6 +7,7 @@
  */
 
 import { storage } from "../storage";
+import { getCachedGoldPrice, getGoldPrice } from "../services/gold-price-service";
 
 interface Gem {
   name: string;
@@ -22,8 +23,8 @@ interface PriceCalculationParams {
   primaryGems?: Gem[];
 }
 
-// Base price of 24k gold per gram in INR (2025 rates)
-const GOLD_24K_PRICE_PER_GRAM_INR = 7500;
+// Fallback price of 24k gold per gram in INR (2025 rates) - will be replaced with real value
+const DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR = 7500;
 
 // USD to INR conversion rate
 const USD_TO_INR_RATE = 83;

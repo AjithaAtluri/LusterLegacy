@@ -27,6 +27,7 @@ import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
+import { getGoldPrice } from "./services/gold-price-service";
 
 // USD to INR conversion rate - must match the rate in price-calculator.ts
 const USD_TO_INR_RATE = 83;
@@ -1257,6 +1258,20 @@ Respond in JSON format:
         success: false,
         message: "Error analyzing jewelry image",
         details: error.message || "Unknown error"
+      });
+    }
+  });
+  
+  // Get current gold price in Hyderabad, India
+  app.get('/api/gold-price', async (_req, res) => {
+    try {
+      const goldPriceData = await getGoldPrice();
+      res.json(goldPriceData);
+    } catch (error) {
+      console.error('Error fetching gold price:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
