@@ -1,11 +1,25 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import backgroundImage from "../../assets/zhang-liven-MbImicTZK54-unsplash.jpg";
 
 export default function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+  
+  // Preload the background image
+  useEffect(() => {
+    const img = new Image();
+    img.src = backgroundImage;
+    img.onload = () => setImageLoaded(true);
+    
+    // If the image is already in cache, it might be loaded instantly
+    if (imageRef.current?.complete) {
+      setImageLoaded(true);
+    }
+  }, []);
   
   // Subtle parallax effect
   useEffect(() => {
@@ -16,13 +30,21 @@ export default function HeroSection() {
 
   return (
     <section className="relative h-[80vh] overflow-hidden">
+      {/* Placeholder background color while image loads */}
+      <div className="absolute inset-0 z-0 bg-charcoal"></div>
+      
       {/* Full-width background image with beautiful jewelry */}
-      <div className="absolute inset-0 z-0">
+      <div className={`absolute inset-0 z-0 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <img 
+          ref={imageRef}
           src={backgroundImage} 
           alt="Elegant yellow diamond earrings on black stone" 
           className="w-full h-full object-cover brightness-110 contrast-110 saturate-120"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
+          onLoad={() => setImageLoaded(true)}
+          fetchpriority="high"
+          loading="eager"
+          decoding="sync"
         />
         {/* Semi-transparent gradient overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-charcoal/70 via-charcoal/55 to-charcoal/30"></div>
