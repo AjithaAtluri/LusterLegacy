@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -128,6 +129,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ label, onChange, onRemove, im
 // Main AI Content Generator Page
 export default function AIContentGeneratorPage() {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState<AIGeneratedContent | null>(null);
   const [savedContent, setSavedContent] = useState<AIGeneratedContent | null>(null);
@@ -802,11 +804,11 @@ export default function AIContentGeneratorPage() {
               </Button>
               <Button
                 onClick={() => {
-                  // Here we would navigate to create a new product with this content
-                  // For now, we'll just show a toast explaining this feature
+                  // Navigate to the add product page, which will automatically use the saved content
+                  navigate('/admin/add-product');
                   toast({
-                    title: "Coming Soon",
-                    description: "This feature will soon allow you to create a product with this content.",
+                    title: "Content Ready",
+                    description: "Use the AI-generated content to create your new product.",
                   });
                 }}
               >
