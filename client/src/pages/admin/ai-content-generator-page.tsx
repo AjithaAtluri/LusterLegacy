@@ -793,6 +793,8 @@ export default function AIContentGeneratorPage() {
                   // Clear saved content from state and localStorage
                   setSavedContent(null);
                   localStorage.removeItem('aiGeneratedContent');
+                  localStorage.removeItem('aiGeneratedImagePreview');
+                  localStorage.removeItem('aiGeneratedImageData');
                   
                   toast({
                     title: "Content Cleared",
@@ -903,6 +905,22 @@ export default function AIContentGeneratorPage() {
                   
                   // Store in localStorage for persistence
                   localStorage.setItem('aiGeneratedContent', JSON.stringify(generatedContent));
+                  
+                  // Save main image preview URL to localStorage
+                  if (mainImagePreview) {
+                    localStorage.setItem('aiGeneratedImagePreview', mainImagePreview);
+                  }
+                  
+                  // Store raw image file data for later use when creating a product
+                  if (mainImage) {
+                    const fileReader = new FileReader();
+                    fileReader.onload = (event) => {
+                      if (event.target?.result) {
+                        localStorage.setItem('aiGeneratedImageData', event.target.result as string);
+                      }
+                    };
+                    fileReader.readAsDataURL(mainImage);
+                  }
                   
                   // Show success toast
                   toast({

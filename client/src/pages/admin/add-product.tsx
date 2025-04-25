@@ -173,6 +173,27 @@ export default function AddProductPage() {
         form.setValue('description', parsedContent.shortDescription);
         form.setValue('details', parsedContent.detailedDescription);
         form.setValue('basePrice', Math.round(parsedContent.priceINR)); // Use INR as base price
+        
+        // Load the saved image preview
+        const savedImagePreview = localStorage.getItem('aiGeneratedImagePreview');
+        if (savedImagePreview) {
+          setMainImagePreview(savedImagePreview);
+        }
+        
+        // Load the saved image data and convert it back to a File object
+        const savedImageData = localStorage.getItem('aiGeneratedImageData');
+        if (savedImageData) {
+          // Convert base64 back to File
+          const fetchResponse = fetch(savedImageData);
+          fetchResponse.then(res => {
+            return res.blob();
+          }).then(blob => {
+            const file = new File([blob], "ai-generated-image.jpg", { type: "image/jpeg" });
+            setMainImage(file);
+          }).catch(error => {
+            console.error('Error converting image data to File:', error);
+          });
+        }
       } catch (error) {
         console.error('Error parsing saved content:', error);
       }
@@ -243,8 +264,10 @@ export default function AddProductPage() {
         description: "Product has been created successfully.",
       });
       
-      // Clear the saved AI content from localStorage
+      // Clear the saved AI content and images from localStorage
       localStorage.removeItem('aiGeneratedContent');
+      localStorage.removeItem('aiGeneratedImagePreview');
+      localStorage.removeItem('aiGeneratedImageData');
       
       // Invalidate products cache
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -314,12 +337,17 @@ export default function AddProductPage() {
   // Clear AI content
   const clearAIContent = () => {
     localStorage.removeItem('aiGeneratedContent');
+    localStorage.removeItem('aiGeneratedImagePreview');
+    localStorage.removeItem('aiGeneratedImageData');
     setSavedContent(null);
     
     // Reset form fields that might have been populated by AI
     form.setValue('name', '');
     form.setValue('description', '');
     form.setValue('details', '');
+    
+    // Clear the main image
+    removeMainImage();
     
     toast({
       title: "AI Content Cleared",
