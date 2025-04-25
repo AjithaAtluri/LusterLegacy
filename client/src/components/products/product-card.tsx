@@ -10,19 +10,31 @@ import GemSparkle from "@/components/ui/gem-sparkle";
 
 // Helper function to handle image URLs
 function getImageUrl(url: string | undefined): string {
-  if (!url) return "https://placehold.co/600x400/png?text=No+Image";
+  console.log("ProductCard - getImageUrl input:", url);
+  
+  if (!url) {
+    console.log("ProductCard - No image URL provided, returning placeholder");
+    return "https://placehold.co/600x400/png?text=No+Image";
+  }
   
   // If it's an absolute URL (starts with http/https or //)
-  if (url.match(/^(https?:)?\/\//)) return url;
-  
-  // If it's a relative URL starting with /
-  if (url.startsWith('/')) {
-    // Make sure it's relative to the domain root
+  if (url.match(/^(https?:)?\/\//)) {
+    console.log("ProductCard - URL is already absolute, returning as is:", url);
     return url;
   }
   
+  // If it's a relative URL starting with /
+  if (url.startsWith('/')) {
+    // Fix double slashes if any
+    const cleanUrl = url.replace(/\/+/g, '/');
+    console.log("ProductCard - URL starts with /, normalized to:", cleanUrl);
+    return cleanUrl;
+  }
+  
   // Otherwise, assume it's a relative URL without leading /
-  return `/${url}`;
+  const prefixedUrl = `/${url}`;
+  console.log("ProductCard - Added / prefix to URL:", prefixedUrl);
+  return prefixedUrl;
 }
 
 // Interface for product details stored as JSON

@@ -15,18 +15,31 @@ import GemSparkle from "@/components/ui/gem-sparkle";
 
 // Helper function to handle image URLs
 function getImageUrl(url: string | undefined): string {
-  if (!url) return "https://placehold.co/600x400/png?text=No+Image";
+  console.log("getImageUrl input:", url);
+  
+  if (!url) {
+    console.log("No image URL provided, returning placeholder");
+    return "https://placehold.co/600x400/png?text=No+Image";
+  }
   
   // If it's an absolute URL (starts with http/https or //)
-  if (url.match(/^(https?:)?\/\//)) return url;
-  
-  // If it's a relative URL starting with /
-  if (url.startsWith('/')) {
+  if (url.match(/^(https?:)?\/\//)) {
+    console.log("URL is already absolute, returning as is:", url);
     return url;
   }
   
+  // If it's a relative URL starting with /
+  if (url.startsWith('/')) {
+    // Fix double slashes if any
+    const cleanUrl = url.replace(/\/+/g, '/');
+    console.log("URL starts with /, normalized to:", cleanUrl);
+    return cleanUrl;
+  }
+  
   // Otherwise, assume it's a relative URL without leading /
-  return `/${url}`;
+  const prefixedUrl = `/${url}`;
+  console.log("Added / prefix to URL:", prefixedUrl);
+  return prefixedUrl;
 }
 
 // Extended product details interface
@@ -95,7 +108,12 @@ export default function ProductDetail() {
   
   useEffect(() => {
     if (product?.imageUrl) {
-      setSelectedImage(getImageUrl(product.imageUrl));
+      console.log("Product image URL before processing:", product.imageUrl);
+      const processedUrl = getImageUrl(product.imageUrl);
+      console.log("Product image URL after processing:", processedUrl);
+      setSelectedImage(processedUrl);
+    } else {
+      console.log("No product image URL available");
     }
   }, [product?.imageUrl]);
   
