@@ -628,7 +628,7 @@ export default function EditProductNew() {
               variant="outline"
             >
               <Upload className="h-4 w-4 mr-2" />
-              AI Generator
+              Regenerate Content
             </Button>
           </div>
         </div>
