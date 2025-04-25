@@ -526,6 +526,7 @@ export default function ProductDetail() {
                   </TabsContent>
                   <TabsContent value="specifications" className="p-6 bg-card rounded-lg shadow-sm">
                     <div className="space-y-4">
+                      <h3 className="font-playfair text-lg font-semibold mb-4">Material & Stone Specifications</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {productMetalType && (
                           <div className="border-b pb-2">
@@ -588,6 +589,16 @@ export default function ProductDetail() {
                             {productStones.map((stone, index) => (
                               <Badge key={index} variant="outline">{stone}</Badge>
                             ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Design Inspiration Section - Show AI generator input fields */}
+                      {userDescription && (
+                        <div className="mt-8">
+                          <h3 className="font-playfair text-lg font-semibold mb-4">Design Inspiration</h3>
+                          <div className="bg-background/50 p-4 rounded-md border border-primary/10">
+                            <p className="font-cormorant text-base italic">{userDescription}</p>
                           </div>
                         </div>
                       )}
