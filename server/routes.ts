@@ -28,6 +28,9 @@ import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
 
+// USD to INR conversion rate - must match the rate in price-calculator.ts
+const USD_TO_INR_RATE = 83;
+
 // Set up multer for file uploads - using both /uploads and /attached_assets for persistence
 // attached_assets is part of source control and will persist between deployments
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -1261,36 +1264,146 @@ Respond in JSON format:
   // Jewelry price calculator endpoint - uses 2025 market rates
   app.post("/api/calculate-price", async (req, res) => {
     try {
-      console.log("Price calculator endpoint called");
+      console.log("Price calculator endpoint called with body:", JSON.stringify(req.body));
       
-      // Check if we have the required fields before proceeding
-      const { productType, metalType, metalTypeId, metalWeight = 5, primaryGems = [] } = req.body;
+      // Extract values from the request
+      const { 
+        metalTypeId,
+        metalWeight = 5, 
+        primaryStone = null, 
+        secondaryStones = [],
+        productType = "Necklace"  // Default product type
+      } = req.body;
       
-      if (!productType || !metalType) {
+      // Validate minimum required data
+      if (!metalTypeId) {
         return res.status(400).json({
           success: false,
-          message: "Missing required product details (productType and metalType)"
+          message: "Missing required metal type information"
         });
       }
       
-      // Use the centralized price calculator utility with database pricing
+      // Get metal type details from database
+      const metalTypeData = await storage.getMetalTypeById(
+        typeof metalTypeId === 'string' && metalTypeId.match(/^\d+$/) 
+          ? parseInt(metalTypeId) 
+          : metalTypeId
+      );
+      
+      // If metal type not found, try to find by name
+      let metalType = metalTypeData?.name || "18K Gold";
+      
+      // Transform the gems data into the format expected by the calculator
+      let primaryGems: Array<{name: string, carats?: number, stoneTypeId?: number}> = [];
+      
+      // Add primary stone if provided
+      if (primaryStone && primaryStone.stoneTypeId) {
+        try {
+          // Look up stone type from database
+          const stoneTypeId = typeof primaryStone.stoneTypeId === 'string' && primaryStone.stoneTypeId.match(/^\d+$/)
+            ? parseInt(primaryStone.stoneTypeId)
+            : primaryStone.stoneTypeId;
+          
+          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          
+          if (stoneTypeData) {
+            primaryGems.push({
+              name: stoneTypeData.name,
+              carats: primaryStone.caratWeight || 1,
+              stoneTypeId: stoneTypeId
+            });
+          }
+        } catch (e) {
+          console.error("Error processing primary stone:", e);
+        }
+      }
+      
+      // Add secondary stones if provided
+      if (Array.isArray(secondaryStones) && secondaryStones.length > 0) {
+        for (const stone of secondaryStones) {
+          if (stone && stone.stoneTypeId) {
+            try {
+              // Look up stone type from database
+              const stoneTypeId = typeof stone.stoneTypeId === 'string' && stone.stoneTypeId.match(/^\d+$/)
+                ? parseInt(stone.stoneTypeId)
+                : stone.stoneTypeId;
+              
+              const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+              
+              if (stoneTypeData) {
+                primaryGems.push({
+                  name: stoneTypeData.name,
+                  carats: stone.caratWeight || 0.5,
+                  stoneTypeId: stoneTypeId
+                });
+              }
+            } catch (e) {
+              console.error("Error processing secondary stone:", e);
+            }
+          }
+        }
+      }
+      
+      // Use the centralized price calculator utility
       const result = await calculateJewelryPrice({
         productType,
         metalType,
-        metalTypeId,
-        metalWeight,
+        metalTypeId: typeof metalTypeId === 'string' ? parseInt(metalTypeId) : metalTypeId,
+        metalWeight: typeof metalWeight === 'string' ? parseFloat(metalWeight) : metalWeight,
         primaryGems
       });
       
+      // Format breakdown for better UI display
+      const usdBreakdown = {
+        metalCost: result.breakdown?.metalCost 
+          ? Math.round(result.breakdown.metalCost / USD_TO_INR_RATE) 
+          : 0,
+        primaryStoneCost: result.breakdown?.stoneCost && primaryStone
+          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * 
+            (primaryGems.length > 0 ? 0.7 : 0)) // Approximate primary stone as 70% of total stone cost
+          : 0,
+        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones.length > 0
+          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * 
+            (primaryGems.length > 1 ? 0.3 : 0)) // Approximate secondary stones as 30% of total stone cost
+          : 0,
+        overhead: result.breakdown?.overhead
+          ? Math.round(result.breakdown.overhead / USD_TO_INR_RATE)
+          : 0
+      };
+      
+      const inrBreakdown = {
+        metalCost: result.breakdown?.metalCost || 0,
+        primaryStoneCost: result.breakdown?.stoneCost && primaryStone
+          ? Math.round(result.breakdown.stoneCost * 
+            (primaryGems.length > 0 ? 0.7 : 0))
+          : 0,
+        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones.length > 0
+          ? Math.round(result.breakdown.stoneCost * 
+            (primaryGems.length > 1 ? 0.3 : 0))
+          : 0,
+        overhead: result.breakdown?.overhead || 0
+      };
+      
+      // Return detailed response
       return res.status(200).json({
         success: true,
-        priceUSD: result.priceUSD,
-        priceINR: result.priceINR,
-        breakdown: result.breakdown,
-        productType,
-        metalType,
-        metalWeight,
-        primaryGems
+        usd: {
+          price: result.priceUSD,
+          currency: "USD",
+          breakdown: usdBreakdown
+        },
+        inr: {
+          price: result.priceINR,
+          currency: "INR",
+          breakdown: inrBreakdown
+        },
+        // Include input data for reference
+        inputs: {
+          metalType,
+          metalWeight,
+          primaryStone,
+          secondaryStones
+        }
       });
     } catch (error) {
       console.error("Error in price calculator endpoint:", error);
