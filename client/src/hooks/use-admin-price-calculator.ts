@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useGoldPrice } from "./use-gold-price";
 
 interface UsePriceCalculatorProps {
   // Input values for price calculation
@@ -32,6 +33,8 @@ export function useAdminPriceCalculator({
   secondaryStoneWeight = "0"
 }: UsePriceCalculatorProps) {
   const { toast } = useToast();
+  const { goldPrice, isLoading: isGoldPriceLoading, location, timestamp } = useGoldPrice();
+  
   const [priceUSD, setPriceUSD] = useState<number>(0);
   const [priceINR, setPriceINR] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
@@ -151,7 +154,11 @@ export function useAdminPriceCalculator({
   return {
     priceUSD,
     priceINR,
-    isCalculating,
-    breakdown
+    isCalculating: isCalculating || isGoldPriceLoading,
+    breakdown,
+    goldPrice,
+    goldPriceLocation: location,
+    goldPriceTimestamp: timestamp,
+    isGoldPriceLoading
   };
 }

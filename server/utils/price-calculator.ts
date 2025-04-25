@@ -68,8 +68,29 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       }
     }
     
+    // 2. Get the current gold price from Hyderabad, India
+    // Try to get a fresh price, with fallback to cached or default price
+    let goldPriceINR = DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR;
+    
+    try {
+      // First try to get real-time price
+      const goldPriceResponse = await getGoldPrice();
+      if (goldPriceResponse.success && goldPriceResponse.price) {
+        goldPriceINR = goldPriceResponse.price;
+        console.log(`Using real-time gold price from Hyderabad: ₹${goldPriceINR} per gram (24K)`);
+      } else {
+        // If API call fails, use cached price
+        goldPriceINR = getCachedGoldPrice();
+        console.log(`Using cached gold price: ₹${goldPriceINR} per gram (24K)`);
+      }
+    } catch (err) {
+      // If all fails, use default price
+      console.error("Error fetching gold price, using default:", err);
+      goldPriceINR = DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR;
+    }
+    
     // Calculate metal cost: grams * 24k price * metal modifier
-    const metalCost = metalWeight * GOLD_24K_PRICE_PER_GRAM_INR * metalPriceModifier;
+    const metalCost = metalWeight * goldPriceINR * metalPriceModifier;
     
     // 2. Calculate stone costs by summing each stone's carat * per-carat price
     let stoneCost = 0;
@@ -196,7 +217,7 @@ export function getSamplePriceCalculation(): string {
   };
   
   // Sample calculation
-  const metalCost = sample.metalWeight * GOLD_24K_PRICE_PER_GRAM_INR * 0.75;
+  const metalCost = sample.metalWeight * DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR * 0.75;
   const stoneCost = 2.5 * 56000; // Natural diamond at ₹56,000 per carat
   const baseCost = metalCost + stoneCost;
   const overhead = baseCost * 0.25;
@@ -206,7 +227,7 @@ export function getSamplePriceCalculation(): string {
 Sample Price Calculation for "${sample.productName}":
 
 1. Metal Cost: 
-   ${sample.metalWeight} grams × ₹${GOLD_24K_PRICE_PER_GRAM_INR} (24K gold price) × ${0.75} (18K modifier)
+   ${sample.metalWeight} grams × ₹${DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR} (24K gold price) × ${0.75} (18K modifier)
    = ₹${metalCost.toLocaleString('en-IN')}
 
 2. Stone Cost:
