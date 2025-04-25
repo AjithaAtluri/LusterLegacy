@@ -429,26 +429,30 @@ export default function EditProductNew() {
         formData.append(`additionalImage${index + 1}`, file);
       });
 
-      // Prepare product data
+      // Prepare product data with same structure as creation
       const productData = {
         name: values.title,
         description: values.shortDescription,
         basePrice: values.priceINR,
         priceUSD: values.priceUSD,
         productTypeId: values.productType,
-        metalType: values.metalType,
-        metalWeight: values.metalWeight,
-        featured: values.featured,
+        isFeatured: values.featured,
         inStock: values.inStock,
-        stoneTypes: values.secondaryStoneTypes,
         details: JSON.stringify({
-          tagline: values.tagline,
           detailedDescription: values.detailedDescription,
-          dimensions: values.dimensions,
-          mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
-          mainStoneWeight: values.mainStoneWeight,
-          secondaryStoneWeight: values.secondaryStoneWeight,
-          userDescription: values.userDescription,
+          additionalData: {
+            tagline: values.tagline,
+            basePriceINR: values.priceINR,
+            priceUSD: values.priceUSD,
+            metalType: values.metalType,
+            metalWeight: values.metalWeight,
+            stoneTypes: values.secondaryStoneTypes,
+            mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
+            mainStoneWeight: values.mainStoneWeight,
+            secondaryStoneWeight: values.secondaryStoneWeight,
+            userDescription: values.userDescription,
+            dimensions: values.dimensions,
+          }
         }),
       };
 
