@@ -213,9 +213,22 @@ export default function ProductDetail() {
           setMainStoneType(aiInputs.mainStoneType || parsed.additionalData.mainStoneType || "");
           setMainStoneWeight(aiInputs.mainStoneWeight || parsed.additionalData.mainStoneWeight || 0);
           
+          // Enhanced debug logging for secondary stone data
+          console.log("Secondary stone debug - Raw additionalData:", parsed.additionalData);
+          console.log("Secondary stone debug - Raw aiInputs:", aiInputs);
+          console.log("Secondary stone debug - additionalData.secondaryStoneType:", parsed.additionalData.secondaryStoneType);
+          console.log("Secondary stone debug - additionalData.secondaryStoneTypes:", parsed.additionalData.secondaryStoneTypes);
+          console.log("Secondary stone debug - aiInputs.secondaryStoneType:", aiInputs.secondaryStoneType);
+          console.log("Secondary stone debug - aiInputs.secondaryStoneTypes:", aiInputs.secondaryStoneTypes);
+          
           // First try to get the single secondaryStoneType (new format)
           const singleSecondaryStone = aiInputs.secondaryStoneType || parsed.additionalData.secondaryStoneType || "";
-          if (singleSecondaryStone && singleSecondaryStone !== "none_selected") {
+          console.log("Secondary stone debug - singleSecondaryStone value:", singleSecondaryStone);
+          console.log("Secondary stone debug - singleSecondaryStone type:", typeof singleSecondaryStone);
+          console.log("Secondary stone debug - Is null or none_selected?", 
+                     !singleSecondaryStone || singleSecondaryStone === "none_selected" || singleSecondaryStone === "");
+          
+          if (singleSecondaryStone && singleSecondaryStone !== "none_selected" && singleSecondaryStone !== "") {
             console.log("Using single secondary stone type:", singleSecondaryStone);
             setSecondaryStoneType(singleSecondaryStone);
             // For backward compatibility, also set the array with this single value
@@ -223,12 +236,14 @@ export default function ProductDetail() {
           } else {
             // Fall back to array format if single type isn't available (backward compatibility)
             const stoneTypesArray = aiInputs.secondaryStoneTypes || parsed.additionalData.secondaryStoneTypes || [];
+            console.log("Secondary stone debug - stoneTypesArray:", stoneTypesArray);
             setSecondaryStoneTypes(stoneTypesArray);
             // If array has values, use the first one for the single type
             if (stoneTypesArray.length > 0) {
               console.log("Using first value from secondary stone array:", stoneTypesArray[0]);
               setSecondaryStoneType(stoneTypesArray[0]);
             } else {
+              console.log("No valid secondary stone found, setting to empty string");
               setSecondaryStoneType("");
             }
           }
