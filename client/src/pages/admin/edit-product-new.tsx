@@ -260,6 +260,38 @@ export default function EditProductNew() {
         console.log("Parsed details:", details);
         console.log("additionalData:", additionalData);
         console.log("aiInputs:", aiInputs);
+        
+        // Search for any properties that might contain stone information
+        console.log("SEARCHING FOR STONE DATA IN ALL PROPERTIES:");
+        
+        // Check additionalData for any property containing 'stone'
+        Object.keys(additionalData).forEach(key => {
+          if (key.toLowerCase().includes('stone')) {
+            console.log(`Found in additionalData.${key}:`, additionalData[key]);
+          }
+        });
+        
+        // Check aiInputs for any property containing 'stone'
+        Object.keys(aiInputs).forEach(key => {
+          if (key.toLowerCase().includes('stone')) {
+            console.log(`Found in aiInputs.${key}:`, aiInputs[key]);
+          }
+        });
+        
+        // Check for properties with 'polki' or 'secondary' in different formats
+        console.log("Checking for 'polki' in properties:");
+        Object.keys(additionalData).forEach(key => {
+          const value = String(additionalData[key] || '');
+          if (value.toLowerCase().includes('polki')) {
+            console.log(`Found 'polki' in additionalData.${key}:`, additionalData[key]);
+          }
+        });
+        Object.keys(aiInputs).forEach(key => {
+          const value = String(aiInputs[key] || '');
+          if (value.toLowerCase().includes('polki')) {
+            console.log(`Found 'polki' in aiInputs.${key}:`, aiInputs[key]);
+          }
+        });
       }
       
       // Extract metal type with better fallbacks

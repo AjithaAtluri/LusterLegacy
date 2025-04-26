@@ -1,0 +1,39 @@
+Fetching product data for ID: 23
+edit-product-new-BaucJ7gG.js:1 Current authenticated user: undefined
+edit-product-new-BaucJ7gG.js:1 Product fetch response status: 200
+edit-product-new-BaucJ7gG.js:1 Product data retrieved successfully: {id: 23, name: 'Ethereal Elegance: Dual-Row Gemstone Necklace', description: 'Discover opulence with our 14k gold necklace, ador…of exquisite gemstones and 14.19 carats of Polki.', basePrice: 8500, imageUrl: '/uploads/c69193da-e0aa-466a-9aa6-26710ca3d06f.jpeg', …}
+edit-product-new-BaucJ7gG.js:1 Product data received: {id: 23, name: 'Ethereal Elegance: Dual-Row Gemstone Necklace', description: 'Discover opulence with our 14k gold necklace, ador…of exquisite gemstones and 14.19 carats of Polki.', basePrice: 8500, imageUrl: '/uploads/c69193da-e0aa-466a-9aa6-26710ca3d06f.jpeg', …}
+edit-product-new-BaucJ7gG.js:1 Parsed details: {detailedDescription: 'Crafted with meticulous attention to detail, this …manship guarantees longevity and timeless appeal.', additionalData: {…}}
+edit-product-new-BaucJ7gG.js:1 Additional data: {tagline: 'Embrace the allure of semi-precious brilliance with timeless luxury.', basePriceINR: 722500, metalType: '', metalWeight: 32, stoneTypes: Array(0), …}
+edit-product-new-BaucJ7gG.js:1 AI inputs: {metalType: '', metalWeight: 32, mainStoneType: 'Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)', mainStoneWeight: 300, secondaryStoneTypes: Array(0), …}
+edit-product-new-BaucJ7gG.js:1 PRODUCT 23 DEBUG DATA:
+edit-product-new-BaucJ7gG.js:1 Raw productData: {id: 23, name: 'Ethereal Elegance: Dual-Row Gemstone Necklace', description: 'Discover opulence with our 14k gold necklace, ador…of exquisite gemstones and 14.19 carats of Polki.', basePrice: 8500, imageUrl: '/uploads/c69193da-e0aa-466a-9aa6-26710ca3d06f.jpeg', …}
+edit-product-new-BaucJ7gG.js:1 Raw details string: {"detailedDescription":"Crafted with meticulous attention to detail, this stunning necklace features dual rows of semi-precious beads including amethyst, rose quartz, lavender quartz, and morganite, totaling an impressive 300 carats. Each bead is hand-selected for its captivating hue and clarity, creating a harmonious blend of pastel elegance. The luxurious 14k yellow gold setting, weighing 32 grams, provides a radiant backdrop for the lab-grown Polki stones, which add an additional 14.19 carats of sparkling sophistication. The necklace's design exudes a regal charm, making it a perfect statement piece for any occasion. Its unique combination of colors and textures ensures that it stands out, while the craftsmanship guarantees longevity and timeless appeal.","additionalData":{"tagline":"Embrace the allure of semi-precious brilliance with timeless luxury.","basePriceINR":722500,"metalType":"","metalWeight":32,"stoneTypes":[],"mainStoneType":"Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)","mainStoneWeight":300,"secondaryStoneTypes":[],"secondaryStoneWeight":14.19,"productTypeId":"6","userDescription":"","aiInputs":{"metalType":"","metalWeight":32,"mainStoneType":"Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)","mainStoneWeight":300,"secondaryStoneTypes":[],"secondaryStoneWeight":14.19,"userDescription":""},"dimensions":""}}
+edit-product-new-BaucJ7gG.js:1 Parsed details: {detailedDescription: 'Crafted with meticulous attention to detail, this …manship guarantees longevity and timeless appeal.', additionalData: {…}}
+edit-product-new-BaucJ7gG.js:1 additionalData: {tagline: 'Embrace the allure of semi-precious brilliance with timeless luxury.', basePriceINR: 722500, metalType: '', metalWeight: 32, stoneTypes: Array(0), …}
+edit-product-new-BaucJ7gG.js:1 aiInputs: {metalType: '', metalWeight: 32, mainStoneType: 'Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)', mainStoneWeight: 300, secondaryStoneTypes: Array(0), …}
+edit-product-new-BaucJ7gG.js:1 No metalType found, using default
+edit-product-new-BaucJ7gG.js:1 Using metalWeight from aiInputs: 32
+edit-product-new-BaucJ7gG.js:1 Using mainStoneType from aiInputs: Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)
+edit-product-new-BaucJ7gG.js:1 Using mainStoneWeight from aiInputs: 300
+edit-product-new-BaucJ7gG.js:1 ----DETAILED STONE DEBUG----
+edit-product-new-BaucJ7gG.js:1 Raw aiInputs: {metalType: '', metalWeight: 32, mainStoneType: 'Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)', mainStoneWeight: 300, secondaryStoneTypes: Array(0), …}
+edit-product-new-BaucJ7gG.js:1 Raw additionalData: {tagline: 'Embrace the allure of semi-precious brilliance with timeless luxury.', basePriceINR: 722500, metalType: '', metalWeight: 32, stoneTypes: Array(0), …}
+edit-product-new-BaucJ7gG.js:1 Raw details: {detailedDescription: 'Crafted with meticulous attention to detail, this …manship guarantees longevity and timeless appeal.', additionalData: {…}}
+edit-product-new-BaucJ7gG.js:1 aiInputs.secondaryStoneType: undefined type: undefined
+edit-product-new-BaucJ7gG.js:1 additionalData.secondaryStoneType: undefined type: undefined
+edit-product-new-BaucJ7gG.js:1 details?.secondaryStoneType: undefined type: undefined
+edit-product-new-BaucJ7gG.js:1 Final secondaryStoneType: none_selected
+edit-product-new-BaucJ7gG.js:1 Using secondaryStoneWeight from aiInputs: 14.19
+edit-product-new-BaucJ7gG.js:1 ----DETAILED OTHER STONE DEBUG----
+edit-product-new-BaucJ7gG.js:1 aiInputs.otherStoneType: undefined type: undefined
+edit-product-new-BaucJ7gG.js:1 additionalData.otherStoneType: undefined type: undefined
+edit-product-new-BaucJ7gG.js:1 details?.otherStoneType: undefined type: undefined
+edit-product-new-BaucJ7gG.js:1 Final otherStoneType: none_selected
+edit-product-new-BaucJ7gG.js:1 Setting form values: {title: 'Ethereal Elegance: Dual-Row Gemstone Necklace', tagline: 'Embrace the allure of semi-precious brilliance with timeless luxury.', shortDescription: 'Discover opulence with our 14k gold necklace, ador…of exquisite gemstones and 14.19 carats of Polki.', detailedDescription: 'Crafted with meticulous attention to detail, this …manship guarantees longevity and timeless appeal.', priceUSD: 0, …}
+edit-product-new-BaucJ7gG.js:1 Setting main image preview: /uploads/c69193da-e0aa-466a-9aa6-26710ca3d06f.jpeg
+edit-product-new-BaucJ7gG.js:1 Setting additional image previews: []
+price-calculator-display-gEH-UxaZ.js:6 Price calculation request: {metalTypeId: '14K Yellow Gold', metalWeight: 32, primaryStone: {…}, secondaryStones: null, otherStone: null}
+price-calculator-display-gEH-UxaZ.js:6 Price calculation response: {success: true, usd: {…}, inr: {…}, inputs: {…}}
+23:1 The resource https://fresh-start-ajitha72.replit.app/assets/zhang-liven-MbImicTZK54-unsplash-C9B0b_0y.jpg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warning
+23:1 The resource https://fresh-start-ajitha72.replit.app/assets/zhang-liven-MbImicTZK54-unsplash-C9B0b_0y.jpg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warning
