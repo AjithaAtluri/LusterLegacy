@@ -53,6 +53,8 @@ interface FormValues {
   mainStoneWeight: string;
   secondaryStoneTypes: SimpleStoneType[];
   secondaryStoneWeight: string;
+  otherStoneType: string;
+  otherStoneWeight: string;
   featured: boolean;
   userDescription: string;
   inStock: boolean;
@@ -91,6 +93,8 @@ export default function EditProductNew() {
       mainStoneWeight: "",
       secondaryStoneTypes: [],
       secondaryStoneWeight: "",
+      otherStoneType: "none_selected",
+      otherStoneWeight: "",
       featured: false,
       userDescription: "",
       inStock: true,
@@ -887,6 +891,8 @@ export default function EditProductNew() {
                             mainStoneWeight={form.watch("mainStoneWeight")}
                             secondaryStoneTypes={form.watch("secondaryStoneTypes")}
                             secondaryStoneWeight={form.watch("secondaryStoneWeight")}
+                            otherStoneType={form.watch("otherStoneType")}
+                            otherStoneWeight={form.watch("otherStoneWeight")}
                           />
                           <div className="mt-3 text-xs text-muted-foreground">
                             <p>This calculator shows a real-time price estimate based on current gold prices and selected materials.</p>

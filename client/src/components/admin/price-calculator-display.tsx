@@ -40,7 +40,9 @@ export function PriceCalculatorDisplay({
     mainStoneType,
     mainStoneWeight,
     secondaryStoneTypes,
-    secondaryStoneWeight
+    secondaryStoneWeight,
+    otherStoneType,
+    otherStoneWeight
   });
 
   return (
@@ -155,6 +157,33 @@ export function PriceCalculatorDisplay({
                   </div>
                 )}
               </div>
+              
+              {/* Other Stone display (if present) */}
+              {otherStoneType && otherStoneType !== "none_selected" && otherStoneType !== "none" && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm font-medium">
+                    <span className="text-muted-foreground">Other Stone</span>
+                    {isCalculating ? (
+                      <Skeleton className="h-4 w-16" />
+                    ) : (
+                      <span>{formatCurrency(0)} {/* Cost included in secondary stones */}</span>
+                    )}
+                  </div>
+                  <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground flex items-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5"></div>
+                        {otherStoneType}
+                      </span>
+                    </div>
+                    {otherStoneWeight && Number(otherStoneWeight) > 0 && (
+                      <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
+                        Total: {otherStoneWeight} carats
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Overhead (25%)</span>
                 {isCalculating ? (
