@@ -102,8 +102,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
-  // Health check route for deployments
-  app.get('/', (_req, res) => {
+  // Health check route for deployments - moved to /api/health to avoid conflict with frontend
+  app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
   });
 
