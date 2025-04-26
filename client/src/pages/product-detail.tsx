@@ -25,6 +25,7 @@ interface ProductDetails {
     stoneTypes: string[];
     mainStoneType?: string;
     mainStoneWeight?: number;
+    secondaryStoneType?: string;
     secondaryStoneTypes?: string[];
     secondaryStoneWeight?: number;
     productTypeId?: string;
@@ -36,6 +37,7 @@ interface ProductDetails {
       metalWeight?: number;
       mainStoneType?: string;
       mainStoneWeight?: number;
+      secondaryStoneType?: string;
       secondaryStoneTypes?: string[];
       secondaryStoneWeight?: number;
       userDescription?: string;
@@ -54,6 +56,7 @@ export default function ProductDetail() {
   const [productMetalWeight, setProductMetalWeight] = useState<number>(0);
   const [mainStoneType, setMainStoneType] = useState<string>("");
   const [mainStoneWeight, setMainStoneWeight] = useState<number>(0);
+  const [secondaryStoneType, setSecondaryStoneType] = useState<string>("");
   const [secondaryStoneTypes, setSecondaryStoneTypes] = useState<string[]>([]);
   const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<number>(0);
   const [dimensions, setDimensions] = useState<string>("");
@@ -209,7 +212,27 @@ export default function ProductDetail() {
           // Stone details
           setMainStoneType(aiInputs.mainStoneType || parsed.additionalData.mainStoneType || "");
           setMainStoneWeight(aiInputs.mainStoneWeight || parsed.additionalData.mainStoneWeight || 0);
-          setSecondaryStoneTypes(aiInputs.secondaryStoneTypes || parsed.additionalData.secondaryStoneTypes || []);
+          
+          // First try to get the single secondaryStoneType (new format)
+          const singleSecondaryStone = aiInputs.secondaryStoneType || parsed.additionalData.secondaryStoneType || "";
+          if (singleSecondaryStone && singleSecondaryStone !== "none_selected") {
+            console.log("Using single secondary stone type:", singleSecondaryStone);
+            setSecondaryStoneType(singleSecondaryStone);
+            // For backward compatibility, also set the array with this single value
+            setSecondaryStoneTypes([singleSecondaryStone]);
+          } else {
+            // Fall back to array format if single type isn't available (backward compatibility)
+            const stoneTypesArray = aiInputs.secondaryStoneTypes || parsed.additionalData.secondaryStoneTypes || [];
+            setSecondaryStoneTypes(stoneTypesArray);
+            // If array has values, use the first one for the single type
+            if (stoneTypesArray.length > 0) {
+              console.log("Using first value from secondary stone array:", stoneTypesArray[0]);
+              setSecondaryStoneType(stoneTypesArray[0]);
+            } else {
+              setSecondaryStoneType("");
+            }
+          }
+          
           setSecondaryStoneWeight(aiInputs.secondaryStoneWeight || parsed.additionalData.secondaryStoneWeight || 0);
           
           // Other details
