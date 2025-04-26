@@ -267,23 +267,6 @@ export default function ProductDetail() {
           
           // Other details
           // dimensions parsing code removed as requested
-          const dimensionsData = parsed.additionalData.dimensions;
-          if (typeof dimensionsData === 'string') {
-            setDimensions(dimensionsData);
-          } else if (dimensionsData && typeof dimensionsData === 'object') {
-            // If it's an object, try to convert it to a string representation
-            try {
-              const dimStr = Object.entries(dimensionsData)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join(', ');
-              setDimensions(dimStr);
-            } catch (e) {
-              console.error("Could not convert dimensions object to string:", e);
-              setDimensions("");
-            }
-          } else {
-            setDimensions("");
-          }
           setUserDescription(aiInputs.userDescription || parsed.additionalData.userDescription || "");
           
           // Don't need to debug state synchronously as it won't have updated yet
@@ -301,18 +284,6 @@ export default function ProductDetail() {
     }
     
     // dimensions handling removed as requested
-    if (product?.dimensions) {
-      if (typeof product.dimensions === 'string') {
-        setDimensions(product.dimensions);
-      } else if (product.dimensions && typeof product.dimensions === 'object') {
-        try {
-          const dimStr = JSON.stringify(product.dimensions);
-          setDimensions(dimStr);
-        } catch (e) {
-          console.error("Could not convert dimensions object to string:", e);
-        }
-      }
-    }
   }, [product?.details]);
   
   // Calculate price with calculator hook
@@ -569,7 +540,7 @@ export default function ProductDetail() {
                         </div>
                       )}
                       
-                      {/* Dimensions section removed as requested */}
+
                     </div>
                     
                     {/* Stone Information Section */}
