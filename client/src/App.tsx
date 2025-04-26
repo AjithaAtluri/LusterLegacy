@@ -33,9 +33,7 @@ const FAQ = lazy(() => import("@/pages/faq"));
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/products"));
-// New unified product page
-const UnifiedProductPage = lazy(() => import("@/pages/admin/unified-product-page"));
-// Legacy product pages (maintained for reference)
+// Unified product page with AI generator
 const AdminAddProductUnified = lazy(() => import("@/pages/admin/add-product-with-unified-generator"));
 const AdminEditProduct = lazy(() => import("@/pages/admin/edit-product"));
 const AdminEditProductNew = lazy(() => import("@/pages/admin/edit-product-new"));
@@ -87,29 +85,15 @@ function App() {
             <Route path="/admin" component={AdminLogin} />
             <Route path="/admin/dashboard" component={AdminDashboard} />
             <Route path="/admin/products" component={AdminProducts} />
-            {/* Unified product page for both adding and editing */}
-            <Route path="/admin/product" component={UnifiedProductPage} />
-            <Route path="/admin/product/:id" component={UnifiedProductPage} />
-            
-            {/* Redirect old add-product URL to the new unified page */}
+            {/* Redirect old add-product URL to the AI generator */}
             <Route path="/admin/add-product">
               {() => {
-                window.location.replace("/admin/product");
+                window.location.replace("/admin/ai-generator");
                 return null;
               }}
             </Route>
-            
-            {/* Redirect old edit-product URL to the new unified page */}
-            <Route path="/admin/edit-product/:id">
-              {(params) => {
-                window.location.replace(`/admin/product/${params.id}`);
-                return null;
-              }}
-            </Route>
-            
-            {/* Legacy routes kept for reference */}
             <Route path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} />
-            <Route path="/admin/edit-product-legacy/:id" component={AdminEditProductNew} />
+            <Route path="/admin/edit-product/:id" component={AdminEditProductNew} />
             <Route path="/admin/metal-types" component={AdminMetalTypes} />
             <Route path="/admin/stone-types" component={AdminStoneTypes} />
             <Route path="/admin/product-types" component={AdminProductTypes} />
