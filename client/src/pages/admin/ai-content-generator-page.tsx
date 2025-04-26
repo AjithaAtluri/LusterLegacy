@@ -194,8 +194,8 @@ export default function AIContentGeneratorPage() {
   
   // Form state
   const [formData, setFormData] = useState({
-    productTypes: [] as string[],
-    metalTypes: [] as string[],
+    productType: "",
+    metalType: "",
     metalWeight: 5,
     mainStoneType: "",
     mainStoneWeight: 1,
@@ -285,12 +285,12 @@ export default function AIContentGeneratorPage() {
     
     try {
       // Validate required fields
-      if (formData.productTypes.length === 0) {
-        throw new Error("At least one product type is required");
+      if (!formData.productType) {
+        throw new Error("Product type is required");
       }
       
-      if (formData.metalTypes.length === 0) {
-        throw new Error("At least one metal type is required");
+      if (!formData.metalType) {
+        throw new Error("Metal type is required");
       }
       
       if (!formData.mainStoneType) {
@@ -305,8 +305,8 @@ export default function AIContentGeneratorPage() {
       const formDataObj = new FormData();
       
       // Add product details
-      formDataObj.append('productTypes', JSON.stringify(formData.productTypes));
-      formDataObj.append('metalTypes', JSON.stringify(formData.metalTypes));
+      formDataObj.append('productType', formData.productType);
+      formDataObj.append('metalType', formData.metalType);
       formDataObj.append('metalWeight', formData.metalWeight.toString());
       formDataObj.append('mainStoneType', formData.mainStoneType);
       formDataObj.append('mainStoneWeight', formData.mainStoneWeight.toString());
@@ -514,78 +514,66 @@ export default function AIContentGeneratorPage() {
               </div>
             </div>
             
-            {/* Product Types (Multiple Selection) */}
+            {/* Product Type (Dropdown) */}
             <div className="space-y-3">
               <div>
-                <Label htmlFor="productTypes">Product Types <span className="text-destructive">*</span></Label>
-                <p className="text-sm text-muted-foreground mb-2">Select all that apply</p>
+                <Label htmlFor="productType">Product Type <span className="text-destructive">*</span></Label>
               </div>
               
-              <div className="border rounded-md p-3 max-h-[200px] overflow-y-auto grid grid-cols-2 gap-2">
-                {productTypesError ? (
-                  <div className="col-span-2 text-destructive">Error loading product types</div>
-                ) : isLoadingProductTypes ? (
-                  <div className="col-span-2 flex items-center">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Loading product types...
-                  </div>
-                ) : productTypes && productTypes.length > 0 ? (
-                  productTypes.map((productType) => (
-                    <div key={productType.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`product-type-${productType.id}`} 
-                        checked={formData.productTypes.includes(productType.name)}
-                        onCheckedChange={() => handleMultiSelectChange('productTypes', productType.name)}
-                      />
-                      <label 
-                        htmlFor={`product-type-${productType.id}`}
-                        className="text-sm cursor-pointer"
-                      >
+              <Select
+                value={formData.productType}
+                onValueChange={(value) => handleSelectChange('productType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a product type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {productTypesError ? (
+                    <SelectItem value="error" disabled>Error loading product types</SelectItem>
+                  ) : isLoadingProductTypes ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : productTypes && productTypes.length > 0 ? (
+                    productTypes.map((productType) => (
+                      <SelectItem key={productType.id} value={productType.name}>
                         {productType.name}
-                      </label>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-2">No product types available</div>
-                )}
-              </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>No product types available</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             
-            {/* Metal Types (Multiple Selection) */}
+            {/* Metal Type (Dropdown) */}
             <div className="space-y-3">
               <div>
-                <Label htmlFor="metalTypes">Metal Types <span className="text-destructive">*</span></Label>
-                <p className="text-sm text-muted-foreground mb-2">Select all that apply</p>
+                <Label htmlFor="metalType">Metal Type <span className="text-destructive">*</span></Label>
               </div>
               
-              <div className="border rounded-md p-3 max-h-[200px] overflow-y-auto grid grid-cols-2 gap-2">
-                {metalTypesError ? (
-                  <div className="col-span-2 text-destructive">Error loading metal types</div>
-                ) : isLoadingMetalTypes ? (
-                  <div className="col-span-2 flex items-center">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Loading metal types...
-                  </div>
-                ) : metalTypes && metalTypes.length > 0 ? (
-                  metalTypes.map((metalType) => (
-                    <div key={metalType.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`metal-type-${metalType.id}`} 
-                        checked={formData.metalTypes.includes(metalType.name)}
-                        onCheckedChange={() => handleMultiSelectChange('metalTypes', metalType.name)}
-                      />
-                      <label 
-                        htmlFor={`metal-type-${metalType.id}`}
-                        className="text-sm cursor-pointer"
-                      >
+              <Select
+                value={formData.metalType}
+                onValueChange={(value) => handleSelectChange('metalType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a metal type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {metalTypesError ? (
+                    <SelectItem value="error" disabled>Error loading metal types</SelectItem>
+                  ) : isLoadingMetalTypes ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : metalTypes && metalTypes.length > 0 ? (
+                    metalTypes.map((metalType) => (
+                      <SelectItem key={metalType.id} value={metalType.name}>
                         {metalType.name}
-                      </label>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-2">No metal types available</div>
-                )}
-              </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>No metal types available</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             
             {/* Metal Weight */}
