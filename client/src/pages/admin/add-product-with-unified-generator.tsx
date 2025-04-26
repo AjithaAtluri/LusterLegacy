@@ -269,7 +269,6 @@ export default function AddProduct() {
           stoneTypes: selectedStoneTypes.map(stone => stone.name),
           mainStoneType: mainStoneType || '',
           mainStoneWeight: parseFloat(mainStoneWeight) || 0,
-          secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
           secondaryStoneType: secondaryStoneType === 'none_selected' ? '' : secondaryStoneType,
           secondaryStoneTypes: secondaryStoneType && secondaryStoneType !== 'none_selected' 
             ? [secondaryStoneType] 
@@ -285,10 +284,12 @@ export default function AddProduct() {
             metalWeight: parseFloat(data.metalWeight) || 0,
             mainStoneType: mainStoneType || '',
             mainStoneWeight: parseFloat(mainStoneWeight) || 0,
-            secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
-            secondaryStoneType: secondaryStoneType || 'none_selected',
+            secondaryStoneType: secondaryStoneType === 'none_selected' ? '' : secondaryStoneType,
+            secondaryStoneTypes: secondaryStoneType && secondaryStoneType !== 'none_selected' 
+              ? [secondaryStoneType] 
+              : [],
             secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
-            otherStoneType: otherStoneType || 'none_selected',
+            otherStoneType: otherStoneType === 'none_selected' ? '' : otherStoneType,
             otherStoneWeight: parseFloat(otherStoneWeight) || 0,
             userDescription: data.userDescription || '',
           },
