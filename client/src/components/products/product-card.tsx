@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
+import { usePriceCalculator } from "@/hooks/use-price-calculator";
 
 // Interface for product details stored as JSON
 interface ProductDetails {
@@ -60,9 +61,16 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }, [product.details]);
   
-  // We don't need to calculate the price on the card level anymore,
-  // just display the base price
-  const { basePrice } = product;
+  // Determine initial metal type from parsed details if available
+  const initialMetalType = productMetalType 
+    ? productMetalType.toLowerCase().replace(/\s+/g, '-') 
+    : undefined;
+  
+  // Use price calculator to get the calculated price (but don't show selectors)
+  const { currentPrice } = usePriceCalculator({
+    basePrice: product.basePrice,
+    initialMetalTypeId: initialMetalType
+  });
   
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
@@ -119,7 +127,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div>
               <p className="font-montserrat text-sm text-foreground/70">Starting from</p>
               <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
-                {formatCurrency(basePrice)}
+                {formatCurrency(currentPrice)}
               </p>
             </div>
           </div>
