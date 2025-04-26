@@ -2,7 +2,7 @@
  * Jewelry Price Calculator using database metal and stone values
  * Calculates prices based on: 
  * 1. Metal weight * 24k gold price * metal type modifier
- * 2. Stone carats * per-carat price for each stone
+ * 2. Stone carats * stone-specific price per carat from database
  * 3. Applies 25% overhead
  */
 
@@ -105,10 +105,14 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     // 2. Calculate stone costs by summing each stone's carat * per-carat price
     let stoneCost = 0;
     
+    // This array stores detailed cost information for each gem
+    const gemCosts: {name: string, carats: number, price: number, totalCost: number}[] = [];
+    
     for (const gem of primaryGems) {
       // Default carat weight if not provided
       const carats = gem.carats || 0.5;
       let perCaratPrice = 0;
+      let stoneTypeName = "";
       
       // Try to get stone price from database by ID first
       if (gem.stoneTypeId) {
@@ -123,17 +127,41 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
             st.name.toLowerCase() === (gem.stoneTypeId as string).toLowerCase()
           );
         }
-        if (stoneTypeData?.priceModifier) {
+        
+        if (stoneTypeData) {
+          stoneTypeName = stoneTypeData.name;
+          // Use the specific price modifier for this stone type
           perCaratPrice = stoneTypeData.priceModifier;
+          console.log(`Using stone price for ${stoneTypeName}: ₹${perCaratPrice} per carat`);
         }
       }
       
-      // Fallback: If no price found, estimate based on name
+      // Fallback: If no price found from database, estimate based on name
       if (!perCaratPrice) {
+        stoneTypeName = gem.name;
         perCaratPrice = await getGemPricePerCaratFromName(gem.name);
+        console.log(`Using fallback stone price for ${stoneTypeName}: ₹${perCaratPrice} per carat`);
       }
       
-      stoneCost += carats * perCaratPrice;
+      // Calculate this gem's cost contribution
+      const thisGemCost = carats * perCaratPrice;
+      stoneCost += thisGemCost;
+      
+      // Store the detailed cost info for this gem
+      gemCosts.push({
+        name: stoneTypeName || gem.name,
+        carats: carats,
+        price: perCaratPrice,
+        totalCost: thisGemCost
+      });
+    }
+    
+    // Log detailed gem cost breakdown for debugging
+    if (gemCosts.length > 0) {
+      console.log("Stone Cost Breakdown:");
+      gemCosts.forEach(gem => {
+        console.log(`- ${gem.name} (${gem.carats} carats at ₹${gem.price}/carat): ₹${gem.totalCost}`);
+      });
     }
     
     // 3. Calculate total with 25% overhead
@@ -166,7 +194,7 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
 /**
  * Estimate gem price per carat based on name when database value not available
  */
-async function getGemPricePerCaratFromName(gemName: string): Promise<number> {
+export async function getGemPricePerCaratFromName(gemName: string): Promise<number> {
   try {
     // Try to find in database first
     const stoneTypes = await storage.getAllStoneTypes();

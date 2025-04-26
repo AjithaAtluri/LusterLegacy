@@ -18,7 +18,7 @@ import {
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
-import { calculateJewelryPrice, getSamplePriceCalculation } from "./utils/price-calculator";
+import { calculateJewelryPrice, getSamplePriceCalculation, getGemPricePerCaratFromName } from "./utils/price-calculator";
 import fs from "fs";
 import { validateAdmin } from "./utils";
 import { v4 as uuidv4 } from "uuid";
@@ -1391,6 +1391,13 @@ Respond in JSON format:
         }
       }
       
+      // Separate the primary gems array into primary stone and secondary stones
+      // We already transformed them all into a single array of primary gems,
+      // but we want to track costs separately
+      
+      // Get the index where secondary stones start
+      const numberOfPrimaryGems = primaryStone ? 1 : 0;
+      
       // Use the centralized price calculator utility
       const result = await calculateJewelryPrice({
         productType,
@@ -1400,39 +1407,74 @@ Respond in JSON format:
         primaryGems
       });
       
-      // Format breakdown for better UI display
-      // Calculate the split between primary and secondary stones
-      // If both exist, primary gets 70%, secondary gets 30%
-      // If only one exists, it gets 100% of the stone cost
-      const hasPrimaryStone = primaryStone && primaryGems.length > 0;
-      const hasSecondaryStones = secondaryStones && secondaryStones.length > 0;
+      // Calculate individual stone type costs to accurately break down primary vs secondary
+      let primaryStoneCost = 0;
+      let secondaryStoneCost = 0;
       
-      let primaryStonePercentage = 0;
-      let secondaryStonePercentage = 0;
-      
-      if (hasPrimaryStone && hasSecondaryStones) {
-        // Both stone types present - split 70/30
-        primaryStonePercentage = 0.7;
-        secondaryStonePercentage = 0.3;
-      } else if (hasPrimaryStone) {
-        // Only primary stone
-        primaryStonePercentage = 1.0;
-      } else if (hasSecondaryStones) {
-        // Only secondary stones
-        secondaryStonePercentage = 1.0;
+      // Handle separately fetching stone costs for accurate breakdown
+      // Calculate costs individually for accurate reporting
+      for (let i = 0; i < primaryGems.length; i++) {
+        const gem = primaryGems[i];
+        const carats = gem.carats || 0.5;
+        let perCaratPrice = 0;
+        
+        // Get the stone price from the database
+        if (gem.stoneTypeId) {
+          try {
+            const stoneTypeId = typeof gem.stoneTypeId === 'number' ? 
+                              gem.stoneTypeId : 
+                              parseInt(gem.stoneTypeId as string);
+                              
+            const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+            
+            if (stoneTypeData?.priceModifier) {
+              perCaratPrice = stoneTypeData.priceModifier;
+            } else {
+              // If not found in database, estimate based on name
+              perCaratPrice = await getGemPricePerCaratFromName(gem.name);
+            }
+            
+            const thisStoneCost = carats * perCaratPrice;
+            
+            // Add to primary or secondary cost based on index
+            if (i < numberOfPrimaryGems) {
+              primaryStoneCost += thisStoneCost;
+            } else {
+              secondaryStoneCost += thisStoneCost;
+            }
+          } catch (e) {
+            console.error(`Error calculating stone cost for ${gem.name}:`, e);
+          }
+        }
       }
       
-      console.log(`Stone cost distribution - Primary: ${primaryStonePercentage * 100}%, Secondary: ${secondaryStonePercentage * 100}%`);
+      const hasPrimaryStone = primaryStone && numberOfPrimaryGems > 0 && primaryStoneCost > 0;
+      const hasSecondaryStones = secondaryStones && secondaryStones.length > 0 && secondaryStoneCost > 0;
+      
+      console.log(`Stone costs - Primary: ₹${primaryStoneCost}, Secondary: ₹${secondaryStoneCost}`);
+      
+      // If we couldn't calculate individual costs (which shouldn't happen),
+      // fall back to the original 70/30 split only for display purposes
+      if (primaryStoneCost === 0 && secondaryStoneCost === 0 && result.breakdown?.stoneCost) {
+        if (hasPrimaryStone && hasSecondaryStones) {
+          primaryStoneCost = result.breakdown.stoneCost * 0.7;
+          secondaryStoneCost = result.breakdown.stoneCost * 0.3;
+        } else if (hasPrimaryStone) {
+          primaryStoneCost = result.breakdown.stoneCost;
+        } else if (hasSecondaryStones) {
+          secondaryStoneCost = result.breakdown.stoneCost;
+        }
+      }
       
       const usdBreakdown = {
         metalCost: result.breakdown?.metalCost 
           ? Math.round(result.breakdown.metalCost / USD_TO_INR_RATE) 
           : 0,
-        primaryStoneCost: result.breakdown?.stoneCost && hasPrimaryStone
-          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * primaryStonePercentage)
+        primaryStoneCost: hasPrimaryStone
+          ? Math.round(primaryStoneCost / USD_TO_INR_RATE)
           : 0,
-        secondaryStoneCost: result.breakdown?.stoneCost && hasSecondaryStones
-          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * secondaryStonePercentage)
+        secondaryStoneCost: hasSecondaryStones
+          ? Math.round(secondaryStoneCost / USD_TO_INR_RATE)
           : 0,
         overhead: result.breakdown?.overhead
           ? Math.round(result.breakdown.overhead / USD_TO_INR_RATE)
@@ -1441,11 +1483,11 @@ Respond in JSON format:
       
       const inrBreakdown = {
         metalCost: result.breakdown?.metalCost || 0,
-        primaryStoneCost: result.breakdown?.stoneCost && hasPrimaryStone
-          ? Math.round(result.breakdown.stoneCost * primaryStonePercentage)
+        primaryStoneCost: hasPrimaryStone
+          ? Math.round(primaryStoneCost)
           : 0,
-        secondaryStoneCost: result.breakdown?.stoneCost && hasSecondaryStones
-          ? Math.round(result.breakdown.stoneCost * secondaryStonePercentage)
+        secondaryStoneCost: hasSecondaryStones
+          ? Math.round(secondaryStoneCost)
           : 0,
         overhead: result.breakdown?.overhead || 0
       };
