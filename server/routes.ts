@@ -1319,6 +1319,7 @@ Respond in JSON format:
         metalWeight = 5, 
         primaryStone = null, 
         secondaryStones = [],
+        otherStone = null,
         productType = "Necklace"  // Default product type
       } = req.body;
       
@@ -1388,6 +1389,29 @@ Respond in JSON format:
               console.error("Error processing secondary stone:", e);
             }
           }
+        }
+      }
+      
+      // Add other stone if provided
+      if (otherStone && otherStone.stoneTypeId) {
+        try {
+          // Look up stone type from database
+          const stoneTypeId = typeof otherStone.stoneTypeId === 'string' && otherStone.stoneTypeId.match(/^\d+$/)
+            ? parseInt(otherStone.stoneTypeId)
+            : otherStone.stoneTypeId;
+          
+          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          
+          if (stoneTypeData) {
+            console.log(`Adding other stone: ${stoneTypeData.name} with weight ${otherStone.caratWeight || 0.25} carats`);
+            primaryGems.push({
+              name: stoneTypeData.name,
+              carats: otherStone.caratWeight || 0.25,
+              stoneTypeId: stoneTypeId
+            });
+          }
+        } catch (e) {
+          console.error("Error processing other stone:", e);
         }
       }
       
@@ -1510,7 +1534,8 @@ Respond in JSON format:
           metalType,
           metalWeight,
           primaryStone,
-          secondaryStones
+          secondaryStones,
+          otherStone
         }
       });
     } catch (error) {
