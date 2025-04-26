@@ -458,7 +458,7 @@ export default function EditProductNew() {
       metalWeight: form.getValues("metalWeight"),
       mainStoneType: form.getValues("mainStoneType"),
       mainStoneWeight: form.getValues("mainStoneWeight"),
-      secondaryStoneTypes: form.getValues("secondaryStoneTypes"),
+      secondaryStoneType: form.getValues("secondaryStoneType"),
       secondaryStoneWeight: form.getValues("secondaryStoneWeight"),
       otherStoneType: form.getValues("otherStoneType"),
       otherStoneWeight: form.getValues("otherStoneWeight"),
@@ -616,10 +616,9 @@ export default function EditProductNew() {
             priceUSD: values.priceUSD,
             metalType: values.metalType,
             metalWeight: parseFloat(values.metalWeight) || 0,
-            stoneTypes: values.secondaryStoneTypes,
             mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
             mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
-            secondaryStoneTypes: values.secondaryStoneTypes,
+            secondaryStoneType: values.secondaryStoneType === "none_selected" ? "" : values.secondaryStoneType,
             secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
             otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
             otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
@@ -632,7 +631,7 @@ export default function EditProductNew() {
               metalWeight: parseFloat(values.metalWeight) || 0,
               mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
               mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
-              secondaryStoneTypes: values.secondaryStoneTypes.map(stone => stone.name),
+              secondaryStoneType: values.secondaryStoneType === "none_selected" ? "" : values.secondaryStoneType,
               secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
               otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
               otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
@@ -1222,33 +1221,28 @@ export default function EditProductNew() {
 
                     <FormField
                       control={form.control}
-                      name="secondaryStoneTypes"
+                      name="secondaryStoneType"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Secondary Stone Types</FormLabel>
-                          <div className="mt-2 border rounded-md p-4 max-h-[200px] overflow-y-auto">
-                            {stoneTypes?.map(stone => (
-                              <div key={stone.id} className="flex items-center space-x-2 mb-2">
-                                <Checkbox 
-                                  id={`stone-${stone.id}`}
-                                  checked={field.value.some(s => s.id === stone.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      field.onChange([...field.value, stone]);
-                                    } else {
-                                      field.onChange(field.value.filter(s => s.id !== stone.id));
-                                    }
-                                  }}
-                                />
-                                <label 
-                                  htmlFor={`stone-${stone.id}`}
-                                  className="text-sm cursor-pointer"
-                                >
+                          <FormLabel>Secondary Stone Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select secondary stone" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none_selected">None</SelectItem>
+                              {stoneTypes?.map(stone => (
+                                <SelectItem key={stone.id} value={stone.name}>
                                   {stone.name}
-                                </label>
-                              </div>
-                            ))}
-                          </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Choose the secondary stone type for this jewelry piece
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -1267,7 +1261,7 @@ export default function EditProductNew() {
                               step="0.01"
                               placeholder="Enter total weight" 
                               {...field}
-                              disabled={form.watch("secondaryStoneTypes").length === 0}
+                              disabled={!form.watch("secondaryStoneType") || form.watch("secondaryStoneType") === "none_selected"}
                             />
                           </FormControl>
                           <FormMessage />
