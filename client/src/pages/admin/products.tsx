@@ -30,10 +30,10 @@ export default function AdminProducts() {
   const params = new URLSearchParams(window.location.search);
   const action = params.get('action');
   
-  // If action=new, redirect to AI generator page
+  // If action=new, redirect to unified product page
   useState(() => {
     if (action === 'new') {
-      setLocation("/admin/ai-generator");
+      setLocation("/admin/product");
     }
   });
   
@@ -56,14 +56,14 @@ export default function AdminProducts() {
   
   // Handle create product
   const handleCreateProduct = () => {
-    // Navigate directly to the AI generator page
-    setLocation("/admin/ai-generator");
+    // Navigate to the unified product page
+    setLocation("/admin/product");
   };
   
   // Handle edit product
   const handleEditProduct = (product: any) => {
-    // Navigate to the edit product page
-    setLocation(`/admin/edit-product/${product.id}`);
+    // Navigate to the unified product page with product id
+    setLocation(`/admin/product/${product.id}`);
   };
   
   // Handle delete product
