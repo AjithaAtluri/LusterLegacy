@@ -939,102 +939,127 @@ export default function EditProductNew() {
                   <CardHeader>
                     <CardTitle>Pricing</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <CardContent>
+                    {/* Hidden form fields for prices - will be updated by code */}
+                    <div className="hidden">
                       <FormField
                         control={form.control}
                         name="priceINR"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Price (INR)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                min="0" 
-                                step="0.01"
-                                placeholder="Price in INR" 
-                                {...field}
-                                value={field.value}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                              />
+                              <Input type="hidden" {...field} />
                             </FormControl>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={form.control}
                         name="priceUSD"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Price (USD)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                min="0" 
-                                step="0.01"
-                                placeholder="Price in USD" 
-                                {...field}
-                                value={field.value}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                              />
+                              <Input type="hidden" {...field} />
                             </FormControl>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
                     
-                    {/* Price Comparison */}
-                    <div className="mt-6">
-                      <Card className="border-amber-200">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base flex items-center">
-                            <PiggyBank className="mr-2 h-5 w-5 text-amber-600" />
-                            Price Comparison
-                          </CardTitle>
-                          <CardDescription>
-                            Compare AI-generated prices with real-time calculated prices
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="border rounded-md p-3 bg-background">
-                              <h3 className="text-sm font-medium mb-2 text-primary">AI-Generated Price</h3>
-                              <div className="space-y-2">
-                                <div className="flex justify-between">
-                                  <span className="text-sm">USD:</span>
-                                  <span className="font-medium">${form.watch("priceUSD")}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span className="text-sm">INR:</span>
-                                  <span className="font-medium">₹{form.watch("priceINR")}</span>
-                                </div>
+                    {/* Price Comparison with Breakdown */}
+                    <Card className="border-amber-200">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center">
+                          <PiggyBank className="mr-2 h-5 w-5 text-amber-600" />
+                          Price Comparison & Breakdown
+                        </CardTitle>
+                        <CardDescription>
+                          Compare AI-generated prices with real-time calculated prices
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="border rounded-md p-3 bg-background">
+                            <h3 className="text-sm font-medium mb-2 text-primary">AI-Generated Price</h3>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm">USD:</span>
+                                <span className="font-medium">${form.watch("priceUSD")}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm">INR:</span>
+                                <span className="font-medium">₹{form.watch("priceINR")}</span>
                               </div>
                             </div>
-                            <div className="border rounded-md p-3 bg-background">
-                              <h3 className="text-sm font-medium mb-2 text-amber-600">Calculated Price</h3>
-                              <PriceCalculatorDisplay 
-                                metalType={form.watch("metalType")}
-                                metalWeight={form.watch("metalWeight")}
-                                mainStoneType={form.watch("mainStoneType")}
-                                mainStoneWeight={form.watch("mainStoneWeight")}
-                                secondaryStoneType={form.watch("secondaryStoneType")}
-                                secondaryStoneWeight={form.watch("secondaryStoneWeight")}
-                                otherStoneType={form.watch("otherStoneType")}
-                                otherStoneWeight={form.watch("otherStoneWeight")}
-                                compact={true}
+                          </div>
+                          <div className="border rounded-md p-3 bg-background">
+                            <h3 className="text-sm font-medium mb-2 text-amber-600">Calculated Price</h3>
+                            <PriceCalculatorDisplay 
+                              metalType={form.watch("metalType")}
+                              metalWeight={form.watch("metalWeight")}
+                              mainStoneType={form.watch("mainStoneType")}
+                              mainStoneWeight={form.watch("mainStoneWeight")}
+                              secondaryStoneType={form.watch("secondaryStoneType")}
+                              secondaryStoneWeight={form.watch("secondaryStoneWeight")}
+                              otherStoneType={form.watch("otherStoneType")}
+                              otherStoneWeight={form.watch("otherStoneWeight")}
+                              compact={true}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Price Breakdown Section */}
+                        <div className="mt-4 border rounded-md p-4 bg-background/50">
+                          <h3 className="text-sm font-medium mb-3 text-foreground">Price Calculation Breakdown</h3>
+                          <div className="space-y-3">
+                            <PriceBreakdownItem 
+                              label="Metal Cost" 
+                              metalType={form.watch("metalType")} 
+                              metalWeight={form.watch("metalWeight")}
+                            />
+                            
+                            {form.watch("mainStoneType") !== "none_selected" && (
+                              <PriceBreakdownItem 
+                                label="Main Stone" 
+                                stoneType={form.watch("mainStoneType")}
+                                stoneWeight={form.watch("mainStoneWeight")}
                               />
+                            )}
+                            
+                            {form.watch("secondaryStoneType") !== "none_selected" && (
+                              <PriceBreakdownItem 
+                                label="Secondary Stone" 
+                                stoneType={form.watch("secondaryStoneType")}
+                                stoneWeight={form.watch("secondaryStoneWeight")}
+                              />
+                            )}
+                            
+                            {form.watch("otherStoneType") !== "none_selected" && (
+                              <PriceBreakdownItem 
+                                label="Other Stone" 
+                                stoneType={form.watch("otherStoneType")}
+                                stoneWeight={form.watch("otherStoneWeight")}
+                              />
+                            )}
+                            
+                            <div className="flex justify-between pt-2 border-t border-border">
+                              <span className="text-sm font-medium">Craftsmanship & Overhead (25%)</span>
+                              <span className="text-sm">Added to final price</span>
                             </div>
                           </div>
-                          <div className="mt-3 text-xs text-muted-foreground">
-                            <p>The calculated price is based on current gold prices and selected materials.</p>
-                            <p className="mt-1">You can manually adjust the prices in the fields above if needed.</p>
+                          
+                          <div className="mt-4 text-xs text-primary">
+                            <p className="font-medium">Price Formula:</p>
+                            <p className="mt-1">(Metal weight × current gold price × metal modifier) + (Stone carat weight × stone price) + 25% overhead</p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                        </div>
+                        
+                        <div className="mt-3 text-xs text-muted-foreground">
+                          <p>The calculated price is based on current gold prices and selected materials.</p>
+                          <p className="mt-1">Prices are dynamically updated based on the product specifications.</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </CardContent>
                 </Card>
 
