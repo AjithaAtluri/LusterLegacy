@@ -1,14 +1,5 @@
 import { useState, useEffect } from "react";
-
-// Hardcoded reliable image mapping that we know works
-const PRODUCT_IMAGE_MAPPING: Record<number, string> = {
-  23: "/uploads/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg", // Ethereal Elegance
-  22: "/uploads/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg", // Ethereal Navaratan
-  21: "/uploads/08eca768-8ea6-4d12-974b-eb7707daca49.jpeg", // Majestic Emerald
-  19: "/uploads/08a3cf15-9317-45ac-9968-aa58a5bf2220.jpeg", // Multigem Harmony
-  // Default fallback for other products
-  0: "/uploads/test_jewelry.jpeg" 
-};
+import { useQuery } from "@tanstack/react-query";
 
 interface ReliableProductImageProps {
   productId: number;
@@ -17,29 +8,54 @@ interface ReliableProductImageProps {
   fallbackSrc?: string;
 }
 
+// Function to get the image path based on the server structure
+const getImagePath = (imageUrl: string | null | undefined): string => {
+  if (!imageUrl) return "";
+  
+  // Normalize path to ensure it works for both uploads and attached_assets
+  if (imageUrl.startsWith("/uploads/")) {
+    return imageUrl; // Already has the correct format
+  }
+  
+  // Add /uploads/ prefix if missing
+  if (!imageUrl.startsWith("/")) {
+    return `/uploads/${imageUrl}`;
+  }
+  
+  return imageUrl;
+};
+
 export default function ReliableProductImage({ 
   productId, 
   alt, 
   className = "", 
-  fallbackSrc = "/uploads/test_jewelry.jpeg" 
+  fallbackSrc = "/uploads/40c3afd0-d8d5-4fa4-87b0-f717a6941660.jpg" 
 }: ReliableProductImageProps) {
-  // Start with a reliable image immediately to avoid flicker
-  const [imageSrc, setImageSrc] = useState<string>(
-    PRODUCT_IMAGE_MAPPING[productId] || 
-    PRODUCT_IMAGE_MAPPING[0] || 
-    fallbackSrc
-  );
-  
+  const [imageSrc, setImageSrc] = useState<string>(fallbackSrc);
   const [hasError, setHasError] = useState(false);
   
-  // Handle image loading errors by using a reliable fallback
+  // If we have a direct product ID, query the product data to get its image
+  const { data: product } = useQuery<any>({
+    queryKey: ['/api/products', productId],
+    enabled: productId > 0
+  });
+  
+  useEffect(() => {
+    if (product) {
+      const imageUrl = product.imageUrl || (product as any).image_url;
+      if (imageUrl) {
+        setImageSrc(getImagePath(imageUrl));
+      }
+    }
+  }, [product]);
+  
+  // Handle image loading errors
   const handleImageError = () => {
-    console.error(`Image failed to load for product ID: ${productId}`);
+    console.error(`Image failed to load for product ID: ${productId}, path: ${imageSrc}`);
     
     if (!hasError) {
-      const fallback = PRODUCT_IMAGE_MAPPING[0] || fallbackSrc;
-      console.log(`Using fallback image: ${fallback}`);
-      setImageSrc(fallback);
+      console.log(`Using fallback image: ${fallbackSrc}`);
+      setImageSrc(fallbackSrc);
       setHasError(true);
     }
   };
