@@ -1401,17 +1401,38 @@ Respond in JSON format:
       });
       
       // Format breakdown for better UI display
+      // Calculate the split between primary and secondary stones
+      // If both exist, primary gets 70%, secondary gets 30%
+      // If only one exists, it gets 100% of the stone cost
+      const hasPrimaryStone = primaryStone && primaryGems.length > 0;
+      const hasSecondaryStones = secondaryStones && secondaryStones.length > 0;
+      
+      let primaryStonePercentage = 0;
+      let secondaryStonePercentage = 0;
+      
+      if (hasPrimaryStone && hasSecondaryStones) {
+        // Both stone types present - split 70/30
+        primaryStonePercentage = 0.7;
+        secondaryStonePercentage = 0.3;
+      } else if (hasPrimaryStone) {
+        // Only primary stone
+        primaryStonePercentage = 1.0;
+      } else if (hasSecondaryStones) {
+        // Only secondary stones
+        secondaryStonePercentage = 1.0;
+      }
+      
+      console.log(`Stone cost distribution - Primary: ${primaryStonePercentage * 100}%, Secondary: ${secondaryStonePercentage * 100}%`);
+      
       const usdBreakdown = {
         metalCost: result.breakdown?.metalCost 
           ? Math.round(result.breakdown.metalCost / USD_TO_INR_RATE) 
           : 0,
-        primaryStoneCost: result.breakdown?.stoneCost && primaryStone
-          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * 
-            (primaryGems.length > 0 ? 0.7 : 0)) // Approximate primary stone as 70% of total stone cost
+        primaryStoneCost: result.breakdown?.stoneCost && hasPrimaryStone
+          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * primaryStonePercentage)
           : 0,
-        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones && secondaryStones.length > 0
-          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * 
-            (primaryGems.length > 1 ? 0.3 : 0)) // Approximate secondary stones as 30% of total stone cost
+        secondaryStoneCost: result.breakdown?.stoneCost && hasSecondaryStones
+          ? Math.round((result.breakdown.stoneCost / USD_TO_INR_RATE) * secondaryStonePercentage)
           : 0,
         overhead: result.breakdown?.overhead
           ? Math.round(result.breakdown.overhead / USD_TO_INR_RATE)
@@ -1420,13 +1441,11 @@ Respond in JSON format:
       
       const inrBreakdown = {
         metalCost: result.breakdown?.metalCost || 0,
-        primaryStoneCost: result.breakdown?.stoneCost && primaryStone
-          ? Math.round(result.breakdown.stoneCost * 
-            (primaryGems.length > 0 ? 0.7 : 0))
+        primaryStoneCost: result.breakdown?.stoneCost && hasPrimaryStone
+          ? Math.round(result.breakdown.stoneCost * primaryStonePercentage)
           : 0,
-        secondaryStoneCost: result.breakdown?.stoneCost && secondaryStones && secondaryStones.length > 0
-          ? Math.round(result.breakdown.stoneCost * 
-            (primaryGems.length > 1 ? 0.3 : 0))
+        secondaryStoneCost: result.breakdown?.stoneCost && hasSecondaryStones
+          ? Math.round(result.breakdown.stoneCost * secondaryStonePercentage)
           : 0,
         overhead: result.breakdown?.overhead || 0
       };

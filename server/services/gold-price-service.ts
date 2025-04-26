@@ -57,9 +57,11 @@ export async function fetchGoldPrice(): Promise<GoldPriceResponse> {
         } else {
           console.log('Gold price pattern not found in HTML');
           
-          // Try alternative pattern
-          const altPriceRegex = /24K\s*Gold\s*Rate.*?₹\s*([\d,]+)/is;
-          const altMatch = html.match(altPriceRegex);
+          // Try alternative pattern - using simple pattern without dotall flag
+          // First make the HTML single line to help with regex matching
+          const singleLineHtml = html.replace(/\n/g, ' ');
+          const altPriceRegex = /24K\s*Gold\s*Rate[^₹]*₹\s*([\d,]+)/i;
+          const altMatch = singleLineHtml.match(altPriceRegex);
           
           if (altMatch && altMatch[1]) {
             const pricePerGram = parseInt(altMatch[1].replace(/,/g, ''), 10);
