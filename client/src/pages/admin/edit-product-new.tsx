@@ -51,7 +51,7 @@ interface FormValues {
   };
   mainStoneType: string;
   mainStoneWeight: string;
-  secondaryStoneTypes: SimpleStoneType[];
+  secondaryStoneType: string;
   secondaryStoneWeight: string;
   otherStoneType: string;
   otherStoneWeight: string;
@@ -91,7 +91,7 @@ export default function EditProductNew() {
       },
       mainStoneType: "none_selected",
       mainStoneWeight: "",
-      secondaryStoneTypes: [],
+      secondaryStoneType: "none_selected",
       secondaryStoneWeight: "",
       otherStoneType: "none_selected",
       otherStoneWeight: "",
@@ -312,36 +312,27 @@ export default function EditProductNew() {
         mainStoneWeight = "0";
       }
       
-      // Extract secondary stone types with better fallbacks and proper formatting
-      let secondaryStoneTypes = [];
-      if (aiInputs.secondaryStoneTypes && Array.isArray(aiInputs.secondaryStoneTypes)) {
-        console.log("Using secondaryStoneTypes from aiInputs:", aiInputs.secondaryStoneTypes);
-        // Convert array of strings to array of objects with id and name
-        secondaryStoneTypes = aiInputs.secondaryStoneTypes.map((name: string, index: number) => ({
-          id: index + 1, // Use index as ID for now
-          name: name
-        }));
-      } else if (additionalData.secondaryStoneTypes && Array.isArray(additionalData.secondaryStoneTypes)) {
-        console.log("Using secondaryStoneTypes from additionalData:", additionalData.secondaryStoneTypes);
-        secondaryStoneTypes = additionalData.secondaryStoneTypes.map((name: string, index: number) => ({
-          id: index + 1,
-          name: name
-        }));
-      } else if (productData.stoneTypes && Array.isArray(productData.stoneTypes)) {
-        console.log("Using stoneTypes from productData:", productData.stoneTypes);
-        secondaryStoneTypes = productData.stoneTypes;
+      // Extract secondary stone type with better fallbacks
+      let secondaryStoneType = 'none_selected';
+      if (aiInputs.secondaryStoneType) {
+        console.log("Using secondaryStoneType from aiInputs:", aiInputs.secondaryStoneType);
+        secondaryStoneType = aiInputs.secondaryStoneType;
+      } else if (additionalData.secondaryStoneType) {
+        console.log("Using secondaryStoneType from additionalData:", additionalData.secondaryStoneType);
+        secondaryStoneType = additionalData.secondaryStoneType;
+      } else if (details?.secondaryStoneType) {
+        console.log("Using secondaryStoneType from details:", details.secondaryStoneType);
+        secondaryStoneType = details.secondaryStoneType;
+      } else if (aiInputs.secondaryStoneTypes && Array.isArray(aiInputs.secondaryStoneTypes) && aiInputs.secondaryStoneTypes.length > 0) {
+        // Fallback to use first value from array if this is from old data format
+        console.log("Fallback: Using first value from secondaryStoneTypes array:", aiInputs.secondaryStoneTypes[0]);
+        secondaryStoneType = aiInputs.secondaryStoneTypes[0];
+      } else if (additionalData.secondaryStoneTypes && Array.isArray(additionalData.secondaryStoneTypes) && additionalData.secondaryStoneTypes.length > 0) {
+        console.log("Fallback: Using first value from secondaryStoneTypes array:", additionalData.secondaryStoneTypes[0]);
+        secondaryStoneType = additionalData.secondaryStoneTypes[0];
       }
       
-      // Format the secondaryStoneTypes properly if they're not already in the right format
-      if (secondaryStoneTypes.length > 0 && typeof secondaryStoneTypes[0] === 'string') {
-        console.log("Converting secondaryStoneTypes from strings to objects");
-        secondaryStoneTypes = secondaryStoneTypes.map((name: string, index: number) => ({
-          id: index + 1,
-          name: name
-        }));
-      }
-      
-      console.log("Final secondaryStoneTypes:", secondaryStoneTypes);
+      console.log("Final secondaryStoneType:", secondaryStoneType);
       
       // Extract secondary stone weight with better fallbacks
       let secondaryStoneWeight = '';
@@ -404,7 +395,7 @@ export default function EditProductNew() {
         },
         mainStoneType: mainStoneType,
         mainStoneWeight: mainStoneWeight,
-        secondaryStoneTypes: secondaryStoneTypes,
+        secondaryStoneType: secondaryStoneType,
         secondaryStoneWeight: secondaryStoneWeight,
         otherStoneType: otherStoneType,
         otherStoneWeight: otherStoneWeight,
