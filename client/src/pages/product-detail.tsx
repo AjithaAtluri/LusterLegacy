@@ -219,33 +219,24 @@ export default function ProductDetail() {
           console.log("Secondary stone debug - additionalData.secondaryStoneType:", parsed.additionalData.secondaryStoneType);
           console.log("Secondary stone debug - additionalData.secondaryStoneTypes:", parsed.additionalData.secondaryStoneTypes);
           console.log("Secondary stone debug - aiInputs.secondaryStoneType:", aiInputs.secondaryStoneType);
-          console.log("Secondary stone debug - aiInputs.secondaryStoneTypes:", aiInputs.secondaryStoneTypes);
           
-          // First try to get the single secondaryStoneType (new format)
-          const singleSecondaryStone = aiInputs.secondaryStoneType || parsed.additionalData.secondaryStoneType || "";
-          console.log("Secondary stone debug - singleSecondaryStone value:", singleSecondaryStone);
-          console.log("Secondary stone debug - singleSecondaryStone type:", typeof singleSecondaryStone);
+          // Get secondary stone type (single value only)
+          const secondaryStone = aiInputs.secondaryStoneType || parsed.additionalData.secondaryStoneType || "";
+          console.log("Secondary stone debug - secondaryStone value:", secondaryStone);
+          console.log("Secondary stone debug - secondaryStone type:", typeof secondaryStone);
           console.log("Secondary stone debug - Is null or none_selected?", 
-                     !singleSecondaryStone || singleSecondaryStone === "none_selected" || singleSecondaryStone === "");
+                     !secondaryStone || secondaryStone === "none_selected" || secondaryStone === "");
           
-          if (singleSecondaryStone && singleSecondaryStone !== "none_selected" && singleSecondaryStone !== "") {
-            console.log("Using single secondary stone type:", singleSecondaryStone);
-            setSecondaryStoneType(singleSecondaryStone);
-            // For backward compatibility, also set the array with this single value
-            setSecondaryStoneTypes([singleSecondaryStone]);
+          if (secondaryStone && secondaryStone !== "none_selected" && secondaryStone !== "") {
+            console.log("Using secondary stone type:", secondaryStone);
+            setSecondaryStoneType(secondaryStone);
+            // For UI purposes, we still need an array with this single value
+            setSecondaryStoneTypes([secondaryStone]);
           } else {
-            // Fall back to array format if single type isn't available (backward compatibility)
-            const stoneTypesArray = aiInputs.secondaryStoneTypes || parsed.additionalData.secondaryStoneTypes || [];
-            console.log("Secondary stone debug - stoneTypesArray:", stoneTypesArray);
-            setSecondaryStoneTypes(stoneTypesArray);
-            // If array has values, use the first one for the single type
-            if (stoneTypesArray.length > 0) {
-              console.log("Using first value from secondary stone array:", stoneTypesArray[0]);
-              setSecondaryStoneType(stoneTypesArray[0]);
-            } else {
-              console.log("No valid secondary stone found, setting to empty string");
-              setSecondaryStoneType("");
-            }
+            // No secondary stone
+            setSecondaryStoneType("");
+            setSecondaryStoneTypes([]);
+            console.log("No valid secondary stone found, setting to empty string");
           }
           
           setSecondaryStoneWeight(aiInputs.secondaryStoneWeight || parsed.additionalData.secondaryStoneWeight || 0);

@@ -21,6 +21,8 @@ interface PriceCalculationParams {
   metalTypeId?: number; // Metal type ID from the database
   metalWeight: number;
   primaryGems?: Gem[];
+  otherStoneType?: string;
+  otherStoneWeight?: number;
 }
 
 // Fallback price of 24k gold per gram in INR (2025 rates) - will be replaced with real value
@@ -108,6 +110,7 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     // This array stores detailed cost information for each gem
     const gemCosts: {name: string, carats: number, price: number, totalCost: number}[] = [];
     
+    // Process primary gems
     for (const gem of primaryGems) {
       // Default carat weight if not provided
       const carats = gem.carats || 0.5;
@@ -154,6 +157,43 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
         price: perCaratPrice,
         totalCost: thisGemCost
       });
+    }
+    
+    // Process otherStoneType if provided
+    if (params.otherStoneType && params.otherStoneWeight && params.otherStoneType !== 'none_selected') {
+      const otherStoneWeight = params.otherStoneWeight || 0.5;
+      let otherStonePrice = 0;
+      
+      // Try to get stone price from database
+      try {
+        const stoneTypes = await storage.getAllStoneTypes();
+        const otherStoneData = stoneTypes.find(st => 
+          st.name.toLowerCase() === params.otherStoneType?.toLowerCase()
+        );
+        
+        if (otherStoneData?.priceModifier) {
+          otherStonePrice = otherStoneData.priceModifier;
+          console.log(`Using database price for ${params.otherStoneType}: ₹${otherStonePrice} per carat`);
+        } else {
+          // Fallback to name-based pricing
+          otherStonePrice = await getGemPricePerCaratFromName(params.otherStoneType);
+          console.log(`Using fallback price for ${params.otherStoneType}: ₹${otherStonePrice} per carat`);
+        }
+        
+        // Calculate other stone cost
+        const otherStoneCost = otherStoneWeight * otherStonePrice;
+        stoneCost += otherStoneCost;
+        
+        // Add to gem costs
+        gemCosts.push({
+          name: params.otherStoneType,
+          carats: otherStoneWeight,
+          price: otherStonePrice,
+          totalCost: otherStoneCost
+        });
+      } catch (error) {
+        console.error(`Error calculating other stone (${params.otherStoneType}) price:`, error);
+      }
     }
     
     // Log detailed gem cost breakdown for debugging
