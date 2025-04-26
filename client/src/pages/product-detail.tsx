@@ -46,7 +46,6 @@ interface ProductDetails {
 export default function ProductDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [parsedDetails, setParsedDetails] = useState<ProductDetails | null>(null);
   const [tagline, setTagline] = useState<string>("");
   const [detailedDescription, setDetailedDescription] = useState<string>("");
@@ -127,16 +126,11 @@ export default function ProductDetail() {
   
   useEffect(() => {
     if (product) {
-      // Use our centralized product image mapping via the getImageUrl function
-      // We pass the product ID to ensure consistent images across components
+      // Log product image debug information
       const imageUrl = product.imageUrl || (product as any).image_url;
       console.log("Product ID for image mapping:", product.id);
       console.log("Product image URL before processing:", imageUrl);
-      
-      // First try to get image from our centralized mapping based on product ID
-      const processedUrl = getImageUrl(imageUrl, product.id);
-      console.log("Product image URL after processing:", processedUrl);
-      setSelectedImage(processedUrl);
+      console.log("Using ReliableProductImage component with direct product ID");
     }
   }, [product]);
   
@@ -257,11 +251,8 @@ export default function ProductDetail() {
     initialMetalTypeId: productMetalType ? productMetalType.toLowerCase().replace(/\s+/g, '-') : '18kt-gold'
   });
   
-  const changeImage = (image: string) => {
-    // Use our centralized getImageUrl function with the product ID
-    // This ensures consistent images even for thumbnails/additional images
-    setSelectedImage(getImageUrl(image, product?.id));
-  };
+  // This function is no longer needed as we're using ReliableProductImage 
+  // to consistently display images based on product ID
   
   // If product not found
   if (error) {
@@ -303,11 +294,11 @@ export default function ProductDetail() {
       )}
 
       {/* Hero Section with Full-Width Image */}
-      {product && selectedImage && (
+      {product && (
         <div className="relative w-full h-[50vh] md:h-[60vh] bg-gradient-to-r from-charcoal to-black overflow-hidden">
           <div className="absolute inset-0 opacity-40">
-            <img 
-              src={selectedImage}
+            <ReliableProductImage 
+              productId={product.id}
               alt={product.name}
               className="w-full h-full object-cover object-center"
             />
@@ -371,13 +362,11 @@ export default function ProductDetail() {
               <div className="sticky top-24">
                 {/* Main Image with sparkle effect */}
                 <div className="rounded-lg overflow-hidden bg-card mb-4 relative group">
-                  {selectedImage && (
-                    <img 
-                      src={selectedImage} 
-                      alt={product.name} 
-                      className="w-full h-auto object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  )}
+                  <ReliableProductImage 
+                    productId={product.id}
+                    alt={product.name}
+                    className="w-full h-auto object-cover transition duration-500 group-hover:scale-105"
+                  />
                   <GemSparkle />
                   
                   {/* Product badges positioned over image */}
@@ -398,16 +387,13 @@ export default function ProductDetail() {
                 {/* Thumbnail gallery */}
                 {allImages.length > 1 && (
                   <div className="grid grid-cols-5 gap-2">
-                    {allImages.map((image, index) => (
+                    {allImages.map((_, index) => (
                       <div 
                         key={index}
-                        className={`rounded-md overflow-hidden cursor-pointer transition-all ${
-                          image && selectedImage === getImageUrl(image) ? 'ring-2 ring-primary' : 'opacity-70 hover:opacity-100'
-                        }`}
-                        onClick={() => image && changeImage(image)}
+                        className="rounded-md overflow-hidden transition-all opacity-80 hover:opacity-100 hover:ring-2 hover:ring-primary"
                       >
-                        <img 
-                          src={getImageUrl(image || '')} 
+                        <ReliableProductImage 
+                          productId={product.id}
                           alt={`${product.name} view ${index + 1}`} 
                           className="w-full h-auto object-cover"
                         />
