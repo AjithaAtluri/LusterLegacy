@@ -246,6 +246,7 @@ export default function ProductDetail() {
               productMetalWeight,
               mainStoneType,
               mainStoneWeight,
+              secondaryStoneType,
               secondaryStoneTypes,
               secondaryStoneWeight
             });
@@ -649,27 +650,31 @@ export default function ProductDetail() {
                             </div>
                           </div>
                           
-                          {/* Secondary Stones */}
-                          {(secondaryStoneTypes?.length > 0 || secondaryStoneWeight > 0) && (
+                          {/* Secondary Stone */}
+                          {((secondaryStoneType && secondaryStoneType !== "none_selected") || secondaryStoneWeight > 0) && (
                             <div className="bg-background border border-border rounded-md p-4">
                               <div className="flex items-center justify-between mb-2">
-                                <span className="font-montserrat font-semibold text-sm text-foreground/80">Secondary Stones</span>
+                                <span className="font-montserrat font-semibold text-sm text-foreground/80">Secondary Stone</span>
                                 {secondaryStoneWeight > 0 && (
-                                  <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats total</Badge>
+                                  <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats</Badge>
                                 )}
                               </div>
                               <div className="space-y-2">
-                                {secondaryStoneTypes && secondaryStoneTypes.length > 0 ? (
-                                  secondaryStoneTypes.map((stone, index) => (
-                                    <div key={index} className="flex items-center space-x-2">
-                                      <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                      <span className="font-cormorant text-lg">{stone}</span>
-                                    </div>
-                                  ))
+                                {secondaryStoneType && secondaryStoneType !== "none_selected" ? (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <span className="font-cormorant text-lg">{secondaryStoneType}</span>
+                                  </div>
+                                ) : secondaryStoneTypes && secondaryStoneTypes.length > 0 ? (
+                                  // Fallback for backward compatibility with old data format
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <span className="font-cormorant text-lg">{secondaryStoneTypes[0]}</span>
+                                  </div>
                                 ) : (
                                   <div className="flex items-center space-x-2">
                                     <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                    <span className="font-cormorant text-lg">Polki Stones</span>
+                                    <span className="font-cormorant text-lg">None</span>
                                   </div>
                                 )}
                               </div>
