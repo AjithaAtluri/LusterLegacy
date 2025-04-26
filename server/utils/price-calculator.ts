@@ -8,6 +8,7 @@
 
 import { storage } from "../storage";
 import { getCachedGoldPrice, getGoldPrice } from "../services/gold-price-service";
+import { getCachedExchangeRate, getUsdToInrRate } from "../services/exchange-rate-service";
 
 interface Gem {
   name: string;
@@ -27,9 +28,6 @@ interface PriceCalculationParams {
 
 // Fallback price of 24k gold per gram in INR (2025 rates) - will be replaced with real value
 const DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR = 7500;
-
-// USD to INR conversion rate
-const USD_TO_INR_RATE = 83;
 
 export async function calculateJewelryPrice(params: PriceCalculationParams): Promise<{
   priceUSD: number;
@@ -305,12 +303,30 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     const overhead = baseCost * 0.25;
     const totalPriceINR = Math.round(baseCost + overhead);
     
-    // Convert to USD
-    const priceUSD = Math.round(totalPriceINR / USD_TO_INR_RATE);
+    // Get the current USD to INR exchange rate (with fallback)
+    let exchangeRate = 83; // Default fallback rate
+    try {
+      // Try to get the current rate
+      const freshRate = await getUsdToInrRate();
+      if (freshRate && freshRate > 0) {
+        exchangeRate = freshRate;
+        console.log(`Using current USD to INR exchange rate: ${exchangeRate}`);
+      } else {
+        // Use cached rate as fallback
+        exchangeRate = getCachedExchangeRate();
+        console.log(`Using cached USD to INR exchange rate: ${exchangeRate}`);
+      }
+    } catch (error) {
+      console.error("Error fetching exchange rate, using default:", error);
+    }
+    
+    // Convert to USD using the current exchange rate
+    const priceUSD = Math.round(totalPriceINR / exchangeRate);
     
     return {
       priceINR: totalPriceINR,
       priceUSD,
+      exchangeRate, // Include the exchange rate used in the response
       breakdown: {
         metalCost: Math.round(metalCost),
         stoneCost: Math.round(stoneCost),
