@@ -567,7 +567,7 @@ export default function UnifiedProductPage() {
               }] : []),
               ...(values.secondaryStoneTypes ? values.secondaryStoneTypes.map(stone => ({
                 name: stone.name,
-                carats: values.secondaryStoneWeight ? parseFloat(values.secondaryStoneWeight) / values.secondaryStoneTypes.length : 0
+                carats: values.secondaryStoneWeight ? parseFloat(values.secondaryStoneWeight) / (values.secondaryStoneTypes?.length || 1) : 0
               })) : [])
             ],
             userDescription: values.userDescription,
@@ -768,7 +768,7 @@ export default function UnifiedProductPage() {
                                 </FormControl>
                                 <SelectContent>
                                   {productTypes?.map((type) => (
-                                    <SelectItem key={type.id} value={type.id.toString()}>
+                                    <SelectItem key={type.id} value={type.id?.toString() || ""}>
                                       {type.name}
                                     </SelectItem>
                                   ))}
@@ -921,7 +921,7 @@ export default function UnifiedProductPage() {
                                 <SelectContent>
                                   <SelectItem value="">None</SelectItem>
                                   {stoneTypes?.map((type) => (
-                                    <SelectItem key={type.id} value={type.name}>
+                                    <SelectItem key={type.id} value={type.name || ""}>
                                       {type.name}
                                     </SelectItem>
                                   ))}
