@@ -106,7 +106,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
   // Also serve files from attached_assets as a fallback for missing uploads
-  app.use('/uploads', express.static(path.join(process.cwd(), 'attached_assets')));
+  // But exclude debug screenshots and other non-jewelry images
+  app.use('/uploads', (req, res, next) => {
+    const requestPath = req.path;
+    
+    // Skip debug screenshots and system-generated images
+    if (requestPath.includes('screenshot-') || requestPath.includes('image_')) {
+      console.log(`Skipping debug image request: ${requestPath}`);
+      return next('route'); // Skip to next route
+    }
+    
+    // Continue to static file middleware for valid jewelry images
+    return express.static(path.join(process.cwd(), 'attached_assets'))(req, res, next);
+  });
   
   // Directly serve files from attached_assets folder
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
@@ -116,6 +128,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const filename = req.params.filename;
     console.log(`Fallback image request for: ${filename}`);
     
+    // Skip debug screenshots and system-generated images
+    if (filename.includes('screenshot-') || filename.includes('image_')) {
+      console.log(`Skipping debug image request in fallback: ${filename}`);
+      return res.status(404).json({ error: 'Image not found or excluded' });
+    }
+    
     // Check if file exists in uploads directory
     const uploadsPath = path.join(process.cwd(), 'uploads', filename);
     if (fs.existsSync(uploadsPath)) {
@@ -124,8 +142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Check if file exists in attached_assets directory
+    // Only using proper jewelry images, no debug screenshots
     const assetsPath = path.join(process.cwd(), 'attached_assets', filename);
-    if (fs.existsSync(assetsPath)) {
+    if (fs.existsSync(assetsPath) && 
+        !(filename.startsWith('screenshot-') || filename.startsWith('image_'))) {
       console.log(`Found in attached_assets directory: ${assetsPath}`);
       return res.sendFile(assetsPath);
     }
@@ -139,11 +159,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // If even our default image is missing, try the last resort
     try {
-      // Find any jewelry images we can use as fallbacks
+      // Find only actual jewelry images to use as fallbacks, avoiding debug screenshots
       const jpegFiles = fs.readdirSync(path.join(process.cwd(), 'uploads'))
-        .filter(file => file.endsWith('.jpeg') || file.endsWith('.jpg'));
+        .filter(file => {
+          // Must be a jpeg/jpg file
+          const isImage = file.endsWith('.jpeg') || file.endsWith('.jpg');
+          // Avoid debug screenshots and other non-jewelry images
+          const isNotDebug = !file.startsWith('screenshot-') && !file.startsWith('image_');
+          return isImage && isNotDebug;
+        });
       
       if (jpegFiles.length > 0) {
+        // Use a consistent image rather than random selections
         const fallbackImagePath = path.join(process.cwd(), 'uploads', jpegFiles[0]);
         console.log(`Using fallback image: ${fallbackImagePath}`);
         return res.sendFile(fallbackImagePath);
