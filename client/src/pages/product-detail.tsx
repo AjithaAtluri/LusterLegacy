@@ -61,6 +61,8 @@ export default function ProductDetail() {
   const [secondaryStoneType, setSecondaryStoneType] = useState<string>("");
   const [secondaryStoneTypes, setSecondaryStoneTypes] = useState<string[]>([]);
   const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<number>(0);
+  const [otherStoneType, setOtherStoneType] = useState<string>("");
+  const [otherStoneWeight, setOtherStoneWeight] = useState<number>(0);
   const [dimensions, setDimensions] = useState<string>("");
   const [userDescription, setUserDescription] = useState<string>("");
   
@@ -219,7 +221,11 @@ export default function ProductDetail() {
           console.log("Secondary stone debug - Raw additionalData:", parsed.additionalData);
           console.log("Secondary stone debug - Raw aiInputs:", aiInputs);
           console.log("Secondary stone debug - additionalData.secondaryStoneType:", parsed.additionalData.secondaryStoneType);
-          console.log("Secondary stone debug - additionalData.secondaryStoneTypes:", parsed.additionalData.secondaryStoneTypes);
+          // Only access the legacy array if it exists (for backward compatibility)
+          if ('secondaryStoneTypes' in parsed.additionalData) {
+            console.log("Secondary stone debug - additionalData.secondaryStoneTypes (legacy array):", 
+              (parsed.additionalData as any).secondaryStoneTypes);
+          }
           console.log("Secondary stone debug - aiInputs.secondaryStoneType:", aiInputs.secondaryStoneType);
           
           // Get secondary stone type (single value only)
@@ -243,6 +249,23 @@ export default function ProductDetail() {
           
           setSecondaryStoneWeight(aiInputs.secondaryStoneWeight || parsed.additionalData.secondaryStoneWeight || 0);
           
+          // Process other stone type
+          console.log("Other stone debug - additionalData.otherStoneType:", parsed.additionalData.otherStoneType);
+          console.log("Other stone debug - aiInputs.otherStoneType:", aiInputs.otherStoneType);
+          
+          // Get other stone type (single value)
+          const otherStone = aiInputs.otherStoneType || parsed.additionalData.otherStoneType || "";
+          
+          if (otherStone && otherStone !== "none_selected" && otherStone !== "") {
+            console.log("Using other stone type:", otherStone);
+            setOtherStoneType(otherStone);
+          } else {
+            setOtherStoneType("");
+            console.log("No valid other stone found, setting to empty string");
+          }
+          
+          setOtherStoneWeight(aiInputs.otherStoneWeight || parsed.additionalData.otherStoneWeight || 0);
+          
           // Other details
           setDimensions(parsed.additionalData.dimensions || "");
           setUserDescription(aiInputs.userDescription || parsed.additionalData.userDescription || "");
@@ -256,7 +279,9 @@ export default function ProductDetail() {
               mainStoneWeight,
               secondaryStoneType,
               secondaryStoneTypes,
-              secondaryStoneWeight
+              secondaryStoneWeight,
+              otherStoneType,
+              otherStoneWeight
             });
           }, 100);
         }
@@ -678,6 +703,31 @@ export default function ProductDetail() {
                                   <div className="flex items-center space-x-2">
                                     <div className="w-2 h-2 rounded-full bg-primary"></div>
                                     <span className="font-cormorant text-lg">{secondaryStoneTypes[0]}</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <span className="font-cormorant text-lg">None</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Other Stone */}
+                          {((otherStoneType && otherStoneType !== "none_selected") || otherStoneWeight > 0) && (
+                            <div className="bg-background border border-border rounded-md p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-montserrat font-semibold text-sm text-foreground/80">Other Stone</span>
+                                {otherStoneWeight > 0 && (
+                                  <Badge variant="secondary" className="text-xs">{otherStoneWeight} carats</Badge>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                {otherStoneType && otherStoneType !== "none_selected" ? (
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                    <span className="font-cormorant text-lg">{otherStoneType}</span>
                                   </div>
                                 ) : (
                                   <div className="flex items-center space-x-2">
