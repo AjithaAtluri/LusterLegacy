@@ -610,14 +610,10 @@ export default function ProductDetail() {
                 </div>
                 
                 {/* Detailed Information Tabs */}
-                <Tabs defaultValue="details" className="w-full">
-                  <TabsList className="grid grid-cols-3 mb-6">
-                    <TabsTrigger value="details">Description</TabsTrigger>
-                    <TabsTrigger value="specifications">Specifications</TabsTrigger>
-                    <TabsTrigger value="care">Care Instructions</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="details" className="p-6 bg-card rounded-lg shadow-sm">
-                    {/* Show the parsed detailed description if available */}
+                <div className="w-full mt-8 space-y-8">
+                  {/* Description Section */}
+                  <div className="p-6 bg-card rounded-lg shadow-sm">
+                    <h3 className="font-playfair text-lg font-semibold mb-4">Description</h3>
                     <div className="prose prose-sm max-w-none">
                       {detailedDescription ? (
                         <div dangerouslySetInnerHTML={{ __html: detailedDescription.replace(/\n/g, '<br />') }} />
@@ -627,180 +623,144 @@ export default function ProductDetail() {
                         </p>
                       )}
                     </div>
-                  </TabsContent>
-                  <TabsContent value="specifications" className="p-6 bg-card rounded-lg shadow-sm">
+                  </div>
+
+                  {/* Specifications Section */}
+                  <div className="p-6 bg-card rounded-lg shadow-sm">
+                    <h3 className="font-playfair text-lg font-semibold mb-4">Material Specifications</h3>
                     <div className="space-y-4">
-                      <h3 className="font-playfair text-lg font-semibold mb-4">Material Specifications</h3>
-                      <div className="space-y-4">
-                        {/* Metal Information in a card-like format */}
+                      {/* Metal Information in a card-like format */}
+                      <div className="bg-background border border-border rounded-md p-4">
+                        <div className="flex items-center justify-between">
+                          <span className="font-montserrat font-semibold text-sm text-foreground/80">Metal Type</span>
+                          {productMetalWeight > 0 && (
+                            <Badge variant="secondary" className="text-xs">{productMetalWeight}g</Badge>
+                          )}
+                        </div>
+                        <div className="font-cormorant text-xl mt-1">
+                          {productMetalType || "14k Gold"}
+                        </div>
+                      </div>
+                      
+                      {/* Product Category */}
+                      {(product.productType || product.category) && (
                         <div className="bg-background border border-border rounded-md p-4">
                           <div className="flex items-center justify-between">
-                            <span className="font-montserrat font-semibold text-sm text-foreground/80">Metal Type</span>
-                            {productMetalWeight > 0 && (
-                              <Badge variant="secondary" className="text-xs">{productMetalWeight}g</Badge>
+                            <span className="font-montserrat font-semibold text-sm text-foreground/80">Product Category</span>
+                          </div>
+                          <div className="font-cormorant text-xl mt-1 capitalize">{product.productType || product.category || "Necklace"}</div>
+                        </div>
+                      )}
+                      
+                      {/* Dimensions */}
+                      {dimensions && (
+                        <div className="bg-background border border-border rounded-md p-4">
+                          <div className="flex items-center justify-between">
+                            <span className="font-montserrat font-semibold text-sm text-foreground/80">Dimensions</span>
+                          </div>
+                          <div className="font-cormorant text-xl mt-1">{dimensions}</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Stone Information Section */}
+                    <div className="mt-6">
+                      <h3 className="font-playfair text-lg font-semibold mb-4">Stone Details</h3>
+                      <div className="space-y-4">
+                        {/* Main Stone */}
+                        <div className="bg-background border border-border rounded-md p-4">
+                          <div className="flex items-center justify-between">
+                            <span className="font-montserrat font-semibold text-sm text-foreground/80">Main Stone</span>
+                            {mainStoneWeight > 0 && (
+                              <Badge variant="secondary" className="text-xs">{mainStoneWeight} carats</Badge>
                             )}
                           </div>
                           <div className="font-cormorant text-xl mt-1">
-                            {productMetalType || "14k Gold"}
+                            {mainStoneType || "Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)"}
                           </div>
                         </div>
                         
-                        {/* Product Category */}
-                        {(product.productType || product.category) && (
+                        {/* Secondary Stone */}
+                        {((secondaryStoneType && secondaryStoneType !== "none_selected") || secondaryStoneWeight > 0) && (
                           <div className="bg-background border border-border rounded-md p-4">
-                            <div className="flex items-center justify-between">
-                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Product Category</span>
-                            </div>
-                            <div className="font-cormorant text-xl mt-1 capitalize">{product.productType || product.category || "Necklace"}</div>
-                          </div>
-                        )}
-                        
-                        {/* Dimensions */}
-                        {dimensions && (
-                          <div className="bg-background border border-border rounded-md p-4">
-                            <div className="flex items-center justify-between">
-                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Dimensions</span>
-                            </div>
-                            <div className="font-cormorant text-xl mt-1">{dimensions}</div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Stone Information Section */}
-                      <div className="mt-6">
-                        <h3 className="font-playfair text-lg font-semibold mb-4">Stone Details</h3>
-                        <div className="space-y-4">
-                          {/* Main Stone */}
-                          <div className="bg-background border border-border rounded-md p-4">
-                            <div className="flex items-center justify-between">
-                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Main Stone</span>
-                              {mainStoneWeight > 0 && (
-                                <Badge variant="secondary" className="text-xs">{mainStoneWeight} carats</Badge>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Secondary Stone</span>
+                              {secondaryStoneWeight > 0 && (
+                                <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats</Badge>
                               )}
                             </div>
-                            <div className="font-cormorant text-xl mt-1">
-                              {mainStoneType || "Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)"}
+                            <div className="space-y-2">
+                              {secondaryStoneType && secondaryStoneType !== "none_selected" ? (
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                  <span className="font-cormorant text-lg">{secondaryStoneType}</span>
+                                </div>
+                              ) : Array.isArray(secondaryStoneTypes) && secondaryStoneTypes.length > 0 ? (
+                                // Fallback for backward compatibility with old data format
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                  <span className="font-cormorant text-lg">{secondaryStoneTypes[0]}</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                  <span className="font-cormorant text-lg">None</span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          
-                          {/* Secondary Stone */}
-                          {((secondaryStoneType && secondaryStoneType !== "none_selected") || secondaryStoneWeight > 0) && (
-                            <div className="bg-background border border-border rounded-md p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-montserrat font-semibold text-sm text-foreground/80">Secondary Stone</span>
-                                {secondaryStoneWeight > 0 && (
-                                  <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats</Badge>
-                                )}
-                              </div>
-                              <div className="space-y-2">
-                                {secondaryStoneType && secondaryStoneType !== "none_selected" ? (
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                    <span className="font-cormorant text-lg">{secondaryStoneType}</span>
-                                  </div>
-                                ) : Array.isArray(secondaryStoneTypes) && secondaryStoneTypes.length > 0 ? (
-                                  // Fallback for backward compatibility with old data format
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                    <span className="font-cormorant text-lg">{secondaryStoneTypes[0]}</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                    <span className="font-cormorant text-lg">None</span>
-                                  </div>
-                                )}
-                              </div>
+                        )}
+                        
+                        {/* Other Stone */}
+                        {((otherStoneType && otherStoneType !== "none_selected") || otherStoneWeight > 0) && (
+                          <div className="bg-background border border-border rounded-md p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Other Stone</span>
+                              {otherStoneWeight > 0 && (
+                                <Badge variant="secondary" className="text-xs">{otherStoneWeight} carats</Badge>
+                              )}
                             </div>
-                          )}
-                          
-                          {/* Other Stone */}
-                          {((otherStoneType && otherStoneType !== "none_selected") || otherStoneWeight > 0) && (
-                            <div className="bg-background border border-border rounded-md p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="font-montserrat font-semibold text-sm text-foreground/80">Other Stone</span>
-                                {otherStoneWeight > 0 && (
-                                  <Badge variant="secondary" className="text-xs">{otherStoneWeight} carats</Badge>
-                                )}
-                              </div>
-                              <div className="space-y-2">
-                                {otherStoneType && otherStoneType !== "none_selected" ? (
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                    <span className="font-cormorant text-lg">{otherStoneType}</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                    <span className="font-cormorant text-lg">None</span>
-                                  </div>
-                                )}
-                              </div>
+                            <div className="space-y-2">
+                              {otherStoneType && otherStoneType !== "none_selected" ? (
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                  <span className="font-cormorant text-lg">{otherStoneType}</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                  <span className="font-cormorant text-lg">None</span>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* All Stones Collection */}
+                    {Array.isArray(productStones) && productStones.length > 0 && (
+                      <div className="mt-6 border-t border-border pt-4">
+                        <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-2">All Stones & Gems</span>
+                        <div className="flex flex-wrap gap-2">
+                          {productStones.map((stone, index) => (
+                            <Badge key={index} variant="outline">{stone}</Badge>
+                          ))}
                         </div>
                       </div>
-                      
-                      {/* All Stones Collection */}
-                      {Array.isArray(productStones) && productStones.length > 0 && (
-                        <div className="border-b pb-2">
-                          <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-1">All Stones & Gems</span>
-                          <div className="flex flex-wrap gap-2">
-                            {productStones.map((stone, index) => (
-                              <Badge key={index} variant="outline">{stone}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                    )}
 
-                      {/* Design Inspiration Section - Show AI generator input fields */}
-                      {userDescription && (
-                        <div className="mt-8">
-                          <h3 className="font-playfair text-lg font-semibold mb-4">Design Inspiration</h3>
-                          <div className="bg-background/50 p-4 rounded-md border border-primary/10">
-                            <p className="font-cormorant text-base italic">{userDescription}</p>
-                          </div>
+                    {/* Design Inspiration Section - Show AI generator input fields */}
+                    {userDescription && (
+                      <div className="mt-8 border-t border-border pt-4">
+                        <h3 className="font-playfair text-lg font-semibold mb-4">Design Inspiration</h3>
+                        <div className="bg-background/50 p-4 rounded-md border border-primary/10">
+                          <p className="font-cormorant text-base italic">{userDescription}</p>
                         </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="care" className="p-6 bg-card rounded-lg shadow-sm">
-                    <div className="space-y-4 font-montserrat text-foreground/80">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 shrink-0">
-                          <Info className="h-5 w-5 text-primary" />
-                        </div>
-                        <p>
-                          Store your jewelry in a cool, dry place, preferably in individual soft pouches or a lined jewelry box to prevent scratches.
-                        </p>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 shrink-0">
-                          <Info className="h-5 w-5 text-primary" />
-                        </div>
-                        <p>
-                          Clean your precious jewelry with a soft, lint-free cloth. For deeper cleaning, use mild soapy water and a soft brush.
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 shrink-0">
-                          <Info className="h-5 w-5 text-primary" />
-                        </div>
-                        <p>
-                          Avoid exposure to harsh chemicals including household cleaners, perfumes, and chlorine. Remove jewelry before swimming or bathing.
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 shrink-0">
-                          <Info className="h-5 w-5 text-primary" />
-                        </div>
-                        <p>
-                          We recommend professional cleaning and inspection once a year to maintain your jewelry's brilliance and integrity.
-                        </p>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
