@@ -314,13 +314,13 @@ export default function EditProductNew() {
       
       // Extract secondary stone type with better fallbacks
       let secondaryStoneType = 'none_selected';
-      if (aiInputs.secondaryStoneType) {
+      if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneType !== "") {
         console.log("Using secondaryStoneType from aiInputs:", aiInputs.secondaryStoneType);
         secondaryStoneType = aiInputs.secondaryStoneType;
-      } else if (additionalData.secondaryStoneType) {
+      } else if (additionalData.secondaryStoneType && additionalData.secondaryStoneType !== "") {
         console.log("Using secondaryStoneType from additionalData:", additionalData.secondaryStoneType);
         secondaryStoneType = additionalData.secondaryStoneType;
-      } else if (details?.secondaryStoneType) {
+      } else if (details?.secondaryStoneType && details.secondaryStoneType !== "") {
         console.log("Using secondaryStoneType from details:", details.secondaryStoneType);
         secondaryStoneType = details.secondaryStoneType;
       } else if (aiInputs.secondaryStoneTypes && Array.isArray(aiInputs.secondaryStoneTypes) && aiInputs.secondaryStoneTypes.length > 0) {
@@ -331,6 +331,15 @@ export default function EditProductNew() {
         console.log("Fallback: Using first value from secondaryStoneTypes array:", additionalData.secondaryStoneTypes[0]);
         secondaryStoneType = additionalData.secondaryStoneTypes[0];
       }
+
+      // DEBUGGING - Add more detailed information about the secondaryStoneType
+      console.log("----DETAILED STONE DEBUG----");
+      console.log("Raw aiInputs:", aiInputs);
+      console.log("Raw additionalData:", additionalData);
+      console.log("Raw details:", details);
+      console.log("aiInputs.secondaryStoneType:", aiInputs.secondaryStoneType, "type:", typeof aiInputs.secondaryStoneType);
+      console.log("additionalData.secondaryStoneType:", additionalData.secondaryStoneType, "type:", typeof additionalData.secondaryStoneType);
+      console.log("details?.secondaryStoneType:", details?.secondaryStoneType, "type:", typeof details?.secondaryStoneType);
       
       console.log("Final secondaryStoneType:", secondaryStoneType);
       
@@ -351,16 +360,23 @@ export default function EditProductNew() {
       
       // Extract other stone type with better fallbacks
       let otherStoneType = 'none_selected';
-      if (aiInputs.otherStoneType) {
+      if (aiInputs.otherStoneType && aiInputs.otherStoneType !== "") {
         console.log("Using otherStoneType from aiInputs:", aiInputs.otherStoneType);
         otherStoneType = aiInputs.otherStoneType;
-      } else if (additionalData.otherStoneType) {
+      } else if (additionalData.otherStoneType && additionalData.otherStoneType !== "") {
         console.log("Using otherStoneType from additionalData:", additionalData.otherStoneType);
         otherStoneType = additionalData.otherStoneType;
-      } else if (details?.otherStoneType) {
+      } else if (details?.otherStoneType && details.otherStoneType !== "") {
         console.log("Using otherStoneType from details:", details.otherStoneType);
         otherStoneType = details.otherStoneType;
       }
+      
+      // DEBUGGING - Add more detailed information about the otherStoneType
+      console.log("----DETAILED OTHER STONE DEBUG----");
+      console.log("aiInputs.otherStoneType:", aiInputs.otherStoneType, "type:", typeof aiInputs.otherStoneType);
+      console.log("additionalData.otherStoneType:", additionalData.otherStoneType, "type:", typeof additionalData.otherStoneType);
+      console.log("details?.otherStoneType:", details?.otherStoneType, "type:", typeof details?.otherStoneType);
+      console.log("Final otherStoneType:", otherStoneType);
       
       // Extract other stone weight with better fallbacks
       let otherStoneWeight = '';
