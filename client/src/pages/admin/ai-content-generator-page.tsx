@@ -634,8 +634,8 @@ export default function AIContentGeneratorPage() {
               </div>
               
               {/* Secondary Stone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border p-3 rounded-md">
+                <div className="space-y-1">
                   <Label htmlFor="secondaryStoneType">Secondary Stone Type (Optional)</Label>
                   <Select 
                     value={formData.secondaryStoneType} 
@@ -679,8 +679,8 @@ export default function AIContentGeneratorPage() {
               </div>
               
               {/* Other Stone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-md">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border p-3 rounded-md">
+                <div className="space-y-1">
                   <Label htmlFor="otherStoneType">Other Stone Type (Optional)</Label>
                   <Select 
                     value={formData.otherStoneType} 
