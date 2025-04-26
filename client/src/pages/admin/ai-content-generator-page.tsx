@@ -263,18 +263,11 @@ export default function AIContentGeneratorPage() {
     setFormData({ ...formData, [name]: value });
   };
   
-  // Handle multiple select changes
+  // This function is no longer used as we've switched to dropdown selects
+  // Keeping it as a fallback in case we need multi-select functionality elsewhere
   const handleMultiSelectChange = (name: string, value: string) => {
-    const currentValues = formData[name as keyof typeof formData] as string[];
-    
-    // If value already exists, remove it; otherwise add it
-    if (Array.isArray(currentValues)) {
-      const updatedValues = currentValues.includes(value)
-        ? currentValues.filter(v => v !== value)
-        : [...currentValues, value];
-      
-      setFormData({ ...formData, [name]: updatedValues });
-    }
+    // Simply use the handleSelectChange since we now use single values
+    handleSelectChange(name, value);
   };
   
   // Generate content using the AI service
