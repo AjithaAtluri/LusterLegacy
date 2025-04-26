@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
-import { usePriceCalculator } from "@/hooks/use-price-calculator";
 
 // Interface for product details stored as JSON
 interface ProductDetails {
@@ -66,11 +64,12 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? productMetalType.toLowerCase().replace(/\s+/g, '-') 
     : undefined;
   
-  // Use price calculator to get the calculated price (but don't show selectors)
-  const { currentPrice } = usePriceCalculator({
-    basePrice: product.basePrice,
-    initialMetalTypeId: initialMetalType
-  });
+  // Use a constant conversion rate to calculate USD price from base price
+  // We'll use 83 as the conversion rate (same as in price-calculator.ts)
+  const USD_TO_INR_RATE = 83;
+  
+  // For display purposes, convert base price to USD
+  const estimatedUsdPrice = Math.round(product.basePrice / USD_TO_INR_RATE);
   
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
@@ -127,7 +126,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div>
               <p className="font-montserrat text-sm text-foreground/70">Starting from</p>
               <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
-                {formatCurrency(currentPrice)}
+                ${estimatedUsdPrice}
               </p>
             </div>
           </div>
