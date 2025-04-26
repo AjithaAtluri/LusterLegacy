@@ -124,7 +124,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="mb-3">
           <div className="flex justify-between items-center">
             <div>
-              <p className="font-montserrat text-sm text-foreground/70">Starting from</p>
+              <p className="font-montserrat text-sm text-foreground/70">Price Estimate</p>
               <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
                 ${estimatedUsdPrice}
               </p>
