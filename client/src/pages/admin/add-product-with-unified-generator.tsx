@@ -187,21 +187,8 @@ export default function AddProduct() {
           setMainStoneWeight(parsedInputs.mainStoneWeight);
         }
         
-        // For backward compatibility with older format
-        if (parsedInputs.secondaryStoneTypes && Array.isArray(parsedInputs.secondaryStoneTypes)) {
-          // Convert old array format to new stone type objects for display
-          const stoneObjects = parsedInputs.secondaryStoneTypes.map(name => ({
-            id: 0, // Placeholder ID that will be replaced when matching with database stones
-            name: name
-          }));
-          setSelectedStoneTypes(stoneObjects);
-          
-          // If we have secondary stones from old format but no specific type selected,
-          // use the first one as the selected secondary stone type
-          if (!parsedInputs.secondaryStoneType && parsedInputs.secondaryStoneTypes.length > 0) {
-            setSecondaryStoneType(parsedInputs.secondaryStoneTypes[0]);
-          }
-        }
+        // We no longer support the array format for secondary stones
+        // Everything uses the single stone type approach
         
         // New format - single secondary stone type
         if (parsedInputs.secondaryStoneType) {
@@ -270,9 +257,6 @@ export default function AddProduct() {
           mainStoneType: mainStoneType || '',
           mainStoneWeight: parseFloat(mainStoneWeight) || 0,
           secondaryStoneType: secondaryStoneType === 'none_selected' ? '' : secondaryStoneType,
-          secondaryStoneTypes: secondaryStoneType && secondaryStoneType !== 'none_selected' 
-            ? [secondaryStoneType] 
-            : [],
           secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
           otherStoneType: otherStoneType === 'none_selected' ? '' : otherStoneType,
           otherStoneWeight: parseFloat(otherStoneWeight) || 0,
@@ -285,9 +269,6 @@ export default function AddProduct() {
             mainStoneType: mainStoneType || '',
             mainStoneWeight: parseFloat(mainStoneWeight) || 0,
             secondaryStoneType: secondaryStoneType === 'none_selected' ? '' : secondaryStoneType,
-            secondaryStoneTypes: secondaryStoneType && secondaryStoneType !== 'none_selected' 
-              ? [secondaryStoneType] 
-              : [],
             secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
             otherStoneType: otherStoneType === 'none_selected' ? '' : otherStoneType,
             otherStoneWeight: parseFloat(otherStoneWeight) || 0,
@@ -404,7 +385,7 @@ export default function AddProduct() {
       mainStoneWeight: mainStoneWeight,
       secondaryStoneType: secondaryStoneType,
       secondaryStoneWeight: secondaryStoneWeight,
-      secondaryStoneTypes: selectedStoneTypes, // Keep for backward compatibility
+      // Only store single secondary stone type, not array
       otherStoneType: otherStoneType,
       otherStoneWeight: otherStoneWeight,
       userDescription: form.getValues("userDescription")
