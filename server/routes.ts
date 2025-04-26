@@ -296,8 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Product ${productId} found:`, {
         id: product.id,
         name: product.name,
-        image_url: product.image_url,
-        imageUrl: (product as any).imageUrl,
+        imageUrl: product.imageUrl,
         keys: Object.keys(product)
       });
 

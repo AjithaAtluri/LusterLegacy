@@ -87,6 +87,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           productId={product.id}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+          fallbackSrc="/uploads/40c3afd0-d8d5-4fa4-87b0-f717a6941660.jpg"
         />
         
         {/* Gemstone sparkle effect on hover */}
