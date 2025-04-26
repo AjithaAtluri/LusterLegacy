@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save, Upload, X, PiggyBank } from "lucide-react";
 import {
   Form,
@@ -55,6 +55,8 @@ export default function AddProduct() {
   const [mainStoneType, setMainStoneType] = useState<string>("");
   const [mainStoneWeight, setMainStoneWeight] = useState<string>("");
   const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<string>("");
+  const [otherStoneType, setOtherStoneType] = useState<string>("none_selected");
+  const [otherStoneWeight, setOtherStoneWeight] = useState<string>("");
   const [productType, setProductType] = useState<string>("");
   const [metalType, setMetalType] = useState<string>("");
   const [metalWeight, setMetalWeight] = useState<string>("");
@@ -231,6 +233,8 @@ export default function AddProduct() {
           mainStoneWeight: parseFloat(mainStoneWeight) || 0,
           secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
           secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
+          otherStoneType: otherStoneType || 'none_selected',
+          otherStoneWeight: parseFloat(otherStoneWeight) || 0,
           productTypeId: data.productTypeId || '',
           userDescription: data.userDescription || '',
           // Save all AI generator inputs explicitly
@@ -241,6 +245,8 @@ export default function AddProduct() {
             mainStoneWeight: parseFloat(mainStoneWeight) || 0,
             secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
             secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
+            otherStoneType: otherStoneType || 'none_selected',
+            otherStoneWeight: parseFloat(otherStoneWeight) || 0,
             userDescription: data.userDescription || '',
           },
           dimensions: data.dimensions || ''
@@ -705,27 +711,51 @@ export default function AddProduct() {
               </div>
             )}
             
-            {/* Price Calculator Section */}
+            {/* Price Comparison Section */}
             <div className="mt-8 border-t pt-8">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <PiggyBank className="mr-2 h-5 w-5 text-primary" />
-                    Real-Time Price Calculator
+                    <PiggyBank className="mr-2 h-5 w-5 text-amber-600" />
+                    Price Comparison
                   </CardTitle>
+                  <CardDescription>
+                    Compare AI-generated prices with real-time calculated prices
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PriceCalculatorDisplay 
-                    metalType={form.watch("metalType")}
-                    metalWeight={form.watch("metalWeight")}
-                    mainStoneType={mainStoneType}
-                    mainStoneWeight={mainStoneWeight}
-                    secondaryStoneTypes={selectedStoneTypes}
-                    secondaryStoneWeight={secondaryStoneWeight}
-                  />
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    <p>This calculator shows a real-time price estimate based on current gold prices and selected materials.</p>
-                    <p className="mt-1">The calculated prices will be saved with the product but can be manually adjusted if needed.</p>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="border rounded-md p-3 bg-background">
+                      <h3 className="text-sm font-medium mb-2 text-primary">AI-Generated Price</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm">USD:</span>
+                          <span className="font-medium">${form.watch("basePrice")}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">INR:</span>
+                          <span className="font-medium">₹{form.watch("basePriceINR")}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="border rounded-md p-3 bg-background">
+                      <h3 className="text-sm font-medium mb-2 text-amber-600">Calculated Price</h3>
+                      <PriceCalculatorDisplay 
+                        metalType={form.watch("metalType")}
+                        metalWeight={form.watch("metalWeight")}
+                        mainStoneType={mainStoneType}
+                        mainStoneWeight={mainStoneWeight}
+                        secondaryStoneTypes={selectedStoneTypes}
+                        secondaryStoneWeight={secondaryStoneWeight}
+                        otherStoneType={otherStoneType}
+                        otherStoneWeight={otherStoneWeight}
+                        compact={true}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    <p>The calculated price is based on current gold prices and selected materials.</p>
+                    <p className="mt-1">You can manually adjust the prices in the fields above if needed.</p>
                   </div>
                 </CardContent>
               </Card>
