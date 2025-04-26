@@ -102,6 +102,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
 
+  // Health check route for deployments
+  app.get('/', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
   // Serve static files from uploads directory (root-level persistent storage)
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   
