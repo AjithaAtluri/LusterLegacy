@@ -619,6 +619,10 @@ export default function EditProductNew() {
             mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
             mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
             secondaryStoneType: values.secondaryStoneType === "none_selected" ? "" : values.secondaryStoneType,
+            // Also include secondaryStoneTypes as an array with the single value for backward compatibility
+            secondaryStoneTypes: values.secondaryStoneType && values.secondaryStoneType !== "none_selected" 
+              ? [values.secondaryStoneType] 
+              : [],
             secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
             otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
             otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
@@ -632,6 +636,10 @@ export default function EditProductNew() {
               mainStoneType: values.mainStoneType === "none_selected" ? "" : values.mainStoneType,
               mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
               secondaryStoneType: values.secondaryStoneType === "none_selected" ? "" : values.secondaryStoneType,
+              // Also include secondaryStoneTypes as an array with the single value for backward compatibility
+              secondaryStoneTypes: values.secondaryStoneType && values.secondaryStoneType !== "none_selected" 
+                ? [values.secondaryStoneType] 
+                : [],
               secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
               otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
               otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,

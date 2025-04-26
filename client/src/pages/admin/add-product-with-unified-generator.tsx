@@ -270,9 +270,12 @@ export default function AddProduct() {
           mainStoneType: mainStoneType || '',
           mainStoneWeight: parseFloat(mainStoneWeight) || 0,
           secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
-          secondaryStoneType: secondaryStoneType || 'none_selected',
+          secondaryStoneType: secondaryStoneType === 'none_selected' ? '' : secondaryStoneType,
+          secondaryStoneTypes: secondaryStoneType && secondaryStoneType !== 'none_selected' 
+            ? [secondaryStoneType] 
+            : [],
           secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
-          otherStoneType: otherStoneType || 'none_selected',
+          otherStoneType: otherStoneType === 'none_selected' ? '' : otherStoneType,
           otherStoneWeight: parseFloat(otherStoneWeight) || 0,
           productTypeId: data.productTypeId || '',
           userDescription: data.userDescription || '',
