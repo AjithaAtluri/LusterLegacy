@@ -266,23 +266,28 @@ export default function ProductDetail() {
           setOtherStoneWeight(aiInputs.otherStoneWeight || parsed.additionalData.otherStoneWeight || 0);
           
           // Other details
-          setDimensions(parsed.additionalData.dimensions || "");
+          // Ensure dimensions is a string, not an object
+          const dimensionsData = parsed.additionalData.dimensions;
+          if (typeof dimensionsData === 'string') {
+            setDimensions(dimensionsData);
+          } else if (dimensionsData && typeof dimensionsData === 'object') {
+            // If it's an object, try to convert it to a string representation
+            try {
+              const dimStr = Object.entries(dimensionsData)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+              setDimensions(dimStr);
+            } catch (e) {
+              console.error("Could not convert dimensions object to string:", e);
+              setDimensions("");
+            }
+          } else {
+            setDimensions("");
+          }
           setUserDescription(aiInputs.userDescription || parsed.additionalData.userDescription || "");
           
-          // Debug what's actually in the state immediately 
-          setTimeout(() => {
-            console.log("State values after setting:", {
-              productMetalType,
-              productMetalWeight,
-              mainStoneType,
-              mainStoneWeight,
-              secondaryStoneType,
-              secondaryStoneTypes,
-              secondaryStoneWeight,
-              otherStoneType,
-              otherStoneWeight
-            });
-          }, 100);
+          // Don't need to debug state synchronously as it won't have updated yet
+          // We'll see the values in the rendered UI
         }
         
         if (parsed.detailedDescription) {
@@ -297,7 +302,16 @@ export default function ProductDetail() {
     
     // Also set dimensions from the top-level field if available
     if (product?.dimensions) {
-      setDimensions(product.dimensions);
+      if (typeof product.dimensions === 'string') {
+        setDimensions(product.dimensions);
+      } else if (product.dimensions && typeof product.dimensions === 'object') {
+        try {
+          const dimStr = JSON.stringify(product.dimensions);
+          setDimensions(dimStr);
+        } catch (e) {
+          console.error("Could not convert dimensions object to string:", e);
+        }
+      }
     }
   }, [product?.details, product?.dimensions]);
   
@@ -522,7 +536,7 @@ export default function ProductDetail() {
                         <div dangerouslySetInnerHTML={{ __html: detailedDescription.replace(/\n/g, '<br />') }} />
                       ) : (
                         <p className="font-montserrat text-foreground/80">
-                          {product.details || "Handcrafted with precision by our master artisans using traditional techniques combined with modern design principles. Each piece undergoes rigorous quality checks."}
+                          {product.details || "No detailed description available."}
                         </p>
                       )}
                     </div>

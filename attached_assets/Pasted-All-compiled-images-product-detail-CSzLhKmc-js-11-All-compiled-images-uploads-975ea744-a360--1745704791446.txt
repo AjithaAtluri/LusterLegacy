@@ -1,0 +1,86 @@
+All compiled images: []
+product-detail-CSzLhKmc.js:11 All compiled images: ['/uploads/975ea744-a360-4aa7-9e24-dbb7fbfac9de.jpeg']
+product-detail-CSzLhKmc.js:11 Product data received from API: {id: 26, name: 'Opulent Navaratan & Emerald Choker Necklace', description: 'Experience the allure of 18k gold adorned with Nav…moissanite, and a carved emerald of Lord Ganesha.', basePrice: 1020000, imageUrl: '/uploads/975ea744-a360-4aa7-9e24-dbb7fbfac9de.jpeg', …}
+product-detail-CSzLhKmc.js:11 Image URL from API: /uploads/975ea744-a360-4aa7-9e24-dbb7fbfac9de.jpeg
+product-detail-CSzLhKmc.js:11 Image URL type: string
+product-detail-CSzLhKmc.js:11 Checking image_url property: undefined
+product-detail-CSzLhKmc.js:11 Product details: {"detailedDescription":"Indulge in the exquisite craftsmanship of our Opulent Navaratan & Emerald Choker Necklace, meticulously fashioned in 18k yellow gold with a substantial weight of 51.9 grams. This masterpiece features a captivating ensemble of 65 carats of Navaratan precious stones, complemented by 36 carats of sparkling moissanite. The pièce de résistance is the intricately carved emerald locket depicting Lord Ganesha, adding a spiritual touch. Designed for versatility, this necklace can be elegantly worn as a choker or as a standalone locket. A fusion of vibrant colors and divine symbolism, this necklace is a testament to opulence and artistry, perfect for any grand occasion.","additionalData":{"tagline":"Embrace divine elegance with our Navaratan necklace, a tribute to timeless luxury.","basePriceINR":1020000,"priceUSD":0,"metalType":"18K Yellow Gold","metalWeight":51.9,"mainStoneType":"Navaratan Precious Stones","mainStoneWeight":65,"secondaryStoneType":"Mozanite","secondaryStoneWeight":36,"otherStoneType":"Carved Emerald","otherStoneWeight":30,"productTypeId":"6","userDescription":"","dimensions":{"length":"0","width":"0","height":"0"},"aiInputs":{"metalType":"18K Yellow Gold","metalWeight":51.9,"mainStoneType":"Navaratan Precious Stones","mainStoneWeight":65,"secondaryStoneType":"Mozanite","secondaryStoneWeight":36,"otherStoneType":"Carved Emerald","otherStoneWeight":30,"userDescription":"","productType":"6"}}}
+product-detail-CSzLhKmc.js:11 Parsed product details: {detailedDescription: 'Indulge in the exquisite craftsmanship of our Opul…nce and artistry, perfect for any grand occasion.', additionalData: {…}}
+product-detail-CSzLhKmc.js:11 Metal type: 18K Yellow Gold
+product-detail-CSzLhKmc.js:11 Metal weight: 51.9
+product-detail-CSzLhKmc.js:11 Main stone type: Navaratan Precious Stones
+product-detail-CSzLhKmc.js:11 Main stone weight: 65
+product-detail-CSzLhKmc.js:11 Secondary stone types: undefined
+product-detail-CSzLhKmc.js:11 Secondary stone weight: 36
+product-detail-CSzLhKmc.js:11 AI inputs: {metalType: '18K Yellow Gold', metalWeight: 51.9, mainStoneType: 'Navaratan Precious Stones', mainStoneWeight: 65, secondaryStoneType: 'Mozanite', …}
+product-detail-CSzLhKmc.js:11 Product ID for image mapping: 26
+product-detail-CSzLhKmc.js:11 Product image URL before processing: /uploads/975ea744-a360-4aa7-9e24-dbb7fbfac9de.jpeg
+product-detail-CSzLhKmc.js:11 Using ReliableProductImage component with direct product ID
+product-detail-CSzLhKmc.js:11 Parsed product details in effect: {detailedDescription: 'Indulge in the exquisite craftsmanship of our Opul…nce and artistry, perfect for any grand occasion.', additionalData: {…}}
+product-detail-CSzLhKmc.js:11 Setting fields from additionalData: {tagline: 'Embrace divine elegance with our Navaratan necklace, a tribute to timeless luxury.', basePriceINR: 1020000, priceUSD: 0, metalType: '18K Yellow Gold', metalWeight: 51.9, …}
+product-detail-CSzLhKmc.js:11 AI inputs: {metalType: '18K Yellow Gold', metalWeight: 51.9, mainStoneType: 'Navaratan Precious Stones', mainStoneWeight: 65, secondaryStoneType: 'Mozanite', …}
+product-detail-CSzLhKmc.js:11 Raw metal type values: {rawAiMetal: '18K Yellow Gold', typeOfAiMetal: 'string', rawDirectMetal: '18K Yellow Gold', typeOfDirectMetal: 'string'}
+product-detail-CSzLhKmc.js:11 Using AI metal type: 18K Yellow Gold
+product-detail-CSzLhKmc.js:11 Final metal type value: 18K Yellow Gold
+product-detail-CSzLhKmc.js:11 Raw metal weight values: {rawAiWeight: 51.9, typeOfAiWeight: 'number', rawDirectWeight: 51.9, typeOfDirectWeight: 'number'}
+product-detail-CSzLhKmc.js:11 Using AI metal weight: 51.9
+product-detail-CSzLhKmc.js:11 Final metal weight value: 51.9
+product-detail-CSzLhKmc.js:11 Secondary stone debug - Raw additionalData: {tagline: 'Embrace divine elegance with our Navaratan necklace, a tribute to timeless luxury.', basePriceINR: 1020000, priceUSD: 0, metalType: '18K Yellow Gold', metalWeight: 51.9, …}
+product-detail-CSzLhKmc.js:11 Secondary stone debug - Raw aiInputs: {metalType: '18K Yellow Gold', metalWeight: 51.9, mainStoneType: 'Navaratan Precious Stones', mainStoneWeight: 65, secondaryStoneType: 'Mozanite', …}
+product-detail-CSzLhKmc.js:11 Secondary stone debug - additionalData.secondaryStoneType: Mozanite
+product-detail-CSzLhKmc.js:11 Secondary stone debug - aiInputs.secondaryStoneType: Mozanite
+product-detail-CSzLhKmc.js:11 Secondary stone debug - secondaryStone value: Mozanite
+product-detail-CSzLhKmc.js:11 Secondary stone debug - secondaryStone type: string
+product-detail-CSzLhKmc.js:11 Secondary stone debug - Is null or none_selected? false
+product-detail-CSzLhKmc.js:11 Using secondary stone type: Mozanite
+product-detail-CSzLhKmc.js:11 Other stone debug - additionalData.otherStoneType: Carved Emerald
+product-detail-CSzLhKmc.js:11 Other stone debug - aiInputs.otherStoneType: Carved Emerald
+product-detail-CSzLhKmc.js:11 Using other stone type: Carved Emerald
+product-detail-CSzLhKmc.js:11 All compiled images: ['/uploads/975ea744-a360-4aa7-9e24-dbb7fbfac9de.jpeg']
+product-detail-CSzLhKmc.js:11 All compiled images: ['/uploads/975ea744-a360-4aa7-9e24-dbb7fbfac9de.jpeg']
+index-ChQkr_UY.js:41 Error: Minified React error #31; visit https://reactjs.org/docs/error-decoder.html?invariant=31&args[]=object%20with%20keys%20%7Blength%2C%20width%2C%20height%7D for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Oi (index-ChQkr_UY.js:39:6311)
+    at x (index-ChQkr_UY.js:39:11366)
+    at Ae (index-ChQkr_UY.js:41:1475)
+    at mm (index-ChQkr_UY.js:41:45623)
+    at fm (index-ChQkr_UY.js:41:39699)
+    at sw (index-ChQkr_UY.js:41:39627)
+    at bs (index-ChQkr_UY.js:41:39481)
+    at Qa (index-ChQkr_UY.js:41:35863)
+    at um (index-ChQkr_UY.js:41:34814)
+    at P (index-ChQkr_UY.js:26:1567)
+La @ index-ChQkr_UY.js:41
+Kh.n.callback @ index-ChQkr_UY.js:41
+bd @ index-ChQkr_UY.js:39
+Qd @ index-ChQkr_UY.js:41
+am @ index-ChQkr_UY.js:41
+rw @ index-ChQkr_UY.js:41
+aw @ index-ChQkr_UY.js:41
+Dn @ index-ChQkr_UY.js:41
+um @ index-ChQkr_UY.js:41
+P @ index-ChQkr_UY.js:26
+M @ index-ChQkr_UY.js:26Understand this error
+index-ChQkr_UY.js:39 Uncaught Error: Minified React error #31; visit https://reactjs.org/docs/error-decoder.html?invariant=31&args[]=object%20with%20keys%20%7Blength%2C%20width%2C%20height%7D for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+    at Oi (index-ChQkr_UY.js:39:6311)
+    at x (index-ChQkr_UY.js:39:11366)
+    at Ae (index-ChQkr_UY.js:41:1475)
+    at mm (index-ChQkr_UY.js:41:45623)
+    at fm (index-ChQkr_UY.js:41:39699)
+    at sw (index-ChQkr_UY.js:41:39627)
+    at bs (index-ChQkr_UY.js:41:39481)
+    at Qa (index-ChQkr_UY.js:41:35863)
+    at um (index-ChQkr_UY.js:41:34814)
+    at P (index-ChQkr_UY.js:26:1567)
+Oi @ index-ChQkr_UY.js:39
+x @ index-ChQkr_UY.js:39
+Ae @ index-ChQkr_UY.js:41
+mm @ index-ChQkr_UY.js:41
+fm @ index-ChQkr_UY.js:41
+sw @ index-ChQkr_UY.js:41
+bs @ index-ChQkr_UY.js:41
+Qa @ index-ChQkr_UY.js:41
+um @ index-ChQkr_UY.js:41
+P @ index-ChQkr_UY.js:26
+M @ index-ChQkr_UY.js:26Understand this error
+product-detail-CSzLhKmc.js:11 State values after setting: {productMetalType: '', productMetalWeight: 0, mainStoneType: '', mainStoneWeight: 0, secondaryStoneType: '', …}
+26:1 The resource https://fresh-start-ajitha72.replit.app/assets/zhang-liven-MbImicTZK54-unsplash-C9B0b_0y.jpg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warning
