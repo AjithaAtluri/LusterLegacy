@@ -30,7 +30,7 @@ interface ProductDetails {
     otherStoneWeight?: number;
     productTypeId?: string;
     userDescription?: string;
-    dimensions?: string;
+    // dimensions field removed as requested
     // Add separate section for AI inputs to ensure they persist
     aiInputs?: {
       metalType?: string;
@@ -62,7 +62,7 @@ export default function ProductDetail() {
   const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<number>(0);
   const [otherStoneType, setOtherStoneType] = useState<string>("");
   const [otherStoneWeight, setOtherStoneWeight] = useState<number>(0);
-  const [dimensions, setDimensions] = useState<string>("");
+  // dimensions state removed as requested
   const [userDescription, setUserDescription] = useState<string>("");
   
   // Defining the product interface
@@ -74,7 +74,7 @@ export default function ProductDetail() {
     imageUrl?: string;
     additionalImages?: string[];
     details?: string;
-    dimensions?: string;
+    // dimensions field removed as requested
     category?: string;
     productType?: string;
     productTypeId?: number;
@@ -266,7 +266,7 @@ export default function ProductDetail() {
           setOtherStoneWeight(aiInputs.otherStoneWeight || parsed.additionalData.otherStoneWeight || 0);
           
           // Other details
-          // Ensure dimensions is a string, not an object
+          // dimensions parsing code removed as requested
           const dimensionsData = parsed.additionalData.dimensions;
           if (typeof dimensionsData === 'string') {
             setDimensions(dimensionsData);
@@ -300,7 +300,7 @@ export default function ProductDetail() {
       }
     }
     
-    // Also set dimensions from the top-level field if available
+    // dimensions handling removed as requested
     if (product?.dimensions) {
       if (typeof product.dimensions === 'string') {
         setDimensions(product.dimensions);
@@ -313,7 +313,7 @@ export default function ProductDetail() {
         }
       }
     }
-  }, [product?.details, product?.dimensions]);
+  }, [product?.details]);
   
   // Calculate price with calculator hook
   const { currentPrice } = usePriceCalculator({
@@ -569,15 +569,7 @@ export default function ProductDetail() {
                         </div>
                       )}
                       
-                      {/* Dimensions */}
-                      {dimensions && (
-                        <div className="bg-background border border-border rounded-md p-4">
-                          <div className="flex items-center justify-between">
-                            <span className="font-montserrat font-semibold text-sm text-foreground/80">Dimensions</span>
-                          </div>
-                          <div className="font-cormorant text-xl mt-1">{dimensions}</div>
-                        </div>
-                      )}
+                      {/* Dimensions section removed as requested */}
                     </div>
                     
                     {/* Stone Information Section */}

@@ -1204,47 +1204,7 @@ export default function EditProductNew() {
                       )}
                     />
 
-                    <div className="grid grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="dimensions.length"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Length (mm)</FormLabel>
-                            <FormControl>
-                              <Input type="number" min="0" step="0.1" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="dimensions.width"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Width (mm)</FormLabel>
-                            <FormControl>
-                              <Input type="number" min="0" step="0.1" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="dimensions.height"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Height (mm)</FormLabel>
-                            <FormControl>
-                              <Input type="number" min="0" step="0.1" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    {/* Dimensions fields removed as requested */}
                   </CardContent>
                 </Card>
 
