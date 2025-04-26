@@ -80,7 +80,7 @@ export default function EditProductNew() {
       priceUSD: 0,
       priceINR: 0,
       productType: "1", // Default to first product type
-      metalType: "18K Yellow Gold", // Default metal type
+      metalType: "14K Yellow Gold", // Default metal type
       metalWeight: "",
       dimensions: {
         length: "0",
@@ -261,7 +261,7 @@ export default function EditProductNew() {
         metalType = productData.metalType;
       } else {
         console.log("No metalType found, using default");
-        metalType = "18K Yellow Gold";
+        metalType = "14K Yellow Gold";
       }
       
       // Extract metal weight with better fallbacks
