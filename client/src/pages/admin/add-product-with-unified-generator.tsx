@@ -654,6 +654,8 @@ export default function AddProduct() {
               setMainStoneWeight={setMainStoneWeight}
               selectedStoneTypes={selectedStoneTypes}
               setSelectedStoneTypes={setSelectedStoneTypes}
+              secondaryStoneType={secondaryStoneType}
+              setSecondaryStoneType={setSecondaryStoneType}
               secondaryStoneWeight={secondaryStoneWeight}
               setSecondaryStoneWeight={setSecondaryStoneWeight}
               handleContentGenerated={handleContentGenerated}
