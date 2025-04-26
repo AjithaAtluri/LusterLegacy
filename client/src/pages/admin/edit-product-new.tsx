@@ -642,6 +642,14 @@ export default function EditProductNew() {
         }),
       };
 
+      // Debug the product data object and specifically the secondary stone info
+      console.log("Submitting product update with data:", productData);
+      console.log("Secondary stone values being sent:", {
+        secondaryStoneType: values.secondaryStoneType,
+        parsed: values.secondaryStoneType === "none_selected" ? "" : values.secondaryStoneType,
+        secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0
+      });
+      
       // Add product data to form
       formData.append('data', JSON.stringify(productData));
 
