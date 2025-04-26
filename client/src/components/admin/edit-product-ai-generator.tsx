@@ -30,6 +30,8 @@ export default function EditProductAIGenerator({
   mainStoneWeight,
   secondaryStoneTypes,
   secondaryStoneWeight,
+  otherStoneType,
+  otherStoneWeight,
   userDescription,
   mainImageUrl,
   additionalImageUrls = [],
@@ -44,6 +46,8 @@ export default function EditProductAIGenerator({
   mainStoneWeight: string;
   secondaryStoneTypes: any[];
   secondaryStoneWeight: string;
+  otherStoneType: string;
+  otherStoneWeight: string;
   userDescription: string;
   mainImageUrl: string | null;
   additionalImageUrls: string[];

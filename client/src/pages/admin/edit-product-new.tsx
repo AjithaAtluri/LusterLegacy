@@ -357,6 +357,34 @@ export default function EditProductNew() {
       } else {
         secondaryStoneWeight = "0";
       }
+      
+      // Extract other stone type with better fallbacks
+      let otherStoneType = 'none_selected';
+      if (aiInputs.otherStoneType) {
+        console.log("Using otherStoneType from aiInputs:", aiInputs.otherStoneType);
+        otherStoneType = aiInputs.otherStoneType;
+      } else if (additionalData.otherStoneType) {
+        console.log("Using otherStoneType from additionalData:", additionalData.otherStoneType);
+        otherStoneType = additionalData.otherStoneType;
+      } else if (details?.otherStoneType) {
+        console.log("Using otherStoneType from details:", details.otherStoneType);
+        otherStoneType = details.otherStoneType;
+      }
+      
+      // Extract other stone weight with better fallbacks
+      let otherStoneWeight = '';
+      if (aiInputs.otherStoneWeight) {
+        console.log("Using otherStoneWeight from aiInputs:", aiInputs.otherStoneWeight);
+        otherStoneWeight = aiInputs.otherStoneWeight.toString();
+      } else if (additionalData.otherStoneWeight) {
+        console.log("Using otherStoneWeight from additionalData:", additionalData.otherStoneWeight);
+        otherStoneWeight = additionalData.otherStoneWeight.toString();
+      } else if (details?.otherStoneWeight) {
+        console.log("Using otherStoneWeight from details:", details.otherStoneWeight);
+        otherStoneWeight = details.otherStoneWeight.toString();
+      } else {
+        otherStoneWeight = "0";
+      }
 
       // Set form values from product data with improved fallbacks
       const formValues = {
@@ -378,6 +406,8 @@ export default function EditProductNew() {
         mainStoneWeight: mainStoneWeight,
         secondaryStoneTypes: secondaryStoneTypes,
         secondaryStoneWeight: secondaryStoneWeight,
+        otherStoneType: otherStoneType,
+        otherStoneWeight: otherStoneWeight,
         featured: productData.isFeatured || productData.featured || false,
         userDescription: aiInputs.userDescription || additionalData.userDescription || details?.userDescription || "",
         inStock: productData.inStock !== false, // default to true if undefined
@@ -439,6 +469,8 @@ export default function EditProductNew() {
       mainStoneWeight: form.getValues("mainStoneWeight"),
       secondaryStoneTypes: form.getValues("secondaryStoneTypes"),
       secondaryStoneWeight: form.getValues("secondaryStoneWeight"),
+      otherStoneType: form.getValues("otherStoneType"),
+      otherStoneWeight: form.getValues("otherStoneWeight"),
       userDescription: form.getValues("userDescription")
     };
     localStorage.setItem('aiGeneratorInputs', JSON.stringify(aiGeneratorInputs));
@@ -598,6 +630,8 @@ export default function EditProductNew() {
             mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
             secondaryStoneTypes: values.secondaryStoneTypes,
             secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
+            otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
+            otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
             productTypeId: values.productType || '',
             userDescription: values.userDescription,
             dimensions: values.dimensions,
@@ -609,6 +643,8 @@ export default function EditProductNew() {
               mainStoneWeight: parseFloat(values.mainStoneWeight) || 0,
               secondaryStoneTypes: values.secondaryStoneTypes.map(stone => stone.name),
               secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
+              otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
+              otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
               userDescription: values.userDescription,
               productType: values.productType || '',
             }
@@ -703,6 +739,8 @@ export default function EditProductNew() {
             mainStoneWeight={form.watch("mainStoneWeight")}
             secondaryStoneTypes={form.watch("secondaryStoneTypes")}
             secondaryStoneWeight={form.watch("secondaryStoneWeight")}
+            otherStoneType={form.watch("otherStoneType")}
+            otherStoneWeight={form.watch("otherStoneWeight")}
             userDescription={form.watch("userDescription")}
             mainImageUrl={mainImagePreview}
             additionalImageUrls={additionalImagePreviews}
@@ -1217,6 +1255,56 @@ export default function EditProductNew() {
                               placeholder="Enter total weight" 
                               {...field}
                               disabled={form.watch("secondaryStoneTypes").length === 0}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="otherStoneType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Other Stone Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select other stone" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none_selected">None</SelectItem>
+                              {stoneTypes?.map(stone => (
+                                <SelectItem key={stone.id} value={stone.name}>
+                                  {stone.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Use this for an additional stone type that doesn't fit the main or secondary categories
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="otherStoneWeight"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Other Stone Weight (carat)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              step="0.01"
+                              placeholder="Enter stone weight" 
+                              {...field}
+                              disabled={!form.watch("otherStoneType") || form.watch("otherStoneType") === "none_selected"}
                             />
                           </FormControl>
                           <FormMessage />
