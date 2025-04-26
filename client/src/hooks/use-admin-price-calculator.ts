@@ -9,7 +9,7 @@ interface UsePriceCalculatorProps {
   metalWeight: string;
   mainStoneType: string;
   mainStoneWeight: string;
-  secondaryStoneTypes?: Array<{ id: number; name: string }>;
+  secondaryStoneType?: string;
   secondaryStoneWeight?: string;
   otherStoneType?: string;
   otherStoneWeight?: string;
@@ -31,7 +31,7 @@ export function useAdminPriceCalculator({
   metalWeight,
   mainStoneType,
   mainStoneWeight,
-  secondaryStoneTypes = [],
+  secondaryStoneType = "none_selected",
   secondaryStoneWeight = "0",
   otherStoneType = "none_selected",
   otherStoneWeight = "0"
@@ -90,19 +90,14 @@ export function useAdminPriceCalculator({
           return;
         }
         
-        // Map secondary stone types to required format with better handling
-        const mappedSecondaryStones = secondaryStoneTypes.map(stone => {
-          // Handle different possible formats of stone data
-          const stoneId = stone.id ? 
-            (typeof stone.id === 'number' ? stone.id.toString() : stone.id) : 
-            // If no id but we have name, use the name (API will try to match by name)
-            (stone.name ? stone.name : '1');
-            
-          return {
-            stoneTypeId: stoneId,
-            caratWeight: secondaryStoneWeightNum / (secondaryStoneTypes.length || 1) // Distribute weight evenly
+        // Prepare secondary stone with single type
+        let secondaryStoneData = null;
+        if (secondaryStoneType && secondaryStoneType !== "none_selected" && secondaryStoneWeightNum > 0) {
+          secondaryStoneData = {
+            stoneTypeId: secondaryStoneType,
+            caratWeight: secondaryStoneWeightNum
           };
-        });
+        }
         
         const requestData = {
           metalTypeId: metalType,

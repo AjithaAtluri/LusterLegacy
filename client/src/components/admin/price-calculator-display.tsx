@@ -9,7 +9,7 @@ interface PriceCalculatorDisplayProps {
   metalWeight: string;
   mainStoneType: string;
   mainStoneWeight: string;
-  secondaryStoneTypes?: Array<{ id: number; name: string }>;
+  secondaryStoneType?: string;
   secondaryStoneWeight?: string;
   otherStoneType?: string;
   otherStoneWeight?: string;
@@ -21,7 +21,7 @@ export function PriceCalculatorDisplay({
   metalWeight,
   mainStoneType,
   mainStoneWeight,
-  secondaryStoneTypes = [],
+  secondaryStoneType = "none_selected",
   secondaryStoneWeight = "0",
   otherStoneType = "none_selected",
   otherStoneWeight = "0",
@@ -41,7 +41,7 @@ export function PriceCalculatorDisplay({
     metalWeight,
     mainStoneType,
     mainStoneWeight,
-    secondaryStoneTypes,
+    secondaryStoneType,
     secondaryStoneWeight,
     otherStoneType,
     otherStoneWeight
@@ -170,19 +170,17 @@ export function PriceCalculatorDisplay({
                     <span>{formatCurrency(breakdown.secondaryStoneCost)}</span>
                   )}
                 </div>
-                {secondaryStoneTypes && secondaryStoneTypes.length > 0 && (
+                {secondaryStoneType && secondaryStoneType !== "none_selected" && (
                   <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">
-                    {secondaryStoneTypes.map((stone, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mr-1.5"></div>
-                          {stone.name}
-                        </span>
-                      </div>
-                    ))}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground flex items-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/60 mr-1.5"></div>
+                        {secondaryStoneType}
+                      </span>
+                    </div>
                     {secondaryStoneWeight && Number(secondaryStoneWeight) > 0 && (
                       <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
-                        Total: {secondaryStoneWeight} carats
+                        Weight: {secondaryStoneWeight} carats
                       </div>
                     )}
                   </div>
@@ -209,7 +207,7 @@ export function PriceCalculatorDisplay({
                     </div>
                     {otherStoneWeight && Number(otherStoneWeight) > 0 && (
                       <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
-                        Total: {otherStoneWeight} carats
+                        Weight: {otherStoneWeight} carats
                       </div>
                     )}
                   </div>
