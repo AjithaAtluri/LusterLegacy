@@ -13,6 +13,7 @@ interface PriceCalculatorDisplayProps {
   secondaryStoneWeight?: string;
   otherStoneType?: string;
   otherStoneWeight?: string;
+  compact?: boolean;
 }
 
 export function PriceCalculatorDisplay({
@@ -23,7 +24,8 @@ export function PriceCalculatorDisplay({
   secondaryStoneTypes = [],
   secondaryStoneWeight = "0",
   otherStoneType = "none_selected",
-  otherStoneWeight = "0"
+  otherStoneWeight = "0",
+  compact = false
 }: PriceCalculatorDisplayProps) {
   const {
     priceUSD,
@@ -45,6 +47,35 @@ export function PriceCalculatorDisplay({
     otherStoneWeight
   });
 
+  // Render a compact version with just the price info
+  if (compact) {
+    return (
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-sm">USD:</span>
+          {isCalculating ? (
+            <Skeleton className="h-6 w-20" />
+          ) : (
+            <span className="font-medium">{formatCurrency(priceUSD)}</span>
+          )}
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-sm">INR:</span>
+          {isCalculating ? (
+            <Skeleton className="h-6 w-20" />
+          ) : (
+            <span className="font-medium">₹{priceINR.toLocaleString('en-IN')}</span>
+          )}
+        </div>
+        <div className="text-xs pt-2 text-muted-foreground flex items-center gap-1">
+          <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+          <span>Based on live gold price: ₹{goldPrice?.toLocaleString('en-IN') || "---"}/g</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Full detailed view
   return (
     <Card className="transition-all">
       <CardHeader className="pb-3">
@@ -166,7 +197,7 @@ export function PriceCalculatorDisplay({
                     {isCalculating ? (
                       <Skeleton className="h-4 w-16" />
                     ) : (
-                      <span>{formatCurrency(0)} {/* Cost included in secondary stones */}</span>
+                      <span>{formatCurrency(0)}</span>
                     )}
                   </div>
                   <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">

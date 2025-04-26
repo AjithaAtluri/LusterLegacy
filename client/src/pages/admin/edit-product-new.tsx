@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2, Save, Upload, X, PiggyBank } from "lucide-react";
 import {
   Form,
@@ -912,29 +912,51 @@ export default function EditProductNew() {
                       />
                     </div>
                     
-                    {/* Price Calculator */}
+                    {/* Price Comparison */}
                     <div className="mt-6">
                       <Card className="border-amber-200">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-base flex items-center">
                             <PiggyBank className="mr-2 h-5 w-5 text-amber-600" />
-                            Real-Time Price Calculator
+                            Price Comparison
                           </CardTitle>
+                          <CardDescription>
+                            Compare AI-generated prices with real-time calculated prices
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <PriceCalculatorDisplay 
-                            metalType={form.watch("metalType")}
-                            metalWeight={form.watch("metalWeight")}
-                            mainStoneType={form.watch("mainStoneType")}
-                            mainStoneWeight={form.watch("mainStoneWeight")}
-                            secondaryStoneTypes={form.watch("secondaryStoneTypes")}
-                            secondaryStoneWeight={form.watch("secondaryStoneWeight")}
-                            otherStoneType={form.watch("otherStoneType")}
-                            otherStoneWeight={form.watch("otherStoneWeight")}
-                          />
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="border rounded-md p-3 bg-background">
+                              <h3 className="text-sm font-medium mb-2 text-primary">AI-Generated Price</h3>
+                              <div className="space-y-2">
+                                <div className="flex justify-between">
+                                  <span className="text-sm">USD:</span>
+                                  <span className="font-medium">${form.watch("priceUSD")}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-sm">INR:</span>
+                                  <span className="font-medium">₹{form.watch("priceINR")}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="border rounded-md p-3 bg-background">
+                              <h3 className="text-sm font-medium mb-2 text-amber-600">Calculated Price</h3>
+                              <PriceCalculatorDisplay 
+                                metalType={form.watch("metalType")}
+                                metalWeight={form.watch("metalWeight")}
+                                mainStoneType={form.watch("mainStoneType")}
+                                mainStoneWeight={form.watch("mainStoneWeight")}
+                                secondaryStoneTypes={form.watch("secondaryStoneTypes")}
+                                secondaryStoneWeight={form.watch("secondaryStoneWeight")}
+                                otherStoneType={form.watch("otherStoneType")}
+                                otherStoneWeight={form.watch("otherStoneWeight")}
+                                compact={true}
+                              />
+                            </div>
+                          </div>
                           <div className="mt-3 text-xs text-muted-foreground">
-                            <p>This calculator shows a real-time price estimate based on current gold prices and selected materials.</p>
-                            <p className="mt-1">You can manually adjust the prices above if needed.</p>
+                            <p>The calculated price is based on current gold prices and selected materials.</p>
+                            <p className="mt-1">You can manually adjust the prices in the fields above if needed.</p>
                           </div>
                         </CardContent>
                       </Card>
