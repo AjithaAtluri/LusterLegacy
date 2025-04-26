@@ -12,6 +12,8 @@ interface JewelryContentRequest {
   metalWeight?: number;
   primaryGems?: Array<{ name: string; carats?: number }>;
   userDescription?: string;
+  otherStoneType?: string;
+  otherStoneWeight?: number;
 }
 
 interface JewelryContentResponse {
@@ -42,17 +44,22 @@ export async function generateJewelryContent(req: Request, res: Response) {
       metalWeight = 5,
       primaryGems = [],
       userDescription = "",
+      otherStoneType = "",
+      otherStoneWeight = 0,
     } = req.body as JewelryContentRequest;
     
     console.log(`Processing request for ${productType} in ${metalType}`);
     
     // Calculate price using the centralized price calculator
-    const { priceUSD: estimatedUSDPrice, priceINR: estimatedINRPrice } = calculateJewelryPrice({
+    const priceResult = await calculateJewelryPrice({
       productType,
       metalType,
       metalWeight,
-      primaryGems
+      primaryGems,
+      otherStoneType,
+      otherStoneWeight
     });
+    const { priceUSD: estimatedUSDPrice, priceINR: estimatedINRPrice } = priceResult;
     
     // OpenAI API key validation
     if (!process.env.OPENAI_API_KEY) {
@@ -86,6 +93,7 @@ Product Details:
 - Type: ${productType}
 - Metal: ${metalType}${metalWeight ? ` (${metalWeight}g)` : ''}
 - Gems: ${primaryGems.map(gem => `${gem.name}${gem.carats ? ` (${gem.carats} carats)` : ''}`).join(', ') || 'None'}
+${otherStoneType ? `- Other Stone: ${otherStoneType}${otherStoneWeight ? ` (${otherStoneWeight} carats)` : ''}` : ''}
 ${userDescription ? `- Additional Details: ${userDescription}` : ''}
 
 Please generate elegant marketing content with the exact JSON structure and fields specified in your instructions.`

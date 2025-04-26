@@ -212,6 +212,9 @@ export default function EditProductAIGenerator({
       primaryGems,
       userDescription: formData.userDescription,
       imageUrls: uploadedImageUrl ? [uploadedImageUrl] : undefined,
+      // Include other stone information
+      otherStoneType: otherStoneType !== "none_selected" ? otherStoneType : undefined,
+      otherStoneWeight: otherStoneWeight ? parseFloat(otherStoneWeight) : undefined,
     };
 
     // Pass to API for content generation along with aiInputs for storage

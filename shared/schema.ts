@@ -33,6 +33,8 @@ export interface AIInputs {
   primaryGems?: Array<{ name: string; carats?: number }>;
   userDescription?: string;
   imageUrls?: string[];
+  otherStoneType?: string;
+  otherStoneWeight?: number;
 }
 
 export const products = pgTable("products", {
