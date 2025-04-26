@@ -2734,6 +2734,40 @@ Respond in JSON format:
       });
     }
   });
+  
+  // Get the current USD to INR exchange rate (not authenticated)
+  app.get("/api/exchange-rate", async (_req, res) => {
+    try {
+      const { getUsdToInrRate, getCachedExchangeRate } = await import("./services/exchange-rate-service");
+      
+      // Try to get a fresh rate, but use cached one if fetching fails
+      try {
+        const rate = await getUsdToInrRate();
+        res.json({ 
+          success: true,
+          rate,
+          source: "Xoom",
+          timestamp: new Date().toISOString() 
+        });
+      } catch (error) {
+        console.error("Error fetching fresh exchange rate:", error);
+        const cachedRate = getCachedExchangeRate();
+        res.json({ 
+          success: true,
+          rate: cachedRate,
+          source: "cached",
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("Error in exchange rate endpoint:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to fetch exchange rate",
+        fallbackRate: 83 
+      });
+    }
+  });
 
   return httpServer;
 }
