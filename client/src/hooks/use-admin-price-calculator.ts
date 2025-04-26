@@ -106,7 +106,7 @@ export function useAdminPriceCalculator({
             stoneTypeId: mainStoneType,
             caratWeight: mainStoneWeightNum
           } : null,
-          secondaryStones: mappedSecondaryStones.length > 0 ? mappedSecondaryStones : null,
+          secondaryStones: secondaryStoneData ? [secondaryStoneData] : null,
           otherStone: otherStoneType !== "none_selected" && otherStoneType !== "none" ? {
             stoneTypeId: otherStoneType,
             caratWeight: otherStoneWeightNum
@@ -158,7 +158,7 @@ export function useAdminPriceCalculator({
     metalWeight, 
     mainStoneType, 
     mainStoneWeight, 
-    secondaryStoneTypes, 
+    secondaryStoneType, 
     secondaryStoneWeight, 
     otherStoneType,
     otherStoneWeight,

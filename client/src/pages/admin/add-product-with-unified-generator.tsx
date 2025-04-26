@@ -48,6 +48,7 @@ export default function AddProduct() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedStoneTypes, setSelectedStoneTypes] = useState<Array<{id: number, name: string}>>([]);
+  const [secondaryStoneType, setSecondaryStoneType] = useState<string>("none_selected");
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
@@ -190,6 +191,10 @@ export default function AddProduct() {
           setSelectedStoneTypes(parsedInputs.secondaryStoneTypes);
         }
         
+        if (parsedInputs.secondaryStoneType) {
+          setSecondaryStoneType(parsedInputs.secondaryStoneType);
+        }
+        
         if (parsedInputs.secondaryStoneWeight) {
           setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight);
         }
@@ -232,6 +237,7 @@ export default function AddProduct() {
           mainStoneType: mainStoneType || '',
           mainStoneWeight: parseFloat(mainStoneWeight) || 0,
           secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
+          secondaryStoneType: secondaryStoneType || 'none_selected',
           secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
           otherStoneType: otherStoneType || 'none_selected',
           otherStoneWeight: parseFloat(otherStoneWeight) || 0,
@@ -244,6 +250,7 @@ export default function AddProduct() {
             mainStoneType: mainStoneType || '',
             mainStoneWeight: parseFloat(mainStoneWeight) || 0,
             secondaryStoneTypes: selectedStoneTypes.map(stone => stone.name),
+            secondaryStoneType: secondaryStoneType || 'none_selected',
             secondaryStoneWeight: parseFloat(secondaryStoneWeight) || 0,
             otherStoneType: otherStoneType || 'none_selected',
             otherStoneWeight: parseFloat(otherStoneWeight) || 0,
@@ -745,7 +752,7 @@ export default function AddProduct() {
                         metalWeight={form.watch("metalWeight")}
                         mainStoneType={mainStoneType}
                         mainStoneWeight={mainStoneWeight}
-                        secondaryStoneTypes={selectedStoneTypes}
+                        secondaryStoneType={secondaryStoneType}
                         secondaryStoneWeight={secondaryStoneWeight}
                         otherStoneType={otherStoneType}
                         otherStoneWeight={otherStoneWeight}
