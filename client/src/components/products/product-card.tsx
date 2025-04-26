@@ -2,51 +2,12 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, getImageUrl } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { METAL_TYPES, STONE_TYPES } from "@/lib/constants";
 import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
-
-// ProductImage component to handle image loading with proper fallbacks
-interface ProductImageProps {
-  product: {
-    id: number;
-    name: string;
-    imageUrl?: string;
-    image_url?: string;
-  };
-  className?: string;
-}
-
-function ProductImage({ product, className = "" }: ProductImageProps) {
-  const [imageSrc, setImageSrc] = useState<string>("");
-  const [isError, setIsError] = useState(false);
-  
-  useEffect(() => {
-    // Use our centralized product image map via the getImageUrl function
-    // Pass the product ID to ensure consistent images across components
-    const src = getImageUrl(product.imageUrl || product.image_url, product.id);
-    setImageSrc(src);
-  }, [product.id, product.imageUrl, product.image_url]);
-  
-  // Handle image loading errors
-  const handleError = () => {
-    console.error("Image load error for product:", product.id, product.name);
-    // Set a default fallback image that we know exists
-    setImageSrc("/uploads/test_jewelry.jpeg");
-    setIsError(true);
-  };
-  
-  return (
-    <img 
-      src={imageSrc}
-      alt={product.name}
-      className={className}
-      onError={!isError ? handleError : undefined}
-    />
-  );
-}
+import ReliableProductImage from "@/components/ui/reliable-product-image";
 
 // Interface for product details stored as JSON
 interface ProductDetails {
@@ -121,9 +82,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
       <div className="relative h-80 overflow-hidden">
-        {/* Get product ID to ensure consistent image mapping */}
-        <ProductImage 
-          product={product}
+        {/* Using the reliable product image component for consistent images */}
+        <ReliableProductImage 
+          productId={product.id}
+          alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
         />
         

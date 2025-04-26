@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import GemSparkle from "@/components/ui/gem-sparkle";
+import ReliableProductImage from "@/components/ui/reliable-product-image";
 
 // Extended product details interface
 interface ProductDetails {
