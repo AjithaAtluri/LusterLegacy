@@ -33,6 +33,8 @@ interface UnifiedAIGeneratorProps {
   setMainStoneWeight: (weight: string) => void;
   selectedStoneTypes: Array<{id: number, name: string}>;
   setSelectedStoneTypes: (types: Array<{id: number, name: string}>) => void;
+  secondaryStoneType: string;
+  setSecondaryStoneType: (type: string) => void;
   secondaryStoneWeight: string;
   setSecondaryStoneWeight: (weight: string) => void;
   handleContentGenerated: (content: AIGeneratedContent) => void;
@@ -65,6 +67,8 @@ export default function UnifiedAIGenerator({
   setMainStoneWeight,
   selectedStoneTypes,
   setSelectedStoneTypes,
+  secondaryStoneType,
+  setSecondaryStoneType,
   secondaryStoneWeight,
   setSecondaryStoneWeight,
   handleContentGenerated,
@@ -459,66 +463,42 @@ export default function UnifiedAIGenerator({
                 </div>
               </div>
               
-              {/* 9. Secondary Stones */}
+              {/* 9. Secondary Stone Type */}
               <div className="space-y-2">
-                <FormLabel>9. Secondary Stones</FormLabel>
-                <div className="border rounded-md p-3 h-[220px] overflow-y-auto">
-                  <div className="grid grid-cols-1 gap-2">
+                <FormLabel>9. Secondary Stone Type</FormLabel>
+                <Select
+                  value={secondaryStoneType}
+                  onValueChange={setSecondaryStoneType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select secondary stone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none_selected">No Secondary Stone</SelectItem>
                     {isLoadingStoneTypes ? (
-                      <div className="flex items-center justify-center p-4 h-full">
-                        <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                      <div className="flex items-center justify-center p-2">
+                        <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
                       </div>
                     ) : stoneTypes?.length ? (
                       stoneTypes.map(stone => (
                         stone.name !== mainStoneType && (
-                          <div key={stone.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`stone-${stone.id}`}
-                              checked={selectedStoneTypes.some(s => s.id === stone.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  handleSetSelectedStoneTypes((prev) => [...prev, {id: stone.id, name: stone.name}]);
-                                } else {
-                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s.id !== stone.id));
-                                }
-                              }}
-                            />
-                            <label
-                              htmlFor={`stone-${stone.id}`}
-                              className="text-sm cursor-pointer"
-                            >
-                              {stone.name}
-                            </label>
-                          </div>
+                          <SelectItem key={stone.id} value={stone.id.toString()}>
+                            {stone.name}
+                          </SelectItem>
                         )
                       ))
                     ) : (
-                      ["Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", "Aquamarine"].map((stoneName, idx) => (
-                        stoneName !== mainStoneType && (
-                          <div key={stoneName} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`stone-${stoneName}`}
-                              checked={selectedStoneTypes.some(s => s.name === stoneName)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  handleSetSelectedStoneTypes((prev) => [...prev, {id: 1000 + idx, name: stoneName}]);
-                                } else {
-                                  handleSetSelectedStoneTypes((prev) => prev.filter((s) => s.name !== stoneName));
-                                }
-                              }}
-                            />
-                            <label
-                              htmlFor={`stone-${stoneName}`}
-                              className="text-sm cursor-pointer"
-                            >
-                              {stoneName}
-                            </label>
-                          </div>
-                        )
-                      ))
+                      <>
+                        <SelectItem value="Diamond">Diamond</SelectItem>
+                        <SelectItem value="Ruby">Ruby</SelectItem>
+                        <SelectItem value="Sapphire">Sapphire</SelectItem>
+                        <SelectItem value="Emerald">Emerald</SelectItem>
+                        <SelectItem value="Amethyst">Amethyst</SelectItem>
+                        <SelectItem value="Aquamarine">Aquamarine</SelectItem>
+                      </>
                     )}
-                  </div>
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
@@ -623,8 +603,8 @@ export default function UnifiedAIGenerator({
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${selectedStoneTypes.length > 0 ? 'bg-green-500' : 'bg-amber-500'}`}>
-                    {selectedStoneTypes.length > 0 ? (
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${secondaryStoneType && secondaryStoneType !== "none_selected" ? 'bg-green-500' : 'bg-amber-500'}`}>
+                    {secondaryStoneType && secondaryStoneType !== "none_selected" ? (
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
@@ -637,10 +617,10 @@ export default function UnifiedAIGenerator({
                     )}
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium">Secondary Stones</h4>
+                    <h4 className="text-sm font-medium">Secondary Stone</h4>
                     <p className="text-sm text-muted-foreground">
-                      {selectedStoneTypes.length > 0 
-                        ? `${selectedStoneTypes.length} stones selected${secondaryStoneWeight ? ` (${secondaryStoneWeight} ct total)` : ''}` 
+                      {secondaryStoneType && secondaryStoneType !== "none_selected"
+                        ? `${secondaryStoneType}${secondaryStoneWeight ? ` (${secondaryStoneWeight} ct)` : ''}` 
                         : 'None selected'}
                     </p>
                   </div>
@@ -684,10 +664,10 @@ export default function UnifiedAIGenerator({
               name: mainStoneType,
               carats: mainStoneWeight ? parseFloat(mainStoneWeight) : undefined
             }] : []),
-            ...selectedStoneTypes.map(stone => ({
-              name: stone.name,
-              carats: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) / selectedStoneTypes.length : undefined
-            }))
+            ...(secondaryStoneType && secondaryStoneType !== "none_selected" ? [{
+              name: secondaryStoneType,
+              carats: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) : undefined
+            }] : [])
           ]}
           userDescription={form.watch("userDescription")}
           imageUrls={[
