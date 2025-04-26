@@ -11,6 +11,8 @@ interface UsePriceCalculatorProps {
   mainStoneWeight: string;
   secondaryStoneTypes?: Array<{ id: number; name: string }>;
   secondaryStoneWeight?: string;
+  otherStoneType?: string;
+  otherStoneWeight?: string;
 }
 
 interface PriceData {
@@ -30,7 +32,9 @@ export function useAdminPriceCalculator({
   mainStoneType,
   mainStoneWeight,
   secondaryStoneTypes = [],
-  secondaryStoneWeight = "0"
+  secondaryStoneWeight = "0",
+  otherStoneType = "none_selected",
+  otherStoneWeight = "0"
 }: UsePriceCalculatorProps) {
   const { toast } = useToast();
   const { goldPrice, isLoading: isGoldPriceLoading, location, timestamp } = useGoldPrice();
@@ -71,9 +75,10 @@ export function useAdminPriceCalculator({
         const metalWeightNum = safeParseFloat(metalWeight);
         const mainStoneWeightNum = safeParseFloat(mainStoneWeight);
         const secondaryStoneWeightNum = safeParseFloat(secondaryStoneWeight);
+        const otherStoneWeightNum = safeParseFloat(otherStoneWeight);
         
         // Skip calculation if all weights are 0
-        if (metalWeightNum <= 0 && mainStoneWeightNum <= 0 && secondaryStoneWeightNum <= 0) {
+        if (metalWeightNum <= 0 && mainStoneWeightNum <= 0 && secondaryStoneWeightNum <= 0 && otherStoneWeightNum <= 0) {
           setPriceUSD(0);
           setPriceINR(0);
           setBreakdown({
@@ -106,7 +111,11 @@ export function useAdminPriceCalculator({
             stoneTypeId: mainStoneType,
             caratWeight: mainStoneWeightNum
           } : null,
-          secondaryStones: mappedSecondaryStones.length > 0 ? mappedSecondaryStones : null
+          secondaryStones: mappedSecondaryStones.length > 0 ? mappedSecondaryStones : null,
+          otherStone: otherStoneType !== "none_selected" && otherStoneType !== "none" ? {
+            stoneTypeId: otherStoneType,
+            caratWeight: otherStoneWeightNum
+          } : null
         };
         
         console.log("Price calculation request:", requestData);
@@ -156,6 +165,8 @@ export function useAdminPriceCalculator({
     mainStoneWeight, 
     secondaryStoneTypes, 
     secondaryStoneWeight, 
+    otherStoneType,
+    otherStoneWeight,
     toast
   ]);
 

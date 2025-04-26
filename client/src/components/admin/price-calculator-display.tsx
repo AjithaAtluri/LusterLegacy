@@ -11,6 +11,8 @@ interface PriceCalculatorDisplayProps {
   mainStoneWeight: string;
   secondaryStoneTypes?: Array<{ id: number; name: string }>;
   secondaryStoneWeight?: string;
+  otherStoneType?: string;
+  otherStoneWeight?: string;
 }
 
 export function PriceCalculatorDisplay({
@@ -19,7 +21,9 @@ export function PriceCalculatorDisplay({
   mainStoneType,
   mainStoneWeight,
   secondaryStoneTypes = [],
-  secondaryStoneWeight = "0"
+  secondaryStoneWeight = "0",
+  otherStoneType = "none_selected",
+  otherStoneWeight = "0"
 }: PriceCalculatorDisplayProps) {
   const {
     priceUSD,
