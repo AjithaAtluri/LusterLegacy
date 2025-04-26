@@ -698,7 +698,7 @@ export default function ProductDetail() {
                                     <div className="w-2 h-2 rounded-full bg-primary"></div>
                                     <span className="font-cormorant text-lg">{secondaryStoneType}</span>
                                   </div>
-                                ) : secondaryStoneTypes && secondaryStoneTypes.length > 0 ? (
+                                ) : Array.isArray(secondaryStoneTypes) && secondaryStoneTypes.length > 0 ? (
                                   // Fallback for backward compatibility with old data format
                                   <div className="flex items-center space-x-2">
                                     <div className="w-2 h-2 rounded-full bg-primary"></div>
@@ -742,7 +742,7 @@ export default function ProductDetail() {
                       </div>
                       
                       {/* All Stones Collection */}
-                      {productStones && productStones.length > 0 && (
+                      {Array.isArray(productStones) && productStones.length > 0 && (
                         <div className="border-b pb-2">
                           <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-1">All Stones & Gems</span>
                           <div className="flex flex-wrap gap-2">
