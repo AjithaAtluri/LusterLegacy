@@ -1955,14 +1955,34 @@ Respond in JSON format:
 
   app.put('/api/admin/products/:id', validateAdmin, upload.fields([
     { name: 'mainImage', maxCount: 1 },
-    { name: 'additionalImages', maxCount: 5 }
+    { name: 'additionalImage1', maxCount: 1 },
+    { name: 'additionalImage2', maxCount: 1 },
+    { name: 'additionalImage3', maxCount: 1 },
+    { name: 'additionalImage4', maxCount: 1 }
   ]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
       // Create an updated data object from request body
-      let updateData = { ...req.body };
+      let updateData = {};
+      
+      // Check if data is sent in the 'data' field (FormData approach)
+      if (req.body.data) {
+        try {
+          // Parse the JSON data from the 'data' field
+          const parsedData = JSON.parse(req.body.data);
+          updateData = { ...parsedData };
+          console.log("Parsed product data from FormData:", updateData);
+        } catch (e) {
+          console.error("Error parsing JSON data from request:", e);
+          return res.status(400).json({ message: 'Invalid product data format' });
+        }
+      } else {
+        // Fallback to legacy approach
+        updateData = { ...req.body };
+        console.log("Using direct request body for product update");
+      }
       
       // Handle productTypeId parsing to integer if present
       if (updateData.productTypeId) {
@@ -1988,23 +2008,82 @@ Respond in JSON format:
         }
       }
       
-      // Handle additional images update
-      if (files.additionalImages && files.additionalImages.length > 0) {
-        const newAdditionalImages = files.additionalImages.map(file => `/uploads/${file.filename}`);
+      // Process additional images - Collect all additional image files
+      const additionalImageFiles = [];
+      for (let i = 1; i <= 4; i++) {
+        const fieldName = `additionalImage${i}`;
+        if (files[fieldName] && files[fieldName].length > 0) {
+          additionalImageFiles.push(files[fieldName][0]);
+        }
+      }
+      
+      console.log(`Found ${additionalImageFiles.length} additional image files`);
+      
+      // If we have new additional images
+      if (additionalImageFiles.length > 0) {
+        // Create paths for the new images
+        const newAdditionalImages = additionalImageFiles.map(file => `/uploads/${file.filename}`);
+        console.log("New additional images:", newAdditionalImages);
         
-        // Delete existing additional images if 'replaceExistingImages' is true
-        if (req.body.replaceExistingImages === 'true' && existingProduct.additionalImages) {
-          existingProduct.additionalImages.forEach(imgUrl => {
+        // Get existing additional images
+        const existingImages = existingProduct.additionalImages || [];
+        console.log("Existing additional images:", existingImages);
+        
+        // Check if we're replacing all images or keeping existing ones
+        if (req.body.replaceExistingImages === 'true') {
+          console.log("Replacing all existing images");
+          // Delete existing images
+          existingImages.forEach(imgUrl => {
+            if (!imgUrl) return;
             const imgPath = path.join(process.cwd(), imgUrl.substring(1));
             if (fs.existsSync(imgPath)) {
               fs.unlinkSync(imgPath);
+              console.log(`Deleted existing image: ${imgUrl}`);
             }
           });
+          
+          // Replace with new images
           updateData.additionalImages = newAdditionalImages;
         } else {
-          // Append new images to existing ones
-          updateData.additionalImages = [...(existingProduct.additionalImages || []), ...newAdditionalImages];
+          // Handle individual image replacements using existing URLs from form data
+          let updatedImages = [...existingImages];
+          
+          console.log("Existing image count:", existingImages.length);
+          
+          // If we have existing images from the form data, use those
+          if (req.body.existingAdditionalImage1) {
+            console.log("Using existing images from form data");
+            updatedImages = [];
+            
+            // Add all existing images from form data
+            for (let i = 1; i <= 4; i++) {
+              const fieldName = `existingAdditionalImage${i}`;
+              if (req.body[fieldName]) {
+                updatedImages.push(req.body[fieldName]);
+                console.log(`Added existing image from form: ${req.body[fieldName]}`);
+              }
+            }
+          }
+          
+          // Append new images
+          updateData.additionalImages = [...updatedImages, ...newAdditionalImages];
+          console.log("Final additional images:", updateData.additionalImages);
         }
+      } else if (req.body.existingAdditionalImage1) {
+        // No new images, but we have existing ones from form data
+        console.log("No new images, using existing images from form data");
+        
+        const updatedImages = [];
+        for (let i = 1; i <= 4; i++) {
+          const fieldName = `existingAdditionalImage${i}`;
+          if (req.body[fieldName]) {
+            updatedImages.push(req.body[fieldName]);
+            console.log(`Added existing image from form: ${req.body[fieldName]}`);
+          }
+        }
+        
+        updateData.additionalImages = updatedImages;
+        console.log("Final existing images from form:", updateData.additionalImages);
       }
       
       // Parse stone type IDs from request body
