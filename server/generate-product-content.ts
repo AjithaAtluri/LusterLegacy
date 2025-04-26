@@ -75,8 +75,8 @@ export const generateProductContent = async (req: Request, res: Response) => {
         }
         
         // Get form data
-        const productTypes = JSON.parse(req.body.productTypes || '[]');
-        const metalTypes = JSON.parse(req.body.metalTypes || '[]');
+        const productType = req.body.productType || '';
+        const metalType = req.body.metalType || '';
         const metalWeight = parseFloat(req.body.metalWeight) || 5;
         const mainStoneType = req.body.mainStoneType;
         const mainStoneWeight = parseFloat(req.body.mainStoneWeight) || 1;
@@ -87,12 +87,12 @@ export const generateProductContent = async (req: Request, res: Response) => {
         const additionalDetails = req.body.additionalDetails || '';
         
         // Validate required fields
-        if (productTypes.length === 0) {
-          return res.status(400).json({ success: false, message: 'At least one product type is required' });
+        if (!productType) {
+          return res.status(400).json({ success: false, message: 'Product type is required' });
         }
         
-        if (metalTypes.length === 0) {
-          return res.status(400).json({ success: false, message: 'At least one metal type is required' });
+        if (!metalType) {
+          return res.status(400).json({ success: false, message: 'Metal type is required' });
         }
         
         if (!mainStoneType) {
@@ -131,8 +131,8 @@ export const generateProductContent = async (req: Request, res: Response) => {
         const productDescription = `
 I am creating content for a luxury jewelry product with the following details:
 
-PRODUCT TYPE(S): ${productTypes.join(', ')}
-METAL TYPE(S): ${metalTypes.join(', ')}
+PRODUCT TYPE: ${productType}
+METAL TYPE: ${metalType}
 METAL WEIGHT: ${metalWeight} grams
 STONE INFORMATION:
 ${stoneInfo.map(stone => `- ${stone.position.toUpperCase()} STONE: ${stone.type}, ${stone.weight} carats`).join('\n')}
@@ -293,7 +293,7 @@ Format your response as structured JSON with these fields: title, tagline, short
                   },
                   {
                     role: "user",
-                    content: `Generate content for a ${productTypes[0]} made of ${metalTypes[0]} with ${mainStoneType} stones. Return in JSON format with these fields: title, tagline, shortDescription, detailedDescription, priceUSD (number), priceINR (number).`
+                    content: `Generate content for a ${productType} made of ${metalType} with ${mainStoneType} stones. Return in JSON format with these fields: title, tagline, shortDescription, detailedDescription, priceUSD (number), priceINR (number).`
                   }
                 ],
                 temperature: 0.7,
@@ -321,10 +321,10 @@ Format your response as structured JSON with these fields: title, tagline, short
               console.error("Fallback JSON parse error:", parseError);
               // Use a simple placeholder response
               fallbackJsonResponse = {
-                title: `${productTypes[0]} with ${mainStoneType}`,
+                title: `${productType} with ${mainStoneType}`,
                 tagline: "Elegantly crafted luxury jewelry piece",
                 shortDescription: "A beautiful piece of jewelry crafted with precision and care.",
-                detailedDescription: `This ${productTypes[0]} is made with premium ${metalTypes[0]} and features exquisite ${mainStoneType} stones. It embodies luxury and sophistication.`,
+                detailedDescription: `This ${productType} is made with premium ${metalType} and features exquisite ${mainStoneType} stones. It embodies luxury and sophistication.`,
                 priceUSD: 1200,
                 priceINR: 102000
               };

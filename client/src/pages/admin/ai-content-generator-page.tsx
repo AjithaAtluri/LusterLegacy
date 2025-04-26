@@ -926,8 +926,8 @@ export default function AIContentGeneratorPage() {
                   
                   // Save the input values that were used to generate the content
                   localStorage.setItem('aiGeneratorInputs', JSON.stringify({
-                    productTypes: formData.productTypes,
-                    metalTypes: formData.metalTypes,
+                    productType: formData.productType,
+                    metalType: formData.metalType,
                     metalWeight: formData.metalWeight,
                     mainStoneType: formData.mainStoneType,
                     mainStoneWeight: formData.mainStoneWeight,
