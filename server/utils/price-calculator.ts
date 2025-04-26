@@ -118,32 +118,86 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       let perCaratPrice = 0;
       let stoneTypeName = "";
       
-      // Try to get stone price from database by ID first
+      // Try to get stone price from database by ID first (prioritize database values)
       if (gem.stoneTypeId) {
         let stoneTypeData;
         if (typeof gem.stoneTypeId === 'number') {
+          // Direct lookup by ID
           stoneTypeData = await storage.getStoneTypeById(gem.stoneTypeId);
+          console.log(`Looking up stone by ID ${gem.stoneTypeId}`);
         } else {
           // If stoneTypeId is a string, it might be a name or ID
           const stoneTypes = await storage.getAllStoneTypes();
           const stoneTypeIdStr = String(gem.stoneTypeId);
-          stoneTypeData = stoneTypes.find(st => 
-            (st.id !== undefined && String(st.id) === stoneTypeIdStr) || 
-            (st.name && st.name.toLowerCase() === stoneTypeIdStr.toLowerCase())
-          );
+          
+          console.log(`Looking up stone by string ID/name "${stoneTypeIdStr}"`);
+          
+          // First try exact ID match
+          stoneTypeData = stoneTypes.find(st => st.id !== undefined && String(st.id) === stoneTypeIdStr);
+          
+          // If no match, try by name
+          if (!stoneTypeData) {
+            stoneTypeData = stoneTypes.find(st => 
+              st.name && st.name.toLowerCase() === stoneTypeIdStr.toLowerCase()
+            );
+          }
+          
+          // Still no match, try partial name match
+          if (!stoneTypeData) {
+            stoneTypeData = stoneTypes.find(st => 
+              st.name && stoneTypeIdStr.toLowerCase().includes(st.name.toLowerCase())
+            );
+          }
         }
         
         if (stoneTypeData) {
           stoneTypeName = stoneTypeData.name;
-          // Use the specific price modifier for this stone type
+          // Use the specific price modifier for this stone type from DB
           perCaratPrice = stoneTypeData.priceModifier;
-          console.log(`Using stone price for ${stoneTypeName}: ₹${perCaratPrice} per carat`);
+          console.log(`Using database stone price for ${stoneTypeName}: ₹${perCaratPrice} per carat`);
+        } else {
+          console.log(`Stone with ID/name "${gem.stoneTypeId}" not found in database`);
         }
       }
       
-      // Fallback: If no price found from database, estimate based on name
+      // If we have a name but no stoneTypeId, try to find it in the database by name
+      if (!perCaratPrice && gem.name) {
+        try {
+          console.log(`Searching database for stone type by name: "${gem.name}"`);
+          const stoneTypes = await storage.getAllStoneTypes();
+          
+          // Try exact name match
+          const matchingStone = stoneTypes.find(st => 
+            st.name && st.name.toLowerCase() === gem.name.toLowerCase()
+          );
+          
+          // If no exact match, try partial name match
+          if (!matchingStone) {
+            const partialMatch = stoneTypes.find(st => 
+              st.name && (
+                gem.name.toLowerCase().includes(st.name.toLowerCase()) ||
+                st.name.toLowerCase().includes(gem.name.toLowerCase())
+              )
+            );
+            
+            if (partialMatch) {
+              stoneTypeName = partialMatch.name;
+              perCaratPrice = partialMatch.priceModifier;
+              console.log(`Using database price for partially matched stone "${stoneTypeName}": ₹${perCaratPrice} per carat`);
+            }
+          } else {
+            stoneTypeName = matchingStone.name;
+            perCaratPrice = matchingStone.priceModifier;
+            console.log(`Using database price for exact matched stone "${stoneTypeName}": ₹${perCaratPrice} per carat`);
+          }
+        } catch (error) {
+          console.error("Error searching stone types by name:", error);
+        }
+      }
+      
+      // Last resort fallback: If still no price found from database, estimate based on name
       if (!perCaratPrice) {
-        stoneTypeName = gem.name;
+        stoneTypeName = gem.name || "Unknown Stone";
         perCaratPrice = await getGemPricePerCaratFromName(gem.name);
         console.log(`Using fallback stone price for ${stoneTypeName}: ₹${perCaratPrice} per carat`);
       }
@@ -154,7 +208,7 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       
       // Store the detailed cost info for this gem
       gemCosts.push({
-        name: stoneTypeName || gem.name,
+        name: stoneTypeName || gem.name || "Unknown Stone",
         carats: carats,
         price: perCaratPrice,
         totalCost: thisGemCost
@@ -165,21 +219,61 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     if (params.otherStoneType && params.otherStoneWeight && params.otherStoneType !== 'none_selected') {
       const otherStoneWeight = params.otherStoneWeight || 0.5;
       let otherStonePrice = 0;
+      let otherStoneName = params.otherStoneType;
       
-      // Try to get stone price from database
+      // Try to get stone price from database with multiple matching approaches
       try {
+        console.log(`Looking up other stone "${params.otherStoneType}" in database`);
         const stoneTypes = await storage.getAllStoneTypes();
-        const otherStoneData = stoneTypes.find(st => 
-          st.name.toLowerCase() === params.otherStoneType?.toLowerCase()
+        
+        // Try exact name match first
+        let otherStoneData = stoneTypes.find(st => 
+          st.name && st.name.toLowerCase() === params.otherStoneType?.toLowerCase()
         );
         
+        // If no exact match, try partial name match
+        if (!otherStoneData) {
+          console.log(`No exact match for "${params.otherStoneType}", trying partial matches`);
+          // See if the provided name contains a stone type name from our database
+          otherStoneData = stoneTypes.find(st => 
+            st.name && params.otherStoneType?.toLowerCase().includes(st.name.toLowerCase())
+          );
+          
+          // If still no match, try the reverse - see if a stone type name contains our search term
+          if (!otherStoneData) {
+            otherStoneData = stoneTypes.find(st => 
+              st.name && st.name.toLowerCase().includes(params.otherStoneType?.toLowerCase())
+            );
+          }
+        }
+        
         if (otherStoneData?.priceModifier) {
+          otherStoneName = otherStoneData.name;
           otherStonePrice = otherStoneData.priceModifier;
-          console.log(`Using database price for ${params.otherStoneType}: ₹${otherStonePrice} per carat`);
+          console.log(`Using database price for ${otherStoneName}: ₹${otherStonePrice} per carat`);
         } else {
-          // Fallback to name-based pricing
-          otherStonePrice = await getGemPricePerCaratFromName(params.otherStoneType);
-          console.log(`Using fallback price for ${params.otherStoneType}: ₹${otherStonePrice} per carat`);
+          // Try to find by keywords, separating compound names
+          const words = params.otherStoneType.toLowerCase().split(/\s+/);
+          for (const word of words) {
+            if (word.length < 3) continue; // Skip short words
+            
+            const keywordMatch = stoneTypes.find(st => 
+              st.name && st.name.toLowerCase().includes(word)
+            );
+            
+            if (keywordMatch?.priceModifier) {
+              otherStoneName = keywordMatch.name;
+              otherStonePrice = keywordMatch.priceModifier;
+              console.log(`Found keyword match "${word}" for stone "${otherStoneName}": ₹${otherStonePrice} per carat`);
+              break;
+            }
+          }
+          
+          // If still no price, fallback to name-based pricing
+          if (!otherStonePrice) {
+            otherStonePrice = await getGemPricePerCaratFromName(params.otherStoneType);
+            console.log(`Using fallback price for ${params.otherStoneType}: ₹${otherStonePrice} per carat`);
+          }
         }
         
         // Calculate other stone cost
@@ -188,7 +282,7 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
         
         // Add to gem costs
         gemCosts.push({
-          name: params.otherStoneType,
+          name: otherStoneName,
           carats: otherStoneWeight,
           price: otherStonePrice,
           totalCost: otherStoneCost
