@@ -24,9 +24,9 @@ export async function fetchGoldPrice(): Promise<GoldPriceResponse> {
     // Simulating network request
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Generate a realistic price with small fluctuations around 7500 INR/gram
+    // Generate a realistic price with small fluctuations around 9800 INR/gram (updated price)
     // In a real implementation, this would be fetched from an actual API
-    const basePrice = 7500;
+    const basePrice = 9800;
     const fluctuation = Math.random() * 300 - 150; // +/- 150 INR
     const currentPrice = Math.round(basePrice + fluctuation);
     
