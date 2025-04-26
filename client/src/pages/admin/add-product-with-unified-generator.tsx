@@ -187,16 +187,49 @@ export default function AddProduct() {
           setMainStoneWeight(parsedInputs.mainStoneWeight);
         }
         
-        if (parsedInputs.secondaryStoneTypes) {
-          setSelectedStoneTypes(parsedInputs.secondaryStoneTypes);
+        // For backward compatibility with older format
+        if (parsedInputs.secondaryStoneTypes && Array.isArray(parsedInputs.secondaryStoneTypes)) {
+          // Convert old array format to new stone type objects for display
+          const stoneObjects = parsedInputs.secondaryStoneTypes.map(name => ({
+            id: 0, // Placeholder ID that will be replaced when matching with database stones
+            name: name
+          }));
+          setSelectedStoneTypes(stoneObjects);
+          
+          // If we have secondary stones from old format but no specific type selected,
+          // use the first one as the selected secondary stone type
+          if (!parsedInputs.secondaryStoneType && parsedInputs.secondaryStoneTypes.length > 0) {
+            setSecondaryStoneType(parsedInputs.secondaryStoneTypes[0]);
+          }
         }
         
+        // New format - single secondary stone type
         if (parsedInputs.secondaryStoneType) {
           setSecondaryStoneType(parsedInputs.secondaryStoneType);
+          
+          // If we have a stone type database, try to match it
+          if (stoneTypes && stoneTypes.length > 0) {
+            const matchedStone = stoneTypes.find(stone => 
+              stone.name.toLowerCase() === parsedInputs.secondaryStoneType.toLowerCase()
+            );
+            
+            if (matchedStone) {
+              setSelectedStoneTypes([{ id: matchedStone.id, name: matchedStone.name }]);
+            }
+          }
         }
         
         if (parsedInputs.secondaryStoneWeight) {
-          setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight);
+          setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight.toString());
+        }
+        
+        // Other stone type (newer format)
+        if (parsedInputs.otherStoneType) {
+          setOtherStoneType(parsedInputs.otherStoneType);
+        }
+        
+        if (parsedInputs.otherStoneWeight) {
+          setOtherStoneWeight(parsedInputs.otherStoneWeight.toString());
         }
 
         if (parsedInputs.userDescription) {
@@ -353,6 +386,35 @@ export default function AddProduct() {
       const enhancedDescription = form.getValues("detailedDescription") + 
         "\n\n-- Image Analysis Notes --\n" + content.imageInsights;
       form.setValue("detailedDescription", enhancedDescription);
+    }
+    
+    // Save content to localStorage for potential regeneration
+    localStorage.setItem('aiGeneratedContent', JSON.stringify(content));
+    
+    // Save input values to localStorage
+    const aiGeneratorInputs = {
+      productType: productType,
+      metalType: form.getValues("metalType"),
+      metalWeight: form.getValues("metalWeight"),
+      mainStoneType: mainStoneType,
+      mainStoneWeight: mainStoneWeight,
+      secondaryStoneType: secondaryStoneType,
+      secondaryStoneWeight: secondaryStoneWeight,
+      secondaryStoneTypes: selectedStoneTypes, // Keep for backward compatibility
+      otherStoneType: otherStoneType,
+      otherStoneWeight: otherStoneWeight,
+      userDescription: form.getValues("userDescription")
+    };
+    localStorage.setItem('aiGeneratorInputs', JSON.stringify(aiGeneratorInputs));
+    
+    // Save image preview to localStorage if available
+    if (mainImagePreview) {
+      localStorage.setItem('aiGeneratedImagePreview', mainImagePreview);
+    }
+    
+    // Save additional images if available
+    if (additionalImagePreviews.length > 0) {
+      localStorage.setItem('aiGeneratedAdditionalImages', JSON.stringify(additionalImagePreviews));
     }
     
     toast({
