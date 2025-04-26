@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, ShoppingBag, Heart, Award, Info, Package, Sun, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, getImageUrl } from "@/lib/utils";
-// Removed tabs import as we're no longer using the tabbed interface
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { usePriceCalculator } from "@/hooks/use-price-calculator";
@@ -179,9 +178,9 @@ export default function ProductDetail() {
             console.log("Using direct metal type:", rawDirectMetal);
             metalType = rawDirectMetal;
           } else {
-            // Hardcoded fallback for specific product
-            console.log("Using hardcoded fallback for metal type");
-            metalType = "14k Gold";
+            // No fallbacks, use empty string if no data is found
+            console.log("No metal type found in product data");
+            metalType = "";
           }
           
           console.log("Final metal type value:", metalType);
@@ -205,9 +204,9 @@ export default function ProductDetail() {
             console.log("Using direct metal weight:", rawDirectWeight);
             metalWeight = rawDirectWeight;
           } else {
-            // Hardcoded fallback for specific product
-            console.log("Using hardcoded fallback for metal weight");
-            metalWeight = 32;
+            // No fallbacks, use 0 if no data is found
+            console.log("No metal weight found in product data");
+            metalWeight = 0;
           }
           
           console.log("Final metal weight value:", metalWeight);
@@ -308,9 +307,6 @@ export default function ProductDetail() {
     initialMetalTypeId: productMetalType ? productMetalType.toLowerCase().replace(/\s+/g, '-') : '18kt-gold'
   });
   
-  // This function is no longer needed as we're using ReliableProductImage 
-  // to consistently display images based on product ID
-  
   // If product not found
   if (error) {
     return (
@@ -374,242 +370,149 @@ export default function ProductDetail() {
                 className="font-montserrat bg-primary text-background hover:bg-accent"
                 onClick={() => setLocation(`/product/${product.id}`)}
               >
-                <ShoppingBag className="mr-2 h-4 w-4" /> 
-                Customize & Purchase
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Add to Cart
+              </Button>
+              <Button
+                variant="outline"
+                className="font-montserrat border-primary text-pearl hover:bg-primary/20"
+              >
+                <Heart className="mr-2 h-4 w-4" />
+                Wishlist
               </Button>
             </div>
           </div>
-          
-          {/* Decorative corner elements */}
-          <div className="absolute top-8 left-8 h-24 w-24 border-t-2 border-l-2 border-primary/40 pointer-events-none"></div>
-          <div className="absolute bottom-8 right-8 h-24 w-24 border-b-2 border-r-2 border-primary/40 pointer-events-none"></div>
         </div>
       )}
-
-      <div className="container mx-auto px-4 md:px-8 py-12">
-        <Button 
-          variant="ghost" 
-          onClick={handleBackToCollection}
-          className="mb-8 font-montserrat"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Collections
-        </Button>
-        
-        {isLoading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            <div>
-              <Skeleton className="rounded-lg h-[500px] w-full mb-4" />
-              <div className="grid grid-cols-5 gap-2">
-                {Array(5).fill(0).map((_, index) => (
-                  <Skeleton key={index} className="rounded-md h-20 w-full" />
-                ))}
+      
+      {/* Product Details Section */}
+      <div className="container mx-auto px-4 md:px-8 py-16">
+        {product ? (
+          <div className="flex flex-col lg:flex-row gap-10">
+            {/* Left Column: Product Images */}
+            <div className="w-full lg:w-1/2">
+              {/* Main Image */}
+              <div className="mb-6 rounded-xl overflow-hidden shadow-lg bg-card">
+                <ReliableProductImage
+                  productId={product.id}
+                  alt={product.name}
+                  className="w-full h-auto object-contain aspect-square"
+                />
               </div>
-            </div>
-            <div>
-              <Skeleton className="h-10 w-2/3 mb-2" />
-              <Skeleton className="h-6 w-full mb-8" />
-              <Skeleton className="h-[300px] w-full mb-8" />
-            </div>
-          </div>
-        ) : product ? (
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
-            {/* Left Column - Gallery (2 columns wide) */}
-            <div className="lg:col-span-2">
-              <div className="sticky top-24">
-                {/* Main Image with sparkle effect */}
-                <div className="rounded-lg overflow-hidden bg-card mb-4 relative group">
-                  <ReliableProductImage 
-                    productId={product.id}
-                    alt={product.name}
-                    className="w-full h-auto object-cover transition duration-500 group-hover:scale-105"
-                  />
-                  <GemSparkle />
-                  
-                  {/* Product badges positioned over image */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2">
-                    {product.isNew && (
-                      <Badge className="bg-primary text-background px-3 py-1">
-                        New
-                      </Badge>
-                    )}
-                    {product.isBestseller && (
-                      <Badge className="bg-accent text-background px-3 py-1">
-                        Bestseller
-                      </Badge>
-                    )}
-                  </div>
+              
+              {/* Additional Images */}
+              {allImages.length > 1 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {allImages.map((img, index) => (
+                    <div key={index} className="rounded-md overflow-hidden border border-border">
+                      <img
+                        src={getImageUrl(img)}
+                        alt={`${product.name} view ${index + 1}`}
+                        className="w-full h-auto aspect-square object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
-                
-                {/* Thumbnail gallery */}
-                {allImages.length > 1 && (
-                  <div className="grid grid-cols-5 gap-2">
-                    {allImages.map((_, index) => (
-                      <div 
-                        key={index}
-                        className="rounded-md overflow-hidden transition-all opacity-80 hover:opacity-100 hover:ring-2 hover:ring-primary"
-                      >
-                        <ReliableProductImage 
-                          productId={product.id}
-                          alt={`${product.name} view ${index + 1}`} 
-                          className="w-full h-auto object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Price display for mobile only */}
-                <div className="block lg:hidden mt-8 p-6 bg-card rounded-lg shadow-lg">
-                  <p className="font-montserrat text-sm text-foreground/70">Price</p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="font-playfair text-3xl font-bold text-foreground">
-                      {formatCurrency(currentPrice)}
-                    </p>
-                    <span className="text-sm text-primary">customizable</span>
-                  </div>
-                  <Separator className="my-4" />
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      className="w-full font-montserrat bg-primary text-background hover:bg-accent"
-                      onClick={() => setLocation(`/product/${product.id}`)}
-                    >
-                      <ShoppingBag className="mr-2 h-4 w-4" /> 
-                      Customize & Purchase
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full font-montserrat"
-                    >
-                      <Heart className="mr-2 h-4 w-4" />
-                      Add to Wishlist
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
             
-            {/* Right Column - Product Info (3 columns wide) */}
-            <div className="lg:col-span-3">
-              {/* Product Info */}
-              <div className="mb-8">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {/* Use productType if available, fall back to category for backward compatibility */}
-                  {(product.productType || product.category) && (
-                    <Badge variant="outline" className="capitalize text-xs">
-                      {product.productType || product.category}
-                    </Badge>
-                  )}
-                  {product.isFeatured && (
-                    <Badge variant="secondary" className="text-xs">Featured</Badge>
-                  )}
-                  {productStones && productStones.length > 0 && (
-                    <Badge variant="outline" className="text-xs">
-                      {productStones.join(', ')}
-                    </Badge>
-                  )}
-                </div>
-                
-                <h1 className="font-playfair text-3xl font-bold text-foreground mb-3">
-                  {product.name}
-                </h1>
-                
-                {tagline && (
-                  <p className="font-cormorant text-xl italic text-primary mb-3">
-                    {tagline}
-                  </p>
-                )}
-                
-                <p className="font-cormorant text-xl text-foreground/80 mb-6">
-                  {product.description}
-                </p>
-                
-                {/* Desktop Price display */}
-                <div className="hidden lg:block p-6 bg-card rounded-lg shadow-lg mb-8">
-                  <p className="font-montserrat text-sm text-foreground/70">Price</p>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <p className="font-playfair text-3xl font-bold text-foreground">
-                      {formatCurrency(currentPrice)}
+            {/* Right Column: Product Information */}
+            <div className="w-full lg:w-1/2">
+              <div className="sticky top-24">
+                {/* Product Title for Mobile */}
+                <div className="block lg:hidden mb-6">
+                  <h1 className="font-playfair text-3xl font-bold text-foreground mb-2">
+                    {product.name}
+                  </h1>
+                  {tagline && (
+                    <p className="font-cormorant text-xl italic text-foreground/70 mb-4">
+                      {tagline}
                     </p>
-                    <span className="text-sm text-primary">customizable</span>
+                  )}
+                </div>
+                
+                {/* Price and Badges */}
+                <div className="mb-6">
+                  <div className="flex flex-wrap items-center gap-4 mb-4">
+                    <span className="font-playfair text-3xl font-semibold text-foreground">
+                      {formatCurrency(currentPrice.usd)}
+                    </span>
+                    <span className="font-montserrat text-lg text-foreground/70">
+                      {formatCurrency(currentPrice.inr, 'INR')}
+                    </span>
                   </div>
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      className="w-full font-montserrat bg-primary text-background hover:bg-accent"
-                      onClick={() => setLocation(`/product/${product.id}`)}
-                    >
-                      <ShoppingBag className="mr-2 h-4 w-4" /> 
-                      Customize & Purchase
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full font-montserrat"
-                    >
-                      <Heart className="mr-2 h-4 w-4" />
-                      Add to Wishlist
-                    </Button>
+                  
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {product.isNew && (
+                      <Badge variant="default" className="bg-green-600">New Arrival</Badge>
+                    )}
+                    {product.isBestseller && (
+                      <Badge variant="secondary" className="bg-amber-600">Bestseller</Badge>
+                    )}
+                    <Badge variant="outline" className="font-montserrat">
+                      <Award className="h-3 w-3 mr-1" />
+                      Handcrafted
+                    </Badge>
+                  </div>
+                  
+                  <p className="font-montserrat text-sm text-foreground/80 mb-6">
+                    {product.description}
+                  </p>
+                </div>
+                
+                {/* Call-To-Action Buttons */}
+                <div className="flex flex-wrap gap-3 mb-8">
+                  <Button className="font-montserrat bg-primary text-background hover:bg-primary/90">
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    Add to Cart
+                  </Button>
+                  <Button variant="outline" className="font-montserrat">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Add to Wishlist
+                  </Button>
+                </div>
+                
+                {/* Product Highlights */}
+                <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="bg-card">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="shrink-0 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Package className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-montserrat font-semibold text-sm">Free Shipping</h3>
+                        <p className="font-montserrat text-xs text-foreground/70">For orders over $200</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-card">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="shrink-0 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Sun className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-montserrat font-semibold text-sm">Authenticity</h3>
+                        <p className="font-montserrat text-xs text-foreground/70">Certified materials</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* Product ratings (to be implemented) */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-1 mb-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star 
+                        key={star} 
+                        className={`h-5 w-5 ${star <= 4 ? 'text-amber-500 fill-amber-500' : 'text-foreground/20'}`} 
+                      />
+                    ))}
+                    <span className="ml-2 font-montserrat text-sm text-foreground/70">4.0 (12 reviews)</span>
                   </div>
                 </div>
                 
-                {/* Key features */}
-                <div className="mb-8">
-                  <h2 className="font-playfair text-2xl font-semibold mb-4">Highlights</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {productMetalType && (
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 bg-primary/10 p-2 rounded-full">
-                          <Package className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-montserrat font-semibold">Premium Materials</h3>
-                          <p className="text-sm text-foreground/70">
-                            Crafted with {productMetalType} {productMetalWeight > 0 ? `(${productMetalWeight}g)` : ''}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {productStones && productStones.length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <div className="mt-1 bg-primary/10 p-2 rounded-full">
-                          <Sun className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-montserrat font-semibold">Precious Stones</h3>
-                          <p className="text-sm text-foreground/70">
-                            {productStones.join(', ')}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 bg-primary/10 p-2 rounded-full">
-                        <Award className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-montserrat font-semibold">Artisan Crafted</h3>
-                        <p className="text-sm text-foreground/70">
-                          Handmade by master artisans
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1 bg-primary/10 p-2 rounded-full">
-                        <Star className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-montserrat font-semibold">Quality Guaranteed</h3>
-                        <p className="text-sm text-foreground/70">
-                          Certified and rigorously tested
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Detailed Information Tabs */}
+                {/* Detailed Information Sections */}
                 <div className="w-full mt-8 space-y-8">
                   {/* Description Section */}
                   <div className="p-6 bg-card rounded-lg shadow-sm">
