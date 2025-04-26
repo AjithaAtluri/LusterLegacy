@@ -252,6 +252,16 @@ export default function EditProductNew() {
       const aiInputs = additionalData.aiInputs || {};
       console.log("AI inputs:", aiInputs); // Add debug logging
       
+      // Special debugging for product 23
+      if (productData.id === 23) {
+        console.log("PRODUCT 23 DEBUG DATA:");
+        console.log("Raw productData:", productData);
+        console.log("Raw details string:", productData.details);
+        console.log("Parsed details:", details);
+        console.log("additionalData:", additionalData);
+        console.log("aiInputs:", aiInputs);
+      }
+      
       // Extract metal type with better fallbacks
       let metalType = '';
       if (aiInputs.metalType) {
