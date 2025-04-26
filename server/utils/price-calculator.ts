@@ -54,9 +54,10 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       } else {
         // If metalTypeId is a string, it might be a name or ID
         const metalTypes = await storage.getAllMetalTypes();
+        const metalTypeIdStr = String(params.metalTypeId);
         metalTypeData = metalTypes.find(mt => 
-          mt.id === parseInt(params.metalTypeId as string) || 
-          mt.name.toLowerCase() === (params.metalTypeId as string).toLowerCase()
+          (mt.id !== undefined && String(mt.id) === metalTypeIdStr) || 
+          (mt.name && mt.name.toLowerCase() === metalTypeIdStr.toLowerCase())
         );
       }
       if (metalTypeData?.priceModifier) {
@@ -125,9 +126,10 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
         } else {
           // If stoneTypeId is a string, it might be a name or ID
           const stoneTypes = await storage.getAllStoneTypes();
+          const stoneTypeIdStr = String(gem.stoneTypeId);
           stoneTypeData = stoneTypes.find(st => 
-            st.id === parseInt(gem.stoneTypeId as string) || 
-            st.name.toLowerCase() === (gem.stoneTypeId as string).toLowerCase()
+            (st.id !== undefined && String(st.id) === stoneTypeIdStr) || 
+            (st.name && st.name.toLowerCase() === stoneTypeIdStr.toLowerCase())
           );
         }
         

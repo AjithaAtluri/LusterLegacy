@@ -22,12 +22,13 @@ interface ProductDetails {
     basePriceINR: number;
     metalType: string;
     metalWeight: number;
-    stoneTypes: string[];
+    stoneTypes: string[]; // Legacy field - use single values instead
     mainStoneType?: string;
     mainStoneWeight?: number;
-    secondaryStoneType?: string;
-    secondaryStoneTypes?: string[];
+    secondaryStoneType?: string; // Single value for secondary stone
     secondaryStoneWeight?: number;
+    otherStoneType?: string; // Single value for other stone
+    otherStoneWeight?: number;
     productTypeId?: string;
     userDescription?: string;
     dimensions?: string;
@@ -37,9 +38,10 @@ interface ProductDetails {
       metalWeight?: number;
       mainStoneType?: string;
       mainStoneWeight?: number;
-      secondaryStoneType?: string;
-      secondaryStoneTypes?: string[];
+      secondaryStoneType?: string; // Standardized to single value
       secondaryStoneWeight?: number;
+      otherStoneType?: string; // Added other stone type
+      otherStoneWeight?: number;
       userDescription?: string;
     };
   };
