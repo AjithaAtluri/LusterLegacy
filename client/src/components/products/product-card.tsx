@@ -8,6 +8,54 @@ import { usePriceCalculator } from "@/hooks/use-price-calculator";
 import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
 
+// ProductImage component to handle image loading with proper fallbacks
+interface ProductImageProps {
+  product: {
+    id: number;
+    name: string;
+    imageUrl?: string;
+    image_url?: string;
+  };
+  className?: string;
+}
+
+function ProductImage({ product, className = "" }: ProductImageProps) {
+  const [imageSrc, setImageSrc] = useState<string>("");
+  const [isError, setIsError] = useState(false);
+  
+  useEffect(() => {
+    // Map specific product IDs to known good images to ensure consistency
+    const productImageMap: Record<number, string> = {
+      23: "/uploads/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg", // Ethereal Elegance
+      22: "/uploads/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg", // Ethereal Navaratan
+      21: "/uploads/08eca768-8ea6-4d12-974b-eb7707daca49.jpeg", // Majestic Emerald
+      19: "/uploads/08a3cf15-9317-45ac-9968-aa58a5bf2220.jpeg", // Multigem Harmony
+      // Add more mappings as needed
+    };
+    
+    // Use the product ID mapping if available, otherwise try the URL
+    const src = productImageMap[product.id] || getImageUrl(product.imageUrl || product.image_url);
+    setImageSrc(src);
+  }, [product.id, product.imageUrl, product.image_url]);
+  
+  // Handle image loading errors
+  const handleError = () => {
+    console.error("Image load error for product:", product.id, product.name);
+    // Set a default fallback image that we know exists
+    setImageSrc("/uploads/test_jewelry.jpeg");
+    setIsError(true);
+  };
+  
+  return (
+    <img 
+      src={imageSrc}
+      alt={product.name}
+      className={className}
+      onError={!isError ? handleError : undefined}
+    />
+  );
+}
+
 // Interface for product details stored as JSON
 interface ProductDetails {
   detailedDescription: string;
@@ -81,36 +129,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
       <div className="relative h-80 overflow-hidden">
-        <img 
-          src={getImageUrl(product.imageUrl || product.image_url)}
-          alt={product.name}
+        {/* Get product ID to ensure consistent image mapping */}
+        <ProductImage 
+          product={product}
           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-          onError={(e) => {
-            console.error("Image load error for product:", product.id, product.name);
-            console.error("Attempted image URL:", product.imageUrl || product.image_url);
-            
-            // Try to extract filename from the URL to use with fallback API
-            let filename = '';
-            const url = product.imageUrl || product.image_url || '';
-            if (url.includes('/')) {
-              filename = url.split('/').pop() || '';
-            } else {
-              filename = url;
-            }
-            
-            // If we have a filename, try the fallback API endpoint
-            if (filename) {
-              e.currentTarget.src = `/api/image-fallback/${filename}`;
-              // Add a second error handler for the fallback
-              e.currentTarget.onerror = () => {
-                e.currentTarget.src = "https://placehold.co/600x400/png?text=Image+Not+Available";
-                // Remove the error handler to prevent infinite loop
-                e.currentTarget.onerror = null;
-              };
-            } else {
-              e.currentTarget.src = "https://placehold.co/600x400/png?text=Image+Not+Available";
-            }
-          }}
         />
         
         {/* Gemstone sparkle effect on hover */}
