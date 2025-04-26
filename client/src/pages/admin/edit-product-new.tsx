@@ -231,6 +231,10 @@ export default function EditProductNew() {
   useEffect(() => {
     if (productData) {
       console.log("Product data received:", productData); // Add debug logging
+      console.log("Product data type:", typeof productData);
+      console.log("Product data keys:", Object.keys(productData));
+      console.log("Raw priceUSD:", productData.priceUSD);
+      console.log("Raw basePrice:", productData.basePrice);
 
       // Parse the details JSON if it exists and is a string
       let details;
@@ -247,10 +251,13 @@ export default function EditProductNew() {
       // Get additionalData from details if it exists
       const additionalData = details?.additionalData || {};
       console.log("Additional data:", additionalData); // Add debug logging
+      console.log("Additional data keys:", Object.keys(additionalData));
+      console.log("Raw basePriceINR:", additionalData.basePriceINR);
       
       // Get AI inputs if available
       const aiInputs = additionalData.aiInputs || {};
       console.log("AI inputs:", aiInputs); // Add debug logging
+      console.log("AI inputs keys:", Object.keys(aiInputs));
       
       // Special debugging for product 23
       if (productData.id === 23) {
