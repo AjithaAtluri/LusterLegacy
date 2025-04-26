@@ -31,8 +31,8 @@ export function getStoneType(id: string) {
  * and how they need to be served from the filesystem
  */
 export function getImageUrl(url: string | undefined): string {
+  // Common missing image cases
   if (!url) {
-    // Use a specific jewelry image we know exists in uploads instead of a random fallback
     return "/uploads/test_jewelry.jpeg";
   }
   
@@ -43,25 +43,37 @@ export function getImageUrl(url: string | undefined): string {
   
   // If it's a URL path starting with /uploads/
   if (url.startsWith('/uploads/')) {
-    // Check if it's one of the missing UUIDs and map to a known good image
     const filename = url.replace('/uploads/', '');
     
-    // Map specific missing UUIDs to specific images we know exist
-    // This ensures consistent images for each product instead of random ones
-    if (filename === 'c3cf99fd-6257-4b52-9843-88050e1ade00.jpeg') {
-      return '/uploads/test_jewelry.jpeg';
-    }
-    if (filename === 'bb374f67-4346-4ab8-9d47-ddc503508d35.jpeg') {
-      return '/uploads/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg';
-    }
-    if (filename === 'edad80ba-8efe-4880-a31c-005ed2881a65.jpeg') {
-      return '/uploads/08eca768-8ea6-4d12-974b-eb7707daca49.jpeg';
-    }
-    if (filename === '890f5f5b-f6af-4db1-a2d4-ef28af6764b0.jpeg') {
-      return '/uploads/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg';
+    // Create a mapping of UUID filenames to known existing files
+    const knownUuids: Record<string, string> = {
+      // Map database UUIDs to actual files we know exist
+      'c3cf99fd-6257-4b52-9843-88050e1ade00.jpeg': 'test_jewelry.jpeg',
+      'bb374f67-4346-4ab8-9d47-ddc503508d35.jpeg': '9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg',
+      'edad80ba-8efe-4880-a31c-005ed2881a65.jpeg': '08eca768-8ea6-4d12-974b-eb7707daca49.jpeg',
+      '890f5f5b-f6af-4db1-a2d4-ef28af6764b0.jpeg': '9cffd119-20ca-461d-be69-fd53a03b177d.jpeg',
+      '0a6966da-a68b-47b2-9dee-90aa31808c8f.jpeg': '08a3cf15-9317-45ac-9968-aa58a5bf2220.jpeg',
+    };
+    
+    // If we have a known mapping for this UUID, use it
+    if (knownUuids[filename]) {
+      return `/uploads/${knownUuids[filename]}`;
     }
     
-    // Otherwise keep the original path
+    // If filename appears to be a UUID but we don't have a specific mapping,
+    // check if it's a known extension and use our fallback
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpe?g|png|gif|webp)$/i;
+    if (uuidPattern.test(filename)) {
+      const extension = filename.split('.').pop()?.toLowerCase();
+      if (extension === 'jpeg' || extension === 'jpg') {
+        return '/uploads/test_jewelry.jpeg';
+      } else if (extension === 'png') {
+        // We could add other defaults for different file types here
+        return '/uploads/test_jewelry.jpeg';
+      }
+    }
+    
+    // Default behavior: attempt direct access first, but provide an error handler
     return url;
   }
   
