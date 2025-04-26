@@ -44,11 +44,7 @@ interface FormValues {
   productType: string;
   metalType: string;
   metalWeight: string;
-  dimensions: {
-    length: string;
-    width: string;
-    height: string;
-  };
+  // dimensions fields removed as requested
   mainStoneType: string;
   mainStoneWeight: string;
   secondaryStoneType: string;
@@ -84,11 +80,7 @@ export default function EditProductNew() {
       productType: "1", // Default to first product type
       metalType: "14K Yellow Gold", // Default metal type
       metalWeight: "",
-      dimensions: {
-        length: "0",
-        width: "0",
-        height: "0",
-      },
+      // dimensions removed as requested
       mainStoneType: "none_selected",
       mainStoneWeight: "",
       secondaryStoneType: "none_selected",
@@ -476,11 +468,7 @@ export default function EditProductNew() {
         productType: productData.productTypeId?.toString() || "",
         metalType: metalType,
         metalWeight: metalWeight,
-        dimensions: {
-          length: details?.dimensions?.length?.toString() || "0",
-          width: details?.dimensions?.width?.toString() || "0",
-          height: details?.dimensions?.height?.toString() || "0",
-        },
+        // dimensions removed as requested
         mainStoneType: mainStoneType,
         mainStoneWeight: mainStoneWeight,
         secondaryStoneType: secondaryStoneType,
@@ -712,7 +700,7 @@ export default function EditProductNew() {
             otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
             productTypeId: values.productType || '',
             userDescription: values.userDescription,
-            dimensions: values.dimensions,
+            // dimensions removed as requested
             // Save all AI generator inputs as a dedicated structure for easier retrieval
             aiInputs: {
               metalType: values.metalType,
