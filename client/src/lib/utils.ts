@@ -15,11 +15,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Format currency in USD
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+// Format currency with specified currency code (USD default)
+export function formatCurrency(amount: number, currencyCode: string = 'USD'): string {
+  const locale = currencyCode === 'INR' ? 'en-IN' : 'en-US';
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "USD",
+    currency: currencyCode,
     maximumFractionDigits: 0
   }).format(amount);
 }

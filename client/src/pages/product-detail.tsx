@@ -435,10 +435,10 @@ export default function ProductDetail() {
                 <div className="mb-6">
                   <div className="flex flex-wrap items-center gap-4 mb-4">
                     <span className="font-playfair text-3xl font-semibold text-foreground">
-                      {formatCurrency(currentPrice.usd)}
+                      {formatCurrency(currentPrice)}
                     </span>
                     <span className="font-montserrat text-lg text-foreground/70">
-                      {formatCurrency(currentPrice.inr, 'INR')}
+                      {formatCurrency(Math.round(currentPrice * 83), 'INR')}
                     </span>
                   </div>
                   
@@ -541,7 +541,7 @@ export default function ProductDetail() {
                           )}
                         </div>
                         <div className="font-cormorant text-xl mt-1">
-                          {productMetalType || "14k Gold"}
+                          {productMetalType || "Not specified"}
                         </div>
                       </div>
                       
@@ -551,7 +551,7 @@ export default function ProductDetail() {
                           <div className="flex items-center justify-between">
                             <span className="font-montserrat font-semibold text-sm text-foreground/80">Product Category</span>
                           </div>
-                          <div className="font-cormorant text-xl mt-1 capitalize">{product.productType || product.category || "Necklace"}</div>
+                          <div className="font-cormorant text-xl mt-1 capitalize">{product.productType || product.category || "Not specified"}</div>
                         </div>
                       )}
                       
@@ -579,7 +579,7 @@ export default function ProductDetail() {
                             )}
                           </div>
                           <div className="font-cormorant text-xl mt-1">
-                            {mainStoneType || "Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)"}
+                            {mainStoneType || "Not specified"}
                           </div>
                         </div>
                         
