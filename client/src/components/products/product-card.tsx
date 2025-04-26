@@ -24,17 +24,9 @@ function ProductImage({ product, className = "" }: ProductImageProps) {
   const [isError, setIsError] = useState(false);
   
   useEffect(() => {
-    // Map specific product IDs to known good images to ensure consistency
-    const productImageMap: Record<number, string> = {
-      23: "/uploads/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg", // Ethereal Elegance
-      22: "/uploads/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg", // Ethereal Navaratan
-      21: "/uploads/08eca768-8ea6-4d12-974b-eb7707daca49.jpeg", // Majestic Emerald
-      19: "/uploads/08a3cf15-9317-45ac-9968-aa58a5bf2220.jpeg", // Multigem Harmony
-      // Add more mappings as needed
-    };
-    
-    // Use the product ID mapping if available, otherwise try the URL
-    const src = productImageMap[product.id] || getImageUrl(product.imageUrl || product.image_url);
+    // Use our centralized product image map via the getImageUrl function
+    // Pass the product ID to ensure consistent images across components
+    const src = getImageUrl(product.imageUrl || product.image_url, product.id);
     setImageSrc(src);
   }, [product.id, product.imageUrl, product.image_url]);
   

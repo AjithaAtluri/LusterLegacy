@@ -2,6 +2,15 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { METAL_TYPES, STONE_TYPES } from "./constants";
 
+// Centralized mapping of product IDs to their correct image paths
+// This ensures consistent images across product cards, detail pages, and collections
+export const PRODUCT_IMAGE_MAP: Record<number, string> = {
+  23: "/uploads/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg", // Ethereal Elegance
+  22: "/uploads/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg", // Ethereal Navaratan
+  21: "/uploads/08eca768-8ea6-4d12-974b-eb7707daca49.jpeg", // Majestic Emerald
+  19: "/uploads/08a3cf15-9317-45ac-9968-aa58a5bf2220.jpeg", // Multigem Harmony
+};
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -29,8 +38,17 @@ export function getStoneType(id: string) {
  * Universal function to handle image URLs across the application
  * This resolves the inconsistency between how images are stored in the database
  * and how they need to be served from the filesystem
+ * 
+ * @param url The image URL to process
+ * @param productId Optional product ID to use for direct product image mapping
  */
-export function getImageUrl(url: string | undefined): string {
+export function getImageUrl(url: string | undefined, productId?: number): string {
+  // If a product ID is provided, use our centralized mapping to ensure consistency
+  if (productId !== undefined && PRODUCT_IMAGE_MAP[productId]) {
+    console.log(`Using centralized product image mapping for product ID: ${productId}`);
+    return PRODUCT_IMAGE_MAP[productId];
+  }
+  
   // Common missing image cases
   if (!url) {
     return "/uploads/test_jewelry.jpeg";
@@ -45,6 +63,12 @@ export function getImageUrl(url: string | undefined): string {
   if (url.startsWith('/uploads/')) {
     const filename = url.replace('/uploads/', '');
     
+    // Skip debug screenshots and testing images
+    if (filename.startsWith('screenshot-') || filename.startsWith('image_')) {
+      console.log(`Skipping debug screenshot: ${filename}`);
+      return "/uploads/test_jewelry.jpeg";
+    }
+    
     // Create a mapping of UUID filenames to known existing files
     const knownUuids: Record<string, string> = {
       // Map database UUIDs to actual files we know exist
@@ -53,6 +77,7 @@ export function getImageUrl(url: string | undefined): string {
       'edad80ba-8efe-4880-a31c-005ed2881a65.jpeg': '08eca768-8ea6-4d12-974b-eb7707daca49.jpeg',
       '890f5f5b-f6af-4db1-a2d4-ef28af6764b0.jpeg': '9cffd119-20ca-461d-be69-fd53a03b177d.jpeg',
       '0a6966da-a68b-47b2-9dee-90aa31808c8f.jpeg': '08a3cf15-9317-45ac-9968-aa58a5bf2220.jpeg',
+      // Add any additional mappings here
     };
     
     // If we have a known mapping for this UUID, use it
