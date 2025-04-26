@@ -727,7 +727,7 @@ export default function EditProductNew() {
             metalWeight={form.watch("metalWeight")}
             mainStoneType={form.watch("mainStoneType")}
             mainStoneWeight={form.watch("mainStoneWeight")}
-            secondaryStoneTypes={form.watch("secondaryStoneTypes")}
+            secondaryStoneType={form.watch("secondaryStoneType")}
             secondaryStoneWeight={form.watch("secondaryStoneWeight")}
             otherStoneType={form.watch("otherStoneType")}
             otherStoneWeight={form.watch("otherStoneWeight")}
@@ -936,7 +936,7 @@ export default function EditProductNew() {
                                 metalWeight={form.watch("metalWeight")}
                                 mainStoneType={form.watch("mainStoneType")}
                                 mainStoneWeight={form.watch("mainStoneWeight")}
-                                secondaryStoneTypes={form.watch("secondaryStoneTypes")}
+                                secondaryStoneType={form.watch("secondaryStoneType")}
                                 secondaryStoneWeight={form.watch("secondaryStoneWeight")}
                                 otherStoneType={form.watch("otherStoneType")}
                                 otherStoneWeight={form.watch("otherStoneWeight")}

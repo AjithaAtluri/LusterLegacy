@@ -28,7 +28,7 @@ export default function EditProductAIGenerator({
   metalWeight,
   mainStoneType,
   mainStoneWeight,
-  secondaryStoneTypes,
+  secondaryStoneType,
   secondaryStoneWeight,
   otherStoneType,
   otherStoneWeight,
@@ -44,7 +44,7 @@ export default function EditProductAIGenerator({
   metalWeight: string;
   mainStoneType: string;
   mainStoneWeight: string;
-  secondaryStoneTypes: any[];
+  secondaryStoneType: string;
   secondaryStoneWeight: string;
   otherStoneType: string;
   otherStoneWeight: string;
@@ -95,22 +95,17 @@ export default function EditProductAIGenerator({
     },
   });
 
-  // Set up the gems input from secondary stone types when component mounts
+  // Set up the gems input from secondary stone type when component mounts
   React.useEffect(() => {
-    if (secondaryStoneTypes && secondaryStoneTypes.length > 0) {
+    if (secondaryStoneType && secondaryStoneType !== 'none_selected') {
       // Format gems text for display
-      const gemsText = secondaryStoneTypes
-        .map((gem: { name: string; weight?: number }) => {
-          if (gem.weight) {
-            return `${gem.name} (${gem.weight} carats)`;
-          }
-          return gem.name;
-        })
-        .join(", ");
+      const gemsText = secondaryStoneWeight 
+        ? `${secondaryStoneType} (${secondaryStoneWeight} carats)`
+        : secondaryStoneType;
       
       setPrimaryGemsInput(gemsText);
     }
-  }, [secondaryStoneTypes]);
+  }, [secondaryStoneType, secondaryStoneWeight]);
 
   // Handle file upload for AI processing
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,12 +160,12 @@ export default function EditProductAIGenerator({
       });
     }
     
-    // Return secondary stone types directly if available
-    if (secondaryStoneTypes && secondaryStoneTypes.length > 0) {
-      return secondaryStoneTypes.map((gem: { name: string; weight?: number }) => ({
-        name: gem.name,
-        carats: gem.weight
-      }));
+    // Return secondary stone type directly if available
+    if (secondaryStoneType && secondaryStoneType !== 'none_selected') {
+      return [{
+        name: secondaryStoneType,
+        carats: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) : undefined
+      }];
     }
     
     return [];
