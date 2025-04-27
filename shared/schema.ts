@@ -85,7 +85,8 @@ export const designRequests = pgTable("design_requests", {
   phone: text("phone"),
   country: text("country"),
   metalType: text("metal_type").notNull(),
-  primaryStone: text("primary_stone").notNull(),
+  primaryStone: text("primary_stone"), // Keep for backward compatibility
+  primaryStones: json("primary_stones").$type<string[]>(), // New field for multi-select stones
   notes: text("notes"),
   imageUrl: text("image_url").notNull(),
   status: text("status").notNull().default("pending"), // "pending", "quoted", "approved", "rejected", "completed"
@@ -110,7 +111,8 @@ export const insertDesignRequestSchema = createInsertSchema(designRequests).pick
   phone: true,
   country: true,
   metalType: true,
-  primaryStone: true,
+  primaryStone: true, // Keep for backward compatibility
+  primaryStones: true, // New field for multi-select stones
   notes: true,
   imageUrl: true,
 });
