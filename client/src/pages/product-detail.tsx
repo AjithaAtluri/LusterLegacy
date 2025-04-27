@@ -362,7 +362,7 @@ export default function ProductDetail() {
                 variant="outline"
                 className="font-montserrat border-primary text-pearl hover:bg-primary/20"
               >
-                <Heart className="mr-2 h-4 w-4" />
+                <HeartIcon className="mr-2 h-4 w-4" />
                 Wishlist
               </Button>
             </div>
@@ -452,7 +452,7 @@ export default function ProductDetail() {
                     Add to Cart
                   </Button>
                   <Button variant="outline" className="font-montserrat">
-                    <Heart className="mr-2 h-4 w-4" />
+                    <HeartIcon className="mr-2 h-4 w-4" />
                     Add to Wishlist
                   </Button>
                 </div>
