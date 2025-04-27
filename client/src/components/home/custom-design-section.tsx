@@ -20,7 +20,7 @@ const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
   metalType: z.string().min(1, "Metal type is required"),
-  primaryStone: z.string().min(1, "Primary stone is required"),
+  primaryStones: z.array(z.string()).min(1, "Select at least one stone"),
   notes: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms to continue"
@@ -41,7 +41,7 @@ export default function CustomDesignSection() {
       fullName: "",
       email: "",
       metalType: "",
-      primaryStone: "",
+      primaryStones: [],
       notes: "",
       agreeToTerms: false
     }
@@ -274,15 +274,15 @@ export default function CustomDesignSection() {
                   
                   <FormField
                     control={form.control}
-                    name="primaryStone"
+                    name="primaryStones"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-montserrat text-sm font-medium text-foreground">
                           Primary Stones*
                         </FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          onValueChange={(value) => field.onChange([value])} 
+                          value={Array.isArray(field.value) && field.value.length > 0 ? field.value[0] : ""}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
