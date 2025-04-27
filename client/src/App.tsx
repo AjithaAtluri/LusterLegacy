@@ -5,6 +5,7 @@ import Footer from "@/components/layout/footer";
 import WhatsAppButton from "@/components/ui/whatsapp-button";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
+import { AuthProvider } from "@/hooks/use-auth";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("@/pages/home"));
@@ -17,6 +18,7 @@ const ProductDetail = lazy(() => import("@/pages/product-detail"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard"));
+const AuthPage = lazy(() => import("@/pages/auth-page"));
 
 // Tools and utilities
 const ImageTest = lazy(() => import("@/pages/tools/image-test"));
@@ -55,11 +57,12 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow">
-        <Suspense fallback={<PageLoader />}>
-          <Switch>
+    <AuthProvider>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <main className="flex-grow">
+          <Suspense fallback={<PageLoader />}>
+            <Switch>
             <Route path="/" component={Home} />
             <Route path="/collections" component={Collections} />
             <Route path="/custom-design" component={CustomDesign} />
@@ -70,6 +73,7 @@ function App() {
             <Route path="/checkout" component={Checkout} />
             <Route path="/inspiration" component={InspirationGallery} />
             <Route path="/customer-dashboard" component={CustomerDashboard} />
+            <Route path="/auth" component={AuthPage} />
             
             {/* Tools */}
             <Route path="/tools/image-test" component={ImageTest} />
@@ -111,6 +115,7 @@ function App() {
       <Footer />
       <WhatsAppButton />
     </div>
+    </AuthProvider>
   );
 }
 
