@@ -20,6 +20,8 @@ const Checkout = lazy(() => import("@/pages/checkout"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard"));
 const AuthPage = lazy(() => import("@/pages/auth-page"));
+const PlaceOrder = lazy(() => import("@/pages/place-order"));
+const CustomizeRequest = lazy(() => import("@/pages/customize-request"));
 
 // Tools and utilities
 const ImageTest = lazy(() => import("@/pages/tools/image-test"));
@@ -74,6 +76,8 @@ function App() {
             <Route path="/checkout" component={Checkout} />
             <Route path="/inspiration" component={InspirationGallery} />
             <ProtectedRoute path="/customer-dashboard" component={CustomerDashboard} />
+            <ProtectedRoute path="/place-order/:id" component={PlaceOrder} />
+            <ProtectedRoute path="/customize-request/:id" component={CustomizeRequest} />
             <Route path="/auth" component={AuthPage} />
             
             {/* Tools */}
