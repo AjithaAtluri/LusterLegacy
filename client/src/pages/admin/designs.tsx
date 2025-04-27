@@ -162,7 +162,11 @@ export default function AdminDesigns() {
                         </div>
                         <div>
                           <div>{design.metalType}</div>
-                          <div className="text-xs text-muted-foreground">{design.primaryStone}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {design.primaryStones && design.primaryStones.length > 0
+                              ? design.primaryStones.join(', ')
+                              : design.primaryStone}
+                          </div>
                         </div>
                       </div>
                     </td>
