@@ -115,6 +115,30 @@ export const insertDesignRequestSchema = createInsertSchema(designRequests).pick
   imageUrl: true,
 });
 
+// Design request comments schema
+export const designRequestComments = pgTable("design_request_comments", {
+  id: serial("id").primaryKey(),
+  designRequestId: integer("design_request_id").notNull().references(() => designRequests.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  createdBy: text("created_by").notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const designRequestCommentsRelations = relations(designRequestComments, ({ one }) => ({
+  designRequest: one(designRequests, {
+    fields: [designRequestComments.designRequestId],
+    references: [designRequests.id]
+  })
+}));
+
+export const insertDesignRequestCommentSchema = createInsertSchema(designRequestComments).pick({
+  designRequestId: true,
+  content: true,
+  createdBy: true,
+  isAdmin: true,
+});
+
 // Cart items schema
 export const cartItems = pgTable("cart_items", {
   id: serial("id").primaryKey(),
@@ -360,6 +384,9 @@ export type InsertProduct = z.infer<typeof insertProductSchema>;
 
 export type DesignRequest = typeof designRequests.$inferSelect;
 export type InsertDesignRequest = z.infer<typeof insertDesignRequestSchema>;
+
+export type DesignRequestComment = typeof designRequestComments.$inferSelect;
+export type InsertDesignRequestComment = z.infer<typeof insertDesignRequestCommentSchema>;
 
 export type CartItem = typeof cartItems.$inferSelect;
 export type InsertCartItem = z.infer<typeof insertCartItemSchema>;

@@ -83,8 +83,13 @@ export interface IStorage {
   getDesignRequest(id: number): Promise<DesignRequest | undefined>;
   getAllDesignRequests(): Promise<DesignRequest[]>;
   getDesignRequestsByEmail(email: string): Promise<DesignRequest[]>;
+  getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]>;
   createDesignRequest(designRequest: InsertDesignRequest): Promise<DesignRequest>;
   updateDesignRequest(id: number, designRequest: Partial<DesignRequest>): Promise<DesignRequest | undefined>;
+  
+  // Design Request Comment methods
+  getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]>;
+  addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment>;
 
   // Cart methods
   getCartItem(id: number): Promise<CartItem | undefined>;
@@ -953,16 +958,31 @@ export class DatabaseStorage implements IStorage {
 
   // Design Request methods
   async getDesignRequest(id: number): Promise<DesignRequest | undefined> {
-    const [request] = await db.select().from(designRequests).where(eq(designRequests.id, id));
-    return request || undefined;
+    try {
+      const [request] = await db.select().from(designRequests).where(eq(designRequests.id, id));
+      return request || undefined;
+    } catch (error) {
+      console.error("Error getting design request:", error);
+      return undefined;
+    }
   }
 
   async getAllDesignRequests(): Promise<DesignRequest[]> {
-    return await db.select().from(designRequests).orderBy(desc(designRequests.createdAt));
+    try {
+      return await db.select().from(designRequests).orderBy(desc(designRequests.createdAt));
+    } catch (error) {
+      console.error("Error getting all design requests:", error);
+      return [];
+    }
   }
 
   async getDesignRequestsByEmail(email: string): Promise<DesignRequest[]> {
-    return await db.select().from(designRequests).where(eq(designRequests.email, email));
+    try {
+      return await db.select().from(designRequests).where(eq(designRequests.email, email));
+    } catch (error) {
+      console.error("Error getting design requests by email:", error);
+      return [];
+    }
   }
   
   async getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]> {
@@ -980,16 +1000,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDesignRequest(insertDesignRequest: InsertDesignRequest): Promise<DesignRequest> {
-    const [request] = await db.insert(designRequests).values(insertDesignRequest).returning();
-    return request;
+    try {
+      const [request] = await db.insert(designRequests).values(insertDesignRequest).returning();
+      return request;
+    } catch (error) {
+      console.error("Error creating design request:", error);
+      throw error;
+    }
   }
 
   async updateDesignRequest(id: number, designRequestUpdate: Partial<DesignRequest>): Promise<DesignRequest | undefined> {
-    const [request] = await db.update(designRequests)
-      .set(designRequestUpdate)
-      .where(eq(designRequests.id, id))
-      .returning();
-    return request || undefined;
+    try {
+      const [request] = await db.update(designRequests)
+        .set(designRequestUpdate)
+        .where(eq(designRequests.id, id))
+        .returning();
+      return request || undefined;
+    } catch (error) {
+      console.error("Error updating design request:", error);
+      return undefined;
+    }
+  }
+  
+  // Design Request Comment methods
+  async getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]> {
+    try {
+      return await db
+        .select()
+        .from(designRequestComments)
+        .where(eq(designRequestComments.designRequestId, designRequestId))
+        .orderBy(asc(designRequestComments.createdAt));
+    } catch (error) {
+      console.error("Error getting design request comments:", error);
+      return [];
+    }
+  }
+  
+  async addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment> {
+    try {
+      const [newComment] = await db
+        .insert(designRequestComments)
+        .values(comment)
+        .returning();
+      return newComment;
+    } catch (error) {
+      console.error("Error adding design request comment:", error);
+      throw error;
+    }
   }
 
   // Cart methods
