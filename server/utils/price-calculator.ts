@@ -231,12 +231,16 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
         console.log(`Looking up other stone with ID ${stoneTypeId} in database`);
         
         // Try to get directly by ID first
-        if (typeof stoneTypeId === 'number') {
-          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
-          if (stoneTypeData) {
-            otherStoneName = stoneTypeData.name;
-            otherStonePrice = stoneTypeData.priceModifier;
-            console.log(`Found other stone by ID: ${otherStoneName} with price ${otherStonePrice}`);
+        if (typeof stoneTypeId === 'number' && !isNaN(stoneTypeId)) {
+          try {
+            const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+            if (stoneTypeData) {
+              otherStoneName = stoneTypeData.name;
+              otherStonePrice = stoneTypeData.priceModifier;
+              console.log(`Found other stone by ID: ${otherStoneName} with price ${otherStonePrice}`);
+            }
+          } catch (error) {
+            console.error(`Error looking up stone type with ID ${stoneTypeId}:`, error);
           }
         }
         

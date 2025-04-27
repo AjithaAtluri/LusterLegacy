@@ -1165,6 +1165,12 @@ export class DatabaseStorage implements IStorage {
   // Stone Type methods
   async getStoneType(id: number): Promise<StoneType | undefined> {
     try {
+      // Ensure id is a valid number to prevent SQL errors
+      if (isNaN(id)) {
+        console.warn(`Invalid stone type id provided: ${id}`);
+        return undefined;
+      }
+      
       const [stoneType] = await db.select().from(stoneTypes).where(eq(stoneTypes.id, id));
       return stoneType;
     } catch (error) {
@@ -1194,13 +1200,30 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getStoneTypeById(id: number | string): Promise<StoneType | undefined> {
-    // If id is a number, use getStoneType
-    if (typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id))) {
-      return this.getStoneType(typeof id === 'string' ? parseInt(id) : id);
+    // First check if id is valid
+    if (id === null || id === undefined || (typeof id === 'number' && isNaN(id))) {
+      console.warn(`Invalid stone type id: ${id}`);
+      return undefined;
     }
     
-    // Otherwise, try to look up by name
-    return this.getStoneTypeByName(id as string);
+    // If id is a number or numeric string, use getStoneType
+    if (typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id))) {
+      const numericId = typeof id === 'string' ? parseInt(id) : id;
+      // Double-check that parsed number is valid
+      if (!isNaN(numericId)) {
+        return this.getStoneType(numericId);
+      } else {
+        console.warn(`Failed to parse stone type id: ${id}`);
+        return undefined;
+      }
+    }
+    
+    // If it's a non-numeric string, try to look up by name
+    if (typeof id === 'string' && id.trim().length > 0) {
+      return this.getStoneTypeByName(id);
+    }
+    
+    return undefined;
   }
   
   async getAllStoneTypes(): Promise<StoneType[]> {
