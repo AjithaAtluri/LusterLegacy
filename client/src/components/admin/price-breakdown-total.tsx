@@ -34,6 +34,7 @@ export function PriceBreakdownTotal({
     isCalculating,
     breakdown,
     goldPrice,
+    exchangeRate,
     goldPriceLocation,
     goldPriceTimestamp,
     isGoldPriceLoading
@@ -50,67 +51,130 @@ export function PriceBreakdownTotal({
   
   // Calculate the total of all cost components to verify it matches the returned price
   const totalCost = breakdown.metalCost + 
-                     breakdown.primaryStoneCost + 
-                     breakdown.secondaryStoneCost + 
-                     breakdown.overhead;
+                    breakdown.primaryStoneCost + 
+                    breakdown.secondaryStoneCost + 
+                    breakdown.otherStoneCost +
+                    breakdown.overhead;
   
   // The price from the API should match this total (with possible small rounding differences)
   const isConsistent = Math.abs(totalCost - priceUSD) < 5; // Allow for small rounding differences
   
+  // Function to format dual currency prices
+  const formatDualCurrency = (usdAmount: number) => {
+    const inrAmount = usdAmount * (exchangeRate || 83);
+    return (
+      <div className="flex flex-col items-end">
+        <span className="font-medium">{formatCurrency(usdAmount)}</span>
+        <span className="text-xs text-muted-foreground">₹{Math.round(inrAmount).toLocaleString('en-IN')}</span>
+      </div>
+    );
+  };
+  
+  // Calculate weight and price for display
+  const getCalculationDetail = (label: string, weight: number, pricePerUnit: number, totalCost: number) => {
+    if (weight <= 0 || totalCost <= 0) return null;
+    return (
+      <div className="text-xs text-muted-foreground ml-2 mt-0.5">
+        {`${weight.toFixed(2)} ${label} × ${formatCurrency(pricePerUnit)}/unit = ${formatCurrency(totalCost)}`}
+      </div>
+    );
+  };
+  
+  // Estimate stone prices for details display
+  const mainStonePricePerCarat = mainStoneType !== "none_selected" && Number(mainStoneWeight) > 0 
+    ? breakdown.primaryStoneCost / Number(mainStoneWeight) 
+    : 0;
+    
+  const secondaryStonePricePerCarat = secondaryStoneType !== "none_selected" && Number(secondaryStoneWeight) > 0 
+    ? breakdown.secondaryStoneCost / Number(secondaryStoneWeight) 
+    : 0;
+    
+  const otherStonePricePerCarat = otherStoneType !== "none_selected" && Number(otherStoneWeight) > 0 && breakdown.otherStoneCost > 0
+    ? breakdown.otherStoneCost / Number(otherStoneWeight) 
+    : 0;
+  
+  // Get metal price per gram
+  const metalWeightNum = Number(metalWeight) || 0;
+  const metalPricePerGram = metalWeightNum > 0 ? breakdown.metalCost / metalWeightNum : 0;
+  
   return (
     <div className="space-y-3">
       {/* Metal cost */}
-      <div className="flex justify-between items-center text-sm">
-        <span className="font-medium">Metal Cost:</span>
-        {isCalculating ? (
-          <Skeleton className="h-4 w-24" />
-        ) : (
-          <span>~{formatCurrency(breakdown.metalCost)}</span>
+      <div className="text-sm">
+        <div className="flex justify-between items-center">
+          <span className="font-medium">Metal Cost:</span>
+          {isCalculating ? (
+            <Skeleton className="h-4 w-24" />
+          ) : (
+            formatDualCurrency(breakdown.metalCost)
+          )}
+        </div>
+        {!isCalculating && metalWeightNum > 0 && (
+          getCalculationDetail("g", metalWeightNum, metalPricePerGram, breakdown.metalCost)
         )}
       </div>
       
       {/* Main stone cost */}
-      <div className="flex justify-between items-center text-sm">
-        <span className="font-medium">Main Stone:</span>
-        {isCalculating ? (
-          <Skeleton className="h-4 w-24" />
-        ) : (
-          <span>~{formatCurrency(breakdown.primaryStoneCost)}</span>
-        )}
-      </div>
+      {mainStoneType !== "none_selected" && Number(mainStoneWeight) > 0 && (
+        <div className="text-sm">
+          <div className="flex justify-between items-center">
+            <span className="font-medium">{mainStoneType}:</span>
+            {isCalculating ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              formatDualCurrency(breakdown.primaryStoneCost)
+            )}
+          </div>
+          {!isCalculating && (
+            getCalculationDetail("ct", Number(mainStoneWeight), mainStonePricePerCarat, breakdown.primaryStoneCost)
+          )}
+        </div>
+      )}
       
       {/* Secondary stone cost */}
       {secondaryStoneType !== "none_selected" && Number(secondaryStoneWeight) > 0 && (
-        <div className="flex justify-between items-center text-sm">
-          <span className="font-medium">Secondary Stone:</span>
-          {isCalculating ? (
-            <Skeleton className="h-4 w-24" />
-          ) : (
-            <span>~{formatCurrency(breakdown.secondaryStoneCost)}</span>
+        <div className="text-sm">
+          <div className="flex justify-between items-center">
+            <span className="font-medium">{secondaryStoneType}:</span>
+            {isCalculating ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              formatDualCurrency(breakdown.secondaryStoneCost)
+            )}
+          </div>
+          {!isCalculating && (
+            getCalculationDetail("ct", Number(secondaryStoneWeight), secondaryStonePricePerCarat, breakdown.secondaryStoneCost)
           )}
         </div>
       )}
       
       {/* Other stone cost */}
       {otherStoneType !== "none_selected" && Number(otherStoneWeight) > 0 && (
-        <div className="flex justify-between items-center text-sm">
-          <span className="font-medium">Other Stone:</span>
-          {isCalculating ? (
-            <Skeleton className="h-4 w-24" />
-          ) : (
-            <span>~{formatCurrency(0)}</span>
+        <div className="text-sm">
+          <div className="flex justify-between items-center">
+            <span className="font-medium">{otherStoneType}:</span>
+            {isCalculating ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              formatDualCurrency(breakdown.otherStoneCost || 0)
+            )}
+          </div>
+          {!isCalculating && breakdown.otherStoneCost > 0 && (
+            getCalculationDetail("ct", Number(otherStoneWeight), otherStonePricePerCarat, breakdown.otherStoneCost)
           )}
         </div>
       )}
       
       {/* Overhead */}
-      <div className="flex justify-between items-center text-sm">
-        <span className="font-medium">Craftsmanship & Overhead (25%):</span>
-        {isCalculating ? (
-          <Skeleton className="h-4 w-24" />
-        ) : (
-          <span>~{formatCurrency(breakdown.overhead)}</span>
-        )}
+      <div className="text-sm">
+        <div className="flex justify-between items-center">
+          <span className="font-medium">Craftsmanship & Overhead (25%):</span>
+          {isCalculating ? (
+            <Skeleton className="h-4 w-24" />
+          ) : (
+            formatDualCurrency(breakdown.overhead)
+          )}
+        </div>
       </div>
       
       <Separator className="my-2" />
@@ -122,8 +186,8 @@ export function PriceBreakdownTotal({
           <Skeleton className="h-5 w-28" />
         ) : (
           <div className="flex flex-col items-end">
-            <span>~{formatCurrency(priceUSD)}</span>
-            <span className="text-sm font-normal">~₹{priceINR.toLocaleString('en-IN')}</span>
+            <span className="text-base">{formatCurrency(priceUSD)}</span>
+            <span className="text-sm">₹{priceINR.toLocaleString('en-IN')}</span>
           </div>
         )}
       </div>
@@ -131,7 +195,7 @@ export function PriceBreakdownTotal({
       {/* Price formula */}
       <div className="mt-4 text-xs text-primary">
         <p className="font-medium">Price Formula:</p>
-        <p className="mt-1">(Metal weight × current gold price × metal modifier) + (Stone carat weight × stone price) + 25% overhead = Total Price</p>
+        <p className="mt-1">(Metal weight × current gold price × metal modifier) + (Stone carat weights × stone prices) + 25% overhead = Total Price</p>
       </div>
       
       {/* Gold price information */}

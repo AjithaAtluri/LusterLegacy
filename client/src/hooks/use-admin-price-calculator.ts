@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useGoldPrice } from "./use-gold-price";
+import { useExchangeRate } from "./use-exchange-rate";
 
 interface UsePriceCalculatorProps {
   // Input values for price calculation
@@ -15,15 +16,18 @@ interface UsePriceCalculatorProps {
   otherStoneWeight?: string;
 }
 
+interface PriceBreakdown {
+  metalCost: number;
+  primaryStoneCost: number;
+  secondaryStoneCost: number;
+  otherStoneCost: number;
+  overhead: number;
+}
+
 interface PriceData {
   price: number;
   currency: string;
-  breakdown: {
-    metalCost: number;
-    primaryStoneCost: number;
-    secondaryStoneCost: number;
-    overhead: number;
-  };
+  breakdown: PriceBreakdown;
 }
 
 export function useAdminPriceCalculator({
@@ -38,19 +42,16 @@ export function useAdminPriceCalculator({
 }: UsePriceCalculatorProps) {
   const { toast } = useToast();
   const { goldPrice, isLoading: isGoldPriceLoading, location, timestamp } = useGoldPrice();
+  const { exchangeRate, isLoading: isExchangeRateLoading } = useExchangeRate();
   
   const [priceUSD, setPriceUSD] = useState<number>(0);
   const [priceINR, setPriceINR] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
-  const [breakdown, setBreakdown] = useState<{
-    metalCost: number;
-    primaryStoneCost: number;
-    secondaryStoneCost: number;
-    overhead: number;
-  }>({
+  const [breakdown, setBreakdown] = useState<PriceBreakdown>({
     metalCost: 0,
     primaryStoneCost: 0,
     secondaryStoneCost: 0,
+    otherStoneCost: 0,
     overhead: 0
   });
   
@@ -85,6 +86,7 @@ export function useAdminPriceCalculator({
             metalCost: 0,
             primaryStoneCost: 0,
             secondaryStoneCost: 0,
+            otherStoneCost: 0,
             overhead: 0
           });
           return;
@@ -122,18 +124,29 @@ export function useAdminPriceCalculator({
           throw new Error("Failed to calculate price");
         }
         
-        const priceData: { usd: PriceData, inr: PriceData } = await response.json();
-        console.log("Price calculation response:", priceData);
+        const data = await response.json();
+        console.log("Price calculation response:", data);
+        
+        if (!data.success) {
+          throw new Error(data.message || "Failed to calculate price");
+        }
+        
+        const priceData: { usd: PriceData, inr: PriceData } = data;
         
         // Update state with calculated prices
         setPriceUSD(priceData.usd.price);
         setPriceINR(priceData.inr.price);
-        setBreakdown({
-          metalCost: priceData.usd.breakdown.metalCost,
-          primaryStoneCost: priceData.usd.breakdown.primaryStoneCost,
-          secondaryStoneCost: priceData.usd.breakdown.secondaryStoneCost,
-          overhead: priceData.usd.breakdown.overhead
-        });
+
+        // Create complete breakdown - ensure all properties exist
+        const completeBreakdown: PriceBreakdown = {
+          metalCost: priceData.usd.breakdown?.metalCost || 0,
+          primaryStoneCost: priceData.usd.breakdown?.primaryStoneCost || 0,
+          secondaryStoneCost: priceData.usd.breakdown?.secondaryStoneCost || 0,
+          otherStoneCost: priceData.usd.breakdown?.otherStoneCost || 0,
+          overhead: priceData.usd.breakdown?.overhead || 0
+        };
+        
+        setBreakdown(completeBreakdown);
         
       } catch (error) {
         console.error("Error calculating price:", error);
@@ -168,9 +181,10 @@ export function useAdminPriceCalculator({
   return {
     priceUSD,
     priceINR,
-    isCalculating: isCalculating || isGoldPriceLoading,
+    isCalculating: isCalculating || isGoldPriceLoading || isExchangeRateLoading,
     breakdown,
     goldPrice,
+    exchangeRate,
     goldPriceLocation: location,
     goldPriceTimestamp: timestamp,
     isGoldPriceLoading
