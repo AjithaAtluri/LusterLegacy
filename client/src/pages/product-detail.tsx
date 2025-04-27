@@ -353,17 +353,18 @@ export default function ProductDetail() {
             <div className="flex gap-3">
               <Button
                 className="font-montserrat bg-primary text-background hover:bg-accent"
-                onClick={() => setLocation(`/product/${product.id}`)}
+                onClick={() => setLocation(`/customize-request/${product.id}`)}
               >
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                Add to Cart
+                <Package className="mr-2 h-4 w-4" />
+                Request Customization
               </Button>
               <Button
                 variant="outline"
                 className="font-montserrat border-primary text-pearl hover:bg-primary/20"
+                onClick={() => setLocation(`/place-order/${product.id}`)}
               >
-                <HeartIcon className="mr-2 h-4 w-4" />
-                Wishlist
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Place Order
               </Button>
             </div>
           </div>
@@ -444,13 +445,20 @@ export default function ProductDetail() {
                 
                 {/* Call-To-Action Buttons */}
                 <div className="flex flex-wrap gap-3 mb-8">
-                  <Button className="font-montserrat bg-primary text-background hover:bg-primary/90">
-                    <ShoppingBag className="mr-2 h-4 w-4" />
-                    Add to Cart
+                  <Button 
+                    className="font-montserrat bg-primary text-background hover:bg-primary/90"
+                    onClick={() => setLocation(`/customize-request/${product.id}`)}
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    Request Customization
                   </Button>
-                  <Button variant="outline" className="font-montserrat">
-                    <HeartIcon className="mr-2 h-4 w-4" />
-                    Add to Wishlist
+                  <Button 
+                    variant="outline" 
+                    className="font-montserrat"
+                    onClick={() => setLocation(`/place-order/${product.id}`)}
+                  >
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    Place Order
                   </Button>
                 </div>
                 
