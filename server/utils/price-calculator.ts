@@ -345,7 +345,7 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
         metalCost: Math.round(metalCost),
         stoneCost: Math.round(stoneCost),
         overhead: Math.round(overhead),
-        stones: stones // Include detailed stone breakdown with individual stones
+        stones: gemCosts // Include detailed stone breakdown with individual stones
       }
     };
   } catch (error) {
@@ -462,7 +462,7 @@ Sample Price Calculation for "${sample.productName}":
    = ₹${totalPrice.toLocaleString('en-IN')}
 
 6. USD Equivalent (approx.):
-   ₹${totalPrice.toLocaleString('en-IN')} ÷ ${USD_TO_INR_RATE}
-   = $${(totalPrice / USD_TO_INR_RATE).toLocaleString('en-US', {maximumFractionDigits: 0})}
+   ₹${totalPrice.toLocaleString('en-IN')} ÷ 83 (exchange rate)
+   = $${(totalPrice / 83).toLocaleString('en-US', {maximumFractionDigits: 0})}
 `;
 }

@@ -1455,8 +1455,7 @@ Respond in JSON format:
         metalTypeId: typeof metalTypeId === 'string' ? parseInt(metalTypeId) : metalTypeId,
         metalWeight: typeof metalWeight === 'string' ? parseFloat(metalWeight) : metalWeight,
         primaryGems,
-        otherStoneType,
-        otherStoneWeight
+        otherStone
       });
       
       // Calculate individual stone type costs to accurately break down primary vs secondary
