@@ -274,7 +274,7 @@ export default function CustomizeRequest() {
                         onChange={(e) => setPreferredBudget(e.target.value)}
                       />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="space-y-2">
                       <Label htmlFor="timeline">Preferred Timeline (Optional)</Label>
                       <Input
                         id="timeline"
@@ -282,6 +282,70 @@ export default function CustomizeRequest() {
                         value={timeline}
                         onChange={(e) => setTimeline(e.target.value)}
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="metalType">Preferred Metal Type</Label>
+                      <Select value={metalTypeId} onValueChange={setMetalTypeId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select metal type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingMetalTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !metalTypes || metalTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No metal types available</div>
+                          ) : (
+                            metalTypes.map((metal) => (
+                              <SelectItem key={metal.id} value={String(metal.id)}>
+                                {metal.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryStone">Primary Stone Type</Label>
+                      <Select value={primaryStoneId} onValueChange={setPrimaryStoneId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select primary stone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingStoneTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !stoneTypes || stoneTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                          ) : (
+                            stoneTypes.map((stone) => (
+                              <SelectItem key={stone.id} value={String(stone.id)}>
+                                {stone.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="secondaryStone">Secondary Stone Type (Optional)</Label>
+                      <Select value={secondaryStoneId} onValueChange={setSecondaryStoneId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select secondary stone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {isLoadingStoneTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !stoneTypes || stoneTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                          ) : (
+                            stoneTypes.map((stone) => (
+                              <SelectItem key={stone.id} value={String(stone.id)}>
+                                {stone.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="customizationDetails">Customization Details*</Label>
