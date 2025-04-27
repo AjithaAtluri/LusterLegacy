@@ -253,8 +253,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate accurate prices for each product using the price calculator
       const productsWithAccuratePrices = await Promise.all(products.map(async product => {
         try {
-          // Parse AI inputs from the product data for price calculation
-          const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          // Try to get AI inputs from product.aiInputs first
+          let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          
+          // If aiInputs is null, try to extract from the nested details JSON
+          if (!aiInputs && product.details) {
+            try {
+              const parsedDetails = JSON.parse(product.details as string);
+              if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+                aiInputs = parsedDetails.additionalData.aiInputs;
+                console.log(`Found AI inputs in details for product ${product.id}`);
+              }
+            } catch (err) {
+              console.error(`Failed to parse details JSON for product ${product.id}:`, err);
+            }
+          }
           
           // Debug logging for product data
           console.log(`Product ${product.id} - ${product.name} - AI Inputs:`, 
@@ -319,8 +332,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate accurate prices for each product using the price calculator
       const productsWithAccuratePrices = await Promise.all(products.map(async product => {
         try {
-          // Parse AI inputs from the product data for price calculation
-          const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          // Try to get AI inputs from product.aiInputs first
+          let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          
+          // If aiInputs is null, try to extract from the nested details JSON
+          if (!aiInputs && product.details) {
+            try {
+              const parsedDetails = JSON.parse(product.details as string);
+              if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+                aiInputs = parsedDetails.additionalData.aiInputs;
+                console.log(`Found AI inputs in details for product ${product.id}`);
+              }
+            } catch (err) {
+              console.error(`Failed to parse details JSON for product ${product.id}:`, err);
+            }
+          }
           
           // Debug logging for product data
           console.log(`Featured Product ${product.id} - ${product.name} - AI Inputs:`, 
@@ -386,8 +412,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate accurate prices for each product using the price calculator
       const productsWithAccuratePrices = await Promise.all(products.map(async product => {
         try {
-          // Parse AI inputs from the product data for price calculation
-          const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          // Try to get AI inputs from product.aiInputs first
+          let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          
+          // If aiInputs is null, try to extract from the nested details JSON
+          if (!aiInputs && product.details) {
+            try {
+              const parsedDetails = JSON.parse(product.details as string);
+              if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+                aiInputs = parsedDetails.additionalData.aiInputs;
+                console.log(`Found AI inputs in details for product ${product.id}`);
+              }
+            } catch (err) {
+              console.error(`Failed to parse details JSON for product ${product.id}:`, err);
+            }
+          }
           
           if (aiInputs) {
             // Extract parameters for the price calculator
@@ -456,8 +495,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Parse AI inputs from the product data for price calculation
-        const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+        // Try to get AI inputs from product.aiInputs first
+        let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+        
+        // If aiInputs is null, try to extract from the nested details JSON
+        if (!aiInputs && product.details) {
+          try {
+            const parsedDetails = JSON.parse(product.details as string);
+            if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+              aiInputs = parsedDetails.additionalData.aiInputs;
+              console.log(`Found AI inputs in details for product ${product.id}`);
+            }
+          } catch (err) {
+            console.error(`Failed to parse details JSON for product ${product.id}:`, err);
+          }
+        }
         
         // Debug logging for product data
         console.log(`Detail Product ${product.id} - ${product.name} - AI Inputs:`, 
