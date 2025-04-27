@@ -489,18 +489,7 @@ export default function ProductDetail() {
                   </Card>
                 </div>
                 
-                {/* Product ratings (to be implemented) */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star 
-                        key={star} 
-                        className={`h-5 w-5 ${star <= 4 ? 'text-amber-500 fill-amber-500' : 'text-foreground/20'}`} 
-                      />
-                    ))}
-                    <span className="ml-2 font-montserrat text-sm text-foreground/70">4.0 (12 reviews)</span>
-                  </div>
-                </div>
+                {/* Product ratings removed as requested */}
                 
                 {/* Detailed Information Sections */}
                 <div className="w-full mt-8 space-y-8">
