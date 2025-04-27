@@ -62,17 +62,26 @@ export default function DesignForm() {
       try {
         const savedFormData = sessionStorage.getItem('designFormData');
         if (savedFormData) {
+          // Parse the saved data and put it in a local variable
           const parsedData = JSON.parse(savedFormData);
+          console.log("Restoring form data:", parsedData);
           
-          // Restore form fields
+          // Restore form fields - make sure to set these right away
           form.setValue("fullName", user.username); // Always use logged-in username
           form.setValue("email", user.email); // Always use logged-in email
-          form.setValue("phone", parsedData.phone || "");
-          form.setValue("country", parsedData.country || "us");
-          form.setValue("metalType", parsedData.metalType || "");
-          form.setValue("primaryStone", parsedData.primaryStone || "");
-          form.setValue("notes", parsedData.notes || "");
-          form.setValue("agreeToTerms", parsedData.agreeToTerms || false);
+          
+          // Important: Use reset function to update all form values at once
+          // This helps ensure the Select components are properly updated
+          form.reset({
+            fullName: user.username,
+            email: user.email,
+            phone: parsedData.phone || "",
+            country: parsedData.country || "us",
+            metalType: parsedData.metalType || "",
+            primaryStone: parsedData.primaryStone || "",
+            notes: parsedData.notes || "",
+            agreeToTerms: parsedData.agreeToTerms || false
+          });
           
           // Restore image data if available
           if (parsedData.imageDataUrl) {
@@ -139,20 +148,39 @@ export default function DesignForm() {
     if (!user) {
       // Save form data to session storage before redirecting
       try {
-        // For the image, we'll convert it to a data URL if it's not too large
-        let imageDataUrl = null;
+        // We'll need to handle the image conversion synchronously to ensure it's stored correctly
+        let formData: any = {
+          ...data,
+          imageInfo: uploadedImage ? {
+            name: uploadedImage.name,
+            type: uploadedImage.type,
+            size: uploadedImage.size,
+            lastModified: uploadedImage.lastModified
+          } : null,
+          imageDataUrl: null // Will be populated below if image is small enough
+        };
+        
+        // Save the initial form data first (without image)
+        sessionStorage.setItem('designFormData', JSON.stringify(formData));
+        
+        // Then handle the image separately if available
         if (uploadedImage && previewUrl && uploadedImage.size < 2 * 1024 * 1024) { // Only for images under 2MB
           try {
-            // Use a FileReader to convert the image to a data URL
+            // Convert image to data URL synchronously to ensure it's saved
             const reader = new FileReader();
             reader.onload = function() {
               const dataUrl = reader.result;
-              // Update the session storage with the image data URL
+              // Get the latest form data to update it
               const existingData = sessionStorage.getItem('designFormData');
               if (existingData) {
-                const parsedData = JSON.parse(existingData);
-                parsedData.imageDataUrl = dataUrl;
-                sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
+                try {
+                  const parsedData = JSON.parse(existingData);
+                  parsedData.imageDataUrl = dataUrl;
+                  sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
+                  console.log("Image data saved to session storage");
+                } catch (parseError) {
+                  console.error('Error parsing form data for image update:', parseError);
+                }
               }
             };
             // Start reading the file as a data URL
@@ -161,18 +189,6 @@ export default function DesignForm() {
             console.error('Error converting image to data URL:', imageError);
           }
         }
-            
-        const formData = {
-          ...data,
-          imageInfo: uploadedImage ? {
-            name: uploadedImage.name,
-            type: uploadedImage.type,
-            size: uploadedImage.size,
-            lastModified: uploadedImage.lastModified
-          } : null,
-          imageDataUrl: null // This will be populated by the FileReader if successful
-        };
-        sessionStorage.setItem('designFormData', JSON.stringify(formData));
       } catch (error) {
         console.error('Error saving form data to session storage', error);
       }
