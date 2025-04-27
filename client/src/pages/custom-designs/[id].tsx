@@ -1,0 +1,330 @@
+import { useState } from "react";
+import { useParams, Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet";
+import { useAuth } from "@/hooks/use-auth";
+import { formatCurrency } from "@/lib/utils";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  ChevronLeft, 
+  Loader2, 
+  PenTool, 
+  ArrowRight,
+  Check,
+  X,
+  MessageCircle
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
+export default function CustomDesignDetail() {
+  const { id } = useParams();
+  const [_, navigate] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // State for new comments
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fetch design request data
+  const { data: design, isLoading, error } = useQuery({
+    queryKey: [`/api/custom-designs/${id}`],
+    enabled: !!id && !!user,
+  });
+  
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-orange-500";
+      case "quoted":
+        return "bg-blue-500";
+      case "approved":
+        return "bg-green-500";
+      case "rejected":
+        return "bg-red-500";
+      case "completed":
+        return "bg-purple-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const handleCommentSubmit = async () => {
+    if (!newComment.trim()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      await apiRequest("POST", `/api/custom-designs/${id}/comments`, {
+        content: newComment
+      });
+      
+      toast({
+        title: "Comment added",
+        description: "Your comment has been added to the design request"
+      });
+      
+      // Invalidate query to refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/custom-designs/${id}`] });
+      
+      // Clear comment field
+      setNewComment("");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Comment failed",
+        description: "Failed to add comment",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-foreground/70">Loading design details...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || !design) {
+    return (
+      <div className="container mx-auto px-4 py-12 max-w-4xl">
+        <Helmet>
+          <title>Design Request Not Found | Luster Legacy</title>
+        </Helmet>
+        <div className="text-center py-12">
+          <PenTool className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
+          <h2 className="font-playfair text-2xl font-bold mb-2">Design Request Not Found</h2>
+          <p className="text-foreground/70 mb-6">
+            The design request you're looking for could not be found. It may have been removed or you may not have access to it.
+          </p>
+          <Button asChild>
+            <Link href="/customer-dashboard">
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <Helmet>
+        <title>Design Request #{design.id} | Luster Legacy</title>
+        <meta name="description" content="View and manage your custom jewelry design request" />
+      </Helmet>
+      
+      <div className="mb-8">
+        <Button variant="outline" size="sm" asChild className="mb-4">
+          <Link href="/customer-dashboard?tab=requests">
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="font-playfair text-3xl font-bold mb-2">Design Request #{design.id}</h1>
+            <p className="text-foreground/70">
+              Submitted on {formatDate(design.createdAt)}
+            </p>
+          </div>
+          <Badge className={`${getStatusColor(design.status)} text-white px-3 py-1 text-sm`}>
+            {design.status.charAt(0).toUpperCase() + design.status.slice(1)}
+          </Badge>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        {/* Left Column - Design Image */}
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle>Reference Image</CardTitle>
+            <CardDescription>Your uploaded design inspiration</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="aspect-square w-full rounded-md overflow-hidden">
+              <img 
+                src={design.imageUrl} 
+                alt="Design Reference" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Right Column - Design Details */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Design Specifications</CardTitle>
+            <CardDescription>Your custom design requirements</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-foreground/70">Metal Type</h3>
+                <p className="font-medium">{design.metalType}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-foreground/70">Primary Stone</h3>
+                <p className="font-medium">{design.primaryStone}</p>
+              </div>
+              
+              {design.notes && (
+                <div>
+                  <h3 className="text-sm font-medium text-foreground/70">Design Notes</h3>
+                  <p className="whitespace-pre-wrap">{design.notes}</p>
+                </div>
+              )}
+              
+              <Separator />
+              
+              {/* Price Quote (if available) */}
+              {design.estimatedPrice && (
+                <div className="bg-accent/10 p-4 rounded-md">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">Estimated Price:</span>
+                    <span className="font-semibold">{formatCurrency(design.estimatedPrice)}</span>
+                  </div>
+                  
+                  {design.status === 'quoted' && (
+                    <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                      <Button className="flex-1 sm:flex-auto" asChild>
+                        <Link href={`/checkout/custom/${design.id}`}>
+                          <Check className="mr-2 h-4 w-4" />
+                          Accept Quote
+                        </Link>
+                      </Button>
+                      <Button variant="outline" className="flex-1 sm:flex-auto">
+                        <X className="mr-2 h-4 w-4" />
+                        Decline
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* CAD Preview (if available) */}
+      {design.cadImageUrl && (
+        <Card className="mb-8">
+          <CardHeader className="pb-2">
+            <CardTitle>CAD Preview</CardTitle>
+            <CardDescription>3D model of your design</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-[500px] rounded-md overflow-hidden">
+              <img 
+                src={design.cadImageUrl} 
+                alt="CAD Model" 
+                className="object-contain w-full max-h-full"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Comments Section */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Communication</CardTitle>
+          <CardDescription>Messages between you and our design team</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {design.comments && design.comments.length > 0 ? (
+              design.comments.map((comment) => (
+                <div 
+                  key={comment.id} 
+                  className={`p-3 rounded-md ${comment.isAdmin ? 'bg-background border ml-6' : 'bg-primary/10 mr-6'}`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium">
+                      {comment.isAdmin ? 'Luster Legacy Team' : 'You'}
+                    </span>
+                    <span className="text-xs text-foreground/60">
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6 text-foreground/60">
+                No comments yet. Use the form below to communicate with our design team.
+              </div>
+            )}
+          </div>
+        </CardContent>
+        
+        <Separator />
+        
+        {/* Comment Form */}
+        <CardFooter className="pt-4">
+          <div className="w-full space-y-3">
+            <Textarea 
+              placeholder="Add a comment or question about your design request..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              rows={3}
+            />
+            <div className="flex justify-end">
+              <Button 
+                onClick={handleCommentSubmit}
+                disabled={isSubmitting || !newComment.trim()}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Send Message
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

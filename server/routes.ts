@@ -771,9 +771,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get design request by ID (admin or matching email)
+  // Get design request by ID (admin or matching user ID)
   app.get('/api/custom-designs/:id', async (req, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
       const designId = parseInt(req.params.id);
       if (isNaN(designId)) {
         return res.status(400).json({ message: 'Invalid design request ID' });
@@ -784,15 +788,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Design request not found' });
       }
 
-      // Check if user is admin or if the request matches their email
-      const isAdmin = req.user?.role === 'admin';
-      const isOwner = req.body.email === designRequest.email;
+      // Check if user is admin or if the request belongs to the user
+      const isAdmin = req.user.role === 'admin';
+      const isOwner = req.user.id === designRequest.userId;
 
       if (!isAdmin && !isOwner) {
         return res.status(403).json({ message: 'Unauthorized access to design request' });
       }
+      
+      // Fetch comments for this design request if they exist
+      let comments = [];
+      try {
+        if (storage.getDesignRequestComments) {
+          comments = await storage.getDesignRequestComments(designId);
+        }
+      } catch (error) {
+        console.error('Error fetching design request comments:', error);
+        // Don't fail the whole request if comments fail
+      }
 
-      res.json(designRequest);
+      res.json({
+        ...designRequest,
+        comments
+      });
     } catch (error) {
       console.error('Error fetching design request:', error);
       res.status(500).json({ message: 'Error fetching design request' });
@@ -818,6 +836,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating design request:', error);
       res.status(500).json({ message: 'Error updating design request' });
+    }
+  });
+  
+  // Add a comment to a design request
+  app.post('/api/custom-designs/:id/comments', async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const designId = parseInt(req.params.id);
+      if (isNaN(designId)) {
+        return res.status(400).json({ message: 'Invalid design request ID' });
+      }
+      
+      const designRequest = await storage.getDesignRequest(designId);
+      if (!designRequest) {
+        return res.status(404).json({ message: 'Design request not found' });
+      }
+      
+      // Check if user is admin or if the request belongs to the user
+      const isAdmin = req.user.role === 'admin';
+      const isOwner = req.user.id === designRequest.userId;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: 'Unauthorized access to design request' });
+      }
+      
+      const { content } = req.body;
+      if (!content || typeof content !== 'string' || content.trim() === '') {
+        return res.status(400).json({ message: 'Comment content is required' });
+      }
+      
+      // Create the comment
+      let comment;
+      try {
+        if (storage.addDesignRequestComment) {
+          comment = await storage.addDesignRequestComment({
+            designRequestId: designId,
+            content: content.trim(),
+            createdBy: req.user.username,
+            createdAt: new Date(),
+            isAdmin: isAdmin
+          });
+        } else {
+          return res.status(501).json({ message: 'Comment functionality not implemented' });
+        }
+      } catch (error) {
+        console.error('Error creating design request comment:', error);
+        return res.status(500).json({ message: 'Error creating comment' });
+      }
+      
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error('Error adding comment to design request:', error);
+      res.status(500).json({ message: 'Error adding comment to design request' });
     }
   });
 
