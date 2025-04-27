@@ -53,7 +53,7 @@ interface FormValues {
   otherStoneType: string;
   otherStoneWeight: string;
   featured: boolean;
-  userDescription: string;
+  // userDescription removed
   inStock: boolean;
 }
 
@@ -89,7 +89,7 @@ export default function EditProductNew() {
       otherStoneType: "none_selected",
       otherStoneWeight: "",
       featured: false,
-      userDescription: "",
+      // userDescription field removed
       inStock: true,
     },
   });
@@ -477,7 +477,6 @@ export default function EditProductNew() {
         otherStoneType: otherStoneType,
         otherStoneWeight: otherStoneWeight,
         featured: productData.isFeatured || productData.featured || false,
-        userDescription: aiInputs.userDescription || additionalData.userDescription || details?.userDescription || "",
         inStock: productData.inStock !== false, // default to true if undefined
       };
 
@@ -538,8 +537,7 @@ export default function EditProductNew() {
       secondaryStoneType: form.getValues("secondaryStoneType"),
       secondaryStoneWeight: form.getValues("secondaryStoneWeight"),
       otherStoneType: form.getValues("otherStoneType"),
-      otherStoneWeight: form.getValues("otherStoneWeight"),
-      userDescription: form.getValues("userDescription")
+      otherStoneWeight: form.getValues("otherStoneWeight")
     };
     localStorage.setItem('aiGeneratorInputs', JSON.stringify(aiGeneratorInputs));
 
@@ -849,15 +847,7 @@ export default function EditProductNew() {
             </Button>
             <h1 className="text-2xl font-semibold">Edit Product</h1>
           </div>
-          <div className="flex space-x-2">
-            <Button 
-              onClick={goToAIGenerator}
-              variant="outline"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Regenerate Content
-            </Button>
-          </div>
+          {/* Regenerate Content button removed */}
         </div>
 
         <Form {...form}>
@@ -1483,26 +1473,7 @@ export default function EditProductNew() {
                     <CardTitle>Additional Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="userDescription"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Custom Description (for AI)</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Enter any additional details you'd like the AI to consider" 
-                              className="min-h-[100px] resize-y"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            This will be used by the AI to generate more custom content
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Custom Description for AI removed */}
 
                     <div className="flex space-x-4">
                       <FormField
