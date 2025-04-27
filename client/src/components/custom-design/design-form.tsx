@@ -504,6 +504,15 @@ export default function DesignForm() {
         >
           {isSubmitting ? "Submitting..." : "Submit Design Request"}
         </Button>
+        
+        {!user && (
+          <div className="mt-4 text-center p-3 bg-accent/10 rounded-md border border-accent/20">
+            <p className="text-sm text-foreground/80">
+              <span className="font-medium">Login required:</span> Your design details will be saved when you log in. 
+              Please create an account or sign in to submit your custom design request.
+            </p>
+          </div>
+        )}
       </form>
     </Form>
   );
