@@ -727,6 +727,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         formattedData.primaryStone
       );
 
+      // Ensure primaryStones is always an array
+      if (!formattedData.primaryStones || !Array.isArray(formattedData.primaryStones)) {
+        formattedData.primaryStones = formattedData.primaryStone ? [formattedData.primaryStone] : [];
+      }
+
+      // Make sure we have a user ID
+      if (!req.user || !req.user.id) {
+        console.error("Missing user ID in authenticated request");
+        return res.status(401).json({ message: "User authentication error" });
+      }
+
+      console.log("Final data for validation:", {
+        userId: req.user.id,
+        primaryStones: formattedData.primaryStones,
+        primaryStone: formattedData.primaryStone
+      });
+
       const validatedData = insertDesignRequestSchema.parse({
         ...formattedData,
         userId: req.user.id, // Add the authenticated user's ID
