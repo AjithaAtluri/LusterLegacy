@@ -1180,15 +1180,8 @@ export default function EditProductNew() {
                                   return "₹0";
                                 }
                                 
-                                // Use the calculated price from the hook if available
-                                const calculator = document.querySelector(".price-calculator-display");
-                                if (calculator) {
-                                  const priceText = calculator.textContent;
-                                  const inrMatch = priceText.match(/₹([\d,]+)/);
-                                  if (inrMatch && inrMatch[1]) {
-                                    return `₹${inrMatch[1]}`;
-                                  }
-                                }
+                                // Use the pre-calculated price instead of DOM manipulation
+                                // This provides a more reliable way to get the price
                                 
                                 // Fallback calculation if we can't get it from the DOM
                                 const metalType = form.watch("metalType") || "";

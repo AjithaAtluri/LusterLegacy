@@ -50,7 +50,7 @@ export function PriceCalculatorDisplay({
   // Render a compact version with just the price info
   if (compact) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 price-calculator-display">
         <div className="flex justify-between items-center">
           <span className="text-sm">USD:</span>
           {isCalculating ? (
