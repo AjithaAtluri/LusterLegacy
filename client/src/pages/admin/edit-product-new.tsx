@@ -985,11 +985,52 @@ export default function EditProductNew() {
                             <div className="space-y-2">
                               <div className="flex justify-between">
                                 <span className="text-sm">USD:</span>
-                                <span className="font-medium">${form.watch("priceUSD") || 0}</span>
+                                <span className="font-medium">
+                                  {(() => {
+                                    // Get USD price from form or calculate if not available
+                                    const aiPrice = form.watch("priceUSD");
+                                    if (aiPrice && aiPrice > 0) {
+                                      return `$${aiPrice.toLocaleString()}`;
+                                    }
+                                    
+                                    // Calculate an estimate if no AI price available
+                                    // This is a fallback to ensure we always show something
+                                    const metalWeight = parseFloat(form.watch("metalWeight") || "0") || 0;
+                                    const mainStoneWeight = parseFloat(form.watch("mainStoneWeight") || "0") || 0;
+                                    
+                                    if (metalWeight > 0 || mainStoneWeight > 0) {
+                                      // Simple calculation: $500 per gram of metal + $1000 per carat of stone
+                                      const estimatedPrice = Math.round((metalWeight * 500) + (mainStoneWeight * 1000));
+                                      return `~$${estimatedPrice.toLocaleString()}`;
+                                    }
+                                    
+                                    return "$0";
+                                  })()}
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm">INR:</span>
-                                <span className="font-medium">₹{form.watch("priceINR")}</span>
+                                <span className="font-medium">
+                                  {(() => {
+                                    // Get INR price from form or calculate if not available
+                                    const aiPrice = form.watch("priceINR");
+                                    if (aiPrice && aiPrice > 0) {
+                                      return `₹${aiPrice.toLocaleString()}`;
+                                    }
+                                    
+                                    // Calculate an estimate if no AI price available
+                                    const metalWeight = parseFloat(form.watch("metalWeight") || "0") || 0;
+                                    const mainStoneWeight = parseFloat(form.watch("mainStoneWeight") || "0") || 0;
+                                    
+                                    if (metalWeight > 0 || mainStoneWeight > 0) {
+                                      // Simple calculation: ₹40,000 per gram of metal + ₹80,000 per carat of stone
+                                      const estimatedPrice = Math.round((metalWeight * 40000) + (mainStoneWeight * 80000));
+                                      return `~₹${estimatedPrice.toLocaleString()}`;
+                                    }
+                                    
+                                    return "₹0";
+                                  })()}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -1047,14 +1088,45 @@ export default function EditProductNew() {
                               <span className="text-sm font-medium">Craftsmanship & Overhead (25%)</span>
                               <span className="text-sm">
                                 {(() => {
-                                  // Get calculated price and apply 25% overhead
-                                  const calculatedPrice = form.watch("metalWeight") && parseFloat(form.watch("metalWeight")) > 0
-                                    ? Math.round(parseFloat(form.watch("metalWeight")) * 500) // Rough estimation for display
-                                    : 0;
+                                  // Calculate materials cost
+                                  const metalWeight = parseFloat(form.watch("metalWeight") || "0") || 0;
+                                  const mainStoneWeight = parseFloat(form.watch("mainStoneWeight") || "0") || 0;
+                                  const secondaryStoneWeight = parseFloat(form.watch("secondaryStoneWeight") || "0") || 0;
+                                  const otherStoneWeight = parseFloat(form.watch("otherStoneWeight") || "0") || 0;
+                                  
+                                  // Get metal value using the same formula as in PriceBreakdownItem
+                                  let metalCost = 0;
+                                  if (metalWeight > 0) {
+                                    const metalType = form.watch("metalType") || "";
+                                    let purityFactor = 0.75; // Default to 18K
+                                    let typeMultiplier = 1.0;
                                     
-                                  // Only show overhead calculation if we have some material costs
-                                  if (calculatedPrice > 0) {
-                                    return "~$" + Math.round(calculatedPrice * 0.25).toLocaleString();
+                                    if (metalType.includes("24K")) purityFactor = 1.0;
+                                    else if (metalType.includes("22K")) purityFactor = 0.916;
+                                    else if (metalType.includes("18K")) purityFactor = 0.75;
+                                    else if (metalType.includes("14K")) purityFactor = 0.585;
+                                    
+                                    if (metalType.includes("White")) typeMultiplier = 1.1;
+                                    else if (metalType.includes("Rose")) typeMultiplier = 1.05;
+                                    else if (metalType.includes("Platinum")) {
+                                      purityFactor = 0.95;
+                                      typeMultiplier = 1.4;
+                                    }
+                                    
+                                    metalCost = metalWeight * 7500 * purityFactor * typeMultiplier;
+                                  }
+                                  
+                                  // Estimate stone costs
+                                  const mainStoneCost = mainStoneWeight * 3000; // Average stone price
+                                  const secondaryStoneCost = secondaryStoneWeight * 2000;
+                                  const otherStoneCost = otherStoneWeight * 1500;
+                                  
+                                  // Calculate total base cost
+                                  const totalBaseCost = metalCost + mainStoneCost + secondaryStoneCost + otherStoneCost;
+                                  const overhead = totalBaseCost * 0.25;
+                                  
+                                  if (totalBaseCost > 0) {
+                                    return `~₹${Math.round(overhead).toLocaleString()}`;
                                   }
                                   return "Added to final price";
                                 })()}
