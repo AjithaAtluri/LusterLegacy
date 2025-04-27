@@ -113,30 +113,76 @@ export function PriceBreakdownItem({
           // Only do this if we have a specific stone type
           if (weightNum > 0 && stoneType !== "none_selected") {
             try {
-              const response = await apiRequest("POST", "/api/calculate-price", {
-                metalTypeId: "18K Yellow Gold", // Default metal just to make API work
-                metalWeight: 1, // Minimal metal weight
-                primaryStone: {
+              // Determine if this is the primary, secondary, or other stone by label
+              let primaryStone = null;
+              let secondaryStones = null;
+              let otherStone = null;
+              
+              // Configure the stone data based on the label
+              if (label.toLowerCase().includes("main") || label === "Stone Cost") {
+                primaryStone = {
                   stoneTypeId: stoneType, 
                   caratWeight: weightNum
-                },
-                secondaryStones: [],
-                otherStone: null
-              });
+                };
+              } else if (label.toLowerCase().includes("secondary")) {
+                secondaryStones = [{
+                  stoneTypeId: stoneType, 
+                  caratWeight: weightNum
+                }];
+              } else if (label.toLowerCase().includes("other")) {
+                otherStone = {
+                  stoneTypeId: stoneType, 
+                  caratWeight: weightNum
+                };
+              } else {
+                // Default to primary stone if no specific label match
+                primaryStone = {
+                  stoneTypeId: stoneType, 
+                  caratWeight: weightNum
+                };
+              }
+              
+              // Construct the payload with the appropriate stone data
+              const requestPayload = {
+                metalTypeId: "18K Yellow Gold", // Default metal just to make API work
+                metalWeight: 1, // Minimal metal weight
+                primaryStone,
+                secondaryStones,
+                otherStone
+              };
+              
+              const response = await apiRequest("POST", "/api/calculate-price", requestPayload);
               
               if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.inr && data.inr.breakdown) {
-                  // Extract the stone cost - this should be in the primaryStoneCost field
-                  const stoneCostINR = data.inr.breakdown.primaryStoneCost;
+                  // Extract the stone cost based on the stone type
+                  let stoneCostINR = 0;
+                  let verifiedName = stoneType;
+                  
+                  if (label.toLowerCase().includes("main") || label === "Stone Cost") {
+                    stoneCostINR = data.inr.breakdown.primaryStoneCost;
+                    if (data.inputs?.primaryStone) {
+                      verifiedName = data.inputs.primaryStone.name || stoneType;
+                    }
+                  } else if (label.toLowerCase().includes("secondary")) {
+                    stoneCostINR = data.inr.breakdown.secondaryStoneCost;
+                    if (data.inputs?.secondaryStones?.[0]) {
+                      verifiedName = data.inputs.secondaryStones[0].name || stoneType;
+                    }
+                  } else if (label.toLowerCase().includes("other")) {
+                    stoneCostINR = data.inr.breakdown.otherStoneCost;
+                    if (data.inputs?.otherStone) {
+                      verifiedName = data.inputs.otherStone.name || stoneType;
+                    }
+                  } else {
+                    // Default to primary stone cost if no specific label match
+                    stoneCostINR = data.inr.breakdown.primaryStoneCost;
+                  }
+                  
                   if (stoneCostINR > 0) {
                     setCost(Math.round(stoneCostINR));
-                    
-                    // Update description with verified stone name if available
-                    if (data.inputs?.primaryStone) {
-                      const verifiedName = data.inputs.primaryStone.name || stoneType;
-                      setDescription(`${weightNum} carat of ${verifiedName}`);
-                    }
+                    setDescription(`${weightNum} carat of ${verifiedName}`);
                   }
                 }
               }

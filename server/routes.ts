@@ -1426,13 +1426,37 @@ Respond in JSON format:
       // Get the index where secondary stones start
       const numberOfPrimaryGems = primaryStone ? 1 : 0;
       
+      // Process otherStone data if present
+      let otherStoneType = undefined;
+      let otherStoneWeight = undefined;
+      
+      if (otherStone && otherStone.stoneTypeId) {
+        const stoneTypeId = otherStone.stoneTypeId;
+        try {
+          // Get stone type data from database
+          const stoneTypeData = await storage.getStoneTypeById(
+            typeof stoneTypeId === 'string' ? parseInt(stoneTypeId) : stoneTypeId
+          );
+          
+          if (stoneTypeData) {
+            otherStoneType = stoneTypeData.name;
+            otherStoneWeight = otherStone.caratWeight || 0.5;
+            console.log(`Processing other stone: ${otherStoneType} with weight ${otherStoneWeight}`);
+          }
+        } catch (error) {
+          console.error('Error processing other stone data:', error);
+        }
+      }
+      
       // Use the centralized price calculator utility
       const result = await calculateJewelryPrice({
         productType,
         metalType,
         metalTypeId: typeof metalTypeId === 'string' ? parseInt(metalTypeId) : metalTypeId,
         metalWeight: typeof metalWeight === 'string' ? parseFloat(metalWeight) : metalWeight,
-        primaryGems
+        primaryGems,
+        otherStoneType,
+        otherStoneWeight
       });
       
       // Calculate individual stone type costs to accurately break down primary vs secondary
