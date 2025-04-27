@@ -132,9 +132,6 @@ export default function ProductCard({ product }: ProductCardProps) {
               <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
                 ${calculatedPriceUSD}
               </p>
-              <p className="font-montserrat text-xs text-muted-foreground">
-                ₹{calculatedPriceINR.toLocaleString('en-IN')}
-              </p>
             </div>
           </div>
         </div>
