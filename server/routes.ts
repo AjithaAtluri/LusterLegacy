@@ -256,9 +256,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Parse AI inputs from the product data for price calculation
           const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
           
+          // Debug logging for product data
+          console.log(`Product ${product.id} - ${product.name} - AI Inputs:`, 
+            aiInputs ? JSON.stringify(aiInputs).substring(0, 150) + '...' : 'No AI inputs');
+          
           if (aiInputs) {
             // Extract parameters for the price calculator
-            const result = await calculateJewelryPrice({
+            const params = {
               productType: aiInputs.productType || "",
               metalType: aiInputs.metalType || "",
               metalWeight: parseFloat(aiInputs.metalWeight) || 0,
@@ -267,7 +271,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 stoneTypeId: aiInputs.otherStoneType,
                 caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
               } : undefined
-            });
+            };
+            
+            console.log(`Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
+            
+            const result = await calculateJewelryPrice(params);
+            console.log(`Product ${product.id} - Calculated prices: USD: ${result.priceUSD}, INR: ${result.priceINR}`);
             
             // Add the accurate prices to the product
             return {
@@ -278,6 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // If AI inputs are not available, use the base price
+          console.log(`Product ${product.id} - No AI inputs, using base price: ${product.basePrice}`);
           return {
             ...product,
             calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
@@ -312,9 +322,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Parse AI inputs from the product data for price calculation
           const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
           
+          // Debug logging for product data
+          console.log(`Featured Product ${product.id} - ${product.name} - AI Inputs:`, 
+            aiInputs ? JSON.stringify(aiInputs).substring(0, 150) + '...' : 'No AI inputs');
+          
           if (aiInputs) {
             // Extract parameters for the price calculator
-            const result = await calculateJewelryPrice({
+            const params = {
               productType: aiInputs.productType || "",
               metalType: aiInputs.metalType || "",
               metalWeight: parseFloat(aiInputs.metalWeight) || 0,
@@ -323,7 +337,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 stoneTypeId: aiInputs.otherStoneType,
                 caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
               } : undefined
-            });
+            };
+            
+            console.log(`Featured Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
+            
+            const result = await calculateJewelryPrice(params);
+            console.log(`Featured Product ${product.id} - Calculated prices: USD: ${result.priceUSD}, INR: ${result.priceINR}`);
             
             // Add the accurate prices to the product
             return {
@@ -334,6 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // If AI inputs are not available, use the base price
+          console.log(`Featured Product ${product.id} - No AI inputs, using base price: ${product.basePrice}`);
           return {
             ...product,
             calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
@@ -434,6 +454,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: product.imageUrl,
         keys: Object.keys(product)
       });
+
+      try {
+        // Parse AI inputs from the product data for price calculation
+        const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+        
+        // Debug logging for product data
+        console.log(`Detail Product ${product.id} - ${product.name} - AI Inputs:`, 
+          aiInputs ? JSON.stringify(aiInputs).substring(0, 150) + '...' : 'No AI inputs');
+        
+        if (aiInputs) {
+          // Extract parameters for the price calculator
+          const params = {
+            productType: aiInputs.productType || "",
+            metalType: aiInputs.metalType || "",
+            metalWeight: parseFloat(aiInputs.metalWeight) || 0,
+            primaryGems: aiInputs.primaryGems || [],
+            otherStone: aiInputs.otherStoneType ? {
+              stoneTypeId: aiInputs.otherStoneType,
+              caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
+            } : undefined
+          };
+          
+          console.log(`Detail Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
+          
+          const result = await calculateJewelryPrice(params);
+          console.log(`Detail Product ${product.id} - Calculated prices: USD: ${result.priceUSD}, INR: ${result.priceINR}`);
+          
+          // Add the accurate prices to the product
+          product.calculatedPriceUSD = result.priceUSD;
+          product.calculatedPriceINR = result.priceINR;
+        } else {
+          // If AI inputs are not available, use the base price
+          console.log(`Detail Product ${product.id} - No AI inputs, using base price: ${product.basePrice}`);
+          product.calculatedPriceUSD = Math.round(product.basePrice / USD_TO_INR_RATE);
+          product.calculatedPriceINR = product.basePrice;
+        }
+      } catch (calcError) {
+        console.error(`Error calculating price for product ${product.id}:`, calcError);
+        // Fallback to base price conversion
+        product.calculatedPriceUSD = Math.round(product.basePrice / USD_TO_INR_RATE);
+        product.calculatedPriceINR = product.basePrice;
+      }
 
       res.json(product);
     } catch (error) {
