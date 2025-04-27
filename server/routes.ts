@@ -249,7 +249,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/products', async (_req, res) => {
     try {
       const products = await storage.getAllProducts();
-      res.json(products);
+      
+      // Calculate accurate prices for each product using the price calculator
+      const productsWithAccuratePrices = await Promise.all(products.map(async product => {
+        try {
+          // Parse AI inputs from the product data for price calculation
+          const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          
+          if (aiInputs) {
+            // Extract parameters for the price calculator
+            const result = await calculateJewelryPrice({
+              productType: aiInputs.productType || "",
+              metalType: aiInputs.metalType || "",
+              metalWeight: parseFloat(aiInputs.metalWeight) || 0,
+              primaryGems: aiInputs.primaryGems || [],
+              otherStone: aiInputs.otherStoneType ? {
+                stoneTypeId: aiInputs.otherStoneType,
+                caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
+              } : undefined
+            });
+            
+            // Add the accurate prices to the product
+            return {
+              ...product,
+              calculatedPriceUSD: result.priceUSD,
+              calculatedPriceINR: result.priceINR
+            };
+          }
+          
+          // If AI inputs are not available, use the base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        } catch (error) {
+          console.error(`Error calculating price for product ${product.id}:`, error);
+          // Return the product with default conversion from base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        }
+      }));
+      
+      res.json(productsWithAccuratePrices);
     } catch (error) {
       console.error('Error fetching products:', error);
       res.status(500).json({ message: 'Error fetching products' });
@@ -260,7 +305,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/products/featured', async (_req, res) => {
     try {
       const products = await storage.getFeaturedProducts();
-      res.json(products);
+      
+      // Calculate accurate prices for each product using the price calculator
+      const productsWithAccuratePrices = await Promise.all(products.map(async product => {
+        try {
+          // Parse AI inputs from the product data for price calculation
+          const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          
+          if (aiInputs) {
+            // Extract parameters for the price calculator
+            const result = await calculateJewelryPrice({
+              productType: aiInputs.productType || "",
+              metalType: aiInputs.metalType || "",
+              metalWeight: parseFloat(aiInputs.metalWeight) || 0,
+              primaryGems: aiInputs.primaryGems || [],
+              otherStone: aiInputs.otherStoneType ? {
+                stoneTypeId: aiInputs.otherStoneType,
+                caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
+              } : undefined
+            });
+            
+            // Add the accurate prices to the product
+            return {
+              ...product,
+              calculatedPriceUSD: result.priceUSD,
+              calculatedPriceINR: result.priceINR
+            };
+          }
+          
+          // If AI inputs are not available, use the base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        } catch (error) {
+          console.error(`Error calculating price for product ${product.id}:`, error);
+          // Return the product with default conversion from base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        }
+      }));
+      
+      res.json(productsWithAccuratePrices);
     } catch (error) {
       console.error('Error fetching featured products:', error);
       res.status(500).json({ message: 'Error fetching featured products' });
@@ -272,7 +362,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category } = req.params;
       const products = await storage.getProductsByCategory(category);
-      res.json(products);
+      
+      // Calculate accurate prices for each product using the price calculator
+      const productsWithAccuratePrices = await Promise.all(products.map(async product => {
+        try {
+          // Parse AI inputs from the product data for price calculation
+          const aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          
+          if (aiInputs) {
+            // Extract parameters for the price calculator
+            const result = await calculateJewelryPrice({
+              productType: aiInputs.productType || "",
+              metalType: aiInputs.metalType || "",
+              metalWeight: parseFloat(aiInputs.metalWeight) || 0,
+              primaryGems: aiInputs.primaryGems || [],
+              otherStone: aiInputs.otherStoneType ? {
+                stoneTypeId: aiInputs.otherStoneType,
+                caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
+              } : undefined
+            });
+            
+            // Add the accurate prices to the product
+            return {
+              ...product,
+              calculatedPriceUSD: result.priceUSD,
+              calculatedPriceINR: result.priceINR
+            };
+          }
+          
+          // If AI inputs are not available, use the base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        } catch (error) {
+          console.error(`Error calculating price for product ${product.id}:`, error);
+          // Return the product with default conversion from base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        }
+      }));
+      
+      res.json(productsWithAccuratePrices);
     } catch (error) {
       console.error('Error fetching products by category:', error);
       res.status(500).json({ message: 'Error fetching products by category' });
