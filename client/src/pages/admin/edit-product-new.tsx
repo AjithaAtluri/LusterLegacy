@@ -985,7 +985,7 @@ export default function EditProductNew() {
                             <div className="space-y-2">
                               <div className="flex justify-between">
                                 <span className="text-sm">USD:</span>
-                                <span className="font-medium">${form.watch("priceUSD")}</span>
+                                <span className="font-medium">${form.watch("priceUSD") || 0}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-sm">INR:</span>
