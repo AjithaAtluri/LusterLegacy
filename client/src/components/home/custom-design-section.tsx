@@ -378,7 +378,7 @@ export default function CustomDesignSection() {
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="font-montserrat text-sm text-foreground/70">
-                          I understand that submitting this design requires a CAD fee of ₹{PAYMENT_TERMS.cadFee.toLocaleString()}, which will be adjusted against my final order.
+                          I understand that if my design is accepted, a ${PAYMENT_TERMS.cadFee} {PAYMENT_TERMS.cadFeeDescription} will be required before work begins. This fee will be adjusted against my final order.
                         </FormLabel>
                         <FormMessage />
                       </div>
