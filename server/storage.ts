@@ -1467,6 +1467,230 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Customization request methods
+  async createCustomizationRequest(request: any): Promise<any> {
+    try {
+      const [newRequest] = await db
+        .insert(designRequests)
+        .values({
+          userId: request.userId || null,
+          fullName: request.name,
+          email: request.email,
+          metalType: request.metalTypeId || "Not specified",
+          primaryStone: request.primaryStoneId || "Not specified",
+          notes: request.customizationDetails,
+          imageUrl: request.imageUrl || "/uploads/placeholder.jpg",
+        })
+        .returning();
+      return newRequest;
+    } catch (error) {
+      console.error("Error creating customization request:", error);
+      throw error;
+    }
+  }
+
+  async getCustomizationRequestsByUserId(userId: number): Promise<any[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(designRequests)
+        .where(eq(designRequests.userId, userId))
+        .orderBy(desc(designRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error("Error getting customization requests by user ID:", error);
+      return [];
+    }
+  }
+
+  async getAllCustomizationRequests(): Promise<any[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(designRequests)
+        .orderBy(desc(designRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error("Error getting all customization requests:", error);
+      return [];
+    }
+  }
+
+  async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
+    try {
+      const [updatedRequest] = await db
+        .update(designRequests)
+        .set({ status })
+        .where(eq(designRequests.id, id))
+        .returning();
+      return updatedRequest;
+    } catch (error) {
+      console.error("Error updating customization request status:", error);
+      return null;
+    }
+  }
+  
+  // Order methods
+  async getOrdersByUserId(userId: number): Promise<any[]> {
+    try {
+      const userOrders = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.userId, userId))
+        .orderBy(desc(orders.createdAt));
+        
+      // For each order, fetch its items
+      const ordersWithItems = await Promise.all(
+        userOrders.map(async (order) => {
+          const items = await db
+            .select()
+            .from(orderItems)
+            .where(eq(orderItems.orderId, order.id));
+            
+          // For each item, fetch the associated product
+          const itemsWithProducts = await Promise.all(
+            items.map(async (item) => {
+              const [product] = await db
+                .select()
+                .from(products)
+                .where(eq(products.id, item.productId));
+              
+              return {
+                ...item,
+                product: product || null
+              };
+            })
+          );
+          
+          return {
+            ...order,
+            items: itemsWithProducts
+          };
+        })
+      );
+      
+      return ordersWithItems;
+    } catch (error) {
+      console.error("Error getting orders by user ID:", error);
+      return [];
+    }
+  }
+  
+  // Cart methods
+  async getCartItemsBySession(sessionId: string): Promise<any> {
+    try {
+      let cartItems = [];
+      
+      if (sessionId) {
+        cartItems = await db
+          .select()
+          .from(cartItems)
+          .where(eq(cartItems.sessionId, sessionId));
+      }
+      
+      // Fetch product details for each cart item
+      const itemsWithProducts = await Promise.all(
+        cartItems.map(async (item) => {
+          const [product] = await db
+            .select()
+            .from(products)
+            .where(eq(products.id, item.productId));
+          
+          return {
+            ...item,
+            product: product || null
+          };
+        })
+      );
+      
+      // Calculate total price
+      const total = itemsWithProducts.reduce((sum, item) => sum + item.price, 0);
+      
+      return {
+        items: itemsWithProducts,
+        total
+      };
+    } catch (error) {
+      console.error("Error getting cart items by session:", error);
+      return { items: [], total: 0 };
+    }
+  }
+  
+  async getCartItemsByUser(userId: number): Promise<any> {
+    try {
+      const cartItems = await db
+        .select()
+        .from(cartItems)
+        .where(eq(cartItems.userId, userId));
+      
+      // Fetch product details for each cart item
+      const itemsWithProducts = await Promise.all(
+        cartItems.map(async (item) => {
+          const [product] = await db
+            .select()
+            .from(products)
+            .where(eq(products.id, item.productId));
+          
+          return {
+            ...item,
+            product: product || null
+          };
+        })
+      );
+      
+      // Calculate total price
+      const total = itemsWithProducts.reduce((sum, item) => sum + item.price, 0);
+      
+      return {
+        items: itemsWithProducts,
+        total
+      };
+    } catch (error) {
+      console.error("Error getting cart items by user:", error);
+      return { items: [], total: 0 };
+    }
+  }
+  
+  async addCartItem(cartItem: InsertCartItem): Promise<any> {
+    try {
+      const [item] = await db
+        .insert(cartItems)
+        .values(cartItem)
+        .returning();
+      
+      return item;
+    } catch (error) {
+      console.error("Error adding cart item:", error);
+      throw error;
+    }
+  }
+  
+  async removeCartItem(id: number): Promise<boolean> {
+    try {
+      await db
+        .delete(cartItems)
+        .where(eq(cartItems.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error("Error removing cart item:", error);
+      return false;
+    }
+  }
+  
+  async clearCart(sessionId: string): Promise<boolean> {
+    try {
+      await db
+        .delete(cartItems)
+        .where(eq(cartItems.sessionId, sessionId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+      return false;
+    }
+  }
 }
 
 // Use database storage implementation
