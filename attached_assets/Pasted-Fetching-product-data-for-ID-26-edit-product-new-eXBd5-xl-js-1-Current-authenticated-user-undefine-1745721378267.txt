@@ -1,0 +1,52 @@
+Fetching product data for ID: 26
+edit-product-new-eXBd5-xl.js:1 Current authenticated user: undefined
+edit-product-new-eXBd5-xl.js:1 Product fetch response status: 200
+edit-product-new-eXBd5-xl.js:1 Product data retrieved successfully: Object
+edit-product-new-eXBd5-xl.js:1 Product data received: Object
+edit-product-new-eXBd5-xl.js:1 Product data type: object
+edit-product-new-eXBd5-xl.js:1 Product data keys: Array(16)
+edit-product-new-eXBd5-xl.js:1 Raw priceUSD: undefined
+edit-product-new-eXBd5-xl.js:1 Raw basePrice: 1020000
+edit-product-new-eXBd5-xl.js:1 Parsed details: Object
+edit-product-new-eXBd5-xl.js:1 Additional data: Object
+edit-product-new-eXBd5-xl.js:1 Additional data keys: Array(13)
+edit-product-new-eXBd5-xl.js:1 Raw basePriceINR: 1020000
+edit-product-new-eXBd5-xl.js:1 AI inputs: Object
+edit-product-new-eXBd5-xl.js:1 AI inputs keys: Array(9)
+edit-product-new-eXBd5-xl.js:1 Using metalType from aiInputs: 18K Yellow Gold
+edit-product-new-eXBd5-xl.js:1 Using metalWeight from aiInputs: 51.9
+edit-product-new-eXBd5-xl.js:1 Using mainStoneType from aiInputs: Navaratan Precious Stones
+edit-product-new-eXBd5-xl.js:1 Using mainStoneWeight from aiInputs: 65
+edit-product-new-eXBd5-xl.js:1 Using secondaryStoneType from aiInputs: Moissanite
+edit-product-new-eXBd5-xl.js:1 ----DETAILED STONE DEBUG----
+edit-product-new-eXBd5-xl.js:1 Raw aiInputs: Object
+edit-product-new-eXBd5-xl.js:1 Raw additionalData: Object
+edit-product-new-eXBd5-xl.js:1 Raw details: Object
+edit-product-new-eXBd5-xl.js:1 aiInputs.secondaryStoneType: Moissanite type: string
+edit-product-new-eXBd5-xl.js:1 additionalData.secondaryStoneType: Moissanite type: string
+edit-product-new-eXBd5-xl.js:1 details?.secondaryStoneType: undefined type: undefined
+edit-product-new-eXBd5-xl.js:1 Final secondaryStoneType: Moissanite
+edit-product-new-eXBd5-xl.js:1 Using secondaryStoneWeight from aiInputs: 36
+edit-product-new-eXBd5-xl.js:1 Using otherStoneType from aiInputs: Natural Carved Emerald - Figurine
+edit-product-new-eXBd5-xl.js:1 ----DETAILED OTHER STONE DEBUG----
+edit-product-new-eXBd5-xl.js:1 aiInputs.otherStoneType: Natural Carved Emerald - Figurine type: string
+edit-product-new-eXBd5-xl.js:1 additionalData.otherStoneType: Natural Carved Emerald - Figurine type: string
+edit-product-new-eXBd5-xl.js:1 details?.otherStoneType: undefined type: undefined
+edit-product-new-eXBd5-xl.js:1 Final otherStoneType: Natural Carved Emerald - Figurine
+edit-product-new-eXBd5-xl.js:1 Using otherStoneWeight from aiInputs: 30
+edit-product-new-eXBd5-xl.js:1 Setting form values: Object
+edit-product-new-eXBd5-xl.js:1 Setting main image preview: /uploads/def6b99f-9163-4499-a000-d0512028aad4.jpeg
+edit-product-new-eXBd5-xl.js:1 Setting additional image previews: Array(0)
+price-calculator-display-B1m5z5fS.js:6 Price calculation request: Object
+price-calculator-display-B1m5z5fS.js:6 Price calculation request: Object
+price-calculator-display-B1m5z5fS.js:6 Price calculation response: Object
+price-calculator-display-B1m5z5fS.js:6 Price calculation response: Object
+26:1 The resource https://fresh-start-ajitha72.replit.app/assets/zhang-liven-MbImicTZK54-unsplash-C9B0b_0y.jpg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warning
+26:1 The resource https://fresh-start-ajitha72.replit.app/assets/zhang-liven-MbImicTZK54-unsplash-C9B0b_0y.jpg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warning
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+26:1 The resource https://fresh-start-ajitha72.replit.app/assets/zhang-liven-MbImicTZK54-unsplash-C9B0b_0y.jpg was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warning
