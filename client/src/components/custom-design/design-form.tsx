@@ -61,6 +61,19 @@ export default function DesignForm() {
   }, [user, form]);
   
   const onSubmit = async (data: DesignFormValues) => {
+    // Check if user is logged in
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Please log in or create an account to submit a custom design request.",
+        variant: "destructive"
+      });
+      
+      // Redirect to auth page with return URL
+      window.location.href = `/auth?returnTo=${encodeURIComponent('/custom-design')}`;
+      return;
+    }
+    
     if (!uploadedImage) {
       toast({
         title: "Image required",

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Redirect } from "wouter";
+import { Redirect, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +47,17 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [location] = useLocation();
+  const [returnPath, setReturnPath] = useState<string>("/");
+  
+  // Parse returnTo parameter from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("returnTo");
+    if (returnTo) {
+      setReturnPath(returnTo);
+    }
+  }, []);
   
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -85,7 +96,7 @@ export default function AuthPage() {
   
   // Redirect if user is already logged in
   if (user) {
-    return <Redirect to="/" />;
+    return <Redirect to={returnPath} />;
   }
   
   return (
