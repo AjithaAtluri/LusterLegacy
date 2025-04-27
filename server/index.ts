@@ -87,6 +87,6 @@ app.use((req, res, next) => {
     reusePort: true,
     backlog: 100
   }, () => {
-    log(`serving on ${port}`);
+    log(`Server running on http://0.0.0.0:${port}`);
   });
 })();
