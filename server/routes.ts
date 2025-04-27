@@ -705,8 +705,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const designData = JSON.parse(req.body.data);
+      
+      // Handle both old and new formats for stones
+      // If primaryStones is present as an array, use it
+      // If only primaryStone is present (string), convert it to array format
+      let formattedData = { ...designData };
+      
+      // For backward compatibility, ensure primaryStone is set if only primaryStones array exists
+      if (formattedData.primaryStones && formattedData.primaryStones.length > 0 && !formattedData.primaryStone) {
+        formattedData.primaryStone = formattedData.primaryStones[0];
+      }
+      
+      // For forward compatibility, ensure primaryStones array exists if only primaryStone is provided
+      if (formattedData.primaryStone && (!formattedData.primaryStones || !formattedData.primaryStones.length)) {
+        formattedData.primaryStones = [formattedData.primaryStone];
+      }
+      
+      console.log("Processing design request with stones:", 
+        formattedData.primaryStones || [], 
+        "Primary stone for backward compatibility:", 
+        formattedData.primaryStone
+      );
+
       const validatedData = insertDesignRequestSchema.parse({
-        ...designData,
+        ...formattedData,
         userId: req.user.id, // Add the authenticated user's ID
         imageUrl: `/uploads/${req.file.filename}`
       });

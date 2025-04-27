@@ -22,6 +22,7 @@ interface DesignDetailProps {
     country: string | null;
     metalType: string;
     primaryStone: string;
+    primaryStones?: string[];
     notes: string | null;
     imageUrl: string;
     status: string;
@@ -226,8 +227,19 @@ export default function DesignDetail({ design }: DesignDetailProps) {
                   <div>{design.metalType}</div>
                 </div>
                 <div>
-                  <div className="font-medium">Primary Stone</div>
-                  <div>{design.primaryStone}</div>
+                  <div className="font-medium">Primary Stone{design.primaryStones && design.primaryStones.length > 1 ? 's' : ''}</div>
+                  {design.primaryStones && design.primaryStones.length > 0 ? (
+                    <div>
+                      {design.primaryStones.map((stone, index) => (
+                        <div key={index} className="flex items-center">
+                          <span className="inline-block h-2 w-2 rounded-full bg-primary/70 mr-2"></span>
+                          {stone}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div>{design.primaryStone}</div> 
+                  )}
                 </div>
                 {design.notes && (
                   <div>
