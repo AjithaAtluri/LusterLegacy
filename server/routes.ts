@@ -106,7 +106,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
 
-  // Health check route for deployments - moved to /api/health to avoid conflict with frontend
+  // Health check routes for deployments
+  app.get('/', (_req, res) => {
+    res.status(200).send('OK');
+  });
+
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
   });
