@@ -172,7 +172,7 @@ export function PriceBreakdownItem({
         <span className="font-medium">{label}:</span>
         <span className="ml-1 text-muted-foreground">{description}</span>
       </div>
-      <span>{isLoading ? "Calculating..." : (cost > 0 ? `~₹${cost.toLocaleString()}` : "N/A")}</span>
+      <span>{isLoading ? "Calculating..." : (cost > 0 ? `~₹${cost.toLocaleString()}` : (description === "No stone selected" ? "N/A" : "₹0"))}</span>
     </div>
   );
 }

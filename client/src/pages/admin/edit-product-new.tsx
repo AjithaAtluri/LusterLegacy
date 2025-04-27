@@ -1008,14 +1008,22 @@ export default function EditProductNew() {
                                 <span className="text-sm">USD:</span>
                                 <span className="font-medium">
                                   {(() => {
-                                    // Get USD price from form or calculate if not available
-                                    const aiPrice = form.watch("priceUSD");
-                                    if (aiPrice && aiPrice > 0) {
-                                      return `$${aiPrice.toLocaleString()}`;
+                                    // Get INR price from form to ensure consistency
+                                    const aiPriceINR = form.watch("priceINR");
+                                    if (aiPriceINR && aiPriceINR > 0) {
+                                      // Convert from INR to USD using current exchange rate (approximately 83 INR = 1 USD)
+                                      const exchangeRate = 83;
+                                      const convertedPriceUSD = Math.round(aiPriceINR / exchangeRate);
+                                      return `$${convertedPriceUSD.toLocaleString()}`;
+                                    }
+                                    
+                                    // Use USD price as a fallback if set directly
+                                    const aiPriceUSD = form.watch("priceUSD");
+                                    if (aiPriceUSD && aiPriceUSD > 0) {
+                                      return `$${aiPriceUSD.toLocaleString()}`;
                                     }
                                     
                                     // Calculate an estimate if no AI price available
-                                    // This is a fallback to ensure we always show something
                                     const metalWeight = parseFloat(form.watch("metalWeight") || "0") || 0;
                                     const mainStoneWeight = parseFloat(form.watch("mainStoneWeight") || "0") || 0;
                                     
@@ -1157,9 +1165,70 @@ export default function EditProductNew() {
                             </div>
                           </div>
                           
+                          {/* Total Price Calculation */}
+                          <div className="flex justify-between items-center py-3 mt-3 border-t border-primary/20 text-sm font-semibold">
+                            <span>Total Price:</span>
+                            <span className="text-base font-bold">
+                              {(() => {
+                                // Get the calculated price from the form
+                                const metalWeight = parseFloat(form.watch("metalWeight") || "0") || 0;
+                                const mainStoneWeight = parseFloat(form.watch("mainStoneWeight") || "0") || 0;
+                                const secondaryStoneWeight = parseFloat(form.watch("secondaryStoneWeight") || "0") || 0;
+                                const otherStoneWeight = parseFloat(form.watch("otherStoneWeight") || "0") || 0;
+                                
+                                if (metalWeight <= 0 && mainStoneWeight <= 0 && secondaryStoneWeight <= 0 && otherStoneWeight <= 0) {
+                                  return "₹0";
+                                }
+                                
+                                // Use the calculated price from the hook if available
+                                const calculator = document.querySelector(".price-calculator-display");
+                                if (calculator) {
+                                  const priceText = calculator.textContent;
+                                  const inrMatch = priceText.match(/₹([\d,]+)/);
+                                  if (inrMatch && inrMatch[1]) {
+                                    return `₹${inrMatch[1]}`;
+                                  }
+                                }
+                                
+                                // Fallback calculation if we can't get it from the DOM
+                                const metalType = form.watch("metalType") || "";
+                                let purityFactor = 0.75; // Default to 18K
+                                let typeMultiplier = 1.0;
+                                
+                                if (metalType.includes("24K")) purityFactor = 1.0;
+                                else if (metalType.includes("22K")) purityFactor = 0.916;
+                                else if (metalType.includes("18K")) purityFactor = 0.75;
+                                else if (metalType.includes("14K")) purityFactor = 0.585;
+                                
+                                if (metalType.includes("White")) typeMultiplier = 1.1;
+                                else if (metalType.includes("Rose")) typeMultiplier = 1.05;
+                                else if (metalType.includes("Platinum")) {
+                                  purityFactor = 0.95;
+                                  typeMultiplier = 1.4;
+                                }
+                                
+                                // Use current gold price or fallback
+                                const metalCost = metalWeight * 7500 * purityFactor * typeMultiplier;
+                                
+                                // Estimate stone costs
+                                // These are placeholders - real calculations come from the API
+                                const mainStoneCost = mainStoneWeight * 80000;
+                                const secondaryStoneCost = secondaryStoneWeight * 60000;
+                                const otherStoneCost = otherStoneWeight * 40000;
+                                
+                                // Calculate total base cost
+                                const totalBaseCost = metalCost + mainStoneCost + secondaryStoneCost + otherStoneCost;
+                                const overhead = totalBaseCost * 0.25;
+                                const totalPrice = totalBaseCost + overhead;
+                                
+                                return `~₹${Math.round(totalPrice).toLocaleString()}`;
+                              })()}
+                            </span>
+                          </div>
+
                           <div className="mt-4 text-xs text-primary">
                             <p className="font-medium">Price Formula:</p>
-                            <p className="mt-1">(Metal weight × current gold price × metal modifier) + (Stone carat weight × stone price) + 25% overhead</p>
+                            <p className="mt-1">(Metal weight × current gold price × metal modifier) + (Stone carat weight × stone price) + 25% overhead = Total Price</p>
                           </div>
                         </div>
                         
