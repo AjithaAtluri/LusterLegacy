@@ -7,6 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { ArrowLeft, Send, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
@@ -27,11 +34,24 @@ export default function CustomizeRequest() {
   const [customizationDetails, setCustomizationDetails] = useState("");
   const [preferredBudget, setPreferredBudget] = useState("");
   const [timeline, setTimeline] = useState("");
+  const [metalTypeId, setMetalTypeId] = useState("");
+  const [primaryStoneId, setPrimaryStoneId] = useState("");
+  const [secondaryStoneId, setSecondaryStoneId] = useState("");
   
   // Fetch product data to display in the form
   const { data: product, isLoading, error } = useQuery({
     queryKey: [`/api/products/${id}`],
     enabled: !!id,
+  });
+  
+  // Fetch metal types for dropdown
+  const { data: metalTypes, isLoading: isLoadingMetalTypes } = useQuery({
+    queryKey: ['/api/metal-types'],
+  });
+  
+  // Fetch stone types for dropdown
+  const { data: stoneTypes, isLoading: isLoadingStoneTypes } = useQuery({
+    queryKey: ['/api/stone-types'],
   });
 
   // Handle form submission
@@ -44,6 +64,9 @@ export default function CustomizeRequest() {
       customizationDetails: string;
       preferredBudget: string;
       timeline: string;
+      metalTypeId?: string;
+      primaryStoneId?: string;
+      secondaryStoneId?: string;
     }) => {
       const response = await apiRequest("POST", "/api/customization-requests", formData);
       if (!response.ok) {
@@ -93,6 +116,9 @@ export default function CustomizeRequest() {
       customizationDetails,
       preferredBudget,
       timeline,
+      metalTypeId,
+      primaryStoneId,
+      secondaryStoneId,
     });
   };
 

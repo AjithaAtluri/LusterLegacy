@@ -1378,6 +1378,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/payment/cancel-paypal-order', cancelOrder);
   
   /**
+   * Public API endpoints for metal types and stone types
+   * These can be used by the customization request form and elsewhere
+   */
+  
+  // Get all metal types (public)
+  app.get('/api/metal-types', async (_req, res) => {
+    try {
+      const metalTypes = await storage.getAllMetalTypes();
+      res.json(metalTypes);
+    } catch (error) {
+      console.error('Error fetching metal types:', error);
+      res.status(500).json({ message: 'Failed to fetch metal types' });
+    }
+  });
+  
+  // Get all stone types (public)
+  app.get('/api/stone-types', async (_req, res) => {
+    try {
+      const stoneTypes = await storage.getAllStoneTypes();
+      res.json(stoneTypes);
+    } catch (error) {
+      console.error('Error fetching stone types:', error);
+      res.status(500).json({ message: 'Failed to fetch stone types' });
+    }
+  });
+  
+  /**
    * Admin API endpoints for Jewelry Management
    */
   
