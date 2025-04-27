@@ -896,10 +896,202 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   /**
+   * Customization Request routes
+   */
+  app.post("/api/customization-requests", async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { productId, name, email, phone, customizationDetails, preferredBudget, timeline } = req.body;
+      
+      // Ensure the product exists
+      const product = await storage.getProduct(Number(productId));
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      const customizationRequest = await storage.createCustomizationRequest({
+        userId: req.user.id,
+        productId: Number(productId),
+        name,
+        email,
+        phone,
+        customizationDetails,
+        preferredBudget,
+        timeline,
+        status: "new", // Default status
+        createdAt: new Date(),
+      });
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Customization request created successfully",
+        request: customizationRequest
+      });
+    } catch (error) {
+      console.error("Error creating customization request:", error);
+      res.status(500).json({ message: "Server error creating customization request" });
+    }
+  });
+
+  app.get("/api/customization-requests", async (req: Request, res: Response) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      let requests;
+      // Admin users get all requests, regular users get only their own
+      if (req.user.role === "admin") {
+        requests = await storage.getAllCustomizationRequests();
+      } else {
+        requests = await storage.getCustomizationRequestsByUserId(req.user.id);
+      }
+      
+      // Get product details for each request
+      const requestsWithProducts = await Promise.all(
+        requests.map(async (request) => {
+          const product = await storage.getProduct(request.productId);
+          return {
+            ...request,
+            product: product ? {
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              imageUrl: product.imageUrl,
+              basePrice: product.basePrice,
+            } : null
+          };
+        })
+      );
+      
+      res.json(requestsWithProducts);
+    } catch (error) {
+      console.error("Error fetching customization requests:", error);
+      res.status(500).json({ message: "Server error fetching customization requests" });
+    }
+  });
+
+  /**
    * Order routes
    */
-  // Create a new order
+  // Create a new order with direct product purchase (no cart)
   app.post('/api/orders', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    try {
+      const { 
+        productId, 
+        name, 
+        email, 
+        phone, 
+        address, 
+        city, 
+        state, 
+        postalCode, 
+        country, 
+        additionalNotes, 
+        paymentMethod,
+        currency
+      } = req.body;
+      
+      // Ensure the product exists
+      const product = await storage.getProduct(Number(productId));
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      
+      // Determine which price to use based on currency
+      const price = currency === "INR" 
+        ? (product.calculatedPriceINR || product.basePrice) 
+        : (product.calculatedPriceUSD || product.basePrice);
+      
+      // Create address string
+      const fullAddress = `${address}, ${city}, ${state}, ${postalCode}, ${country}`;
+      
+      const order = await storage.createOrder({
+        userId: req.user.id,
+        customerName: name,
+        customerEmail: email,
+        customerPhone: phone,
+        shippingAddress: fullAddress,
+        currency: currency,
+        paymentMethod: paymentMethod,
+        totalAmount: price,
+        specialInstructions: additionalNotes || "",
+        orderStatus: "new",
+        paymentStatus: "pending",
+        createdAt: new Date(),
+      });
+      
+      // Create order item
+      await storage.createOrderItem({
+        orderId: order.id,
+        productId: Number(productId),
+        quantity: 1,
+        price: price,
+        currency: currency,
+      });
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Order placed successfully",
+        order: order
+      });
+    } catch (error) {
+      console.error("Error creating order:", error);
+      res.status(500).json({ message: "Server error creating order" });
+    }
+  });
+  
+  // Get user orders
+  app.get('/api/user/orders', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    try {
+      const orders = await storage.getOrdersByUserId(req.user.id);
+      
+      // Get products for each order
+      const ordersWithProducts = await Promise.all(
+        orders.map(async (order) => {
+          const items = await storage.getOrderItemsByOrder(order.id);
+          const itemsWithProducts = await Promise.all(
+            items.map(async (item) => {
+              const product = await storage.getProduct(item.productId);
+              return {
+                ...item,
+                product: product ? {
+                  id: product.id,
+                  name: product.name,
+                  description: product.description,
+                  imageUrl: product.imageUrl,
+                } : null
+              };
+            })
+          );
+          
+          return {
+            ...order,
+            items: itemsWithProducts
+          };
+        })
+      );
+      
+      res.json(ordersWithProducts);
+    } catch (error) {
+      console.error("Error fetching user orders:", error);
+      res.status(500).json({ message: "Server error fetching orders" });
+    }
+  });
+  
+  // Legacy order endpoints
+  app.post('/api/legacy/orders', async (req, res) => {
     try {
       const { customer, cart, specialInstructions } = req.body;
       const sessionId = req.sessionId;

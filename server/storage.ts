@@ -47,7 +47,16 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-
+  
+  // Customization request methods
+  createCustomizationRequest(request: any): Promise<any>;
+  getCustomizationRequestsByUserId(userId: number): Promise<any[]>;
+  getAllCustomizationRequests(): Promise<any[]>;
+  updateCustomizationRequestStatus(id: number, status: string): Promise<any>;
+  
+  // Order methods
+  getOrdersByUserId(userId: number): Promise<any[]>;
+  
   // Product methods
   getProduct(id: number): Promise<Product | undefined>;
   getProductById(id: number): Promise<Product | undefined>; // Alias for getProduct
@@ -152,6 +161,7 @@ export class MemStorage implements IStorage {
   private stoneTypes: Map<number, StoneType>;
   private productStones: Map<string, ProductStone>; // Key is "productId-stoneTypeId"
   private inspirationItems: Map<number, InspirationGalleryItem>;
+  private customizationRequests: Map<number, any>; // Customization requests
   
   private currentUserId: number;
   private currentProductId: number;
@@ -165,6 +175,7 @@ export class MemStorage implements IStorage {
   private currentStoneTypeId: number;
   private currentInspirationItemId: number;
   private currentProductTypeId: number;
+  private currentCustomizationRequestId: number;
   private productTypes: Map<number, ProductType>;
 
   constructor() {
@@ -181,6 +192,7 @@ export class MemStorage implements IStorage {
     this.productStones = new Map();
     this.inspirationItems = new Map();
     this.productTypes = new Map();
+    this.customizationRequests = new Map();
     
     this.currentUserId = 1;
     this.currentProductId = 1;
@@ -194,6 +206,7 @@ export class MemStorage implements IStorage {
     this.currentStoneTypeId = 1;
     this.currentInspirationItemId = 1;
     this.currentProductTypeId = 1;
+    this.currentCustomizationRequestId = 1;
     
     // Initialize with sample data
     this.initSampleData();
@@ -576,6 +589,45 @@ export class MemStorage implements IStorage {
   async removeProductStone(productId: number, stoneTypeId: number): Promise<boolean> {
     const key = `${productId}-${stoneTypeId}`;
     return this.productStones.delete(key);
+  }
+
+  // Customization Request methods
+  async createCustomizationRequest(request: any): Promise<any> {
+    const id = this.currentCustomizationRequestId++;
+    const createdAt = new Date();
+    const customizationRequest = { 
+      ...request, 
+      id, 
+      createdAt,
+      status: request.status || "new" 
+    };
+    this.customizationRequests.set(id, customizationRequest);
+    return customizationRequest;
+  }
+
+  async getCustomizationRequestsByUserId(userId: number): Promise<any[]> {
+    return Array.from(this.customizationRequests.values())
+      .filter(request => request.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getAllCustomizationRequests(): Promise<any[]> {
+    return Array.from(this.customizationRequests.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
+    const request = this.customizationRequests.get(id);
+    if (!request) return null;
+    
+    const updatedRequest = { ...request, status };
+    this.customizationRequests.set(id, updatedRequest);
+    return updatedRequest;
+  }
+  
+  // For compatibility with orders
+  async getOrdersByUserId(userId: number): Promise<any[]> {
+    return this.getOrdersByUser(userId);
   }
 
   // Inspiration Gallery methods

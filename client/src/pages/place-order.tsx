@@ -51,6 +51,14 @@ export default function PlaceOrder() {
       setCountry("USA");
     }
   }, [currency]);
+  
+  // Pre-fill form with user data if available
+  useEffect(() => {
+    if (user) {
+      setName(user.username);
+      setEmail(user.email || "");
+    }
+  }, [user]);
 
   // Handle form submission
   const orderMutation = useMutation({
@@ -149,11 +157,41 @@ export default function PlaceOrder() {
       return product.calculatedPriceINR || product.basePrice;
     }
   };
+  
+  // Redirect to login if not authenticated
+  const handleLoginRedirect = () => {
+    // Store the current URL to redirect back after login
+    localStorage.setItem('redirectAfterLogin', `/place-order/${id}`);
+    setLocation('/auth');
+  };
 
-  if (isLoading) {
+  if (isAuthLoading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
-        <p>Loading product details...</p>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // If not authenticated, show login prompt
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="font-playfair text-2xl font-bold mb-4">Authentication Required</h1>
+        <p className="mb-6">You need to be logged in to place an order for our products.</p>
+        <p className="mb-6 text-sm text-foreground/70">
+          Creating an account allows you to track your orders in your dashboard.
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <Button onClick={handleLoginRedirect} className="bg-primary">
+            <LogIn className="mr-2 h-4 w-4" />
+            Login or Create Account
+          </Button>
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Product
+          </Button>
+        </div>
       </div>
     );
   }
