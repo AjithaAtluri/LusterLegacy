@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ShoppingBag } from "lucide-react";
+import { Menu, X, ShoppingBag, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/ui/logo";
 
@@ -56,9 +56,9 @@ export default function Header() {
             </Link>
           ))}
           
-          <Link href="/checkout" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
-            <ShoppingBag className="h-4 w-4 mr-2" />
-            Cart ({cartCount})
+          <Link href="/customer-dashboard" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
+            <User className="h-4 w-4 mr-2" />
+            My Account
           </Link>
         </div>
         
@@ -97,12 +97,12 @@ export default function Header() {
                 ))}
                 
                 <Link 
-                  href="/checkout"
+                  href="/customer-dashboard"
                   onClick={() => setIsMenuOpen(false)}
                   className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center mt-4"
                 >
-                  <ShoppingBag className="h-4 w-4 mr-2" />
-                  Cart ({cartCount})
+                  <User className="h-4 w-4 mr-2" />
+                  My Account
                 </Link>
               </div>
             </div>
