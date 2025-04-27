@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,9 +65,9 @@ export default function CustomerDashboard() {
   });
   
   // Combine both types of requests when available
-  const allDesignRequests = React.useMemo(() => {
+  const allDesignRequests = useMemo(() => {
     const requests = [...(customizationRequests || [])];
-    if (customDesigns) {
+    if (customDesigns && Array.isArray(customDesigns)) {
       // Add custom designs with a property to identify their source
       requests.push(...customDesigns.map(design => ({
         ...design,
@@ -363,12 +363,12 @@ export default function CustomerDashboard() {
                   <CardDescription>View and track your custom jewelry requests</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isLoadingRequests ? (
+                  {isLoadingRequests || isLoadingCustomDesigns ? (
                     <div className="p-8 text-center">
                       <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
                       <p>Loading your design requests...</p>
                     </div>
-                  ) : !customizationRequests || customizationRequests.length === 0 ? (
+                  ) : !allDesignRequests || allDesignRequests.length === 0 ? (
                     <div className="text-center py-10">
                       <PenTool className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
                       <h3 className="font-playfair text-xl font-medium mb-2">No custom design requests</h3>
@@ -383,18 +383,28 @@ export default function CustomerDashboard() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {customizationRequests.map((request) => (
+                      {allDesignRequests.map((request) => (
                         <Card key={request.id} className="overflow-hidden">
                           <CardHeader className="bg-background/50 pb-2">
                             <div className="flex justify-between items-center">
                               <CardTitle className="text-lg">Request #{request.id}</CardTitle>
                               <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" asChild>
-                                  <Link href={`/products/${request.productId}`}>
-                                    <ExternalLink className="h-3 w-3 mr-1" />
-                                    View Product
-                                  </Link>
-                                </Button>
+                                {/* Two types of requests: product customization vs custom design form */}
+                                {request.productId ? (
+                                  <Button variant="outline" size="sm" asChild>
+                                    <Link href={`/products/${request.productId}`}>
+                                      <ExternalLink className="h-3 w-3 mr-1" />
+                                      View Product
+                                    </Link>
+                                  </Button>
+                                ) : (
+                                  <Button variant="outline" size="sm" asChild>
+                                    <Link href={`/custom-designs/${request.id}`}>
+                                      <ExternalLink className="h-3 w-3 mr-1" />
+                                      View Details
+                                    </Link>
+                                  </Button>
+                                )}
                               </div>
                             </div>
                             <CardDescription>
@@ -403,33 +413,69 @@ export default function CustomerDashboard() {
                             </CardDescription>
                           </CardHeader>
                           <CardContent className="pt-4">
-                            <div className="flex items-start mb-4">
-                              <div className="w-16 h-16 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-4">
-                                {request.product?.imageUrl ? (
-                                  <img 
-                                    src={request.product.imageUrl} 
-                                    alt={request.product.name} 
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-foreground/5">
-                                    <PenTool className="h-6 w-6 text-foreground/30" />
+                            {/* For product customization requests */}
+                            {request.productId && (
+                              <div className="flex items-start mb-4">
+                                <div className="w-16 h-16 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-4">
+                                  {request.product?.imageUrl ? (
+                                    <img 
+                                      src={request.product.imageUrl} 
+                                      alt={request.product.name} 
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-foreground/5">
+                                      <PenTool className="h-6 w-6 text-foreground/30" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <h3 className="font-medium mb-1">
+                                    {request.product?.name || 'Custom Piece'}
+                                  </h3>
+                                  <p className="text-sm text-foreground/70 mb-2">
+                                    {request.specifications?.metalType} • {request.specifications?.stoneType}
+                                  </p>
+                                  <div className="text-sm">
+                                    <p className="line-clamp-2 text-foreground/70">{request.message}</p>
                                   </div>
-                                )}
-                              </div>
-                              <div>
-                                <h3 className="font-medium mb-1">
-                                  {request.product?.name || 'Custom Piece'}
-                                </h3>
-                                <p className="text-sm text-foreground/70 mb-2">
-                                  {request.specifications?.metalType} • {request.specifications?.stoneType}
-                                </p>
-                                <div className="text-sm">
-                                  <p className="line-clamp-2 text-foreground/70">{request.message}</p>
                                 </div>
                               </div>
-                            </div>
+                            )}
+
+                            {/* For custom design form submissions */}
+                            {!request.productId && (
+                              <div className="flex items-start mb-4">
+                                <div className="w-16 h-16 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-4">
+                                  {request.imageUrl ? (
+                                    <img 
+                                      src={request.imageUrl} 
+                                      alt="Design reference" 
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-foreground/5">
+                                      <PenTool className="h-6 w-6 text-foreground/30" />
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <h3 className="font-medium mb-1">
+                                    Custom Jewelry Design
+                                  </h3>
+                                  <p className="text-sm text-foreground/70 mb-2">
+                                    {request.metalType || 'Custom Metal'} • {request.primaryStone || 'Custom Stone'}
+                                  </p>
+                                  {request.notes && (
+                                    <div className="text-sm">
+                                      <p className="line-clamp-2 text-foreground/70">{request.notes}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                             
+                            {/* Designer comments */}
                             {request.designerComments && (
                               <div className="bg-primary/5 p-3 rounded-md mb-3">
                                 <h4 className="text-sm font-medium mb-1">Designer Comments:</h4>
@@ -437,21 +483,38 @@ export default function CustomerDashboard() {
                               </div>
                             )}
                             
-                            {request.status === 'quoted' && (
+                            {/* CAD image */}
+                            {request.cadImageUrl && (
+                              <div className="bg-primary/5 p-3 rounded-md mb-3">
+                                <h4 className="text-sm font-medium mb-1">CAD Design:</h4>
+                                <div className="h-40 bg-background rounded-md border overflow-hidden">
+                                  <img 
+                                    src={request.cadImageUrl} 
+                                    alt="CAD design" 
+                                    className="w-full h-full object-contain"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Price quotes */}
+                            {(request.status === 'quoted' || request.estimatedPrice) && (
                               <div className="bg-accent/10 p-3 rounded-md">
                                 <div className="flex justify-between mb-1">
                                   <h4 className="text-sm font-medium">Quote Amount:</h4>
                                   <span className="font-medium">
-                                    {formatCurrency(request.quoteAmount || 0)}
+                                    {formatCurrency(request.quoteAmount || request.estimatedPrice || 0)}
                                   </span>
                                 </div>
-                                <div className="flex justify-end mt-3">
-                                  <Button variant="default" size="sm" asChild>
-                                    <Link href={`/checkout/custom/${request.id}`}>
-                                      Accept & Proceed <ArrowRight className="ml-1 h-3 w-3" />
-                                    </Link>
-                                  </Button>
-                                </div>
+                                {request.status === 'quoted' && (
+                                  <div className="flex justify-end mt-3">
+                                    <Button variant="default" size="sm" asChild>
+                                      <Link href={`/checkout/custom/${request.id}`}>
+                                        Accept & Proceed <ArrowRight className="ml-1 h-3 w-3" />
+                                      </Link>
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </CardContent>
