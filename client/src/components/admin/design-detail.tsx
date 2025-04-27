@@ -16,6 +16,8 @@ interface DesignDetailProps {
     id: number;
     fullName: string;
     email: string;
+    phone: string | null;
+    country: string | null;
     metalType: string;
     primaryStone: string;
     notes: string | null;
