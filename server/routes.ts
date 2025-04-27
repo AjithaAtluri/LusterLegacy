@@ -784,20 +784,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('GET /api/cart - User ID:', userId);
       
       let cartData;
-      if (userId) {
-        // If user is logged in, get cart by user ID
-        cartData = await storage.getCartItemsByUser(userId);
-      } else {
-        // Otherwise get cart by session ID
-        cartData = await storage.getCartItemsBySession(sessionId);
+      try {
+        if (userId) {
+          // If user is logged in, get cart by user ID
+          cartData = await storage.getCartItemsByUser(userId);
+        } else if (sessionId) {
+          // Otherwise get cart by session ID
+          cartData = await storage.getCartItemsBySession(sessionId);
+        } else {
+          // Return empty cart if no user or session
+          cartData = { items: [], total: 0 };
+        }
+        
+        // Debug logging
+        console.log(`GET /api/cart - Found ${cartData.items?.length || 0} items for session ${sessionId}`);
+        
+        // The storage methods now handle fetching product details
+        // and calculating the total price
+        res.json(cartData);
+      } catch (error) {
+        console.error('Error processing cart data:', error);
+        // Return empty cart to avoid breaking the UI
+        res.json({ items: [], total: 0 });
       }
-      
-      // Debug logging
-      console.log(`GET /api/cart - Found ${cartData.items.length} items`);
-      
-      // The storage methods now handle fetching product details
-      // and calculating the total price
-      res.json(cartData);
     } catch (error) {
       console.error('Error fetching cart:', error);
       res.status(500).json({ message: 'Error fetching cart' });

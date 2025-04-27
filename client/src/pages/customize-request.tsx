@@ -35,7 +35,6 @@ export default function CustomizeRequest() {
   const [preferredBudget, setPreferredBudget] = useState("");
   const [timeline, setTimeline] = useState("");
   const [metalTypeId, setMetalTypeId] = useState("");
-  const [primaryStoneId, setPrimaryStoneId] = useState("");
   const [secondaryStoneId, setSecondaryStoneId] = useState("");
   
   // Fetch product data to display in the form
@@ -117,7 +116,6 @@ export default function CustomizeRequest() {
       preferredBudget,
       timeline,
       metalTypeId,
-      primaryStoneId,
       secondaryStoneId,
     });
   };
@@ -304,27 +302,7 @@ export default function CustomizeRequest() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="primaryStone">Primary Stone Type</Label>
-                      <Select value={primaryStoneId} onValueChange={setPrimaryStoneId}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select primary stone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {isLoadingStoneTypes ? (
-                            <div className="flex items-center justify-center p-2">Loading...</div>
-                          ) : !stoneTypes || stoneTypes.length === 0 ? (
-                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
-                          ) : (
-                            stoneTypes.map((stone) => (
-                              <SelectItem key={stone.id} value={String(stone.id)}>
-                                {stone.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {/* Primary Stone field removed as requested */}
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="secondaryStone">Secondary Stone Type (Optional)</Label>
                       <Select value={secondaryStoneId} onValueChange={setSecondaryStoneId}>
