@@ -696,69 +696,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/custom-design', upload.single('designImage'), async (req, res) => {
     try {
       if (!req.file) {
+        console.error('No design image uploaded');
         return res.status(400).json({ message: 'No image file uploaded' });
       }
 
       // Check if user is authenticated
       if (!req.user) {
+        console.error('User not authenticated for design request');
         return res.status(401).json({ message: 'Authentication required' });
       }
 
-      const designData = JSON.parse(req.body.data);
+      console.log("Request body data:", req.body.data ? req.body.data.substring(0, 100) : "No data");
       
-      // Handle both old and new formats for stones
-      // If primaryStones is present as an array, use it
-      // If only primaryStone is present (string), convert it to array format
-      let formattedData = { ...designData };
-      
-      // For backward compatibility, ensure primaryStone is set if only primaryStones array exists
-      if (formattedData.primaryStones && formattedData.primaryStones.length > 0 && !formattedData.primaryStone) {
-        formattedData.primaryStone = formattedData.primaryStones[0];
+      try {
+        const designData = JSON.parse(req.body.data);
+        console.log("Parsed design data:", JSON.stringify(designData, null, 2));
+        
+        // Handle both old and new formats for stones
+        // If primaryStones is present as an array, use it
+        // If only primaryStone is present (string), convert it to array format
+        let formattedData = { ...designData };
+        
+        // For backward compatibility, ensure primaryStone is set if only primaryStones array exists
+        if (formattedData.primaryStones && formattedData.primaryStones.length > 0 && !formattedData.primaryStone) {
+          formattedData.primaryStone = formattedData.primaryStones[0];
+        }
+        
+        // For forward compatibility, ensure primaryStones array exists if only primaryStone is provided
+        if (formattedData.primaryStone && (!formattedData.primaryStones || !formattedData.primaryStones.length)) {
+          formattedData.primaryStones = [formattedData.primaryStone];
+        }
+        
+        console.log("Processing design request with stones:", 
+          formattedData.primaryStones || [], 
+          "Primary stone for backward compatibility:", 
+          formattedData.primaryStone
+        );
+
+        // Ensure primaryStones is always an array
+        if (!formattedData.primaryStones || !Array.isArray(formattedData.primaryStones)) {
+          formattedData.primaryStones = formattedData.primaryStone ? [formattedData.primaryStone] : [];
+        }
+
+        // Make sure we have a user ID
+        if (!req.user || !req.user.id) {
+          console.error("Missing user ID in authenticated request");
+          return res.status(401).json({ message: "User authentication error" });
+        }
+
+        console.log("Final data for validation:", {
+          userId: req.user.id,
+          primaryStones: formattedData.primaryStones,
+          primaryStone: formattedData.primaryStone
+        });
+
+        try {
+          const validatedData = insertDesignRequestSchema.parse({
+            ...formattedData,
+            userId: req.user.id, // Add the authenticated user's ID
+            imageUrl: `/uploads/${req.file.filename}`
+          });
+
+          console.log("Validation successful, creating design request with user ID:", req.user.id);
+          const designRequest = await storage.createDesignRequest(validatedData);
+          res.status(201).json(designRequest);
+        } catch (validationError) {
+          console.error('Validation error:', validationError);
+          if (validationError instanceof z.ZodError) {
+            return res.status(400).json({ 
+              message: 'Invalid design request data', 
+              errors: validationError.errors,
+              formData: formattedData 
+            });
+          }
+          throw validationError; // Re-throw if it's not a ZodError
+        }
+      } catch (parseError) {
+        console.error('Error parsing request body data:', parseError);
+        return res.status(400).json({ message: 'Invalid JSON in request data' });
       }
-      
-      // For forward compatibility, ensure primaryStones array exists if only primaryStone is provided
-      if (formattedData.primaryStone && (!formattedData.primaryStones || !formattedData.primaryStones.length)) {
-        formattedData.primaryStones = [formattedData.primaryStone];
-      }
-      
-      console.log("Processing design request with stones:", 
-        formattedData.primaryStones || [], 
-        "Primary stone for backward compatibility:", 
-        formattedData.primaryStone
-      );
-
-      // Ensure primaryStones is always an array
-      if (!formattedData.primaryStones || !Array.isArray(formattedData.primaryStones)) {
-        formattedData.primaryStones = formattedData.primaryStone ? [formattedData.primaryStone] : [];
-      }
-
-      // Make sure we have a user ID
-      if (!req.user || !req.user.id) {
-        console.error("Missing user ID in authenticated request");
-        return res.status(401).json({ message: "User authentication error" });
-      }
-
-      console.log("Final data for validation:", {
-        userId: req.user.id,
-        primaryStones: formattedData.primaryStones,
-        primaryStone: formattedData.primaryStone
-      });
-
-      const validatedData = insertDesignRequestSchema.parse({
-        ...formattedData,
-        userId: req.user.id, // Add the authenticated user's ID
-        imageUrl: `/uploads/${req.file.filename}`
-      });
-
-      console.log("Creating design request with user ID:", req.user.id);
-      const designRequest = await storage.createDesignRequest(validatedData);
-      res.status(201).json(designRequest);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid design request data', errors: error.errors });
-      }
-      console.error('Error submitting design request:', error);
-      res.status(500).json({ message: 'Error submitting design request' });
+      console.error('Critical error submitting design request:', error);
+      res.status(500).json({ message: 'Error submitting design request: ' + (error.message || 'Unknown error') });
     }
   });
 
