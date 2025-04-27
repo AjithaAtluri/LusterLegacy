@@ -45,13 +45,14 @@ import { eq, desc, asc, and, SQL, sql } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
 const MemoryStore = createMemoryStore(session);
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   // Session store for authentication
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any to avoid type issues with express-session
   
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -189,7 +190,7 @@ export class MemStorage implements IStorage {
   private productTypes: Map<number, ProductType>;
   
   // Session store for authentication
-  public sessionStore: session.SessionStore;
+  public sessionStore: any; // Using any to avoid type issues with express-session
 
   constructor() {
     this.users = new Map();
@@ -868,6 +869,18 @@ export class MemStorage implements IStorage {
 
 // Database storage implementation
 export class DatabaseStorage implements IStorage {
+  // Session store for authentication
+  public sessionStore: any; // Using any to avoid type issues with express-session
+  
+  constructor() {
+    // Initialize with PostgresSessionStore
+    // Using the already imported pool from db.ts
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
+  }
+  
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

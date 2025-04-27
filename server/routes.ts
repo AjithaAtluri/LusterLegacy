@@ -107,13 +107,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Health check routes for deployments
-  app.get('/', (_req, res) => {
-    res.status(200).json({ 
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
-    });
-  });
+  // Only serve JSON for API health endpoints, not for the root route
+  // This allows the Vite middleware to properly serve the frontend
 
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });

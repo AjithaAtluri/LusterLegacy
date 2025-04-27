@@ -45,6 +45,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false, // Don't retry on 401 (not authenticated)
   });
+  
+  console.log("Auth Context - User data:", user);
+  console.log("Auth Context - Loading:", isLoading);
+  console.log("Auth Context - Error:", error);
 
   // Mutation for login
   const loginMutation = useMutation<Omit<User, "password">, Error, LoginData>({
