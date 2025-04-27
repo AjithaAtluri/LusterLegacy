@@ -4,3 +4,6 @@ entrypoint = "server/index.ts"
 # Ensure we hide development warnings in production
 [env]
 NODE_ENV = "production"
+
+# Ensure we are using the right build directory
+build_directory = "dist"
