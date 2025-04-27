@@ -342,7 +342,7 @@ export default function CustomerDashboard() {
                         You haven't submitted any customization requests yet.
                       </p>
                       <Button asChild>
-                        <Link href="/customize-request">
+                        <Link href="/custom-design">
                           Create Custom Design <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
