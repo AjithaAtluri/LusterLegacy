@@ -1,34 +1,29 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-interface ExchangeRateResponse {
-  success: boolean;
-  rate: number;
-  source: string;
-  timestamp: string;
-  fallbackRate?: number;
-}
-
-/**
- * A hook to fetch the current USD to INR exchange rate
- * This uses the server's exchange rate service which provides cached values if the API is unavailable
- */
+// Hook for fetching current USD to INR exchange rate
 export function useExchangeRate() {
-  const { data, isLoading, error } = useQuery<ExchangeRateResponse>({
+  const { data: exchangeRate, isLoading, error } = useQuery({
     queryKey: ["/api/exchange-rate"],
-    refetchInterval: 3600000, // Refetch every hour
-    staleTime: 3600000, // Consider data fresh for an hour
+    queryFn: async () => {
+      const response = await fetch("/api/exchange-rate");
+      if (!response.ok) {
+        throw new Error("Failed to fetch exchange rate");
+      }
+      const data = await response.json();
+      return data.rate;
+    },
+    // Cache the exchange rate for 1 hour (it doesn't change that frequently)
+    staleTime: 60 * 60 * 1000,
+    // If the request fails, retry 3 times
+    retry: 3,
+    // If we can't get the exchange rate, use a fallback value
+    // (This ensures the UI doesn't break if the API is down)
+    placeholderData: 83,
   });
 
-  // Default exchange rate if API call fails
-  const DEFAULT_EXCHANGE_RATE = 83;
-  
   return {
-    // If data exists and was successful, use the rate, otherwise use the fallback or default
-    exchangeRate: data?.success ? data.rate : (data?.fallbackRate || DEFAULT_EXCHANGE_RATE),
-    source: data?.source || "default",
-    timestamp: data?.timestamp,
+    exchangeRate: exchangeRate || 83, // Fallback to 83 if no data
     isLoading,
-    error
+    error,
   };
 }

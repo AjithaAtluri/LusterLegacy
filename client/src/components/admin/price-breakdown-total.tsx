@@ -1,4 +1,5 @@
 import { useAdminPriceCalculator } from "@/hooks/use-admin-price-calculator";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { formatCurrency } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,12 +71,22 @@ export function PriceBreakdownTotal({
     );
   };
   
-  // Calculate weight and price for display
+  // Calculate weight and price for display with both USD and INR details
   const getCalculationDetail = (label: string, weight: number, pricePerUnit: number, totalCost: number) => {
     if (weight <= 0 || totalCost <= 0) return null;
+    
+    const rate = exchangeRate || 83;
+    const inrPricePerUnit = pricePerUnit * rate;
+    const inrTotalCost = totalCost * rate;
+    
     return (
-      <div className="text-xs text-muted-foreground ml-2 mt-0.5">
-        {`${weight.toFixed(2)} ${label} × ${formatCurrency(pricePerUnit)}/unit = ${formatCurrency(totalCost)}`}
+      <div className="text-xs text-muted-foreground ml-2 mt-0.5 space-y-0.5">
+        <div>
+          {`${weight.toFixed(2)} ${label} × ${formatCurrency(pricePerUnit)}/unit = ${formatCurrency(totalCost)}`}
+        </div>
+        <div>
+          {`${weight.toFixed(2)} ${label} × ₹${Math.round(inrPricePerUnit).toLocaleString('en-IN')}/unit = ₹${Math.round(inrTotalCost).toLocaleString('en-IN')}`}
+        </div>
       </div>
     );
   };
