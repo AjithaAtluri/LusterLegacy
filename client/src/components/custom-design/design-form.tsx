@@ -74,6 +74,51 @@ export default function DesignForm() {
           form.setValue("notes", parsedData.notes || "");
           form.setValue("agreeToTerms", parsedData.agreeToTerms || false);
           
+          // Restore image data if available
+          if (parsedData.imageDataUrl) {
+            // For images saved as data URLs, we need to convert them back to a File object
+            try {
+              // First, create an image element to get dimensions
+              const img = new Image();
+              img.onload = function() {
+                // Create a canvas element
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Draw the image on the canvas
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0);
+                
+                // Convert canvas to blob
+                canvas.toBlob((blob) => {
+                  if (blob && parsedData.imageInfo) {
+                    // Create a new File object from the blob
+                    const restoredFile = new File([blob], 
+                      parsedData.imageInfo.name || "restored-image.jpg", 
+                      { 
+                        type: parsedData.imageInfo.type || "image/jpeg",
+                        lastModified: parsedData.imageInfo.lastModified || Date.now()
+                      }
+                    );
+                    
+                    // Set the preview URL
+                    const previewUrl = URL.createObjectURL(restoredFile);
+                    setPreviewUrl(previewUrl);
+                    
+                    // Set the uploadedImage state
+                    setUploadedImage(restoredFile);
+                  }
+                }, parsedData.imageInfo?.type || "image/jpeg");
+              };
+              
+              // Start loading the image
+              img.src = parsedData.imageDataUrl;
+            } catch (imageError) {
+              console.error('Error restoring image from data URL:', imageError);
+            }
+          }
+          
           // Show a success message
           toast({
             title: "Design details restored",
@@ -94,15 +139,38 @@ export default function DesignForm() {
     if (!user) {
       // Save form data to session storage before redirecting
       try {
+        // For the image, we'll convert it to a data URL if it's not too large
+        let imageDataUrl = null;
+        if (uploadedImage && previewUrl && uploadedImage.size < 2 * 1024 * 1024) { // Only for images under 2MB
+          try {
+            // Use a FileReader to convert the image to a data URL
+            const reader = new FileReader();
+            reader.onload = function() {
+              const dataUrl = reader.result;
+              // Update the session storage with the image data URL
+              const existingData = sessionStorage.getItem('designFormData');
+              if (existingData) {
+                const parsedData = JSON.parse(existingData);
+                parsedData.imageDataUrl = dataUrl;
+                sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
+              }
+            };
+            // Start reading the file as a data URL
+            reader.readAsDataURL(uploadedImage);
+          } catch (imageError) {
+            console.error('Error converting image to data URL:', imageError);
+          }
+        }
+            
         const formData = {
           ...data,
-          imageFile: uploadedImage ? {
+          imageInfo: uploadedImage ? {
             name: uploadedImage.name,
             type: uploadedImage.type,
             size: uploadedImage.size,
-            lastModified: uploadedImage.lastModified,
-            previewUrl: previewUrl
-          } : null
+            lastModified: uploadedImage.lastModified
+          } : null,
+          imageDataUrl: null // This will be populated by the FileReader if successful
         };
         sessionStorage.setItem('designFormData', JSON.stringify(formData));
       } catch (error) {
@@ -506,10 +574,9 @@ export default function DesignForm() {
         </Button>
         
         {!user && (
-          <div className="mt-4 text-center p-3 bg-accent/10 rounded-md border border-accent/20">
-            <p className="text-sm text-foreground/80">
-              <span className="font-medium">Login required:</span> Your design details will be saved when you log in. 
-              Please create an account or sign in to submit your custom design request.
+          <div className="mt-2 text-center">
+            <p className="text-xs text-foreground/60">
+              Login required. Your design details will be saved when you submit.
             </p>
           </div>
         )}
