@@ -1,0 +1,6 @@
+run = ["npm", "run", "dev"]
+entrypoint = "server/index.ts"
+
+# Ensure we hide development warnings in production
+[env]
+NODE_ENV = "production"
