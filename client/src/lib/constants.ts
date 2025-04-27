@@ -80,5 +80,6 @@ export const PAYMENT_TERMS = {
   ADVANCE_DESCRIPTION: "This is an advance payment of 50% to begin crafting your jewelry.",
   REMAINING_DESCRIPTION: "The remaining 50% will be due before shipping once your item is completed.",
   cadFee: 150,  // CAD fee in USD
+  cadFeeINR: 5000,  // CAD fee in INR
   cadFeeDescription: "design consultation & CAD fee"
 };

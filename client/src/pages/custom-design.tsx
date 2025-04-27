@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet";
 import DesignForm from "@/components/custom-design/design-form";
 import { CheckCircle, Clock, HelpCircle, FileImage } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PAYMENT_TERMS } from "@/lib/constants";
 
 export default function CustomDesign() {
   return (
@@ -50,7 +51,7 @@ export default function CustomDesign() {
                 <div>
                   <h3 className="font-playfair text-lg font-semibold text-foreground mb-2">CAD Model & Quote</h3>
                   <p className="font-montserrat text-foreground/70">
-                    Our design team will create a detailed CAD model for your approval and provide a comprehensive quote. A ₹5,000 design fee applies, which is fully adjustable against your final order.
+                    Our design team will create a detailed CAD model for your approval and provide a comprehensive quote. If your design is accepted, a ${PAYMENT_TERMS.cadFee}/₹{PAYMENT_TERMS.cadFeeINR} {PAYMENT_TERMS.cadFeeDescription} will be required before work begins, which is fully adjustable against your final order.
                   </p>
                 </div>
               </div>
