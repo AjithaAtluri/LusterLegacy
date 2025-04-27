@@ -1494,6 +1494,16 @@ Respond in JSON format:
         }
       }
       
+      // Get other stone cost if available
+      const hasOtherStone = otherStone && otherStone.stoneTypeId;
+      const otherStoneCost = hasOtherStone && result.breakdown?.stones 
+        ? result.breakdown.stones.find(s => 
+            s.name && otherStone.stoneTypeId && 
+            s.name.toLowerCase().includes(String(otherStone.stoneTypeId).toLowerCase()))?.totalCost || 0
+        : 0;
+      
+      console.log("Other stone available:", hasOtherStone, "cost:", otherStoneCost);
+      
       const usdBreakdown = {
         metalCost: result.breakdown?.metalCost 
           ? Math.round(result.breakdown.metalCost / USD_TO_INR_RATE) 
@@ -1503,6 +1513,9 @@ Respond in JSON format:
           : 0,
         secondaryStoneCost: hasSecondaryStones
           ? Math.round(secondaryStoneCost / USD_TO_INR_RATE)
+          : 0,
+        otherStoneCost: hasOtherStone
+          ? Math.round(otherStoneCost / USD_TO_INR_RATE)
           : 0,
         overhead: result.breakdown?.overhead
           ? Math.round(result.breakdown.overhead / USD_TO_INR_RATE)
@@ -1516,6 +1529,9 @@ Respond in JSON format:
           : 0,
         secondaryStoneCost: hasSecondaryStones
           ? Math.round(secondaryStoneCost)
+          : 0,
+        otherStoneCost: hasOtherStone
+          ? Math.round(otherStoneCost)
           : 0,
         overhead: result.breakdown?.overhead || 0
       };
