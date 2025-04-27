@@ -32,6 +32,9 @@ interface ProductCardProps {
     productType?: string;
     category?: string; // Legacy field
     details?: string;
+    // New calculated price fields returned from API
+    calculatedPriceUSD?: number;
+    calculatedPriceINR?: number;
   };
 }
 
@@ -64,12 +67,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? productMetalType.toLowerCase().replace(/\s+/g, '-') 
     : undefined;
   
-  // Use a constant conversion rate to calculate USD price from base price
-  // We'll use 83 as the conversion rate (same as in price-calculator.ts)
+  // Use calculated price if available, or fall back to calculating from base price
+  // We'll use 83 as the conversion rate (same as in price-calculator.ts) for fallback
   const USD_TO_INR_RATE = 83;
   
-  // For display purposes, convert base price to USD
-  const estimatedUsdPrice = Math.round(product.basePrice / USD_TO_INR_RATE);
+  // Use the calculated price from API if available
+  const calculatedPriceUSD = product.calculatedPriceUSD || Math.round(product.basePrice / USD_TO_INR_RATE);
+  const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
@@ -124,9 +128,12 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="mb-3">
           <div className="flex justify-between items-center">
             <div>
-              <p className="font-montserrat text-sm text-foreground/70">Price Estimate</p>
+              <p className="font-montserrat text-sm text-foreground/70">Price</p>
               <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
-                ${estimatedUsdPrice}
+                ${calculatedPriceUSD}
+              </p>
+              <p className="font-montserrat text-xs text-muted-foreground">
+                ₹{calculatedPriceINR.toLocaleString('en-IN')}
               </p>
             </div>
           </div>
