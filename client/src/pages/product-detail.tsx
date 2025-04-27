@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, getImageUrl } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { usePriceCalculator } from "@/hooks/use-price-calculator";
+
 import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
 
@@ -81,6 +81,9 @@ export default function ProductDetail() {
     isNew?: boolean;
     isBestseller?: boolean;
     isFeatured?: boolean;
+    // Server-calculated prices
+    calculatedPriceUSD?: number;
+    calculatedPriceINR?: number;
   }
 
   // Fetch product data
@@ -286,11 +289,8 @@ export default function ProductDetail() {
     // dimensions handling removed as requested
   }, [product?.details]);
   
-  // Calculate price with calculator hook
-  const { currentPrice } = usePriceCalculator({
-    basePrice: product?.basePrice || 0,
-    initialMetalTypeId: productMetalType ? productMetalType.toLowerCase().replace(/\s+/g, '-') : '18kt-gold'
-  });
+  // Use server-calculated price rather than recalculating on client side
+  const currentPrice = product?.calculatedPriceUSD ?? product?.basePrice ?? 0;
   
   // If product not found
   if (error) {
@@ -421,9 +421,6 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap items-center gap-4 mb-4">
                     <span className="font-playfair text-3xl font-semibold text-foreground">
                       {formatCurrency(currentPrice)}
-                    </span>
-                    <span className="font-montserrat text-lg text-foreground/70">
-                      {formatCurrency(Math.round(currentPrice * 83), 'INR')}
                     </span>
                   </div>
                   
