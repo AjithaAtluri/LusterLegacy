@@ -24,6 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import EditProductAIGenerator from "@/components/admin/edit-product-ai-generator";
 import { PriceCalculatorDisplay } from "@/components/admin/price-calculator-display";
 import { PriceBreakdownItem } from "@/components/admin/price-breakdown-item-new";
+import { PriceBreakdownTotal } from "@/components/admin/price-breakdown-total";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
@@ -1082,147 +1083,16 @@ export default function EditProductNew() {
                         {/* Price Breakdown Section */}
                         <div className="mt-4 border rounded-md p-4 bg-background/50">
                           <h3 className="text-sm font-medium mb-3 text-foreground">Price Calculation Breakdown</h3>
-                          <div className="space-y-3">
-                            <PriceBreakdownItem 
-                              label="Metal Cost" 
-                              metalType={form.watch("metalType")} 
-                              metalWeight={form.watch("metalWeight")}
-                            />
-                            
-                            {form.watch("mainStoneType") !== "none_selected" && (
-                              <PriceBreakdownItem 
-                                label="Main Stone" 
-                                stoneType={form.watch("mainStoneType")}
-                                stoneWeight={form.watch("mainStoneWeight")}
-                              />
-                            )}
-                            
-                            {form.watch("secondaryStoneType") !== "none_selected" && (
-                              <PriceBreakdownItem 
-                                label="Secondary Stone" 
-                                stoneType={form.watch("secondaryStoneType")}
-                                stoneWeight={form.watch("secondaryStoneWeight")}
-                              />
-                            )}
-                            
-                            {form.watch("otherStoneType") !== "none_selected" && (
-                              <PriceBreakdownItem 
-                                label="Other Stone" 
-                                stoneType={form.watch("otherStoneType")}
-                                stoneWeight={form.watch("otherStoneWeight")}
-                              />
-                            )}
-                            
-                            <div className="flex justify-between pt-2 border-t border-border">
-                              <span className="text-sm font-medium">Craftsmanship & Overhead (25%)</span>
-                              <span className="text-sm">
-                                {(() => {
-                                  // Calculate materials cost
-                                  const metalWeight = parseFloat(form.watch("metalWeight") || "0") || 0;
-                                  const mainStoneWeight = parseFloat(form.watch("mainStoneWeight") || "0") || 0;
-                                  const secondaryStoneWeight = parseFloat(form.watch("secondaryStoneWeight") || "0") || 0;
-                                  const otherStoneWeight = parseFloat(form.watch("otherStoneWeight") || "0") || 0;
-                                  
-                                  // Get metal value using the same formula as in PriceBreakdownItem
-                                  let metalCost = 0;
-                                  if (metalWeight > 0) {
-                                    const metalType = form.watch("metalType") || "";
-                                    let purityFactor = 0.75; // Default to 18K
-                                    let typeMultiplier = 1.0;
-                                    
-                                    if (metalType.includes("24K")) purityFactor = 1.0;
-                                    else if (metalType.includes("22K")) purityFactor = 0.916;
-                                    else if (metalType.includes("18K")) purityFactor = 0.75;
-                                    else if (metalType.includes("14K")) purityFactor = 0.585;
-                                    
-                                    if (metalType.includes("White")) typeMultiplier = 1.1;
-                                    else if (metalType.includes("Rose")) typeMultiplier = 1.05;
-                                    else if (metalType.includes("Platinum")) {
-                                      purityFactor = 0.95;
-                                      typeMultiplier = 1.4;
-                                    }
-                                    
-                                    metalCost = metalWeight * 7500 * purityFactor * typeMultiplier;
-                                  }
-                                  
-                                  // We can't get exact stone prices here without more API calls
-                                  // The accurate prices will be shown in the PriceBreakdownItem components
-                                  // Here we just need a rough estimate for the overhead display
-                                  const mainStoneCost = mainStoneWeight * 1000; // Minimal placeholder for calculation
-                                  const secondaryStoneCost = secondaryStoneWeight * 1000;
-                                  const otherStoneCost = otherStoneWeight * 1000;
-                                  
-                                  // Calculate total base cost
-                                  const totalBaseCost = metalCost + mainStoneCost + secondaryStoneCost + otherStoneCost;
-                                  const overhead = totalBaseCost * 0.25;
-                                  
-                                  if (totalBaseCost > 0) {
-                                    return `~₹${Math.round(overhead).toLocaleString()}`;
-                                  }
-                                  return "Added to final price";
-                                })()}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Total Price Calculation */}
-                          <div className="flex justify-between items-center py-3 mt-3 border-t border-primary/20 text-sm font-semibold">
-                            <span>Total Price:</span>
-                            <span className="text-base font-bold">
-                              {(() => {
-                                // Get the calculated price from the form
-                                const metalWeight = parseFloat(form.watch("metalWeight") || "0") || 0;
-                                const mainStoneWeight = parseFloat(form.watch("mainStoneWeight") || "0") || 0;
-                                const secondaryStoneWeight = parseFloat(form.watch("secondaryStoneWeight") || "0") || 0;
-                                const otherStoneWeight = parseFloat(form.watch("otherStoneWeight") || "0") || 0;
-                                
-                                if (metalWeight <= 0 && mainStoneWeight <= 0 && secondaryStoneWeight <= 0 && otherStoneWeight <= 0) {
-                                  return "₹0";
-                                }
-                                
-                                // Use the pre-calculated price instead of DOM manipulation
-                                // This provides a more reliable way to get the price
-                                
-                                // Fallback calculation if we can't get it from the DOM
-                                const metalType = form.watch("metalType") || "";
-                                let purityFactor = 0.75; // Default to 18K
-                                let typeMultiplier = 1.0;
-                                
-                                if (metalType.includes("24K")) purityFactor = 1.0;
-                                else if (metalType.includes("22K")) purityFactor = 0.916;
-                                else if (metalType.includes("18K")) purityFactor = 0.75;
-                                else if (metalType.includes("14K")) purityFactor = 0.585;
-                                
-                                if (metalType.includes("White")) typeMultiplier = 1.1;
-                                else if (metalType.includes("Rose")) typeMultiplier = 1.05;
-                                else if (metalType.includes("Platinum")) {
-                                  purityFactor = 0.95;
-                                  typeMultiplier = 1.4;
-                                }
-                                
-                                // Use current gold price or fallback
-                                const metalCost = metalWeight * 7500 * purityFactor * typeMultiplier;
-                                
-                                // Estimate stone costs
-                                // These are placeholders - real calculations come from the API
-                                const mainStoneCost = mainStoneWeight * 80000;
-                                const secondaryStoneCost = secondaryStoneWeight * 60000;
-                                const otherStoneCost = otherStoneWeight * 40000;
-                                
-                                // Calculate total base cost
-                                const totalBaseCost = metalCost + mainStoneCost + secondaryStoneCost + otherStoneCost;
-                                const overhead = totalBaseCost * 0.25;
-                                const totalPrice = totalBaseCost + overhead;
-                                
-                                return `~₹${Math.round(totalPrice).toLocaleString()}`;
-                              })()}
-                            </span>
-                          </div>
-
-                          <div className="mt-4 text-xs text-primary">
-                            <p className="font-medium">Price Formula:</p>
-                            <p className="mt-1">(Metal weight × current gold price × metal modifier) + (Stone carat weight × stone price) + 25% overhead = Total Price</p>
-                          </div>
+                          <PriceBreakdownTotal
+                            metalType={form.watch("metalType")}
+                            metalWeight={form.watch("metalWeight") || "0"}
+                            mainStoneType={form.watch("mainStoneType") || "none_selected"}
+                            mainStoneWeight={form.watch("mainStoneWeight") || "0"}
+                            secondaryStoneType={form.watch("secondaryStoneType")}
+                            secondaryStoneWeight={form.watch("secondaryStoneWeight")}
+                            otherStoneType={form.watch("otherStoneType")}
+                            otherStoneWeight={form.watch("otherStoneWeight")}
+                          />
                         </div>
                         
                         <div className="mt-3 text-xs text-muted-foreground">
