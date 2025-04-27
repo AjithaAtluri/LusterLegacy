@@ -6,7 +6,8 @@ import { queryClient } from "@/lib/queryClient";
 import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Save, Upload, X, PiggyBank } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ArrowLeft, Loader2, Save, Upload, X, PiggyBank, Trash2 } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -218,6 +219,37 @@ export default function EditProductNew() {
     queryFn: fetchStoneTypes,
     retry: 3,
     refetchOnWindowFocus: false
+  });
+
+  // Delete product mutation
+  const deleteProductMutation = useMutation({
+    mutationFn: async () => {
+      if (!params.id) {
+        throw new Error("No product ID provided");
+      }
+      const response = await apiRequest("DELETE", `/api/products/${params.id}`);
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Product Deleted",
+        description: "The product has been successfully deleted.",
+      });
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      
+      // Redirect back to products list
+      setLocation('/admin/products');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Deleting Product",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Update form when product data is loaded
@@ -1510,21 +1542,58 @@ export default function EditProductNew() {
                   </CardContent>
                 </Card>
 
-                <div className="flex justify-end space-x-4">
-                  <Button 
-                    variant="outline" 
-                    type="button"
-                    onClick={() => setLocation('/admin/products')}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Update Product
-                  </Button>
+                <div className="flex justify-between items-center">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        type="button"
+                        disabled={deleteProductMutation.isPending}
+                      >
+                        {deleteProductMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        Delete Product
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the product
+                          and remove it from the database.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteProductMutation.mutate()}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  
+                  <div className="flex space-x-4">
+                    <Button 
+                      variant="outline" 
+                      type="button"
+                      onClick={() => setLocation('/admin/products')}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Update Product
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
