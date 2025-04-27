@@ -699,12 +699,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No image file uploaded' });
       }
 
+      // Check if user is authenticated
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+
       const designData = JSON.parse(req.body.data);
       const validatedData = insertDesignRequestSchema.parse({
         ...designData,
+        userId: req.user.id, // Add the authenticated user's ID
         imageUrl: `/uploads/${req.file.filename}`
       });
 
+      console.log("Creating design request with user ID:", req.user.id);
       const designRequest = await storage.createDesignRequest(validatedData);
       res.status(201).json(designRequest);
     } catch (error) {

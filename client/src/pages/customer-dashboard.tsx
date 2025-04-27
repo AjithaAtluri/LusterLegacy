@@ -42,8 +42,16 @@ export default function CustomerDashboard() {
   // Fetch customization requests
   const { data: customizationRequests, isLoading: isLoadingRequests } = useQuery({
     queryKey: ['/api/customization-requests'],
-    enabled: activeTab === "requests",
-    staleTime: 60000
+    enabled: activeTab === "requests" && !!user,
+    staleTime: 60000,
+    onError: (error) => {
+      console.error("Error fetching customization requests:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your custom design requests",
+        variant: "destructive",
+      });
+    }
   });
   
   // Fetch orders

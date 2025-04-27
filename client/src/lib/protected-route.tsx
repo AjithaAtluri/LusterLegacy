@@ -32,7 +32,8 @@ export function ProtectedRoute({
         // Redirect to login if not authenticated
         if (!user) {
           // Add returnTo parameter for easier navigation back to the intended page
-          const returnPath = path.startsWith('/admin') ? '/admin' : path;
+          const pathString = typeof path === 'string' ? path : path.toString();
+          const returnPath = pathString.startsWith('/admin') ? '/admin' : pathString;
           return <Redirect to={`/auth?returnTo=${encodeURIComponent(returnPath)}`} />;
         }
 
