@@ -1045,7 +1045,20 @@ export default function EditProductNew() {
                             
                             <div className="flex justify-between pt-2 border-t border-border">
                               <span className="text-sm font-medium">Craftsmanship & Overhead (25%)</span>
-                              <span className="text-sm">Added to final price</span>
+                              <span className="text-sm">
+                                {(() => {
+                                  // Get calculated price and apply 25% overhead
+                                  const calculatedPrice = form.watch("metalWeight") && parseFloat(form.watch("metalWeight")) > 0
+                                    ? Math.round(parseFloat(form.watch("metalWeight")) * 500) // Rough estimation for display
+                                    : 0;
+                                    
+                                  // Only show overhead calculation if we have some material costs
+                                  if (calculatedPrice > 0) {
+                                    return "~$" + Math.round(calculatedPrice * 0.25).toLocaleString();
+                                  }
+                                  return "Added to final price";
+                                })()}
+                              </span>
                             </div>
                           </div>
                           

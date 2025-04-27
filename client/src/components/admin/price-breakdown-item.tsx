@@ -24,9 +24,10 @@ export function PriceBreakdownItem({
   const [cost, setCost] = useState<number>(0);
   const [description, setDescription] = useState<string>("");
 
-  // Calculate individual cost elements
+  // Calculate individual cost elements immediately, no debounce
   useEffect(() => {
-    const calculateCost = async () => {
+    // Function to calculate costs synchronously for immediate feedback
+    const calculateCost = () => {
       try {
         // For Metal Cost
         if (label === "Metal Cost" && metalType && metalWeight) {
@@ -75,37 +76,36 @@ export function PriceBreakdownItem({
           }
           
           // Use stone type name to estimate price directly
-          // Bypass API call which is causing errors
           let pricePerCarat = 100; // Default price
           let stoneName = stoneType;
           
-          // Rough estimates for common stones based on name
-          if (stoneType.includes("Diamond") || stoneType.includes("diamond")) pricePerCarat = 5000;
-          else if (stoneType.includes("Ruby") || stoneType.includes("ruby")) pricePerCarat = 1500;
-          else if (stoneType.includes("Sapphire") || stoneType.includes("sapphire")) pricePerCarat = 1200;
-          else if (stoneType.includes("Emerald") || stoneType.includes("emerald")) pricePerCarat = 1300;
-          else if (stoneType.includes("Pearl") || stoneType.includes("pearl")) pricePerCarat = 800;
-          else if (stoneType.includes("Topaz") || stoneType.includes("topaz")) pricePerCarat = 300;
-          else if (stoneType.includes("Amethyst") || stoneType.includes("amethyst")) pricePerCarat = 200;
-          else if (stoneType.includes("Tourmaline") || stoneType.includes("tourmaline")) pricePerCarat = 400;
-          else if (stoneType.includes("Opal") || stoneType.includes("opal")) pricePerCarat = 600;
-          else if (stoneType.includes("Polki") || stoneType.includes("polki")) pricePerCarat = 2000;
-          else if (stoneType.includes("Morganite") || stoneType.includes("morganite")) pricePerCarat = 300;
-          else if (stoneType.includes("Aquamarine") || stoneType.includes("aquamarine")) pricePerCarat = 400;
+          // Rough estimates for common stones based on name (case-insensitive)
+          const stoneTypeLower = stoneType.toLowerCase();
+          if (stoneTypeLower.includes("diamond")) pricePerCarat = 5000;
+          else if (stoneTypeLower.includes("ruby")) pricePerCarat = 1500;
+          else if (stoneTypeLower.includes("sapphire")) pricePerCarat = 1200;
+          else if (stoneTypeLower.includes("emerald")) pricePerCarat = 1300;
+          else if (stoneTypeLower.includes("pearl")) pricePerCarat = 800;
+          else if (stoneTypeLower.includes("topaz")) pricePerCarat = 300;
+          else if (stoneTypeLower.includes("amethyst")) pricePerCarat = 200;
+          else if (stoneTypeLower.includes("tourmaline")) pricePerCarat = 400;
+          else if (stoneTypeLower.includes("opal")) pricePerCarat = 600;
+          else if (stoneTypeLower.includes("polki")) pricePerCarat = 2000;
+          else if (stoneTypeLower.includes("morganite")) pricePerCarat = 300;
+          else if (stoneTypeLower.includes("aquamarine")) pricePerCarat = 400;
+          else if (stoneTypeLower.includes("quartz")) pricePerCarat = 150;
           
-          // Extract stone name for display
-          // Split by space and capitalize first letter of each word
-          const parts = stoneType.split(' ');
-          if (parts.length >= 2) {
-            // If it's a numeric ID, use a generic name based on the estimated price
-            if (!isNaN(parseInt(stoneType))) {
-              if (pricePerCarat >= 4000) stoneName = "Premium Diamond";
-              else if (pricePerCarat >= 1000) stoneName = "Precious Gemstone";
-              else stoneName = "Semi-precious Stone";
-            } else {
-              // Use the input value directly
-              stoneName = stoneType;
-            }
+          // Handle numeric IDs for stone types
+          if (!isNaN(parseInt(stoneType))) {
+            // Use ID-based pricing as fallback
+            const stoneId = parseInt(stoneType);
+            if (stoneId > 10) pricePerCarat = 1000 + (stoneId * 10); // Higher IDs = higher value stones
+            else pricePerCarat = 500 + (stoneId * 50);
+            
+            // Generic name based on ID
+            if (pricePerCarat >= 4000) stoneName = "Premium Diamond";
+            else if (pricePerCarat >= 1000) stoneName = "Precious Gemstone";
+            else stoneName = "Semi-precious Stone";
           }
           
           const estimatedCost = weightNum * pricePerCarat;
@@ -119,7 +119,9 @@ export function PriceBreakdownItem({
       }
     };
 
+    // Call calculation immediately, no delay
     calculateCost();
+    
   }, [label, metalType, metalWeight, stoneType, stoneWeight, goldPrice]);
 
   // Don't render anything if no valid data
