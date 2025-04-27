@@ -4,11 +4,13 @@ import { useParams, useLocation, Link } from "wouter";
 import { Helmet } from "react-helmet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, ShoppingBag, Heart as HeartIcon, Award, Info, Package, Sun, Star } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShoppingBag, Heart as HeartIcon, Award, Info, Package, Sun, Star, LogIn } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, getImageUrl } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
@@ -49,6 +51,8 @@ interface ProductDetails {
 export default function ProductDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [parsedDetails, setParsedDetails] = useState<ProductDetails | null>(null);
   const [tagline, setTagline] = useState<string>("");
   const [detailedDescription, setDetailedDescription] = useState<string>("");
@@ -131,6 +135,34 @@ export default function ProductDetail() {
   // Handle navigation back to collections page
   const handleBackToCollection = () => {
     setLocation('/collections');
+  };
+  
+  // Handle customization request with authentication check
+  const handleCustomizationRequest = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login or sign up to request customization",
+        variant: "default",
+      });
+      setLocation('/auth');
+      return;
+    }
+    setLocation(`/customize-request/${product?.id}`);
+  };
+  
+  // Handle place order with authentication check
+  const handlePlaceOrder = () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login or sign up to place an order",
+        variant: "default",
+      });
+      setLocation('/auth');
+      return;
+    }
+    setLocation(`/place-order/${product?.id}`);
   };
   
   useEffect(() => {
@@ -353,7 +385,7 @@ export default function ProductDetail() {
             <div className="flex gap-3">
               <Button
                 className="font-montserrat bg-primary text-background hover:bg-accent"
-                onClick={() => setLocation(`/customize-request/${product.id}`)}
+                onClick={handleCustomizationRequest}
               >
                 <Package className="mr-2 h-4 w-4" />
                 Request Customization
@@ -361,7 +393,7 @@ export default function ProductDetail() {
               <Button
                 variant="outline"
                 className="font-montserrat border-primary text-pearl hover:bg-primary/20"
-                onClick={() => setLocation(`/place-order/${product.id}`)}
+                onClick={handlePlaceOrder}
               >
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Place Order
@@ -447,7 +479,7 @@ export default function ProductDetail() {
                 <div className="flex flex-wrap gap-3 mb-8">
                   <Button 
                     className="font-montserrat bg-primary text-background hover:bg-primary/90"
-                    onClick={() => setLocation(`/customize-request/${product.id}`)}
+                    onClick={handleCustomizationRequest}
                   >
                     <Package className="mr-2 h-4 w-4" />
                     Request Customization
@@ -455,7 +487,7 @@ export default function ProductDetail() {
                   <Button 
                     variant="outline" 
                     className="font-montserrat"
-                    onClick={() => setLocation(`/place-order/${product.id}`)}
+                    onClick={handlePlaceOrder}
                   >
                     <ShoppingBag className="mr-2 h-4 w-4" />
                     Place Order
