@@ -246,7 +246,9 @@ export default function DesignForm() {
       });
       
       if (!response.ok) {
-        throw new Error("Failed to submit design request");
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        console.error("Design form server error:", errorData);
+        throw new Error(errorData.message || "Failed to submit design request");
       }
       
       toast({
