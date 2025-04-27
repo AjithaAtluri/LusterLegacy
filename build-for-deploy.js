@@ -3,7 +3,6 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-// Colors for console output
 const colors = {
   reset: '\x1b[0m',
   green: '\x1b[32m',
@@ -24,12 +23,11 @@ try {
   process.exit(1);
 }
 
-// Step 2: Ensure build/server directory exists
+// Step 2: Ensure build directories exist
 const serverBuildDir = path.join(process.cwd(), 'build', 'server');
-console.log(`${colors.yellow}Creating server build directory: ${serverBuildDir}${colors.reset}`);
-if (!fs.existsSync(serverBuildDir)) {
-  fs.mkdirSync(serverBuildDir, { recursive: true });
-}
+const serverPublicDir = path.join(serverBuildDir, 'public');
+console.log(`${colors.yellow}Creating build directories...${colors.reset}`);
+fs.mkdirSync(serverPublicDir, { recursive: true });
 
 // Step 3: Build the server with esbuild
 console.log(`${colors.yellow}Building server with esbuild...${colors.reset}`);
@@ -41,31 +39,15 @@ try {
   process.exit(1);
 }
 
-// Step 4: Copy public assets directory to build directory
-console.log(`${colors.yellow}Copying public assets to build directory...${colors.reset}`);
-const publicDir = path.join(process.cwd(), 'public');
-const buildPublicDir = path.join(process.cwd(), 'build', 'public');
-
-if (fs.existsSync(publicDir)) {
-  if (!fs.existsSync(buildPublicDir)) {
-    fs.mkdirSync(buildPublicDir, { recursive: true });
-  }
-  
-  fs.readdirSync(publicDir).forEach(file => {
-    const srcPath = path.join(publicDir, file);
-    const destPath = path.join(buildPublicDir, file);
-    
-    if (fs.lstatSync(srcPath).isDirectory()) {
-      // Copy recursively for directories
-      execSync(`cp -r "${srcPath}" "${destPath}"`, { stdio: 'inherit' });
-    } else {
-      // Copy file
-      fs.copyFileSync(srcPath, destPath);
-    }
-  });
-  console.log(`${colors.green}Public assets copied successfully!${colors.reset}`);
-} else {
-  console.log(`${colors.yellow}No public directory found, skipping asset copy.${colors.reset}`);
+// Step 4: Copy client build files to server public directory
+console.log(`${colors.yellow}Copying client build files to server public directory...${colors.reset}`);
+const distPublicDir = path.join(process.cwd(), 'dist', 'public');
+try {
+  execSync(`cp -r "${distPublicDir}/"* "${serverPublicDir}"`, { stdio: 'inherit' });
+  console.log(`${colors.green}Client build files copied successfully!${colors.reset}`);
+} catch (error) {
+  console.error(`${colors.red}Failed to copy client build files: ${error.message}${colors.reset}`);
+  process.exit(1);
 }
 
 // Step 5: Create a production .env file if needed
@@ -74,4 +56,3 @@ const envContent = `NODE_ENV=production\n`;
 fs.writeFileSync(path.join(process.cwd(), 'build', '.env'), envContent);
 
 console.log(`${colors.green}Build completed successfully! Deployment package is ready in the build directory.${colors.reset}`);
-console.log(`${colors.blue}To start the application, use: NODE_ENV=production node build/server/index.js${colors.reset}`);
