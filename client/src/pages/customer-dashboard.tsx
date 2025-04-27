@@ -470,7 +470,11 @@ export default function CustomerDashboard() {
                                     Custom Jewelry Design
                                   </h3>
                                   <p className="text-sm text-foreground/70 mb-2">
-                                    {request.metalType || 'Custom Metal'} • {request.primaryStone || 'Custom Stone'}
+                                    {request.metalType || 'Custom Metal'} • {
+                                      request.primaryStones && request.primaryStones.length > 0 
+                                        ? request.primaryStones.join(', ') 
+                                        : (request.primaryStone || 'Custom Stone')
+                                    }
                                   </p>
                                   {request.notes && (
                                     <div className="text-sm">
