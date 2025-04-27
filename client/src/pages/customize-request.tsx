@@ -97,10 +97,10 @@ export default function CustomizeRequest() {
     e.preventDefault();
     
     // Validate form fields
-    if (!name || !email || !customizationDetails) {
+    if (!name || !email || !phone || !customizationDetails) {
       toast({
         title: "Required Fields Missing",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields (name, email, phone, and customization details).",
         variant: "destructive",
       });
       return;
@@ -255,12 +255,13 @@ export default function CustomizeRequest() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">Phone Number*</Label>
                       <Input
                         id="phone"
                         placeholder="Your contact number"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
+                        required
                       />
                     </div>
                     <div className="space-y-2">
