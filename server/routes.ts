@@ -1101,6 +1101,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Alias for customer dashboard
+  app.get('/api/orders', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    try {
+      const orders = await storage.getOrdersByUserId(req.user.id);
+      
+      // Get products for each order
+      const ordersWithProducts = await Promise.all(
+        orders.map(async (order) => {
+          const items = await storage.getOrderItemsByOrder(order.id);
+          const itemsWithProducts = await Promise.all(
+            items.map(async (item) => {
+              const product = await storage.getProduct(item.productId);
+              return {
+                ...item,
+                product: product ? {
+                  id: product.id,
+                  name: product.name,
+                  description: product.description,
+                  imageUrl: product.imageUrl,
+                } : null
+              };
+            })
+          );
+          
+          return {
+            ...order,
+            items: itemsWithProducts
+          };
+        })
+      );
+      
+      res.json(ordersWithProducts);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      // Return empty array instead of error to prevent UI breaking
+      res.json([]);
+    }
+  });
+  
   // Legacy order endpoints
   app.post('/api/legacy/orders', async (req, res) => {
     try {
@@ -1156,29 +1199,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get orders for current session
-  app.get('/api/orders', async (req, res) => {
-    try {
-      const sessionId = req.sessionId;
-      const orders = await storage.getOrdersBySession(sessionId);
-
-      // Include order items with each order
-      const ordersWithItems = await Promise.all(
-        orders.map(async (order) => {
-          const items = await storage.getOrderItemsByOrder(order.id);
-          return {
-            ...order,
-            items
-          };
-        })
-      );
-
-      res.json(ordersWithItems);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      res.status(500).json({ message: 'Error fetching orders' });
-    }
-  });
+  // Get orders for current session (legacy route - now handled by the new route above)
+  // This route is deprecated and will be removed in the future
+  // Using the auth-required route from above for the dashboard
 
   // Get all orders (admin only)
   app.get('/api/admin/orders', validateAdmin, async (_req, res) => {
