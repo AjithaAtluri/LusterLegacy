@@ -195,7 +195,7 @@ export function PriceCalculatorDisplay({
                     {isCalculating ? (
                       <Skeleton className="h-4 w-16" />
                     ) : (
-                      <span>{formatCurrency(0)}</span>
+                      <span>{formatCurrency(breakdown.otherStoneCost)}</span>
                     )}
                   </div>
                   <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">
