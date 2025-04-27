@@ -203,7 +203,7 @@ export default function EditProductAIGenerator({
       metalType: formData.metalType,
       metalWeight: formData.metalWeight ? parseFloat(formData.metalWeight) : undefined,
       primaryGems,
-      // userDescription removed as requested
+      userDescription: formData.userDescription, // Kept in AI generator as requested
       imageUrls: uploadedImageUrl ? [uploadedImageUrl] : undefined,
       // Include other stone information
       otherStoneType: otherStoneType !== "none_selected" ? otherStoneType : undefined,
@@ -313,7 +313,24 @@ export default function EditProductAIGenerator({
               </p>
             </div>
 
-            {/* User Description input removed as requested */}
+            {/* User Description - kept in AI generator as requested */}
+            <FormField
+              control={form.control}
+              name="userDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Details (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter any additional details about the product, e.g., design inspiration, special features..."
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Image Upload */}
             <div className="space-y-2">
