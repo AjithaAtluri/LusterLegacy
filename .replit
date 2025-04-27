@@ -8,7 +8,7 @@ packages = ["jq"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "node deploy-prep.js"]
+build = ["sh", "-c", "node build-for-deploy.js"]
 run = ["sh", "-c", "NODE_ENV=production node --experimental-specifier-resolution=node build/server/index.js"]
 
 [[ports]]
