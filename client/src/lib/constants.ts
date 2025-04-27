@@ -26,25 +26,21 @@ export const COUNTRIES = [
 
 // Customization options
 export const METAL_TYPES = [
-  { id: "22kt-gold", name: "22kt Gold", priceMultiplier: 1.2 },
-  { id: "18kt-gold", name: "18kt Gold", priceMultiplier: 1.0 },
-  { id: "14kt-gold", name: "14kt Gold", priceMultiplier: 0.8 },
-  { id: "silver-gold", name: "Silver with Gold Accents", priceMultiplier: 0.5 }
+  { id: "22k-gold", name: "22K Gold", priceMultiplier: 1.2 },
+  { id: "18k-gold", name: "18K Gold", priceMultiplier: 1.0 },
+  { id: "14k-gold", name: "14K Gold", priceMultiplier: 0.8 }
 ];
 
 export const STONE_TYPES = [
-  { id: "natural-polki", name: "Natural Polki Diamonds", priceMultiplier: 1.5 },
-  { id: "lab-polki", name: "Lab Polki Diamonds", priceMultiplier: 1.2 },
-  { id: "moissanite", name: "Moissanite", priceMultiplier: 0.9 },
+  { id: "lab-created-diamond", name: "Lab Created Diamond", priceMultiplier: 1.3 },
+  { id: "lab-created-gems", name: "Lab Created Gems", priceMultiplier: 0.8 },
+  { id: "lab-created-polki", name: "Lab Created Polki", priceMultiplier: 1.2 },
   { id: "natural-diamond", name: "Natural Diamond", priceMultiplier: 2.0 },
-  { id: "lab-diamond", name: "Lab-Created Diamond", priceMultiplier: 1.3 },
-  { id: "swarovski", name: "Swarovski", priceMultiplier: 0.7 },
-  { id: "cz", name: "CZ", priceMultiplier: 0.5 },
-  { id: "pota", name: "Pota Stones", priceMultiplier: 0.4 },
-  { id: "ruby", name: "Ruby", priceMultiplier: 1.3 },
-  { id: "emerald", name: "Emerald", priceMultiplier: 1.4 },
-  { id: "sapphire", name: "Sapphire", priceMultiplier: 1.3 }
-];
+  { id: "natural-polki", name: "Natural Polki", priceMultiplier: 1.5 },
+  { id: "onyx", name: "Onyx", priceMultiplier: 0.9 },
+  { id: "precious-gems", name: "Precious Gems (Ruby, Emerald, Sapphire, etc)", priceMultiplier: 1.4 },
+  { id: "semi-precious-gems", name: "Semi Precious Gems (Amethyst, Quartz, Morganite, etc)", priceMultiplier: 1.0 }
+].sort((a, b) => a.name.localeCompare(b.name));
 
 // Company details
 export const COMPANY = {

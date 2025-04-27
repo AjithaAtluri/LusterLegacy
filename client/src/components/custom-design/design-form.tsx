@@ -12,9 +12,21 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS, COUNTRIES } from "@/lib/constants";
 import { useDropzone } from "react-dropzone";
-import { Upload, X, Image as ImageIcon, CheckCircle } from "lucide-react";
-import { isImageFile, getFileExtension } from "@/lib/utils";
+import { Upload, X, Image as ImageIcon, CheckCircle, Check, ChevronsUpDown } from "lucide-react";
+import { isImageFile, getFileExtension, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -22,7 +34,7 @@ const designFormSchema = z.object({
   phone: z.string().min(8, "Phone number is required"),
   country: z.string().min(2, "Country is required"),
   metalType: z.string().min(1, "Metal type is required"),
-  primaryStone: z.string().min(1, "Primary stone is required"),
+  primaryStones: z.array(z.string()).min(1, "Select at least one stone type"),
   notes: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms to continue" 
@@ -35,6 +47,7 @@ export default function DesignForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedStones, setSelectedStones] = useState<string[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -46,7 +59,7 @@ export default function DesignForm() {
       phone: "",
       country: "us", // Default to United States
       metalType: "",
-      primaryStone: "",
+      primaryStones: [],
       notes: "",
       agreeToTerms: false
     }
@@ -66,6 +79,11 @@ export default function DesignForm() {
           const parsedData = JSON.parse(savedFormData);
           console.log("Restoring form data:", parsedData);
           
+          // Check if we have the old format data with primaryStone instead of primaryStones
+          if (parsedData.primaryStone && !parsedData.primaryStones) {
+            parsedData.primaryStones = parsedData.primaryStone ? [parsedData.primaryStone] : [];
+          }
+          
           // Restore form fields - make sure to set these right away
           form.setValue("fullName", user.username); // Always use logged-in username
           form.setValue("email", user.email); // Always use logged-in email
@@ -78,7 +96,7 @@ export default function DesignForm() {
             phone: parsedData.phone || "",
             country: parsedData.country || "us",
             metalType: parsedData.metalType || "",
-            primaryStone: parsedData.primaryStone || "",
+            primaryStones: parsedData.primaryStones || [],
             notes: parsedData.notes || "",
             agreeToTerms: parsedData.agreeToTerms || false
           });
@@ -413,29 +431,65 @@ export default function DesignForm() {
           
           <FormField
             control={form.control}
-            name="primaryStone"
+            name="primaryStones"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                  Primary Stones*
+                  Stone Types* (Select one or more)
                 </FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
-                      <SelectValue placeholder="Select stone type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {STONE_TYPES.map((stone) => (
-                      <SelectItem key={stone.id} value={stone.id}>
-                        {stone.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between p-3 border border-foreground/20 rounded font-montserrat text-sm",
+                            !field.value.length && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value.length > 0
+                            ? `${field.value.length} stone${field.value.length > 1 ? "s" : ""} selected`
+                            : "Select stone types"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Command className="w-full">
+                        <CommandInput placeholder="Search stone types..." />
+                        <CommandEmpty>No stone type found.</CommandEmpty>
+                        <CommandGroup className="max-h-64 overflow-y-auto">
+                          {STONE_TYPES.map((stone) => {
+                            const isSelected = field.value.includes(stone.id);
+                            return (
+                              <CommandItem
+                                key={stone.id}
+                                value={stone.id}
+                                onSelect={() => {
+                                  const updatedValue = isSelected
+                                    ? field.value.filter((value) => value !== stone.id)
+                                    : [...field.value, stone.id];
+                                  field.onChange(updatedValue);
+                                  setSelectedStones(updatedValue);
+                                }}
+                              >
+                                <div className={cn(
+                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                  isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
+                                )}>
+                                  {isSelected && <Check className="h-3 w-3" />}
+                                </div>
+                                <span>{stone.name}</span>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
