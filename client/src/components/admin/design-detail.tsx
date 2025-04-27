@@ -127,6 +127,18 @@ export default function DesignDetail({ design }: DesignDetailProps) {
                   <div className="font-medium">Email</div>
                   <div>{design.email}</div>
                 </div>
+                {design.phone && (
+                  <div>
+                    <div className="font-medium">Phone</div>
+                    <div>{design.phone}</div>
+                  </div>
+                )}
+                {design.country && (
+                  <div>
+                    <div className="font-medium">Country</div>
+                    <div>{design.country}</div>
+                  </div>
+                )}
                 <div>
                   <div className="font-medium">Submission Date</div>
                   <div>{formatDate(design.createdAt)}</div>

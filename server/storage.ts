@@ -1531,6 +1531,8 @@ export class DatabaseStorage implements IStorage {
           userId: request.userId || null,
           fullName: request.name,
           email: request.email,
+          phone: request.phone || null,
+          country: request.country || null,
           metalType: request.metalTypeId || "Not specified",
           primaryStone: request.primaryStoneId || "Not specified",
           notes: request.customizationDetails,
