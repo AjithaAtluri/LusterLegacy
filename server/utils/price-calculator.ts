@@ -330,7 +330,8 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       breakdown: {
         metalCost: Math.round(metalCost),
         stoneCost: Math.round(stoneCost),
-        overhead: Math.round(overhead)
+        overhead: Math.round(overhead),
+        stones: stones // Include detailed stone breakdown with individual stones
       }
     };
   } catch (error) {
