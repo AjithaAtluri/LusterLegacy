@@ -39,7 +39,7 @@ export default function CustomerDashboard() {
     staleTime: 60000 // 1 minute cache
   });
   
-  // Fetch customization requests
+  // Fetch both types of customization requests (from both endpoints)
   const { data: customizationRequests, isLoading: isLoadingRequests } = useQuery({
     queryKey: ['/api/customization-requests'],
     enabled: activeTab === "requests" && !!user,
@@ -53,6 +53,32 @@ export default function CustomerDashboard() {
       });
     }
   });
+  
+  // Also fetch custom designs from the other endpoint
+  const { data: customDesigns, isLoading: isLoadingCustomDesigns } = useQuery({
+    queryKey: ['/api/custom-designs/user'],
+    enabled: activeTab === "requests" && !!user,
+    staleTime: 60000,
+    onError: (error) => {
+      console.error("Error fetching custom designs:", error);
+    }
+  });
+  
+  // Combine both types of requests when available
+  const allDesignRequests = React.useMemo(() => {
+    const requests = [...(customizationRequests || [])];
+    if (customDesigns) {
+      // Add custom designs with a property to identify their source
+      requests.push(...customDesigns.map(design => ({
+        ...design,
+        isCustomDesign: true
+      })));
+    }
+    // Sort by date
+    return requests.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [customizationRequests, customDesigns]);
   
   // Fetch orders
   const { data: orders, isLoading: isLoadingOrders } = useQuery({

@@ -733,6 +733,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Error fetching design requests' });
     }
   });
+  
+  // Get custom designs for the current user
+  app.get('/api/custom-designs/user', async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    try {
+      const designRequests = await storage.getDesignRequestsByUserId(req.user.id);
+      
+      // Add product information if available
+      const designsWithProducts = await Promise.all(
+        designRequests.map(async (design) => {
+          let product = null;
+          if (design.productId) {
+            product = await storage.getProduct(design.productId);
+          }
+          
+          return {
+            ...design,
+            product: product ? {
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              imageUrl: product.imageUrl,
+              basePrice: product.basePrice,
+            } : null
+          };
+        })
+      );
+      
+      res.json(designsWithProducts);
+    } catch (error) {
+      console.error('Error fetching user design requests:', error);
+      res.status(500).json({ message: 'Error fetching user design requests' });
+    }
+  });
 
   // Get design request by ID (admin or matching email)
   app.get('/api/custom-designs/:id', async (req, res) => {

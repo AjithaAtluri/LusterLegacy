@@ -964,6 +964,20 @@ export class DatabaseStorage implements IStorage {
   async getDesignRequestsByEmail(email: string): Promise<DesignRequest[]> {
     return await db.select().from(designRequests).where(eq(designRequests.email, email));
   }
+  
+  async getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(designRequests)
+        .where(eq(designRequests.userId, userId))
+        .orderBy(desc(designRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error("Error getting design requests by user ID:", error);
+      return [];
+    }
+  }
 
   async createDesignRequest(insertDesignRequest: InsertDesignRequest): Promise<DesignRequest> {
     const [request] = await db.insert(designRequests).values(insertDesignRequest).returning();
