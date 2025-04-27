@@ -76,8 +76,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group">
-      <div className="relative h-80 overflow-hidden">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group h-[550px] flex flex-col">
+      <div className="relative h-64 overflow-hidden flex-shrink-0">
         {/* Using the reliable product image component for consistent images */}
         <ReliableProductImage 
           productId={product.id}
@@ -89,57 +89,59 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Gemstone sparkle effect on hover */}
         <GemSparkle />
         
-        {product.isNew && (
-          <Badge className="absolute top-4 right-4 bg-primary text-background px-3 py-1 rounded-full">
-            New
-          </Badge>
-        )}
-        
-        {product.isBestseller && (
-          <Badge className="absolute top-4 right-4 bg-accent text-background px-3 py-1 rounded-full">
-            Bestseller
-          </Badge>
-        )}
+        {/* Status badges positioned at top-right */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
+          {product.isNew && (
+            <Badge className="bg-primary text-background px-3 py-1 rounded-full">New</Badge>
+          )}
+          {product.isBestseller && (
+            <Badge className="bg-accent text-background px-3 py-1 rounded-full">Bestseller</Badge>
+          )}
+        </div>
       </div>
       
-      <div className="p-6">
-        <h3 className="font-playfair text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">{product.name}</h3>
-        
-        {/* Display tagline if available */}
-        {tagline && (
-          <p className="font-cormorant text-md italic text-primary mb-2">{tagline}</p>
-        )}
-        
-        <p className="font-cormorant text-lg text-foreground/70 mb-3">{product.description}</p>
-        
-        {/* Display product type and status badges */}
-        <div className="flex flex-wrap gap-1 mb-4">
-          {/* Use productType if available, fall back to category for backward compatibility */}
+      {/* Content area with fixed layout */}
+      <div className="p-4 flex flex-col flex-grow">
+        {/* Product type badge */}
+        <div className="mb-2">
           {(product.productType || product.category) && (
             <Badge variant="outline" className="capitalize text-xs">
               {product.productType || product.category}
             </Badge>
           )}
           {product.isFeatured && (
-            <Badge variant="secondary" className="text-xs">Featured</Badge>
+            <Badge variant="secondary" className="text-xs ml-1">Featured</Badge>
           )}
         </div>
         
-        <div className="mb-3">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="font-montserrat text-sm text-foreground/70">Price</p>
-              <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
-                ${calculatedPriceUSD}
-              </p>
-            </div>
-          </div>
+        {/* Product title with fixed height */}
+        <h3 className="font-playfair text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-1">{product.name}</h3>
+        
+        {/* Tagline with fixed height */}
+        <div className="h-6">
+          {tagline && (
+            <p className="font-cormorant text-sm italic text-primary truncate">{tagline}</p>
+          )}
         </div>
-            
-        <div className="flex justify-center">
+        
+        {/* Description with fixed height and ellipsis */}
+        <p className="font-cormorant text-sm text-foreground/70 line-clamp-3 mb-3 h-[60px]">
+          {product.description}
+        </p>
+        
+        {/* Price section */}
+        <div className="mt-auto mb-3">
+          <p className="font-montserrat text-sm text-foreground/70">Price</p>
+          <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
+            ${calculatedPriceUSD}
+          </p>
+        </div>
+        
+        {/* Button always at the bottom */}
+        <div className="mt-auto">
           <Button 
             asChild
-            className="font-montserrat bg-foreground hover:bg-primary text-background px-6 py-2 rounded transition duration-300"
+            className="font-montserrat bg-foreground hover:bg-primary text-background w-full py-2 rounded transition duration-300"
           >
             <Link href={`/product-detail/${product.id}`}>
               View Details

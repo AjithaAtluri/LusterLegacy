@@ -173,7 +173,7 @@ export default function AdminProducts() {
                 <div className="flex items-start justify-between mb-1">
                   <h3 className="font-playfair font-medium">{product.name}</h3>
                   <span className="font-medium text-sm">
-                    {formatCurrency(product.basePrice)}
+                    {formatCurrency(product.calculatedPriceUSD || Math.round(product.basePrice / 83))}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
@@ -279,7 +279,9 @@ export default function AdminProducts() {
               )}
               <div>
                 <h3 className="font-medium">{selectedProduct.name}</h3>
-                <p className="text-sm text-muted-foreground">{formatCurrency(selectedProduct.basePrice)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatCurrency(selectedProduct.calculatedPriceUSD || Math.round(selectedProduct.basePrice / 83))}
+                </p>
               </div>
             </div>
           )}
