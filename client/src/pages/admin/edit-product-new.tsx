@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import EditProductAIGenerator from "@/components/admin/edit-product-ai-generator";
 import { PriceCalculatorDisplay } from "@/components/admin/price-calculator-display";
-import { PriceBreakdownItem } from "@/components/admin/price-breakdown-item";
+import { PriceBreakdownItem } from "@/components/admin/price-breakdown-item-new";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
