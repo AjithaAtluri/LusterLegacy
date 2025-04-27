@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,19 +10,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS } from "@/lib/constants";
+import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS, COUNTRIES } from "@/lib/constants";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Image as ImageIcon, CheckCircle } from "lucide-react";
 import { isImageFile, getFileExtension } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(8, "Phone number is required"),
+  country: z.string().min(2, "Country is required"),
   metalType: z.string().min(1, "Metal type is required"),
   primaryStone: z.string().min(1, "Primary stone is required"),
   notes: z.string().optional(),
-  agreeToTerms: z.literal(true, {
-    errorMap: () => ({ message: "You must agree to the terms to continue" })
+  agreeToTerms: z.boolean().refine(val => val === true, {
+    message: "You must agree to the terms to continue" 
   })
 });
 
@@ -33,18 +36,29 @@ export default function DesignForm() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
+      fullName: user?.username || "",
+      email: user?.email || "",
+      phone: "",
+      country: "in", // Default to India
       metalType: "",
       primaryStone: "",
       notes: "",
       agreeToTerms: false
     }
   });
+  
+  // Update the form with user data when user loads
+  useEffect(() => {
+    if (user) {
+      form.setValue("fullName", user.username);
+      form.setValue("email", user.email);
+    }
+  }, [user, form]);
   
   const onSubmit = async (data: DesignFormValues) => {
     if (!uploadedImage) {
@@ -214,7 +228,7 @@ export default function DesignForm() {
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="bg-background rounded-lg shadow-lg p-8">
+      <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-8">
         <h3 className="font-playfair text-2xl font-semibold text-foreground mb-6">Submit Your Design</h3>
         
         <div className="mb-6">
@@ -311,7 +325,7 @@ export default function DesignForm() {
           <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
             Contact Information*
           </FormLabel>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <FormField
               control={form.control}
               name="fullName"
@@ -338,13 +352,69 @@ export default function DesignForm() {
                     <Input 
                       {...field} 
                       placeholder="Email Address" 
-                      className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                      readOnly={user !== null}
+                      className={`p-3 border border-foreground/20 rounded font-montserrat text-sm ${user ? 'bg-accent/5' : ''}`}
                     />
                   </FormControl>
+                  {user && (
+                    <p className="text-xs text-muted-foreground mt-1">Email is auto-filled from your account</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                      Phone Number*
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Phone Number" 
+                        className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                      Country*
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
+                          <SelectValue placeholder="Select your country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country.id} value={country.id}>
+                            {country.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
         </div>
         

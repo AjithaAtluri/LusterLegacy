@@ -1,5 +1,29 @@
 // This file contains application-wide constants
 
+// Country list for dropdowns
+export const COUNTRIES = [
+  { id: "in", name: "India" },
+  { id: "us", name: "United States" },
+  { id: "ae", name: "United Arab Emirates" },
+  { id: "gb", name: "United Kingdom" },
+  { id: "ca", name: "Canada" },
+  { id: "au", name: "Australia" },
+  { id: "sg", name: "Singapore" },
+  { id: "hk", name: "Hong Kong" },
+  { id: "my", name: "Malaysia" },
+  { id: "sa", name: "Saudi Arabia" },
+  { id: "qa", name: "Qatar" },
+  { id: "kw", name: "Kuwait" },
+  { id: "th", name: "Thailand" },
+  { id: "jp", name: "Japan" },
+  { id: "kr", name: "South Korea" },
+  { id: "de", name: "Germany" },
+  { id: "fr", name: "France" },
+  { id: "ch", name: "Switzerland" },
+  { id: "it", name: "Italy" },
+  { id: "es", name: "Spain" }
+];
+
 // Customization options
 export const METAL_TYPES = [
   { id: "22kt-gold", name: "22kt Gold", priceMultiplier: 1.2 },
