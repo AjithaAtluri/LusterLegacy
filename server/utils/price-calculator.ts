@@ -256,35 +256,36 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
               st.name && st.name.toLowerCase() === stoneName.toLowerCase()
             );
           }
-        }
-        
-        if (otherStoneData?.priceModifier) {
-          otherStoneName = otherStoneData.name;
-          otherStonePrice = otherStoneData.priceModifier;
-          console.log(`Using database price for ${otherStoneName}: ₹${otherStonePrice} per carat`);
-        } else if (typeof params.otherStone.stoneTypeId === 'string') {
-          // Try to find by keywords, separating compound names
-          const stoneTypeName = params.otherStone.stoneTypeId;
-          const words = stoneTypeName.toLowerCase().split(/\s+/);
-          for (const word of words) {
-            if (word.length < 3) continue; // Skip short words
-            
-            const keywordMatch = stoneTypes.find(st => 
-              st.name && st.name.toLowerCase().includes(word)
-            );
-            
-            if (keywordMatch?.priceModifier) {
-              otherStoneName = keywordMatch.name;
-              otherStonePrice = keywordMatch.priceModifier;
-              console.log(`Found keyword match "${word}" for stone "${otherStoneName}": ₹${otherStonePrice} per carat`);
-              break;
-            }
-          }
           
-          // If still no price, fallback to name-based pricing
-          if (!otherStonePrice && typeof params.otherStone.stoneTypeId === 'string') {
-            otherStonePrice = await getGemPricePerCaratFromName(params.otherStone.stoneTypeId);
-            console.log(`Using fallback price for ${params.otherStone.stoneTypeId}: ₹${otherStonePrice} per carat`);
+          // Use the found stone data if available
+          if (otherStoneData?.priceModifier) {
+            otherStoneName = otherStoneData.name;
+            otherStonePrice = otherStoneData.priceModifier;
+            console.log(`Using database price for ${otherStoneName}: ₹${otherStonePrice} per carat`);
+          } else if (typeof params.otherStone.stoneTypeId === 'string') {
+            // Try to find by keywords, separating compound names
+            const stoneTypeName = params.otherStone.stoneTypeId;
+            const words = stoneTypeName.toLowerCase().split(/\s+/);
+            for (const word of words) {
+              if (word.length < 3) continue; // Skip short words
+              
+              const keywordMatch = stoneTypes.find(st => 
+                st.name && st.name.toLowerCase().includes(word)
+              );
+              
+              if (keywordMatch?.priceModifier) {
+                otherStoneName = keywordMatch.name;
+                otherStonePrice = keywordMatch.priceModifier;
+                console.log(`Found keyword match "${word}" for stone "${otherStoneName}": ₹${otherStonePrice} per carat`);
+                break;
+              }
+            }
+            
+            // If still no price, fallback to name-based pricing
+            if (!otherStonePrice) {
+              otherStonePrice = await getGemPricePerCaratFromName(params.otherStone.stoneTypeId);
+              console.log(`Using fallback price for ${params.otherStone.stoneTypeId}: ₹${otherStonePrice} per carat`);
+            }
           }
         }
         
