@@ -1520,11 +1520,38 @@ Respond in JSON format:
       
       // Get other stone cost if available
       const hasOtherStone = otherStone && otherStone.stoneTypeId;
-      const otherStoneCost = hasOtherStone && result.breakdown?.stones 
-        ? result.breakdown.stones.find(s => 
-            s.name && otherStone.stoneTypeId && 
-            s.name.toLowerCase().includes(String(otherStone.stoneTypeId).toLowerCase()))?.totalCost || 0
-        : 0;
+      let otherStoneCost = 0;
+      
+      // Try to find other stone data - first check if there are detailed stone breakdowns
+      if (hasOtherStone && result.breakdown?.stones && Array.isArray(result.breakdown.stones)) {
+        // Look for a matching stone in the detailed breakdown
+        const otherStoneData = result.breakdown.stones.find(s => 
+          s.name && otherStone.stoneTypeId && 
+          s.name.toLowerCase().includes(String(otherStone.stoneTypeId).toLowerCase()));
+          
+        if (otherStoneData && otherStoneData.totalCost) {
+          otherStoneCost = otherStoneData.totalCost;
+          console.log(`Found other stone ${otherStoneData.name} with cost ₹${otherStoneCost}`);
+        }
+      } 
+      
+      // If we couldn't find the cost in stones array or it's not available,
+      // try to calculate it directly using the stone data
+      if (hasOtherStone && otherStoneCost === 0 && otherStone.caratWeight) {
+        try {
+          const stoneTypeId = typeof otherStone.stoneTypeId === 'string' ? 
+            parseInt(otherStone.stoneTypeId) : otherStone.stoneTypeId;
+            
+          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          if (stoneTypeData?.priceModifier) {
+            const caratWeight = otherStone.caratWeight || 0.5;
+            otherStoneCost = caratWeight * stoneTypeData.priceModifier;
+            console.log(`Calculated other stone cost (${stoneTypeData.name}): ₹${otherStoneCost}`);
+          }
+        } catch (err) {
+          console.error("Error calculating other stone cost directly:", err);
+        }
+      }
       
       console.log("Other stone available:", hasOtherStone, "cost:", otherStoneCost);
       
