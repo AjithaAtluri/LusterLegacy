@@ -44,8 +44,11 @@ export default function CustomerDashboard() {
     queryKey: ['/api/customization-requests'],
     enabled: activeTab === "requests" && !!user,
     staleTime: 60000,
-    onError: (error) => {
-      console.error("Error fetching customization requests:", error);
+    onSuccess: (data) => {
+      console.log("Successfully fetched customization requests:", data);
+    },
+    onError: () => {
+      console.error("Error fetching customization requests");
       toast({
         title: "Error",
         description: "Failed to load your custom design requests",
@@ -59,8 +62,11 @@ export default function CustomerDashboard() {
     queryKey: ['/api/custom-designs/user'],
     enabled: activeTab === "requests" && !!user,
     staleTime: 60000,
-    onError: (error) => {
-      console.error("Error fetching custom designs:", error);
+    onSuccess: (data) => {
+      console.log("Successfully fetched custom designs:", data);
+    },
+    onError: () => {
+      console.error("Error fetching custom designs");
     }
   });
   
