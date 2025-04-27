@@ -31,7 +31,7 @@ export interface AIInputs {
   metalType: string;
   metalWeight?: number;
   primaryGems?: Array<{ name: string; carats?: number }>;
-  userDescription?: string;
+  // userDescription removed as requested
   imageUrls?: string[];
   otherStoneType?: string;
   otherStoneWeight?: number;

@@ -203,7 +203,7 @@ export default function EditProductAIGenerator({
       metalType: formData.metalType,
       metalWeight: formData.metalWeight ? parseFloat(formData.metalWeight) : undefined,
       primaryGems,
-      userDescription: formData.userDescription,
+      // userDescription removed as requested
       imageUrls: uploadedImageUrl ? [uploadedImageUrl] : undefined,
       // Include other stone information
       otherStoneType: otherStoneType !== "none_selected" ? otherStoneType : undefined,
