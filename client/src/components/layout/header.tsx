@@ -81,7 +81,7 @@ export default function Header() {
           ) : (
             <Link href="/auth" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
               <User className="h-4 w-4 mr-2" />
-              Login / Register
+              Sign Up/Login
             </Link>
           )}
         </div>
@@ -150,7 +150,7 @@ export default function Header() {
                     className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center mt-4"
                   >
                     <User className="h-4 w-4 mr-2" />
-                    Login / Register
+                    Sign Up/Login
                   </Link>
                 )}
               </div>

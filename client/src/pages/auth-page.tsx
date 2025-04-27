@@ -109,8 +109,8 @@ export default function AuthPage() {
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="login">Sign In</TabsTrigger>
+              <TabsTrigger value="register">Sign Up</TabsTrigger>
             </TabsList>
             
             {/* Login Form */}
@@ -178,7 +178,7 @@ export default function AuthPage() {
                     onClick={() => setActiveTab("register")}
                     className="text-primary hover:underline font-medium"
                   >
-                    Register
+                    Sign Up
                   </button>
                 </p>
               </div>
