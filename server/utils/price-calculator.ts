@@ -22,8 +22,10 @@ interface PriceCalculationParams {
   metalTypeId?: number; // Metal type ID from the database
   metalWeight: number;
   primaryGems?: Gem[];
-  otherStoneType?: string;
-  otherStoneWeight?: number;
+  otherStone?: {
+    stoneTypeId?: number | string;
+    caratWeight?: number;
+  };
 }
 
 // Fallback price of 24k gold per gram in INR (2025 rates) - will be replaced with real value
@@ -32,10 +34,12 @@ const DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR = 7500;
 export async function calculateJewelryPrice(params: PriceCalculationParams): Promise<{
   priceUSD: number;
   priceINR: number;
+  exchangeRate?: number;
   breakdown?: {
     metalCost: number;
     stoneCost: number;
     overhead: number;
+    stones?: Array<{name: string, carats: number, price: number, totalCost: number}>;
   };
 }> {
   try {
@@ -213,34 +217,43 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
       });
     }
     
-    // Process otherStoneType if provided
-    if (params.otherStoneType && params.otherStoneWeight && params.otherStoneType !== 'none_selected') {
-      const otherStoneWeight = params.otherStoneWeight || 0.5;
+    // Process otherStone if provided
+    if (params.otherStone && params.otherStone.stoneTypeId && params.otherStone.stoneTypeId !== 'none_selected') {
+      const otherStoneWeight = params.otherStone.caratWeight || 0.5;
       let otherStonePrice = 0;
-      let otherStoneName = params.otherStoneType;
+      let otherStoneName = "Other Stone";
       
       // Try to get stone price from database with multiple matching approaches
       try {
-        console.log(`Looking up other stone "${params.otherStoneType}" in database`);
-        const stoneTypes = await storage.getAllStoneTypes();
+        const stoneTypeId = typeof params.otherStone.stoneTypeId === 'string' ? 
+          parseInt(params.otherStone.stoneTypeId) : params.otherStone.stoneTypeId;
+          
+        console.log(`Looking up other stone with ID ${stoneTypeId} in database`);
         
-        // Try exact name match first
-        let otherStoneData = stoneTypes.find(st => 
-          st.name && st.name.toLowerCase() === params.otherStoneType?.toLowerCase()
-        );
+        // Try to get directly by ID first
+        if (typeof stoneTypeId === 'number') {
+          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          if (stoneTypeData) {
+            otherStoneName = stoneTypeData.name;
+            otherStonePrice = stoneTypeData.priceModifier;
+            console.log(`Found other stone by ID: ${otherStoneName} with price ${otherStonePrice}`);
+          }
+        }
         
-        // If no exact match, try partial name match
-        if (!otherStoneData) {
-          console.log(`No exact match for "${params.otherStoneType}", trying partial matches`);
-          // See if the provided name contains a stone type name from our database
-          otherStoneData = stoneTypes.find(st => 
-            st.name && params.otherStoneType?.toLowerCase().includes(st.name.toLowerCase())
+        // If not found by ID, try to search all stones
+        if (!otherStonePrice) {
+          const stoneTypes = await storage.getAllStoneTypes();
+          
+          // Try exact ID match first
+          let otherStoneData = stoneTypes.find(st => 
+            st.id !== undefined && st.id === stoneTypeId
           );
           
-          // If still no match, try the reverse - see if a stone type name contains our search term
-          if (!otherStoneData) {
+          // If ID doesn't match, try by name 
+          if (!otherStoneData && typeof params.otherStone.stoneTypeId === 'string') {
+            const stoneName = params.otherStone.stoneTypeId;
             otherStoneData = stoneTypes.find(st => 
-              st.name && st.name.toLowerCase().includes(params.otherStoneType?.toLowerCase())
+              st.name && st.name.toLowerCase() === stoneName.toLowerCase()
             );
           }
         }
@@ -249,9 +262,10 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
           otherStoneName = otherStoneData.name;
           otherStonePrice = otherStoneData.priceModifier;
           console.log(`Using database price for ${otherStoneName}: ₹${otherStonePrice} per carat`);
-        } else {
+        } else if (typeof params.otherStone.stoneTypeId === 'string') {
           // Try to find by keywords, separating compound names
-          const words = params.otherStoneType.toLowerCase().split(/\s+/);
+          const stoneTypeName = params.otherStone.stoneTypeId;
+          const words = stoneTypeName.toLowerCase().split(/\s+/);
           for (const word of words) {
             if (word.length < 3) continue; // Skip short words
             
@@ -268,9 +282,9 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
           }
           
           // If still no price, fallback to name-based pricing
-          if (!otherStonePrice) {
-            otherStonePrice = await getGemPricePerCaratFromName(params.otherStoneType);
-            console.log(`Using fallback price for ${params.otherStoneType}: ₹${otherStonePrice} per carat`);
+          if (!otherStonePrice && typeof params.otherStone.stoneTypeId === 'string') {
+            otherStonePrice = await getGemPricePerCaratFromName(params.otherStone.stoneTypeId);
+            console.log(`Using fallback price for ${params.otherStone.stoneTypeId}: ₹${otherStonePrice} per carat`);
           }
         }
         
@@ -286,7 +300,7 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
           totalCost: otherStoneCost
         });
       } catch (error) {
-        console.error(`Error calculating other stone (${params.otherStoneType}) price:`, error);
+        console.error(`Error calculating other stone price:`, error);
       }
     }
     
