@@ -4,84 +4,118 @@ import {
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import { User, insertUserSchema } from "@shared/schema";
+import { z } from "zod";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type AuthContextType = {
-  user: SelectUser | null;
+  user: User | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
+  loginMutation: UseMutationResult<Omit<User, "password">, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
+  registerMutation: UseMutationResult<Omit<User, "password">, Error, RegisterData>;
 };
 
-type LoginData = Pick<InsertUser, "username" | "password">;
+// Data type for login
+type LoginData = {
+  username: string;
+  password: string;
+};
+
+// Data type for registration based on insertUserSchema but explicitly adding role
+const registerSchema = insertUserSchema.extend({
+  role: z.string().optional().default("customer")
+});
+type RegisterData = z.infer<typeof registerSchema>;
 
 export const AuthContext = createContext<AuthContextType | null>(null);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  
+  // Query to get the current user (if logged in)
   const {
     data: user,
     error,
     isLoading,
-  } = useQuery<SelectUser | null, Error>({
+  } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    retry: false, // Don't retry on 401 (not authenticated)
   });
 
-  const loginMutation = useMutation({
+  // Mutation for login
+  const loginMutation = useMutation<Omit<User, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+      
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
+    onSuccess: (userData) => {
+      queryClient.setQueryData(["/api/user"], userData);
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.username}!`,
+        description: `Welcome ${userData.username}!`,
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Login failed",
-        description: error.message || "Invalid username or password",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
+  // Mutation for registration
+  const registerMutation = useMutation<Omit<User, "password">, Error, RegisterData>({
+    mutationFn: async (userData: RegisterData) => {
+      const res = await apiRequest("POST", "/api/register", userData);
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+      
       return await res.json();
     },
-    onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
+    onSuccess: (userData) => {
+      queryClient.setQueryData(["/api/user"], userData);
       toast({
         title: "Registration successful",
-        description: `Welcome to Luster Legacy, ${user.username}!`,
+        description: `Welcome to Luster Legacy, ${userData.username}!`,
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Registration failed",
-        description: error.message || "Username may already be taken",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const logoutMutation = useMutation({
+  // Mutation for logout
+  const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      const res = await apiRequest("POST", "/api/logout");
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Logout failed");
+      }
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
       toast({
         title: "Logged out successfully",
-        description: "You have been logged out of your account.",
       });
     },
     onError: (error: Error) => {

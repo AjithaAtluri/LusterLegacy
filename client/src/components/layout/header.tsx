@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ShoppingBag, User } from "lucide-react";
+import { Menu, X, ShoppingBag, User, LogOut } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/ui/logo";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logoutMutation } = useAuth();
   
   // Fetch cart items count
   const { data: cartData } = useQuery({
@@ -20,6 +22,10 @@ export default function Header() {
   // Safely extract items from the cart data response
   const cartItems = cartData?.items || [];
   const cartCount = cartItems.length;
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
   
   const isActive = (path: string) => {
     return location === path;
@@ -56,10 +62,28 @@ export default function Header() {
             </Link>
           ))}
           
-          <Link href="/customer-dashboard" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
-            <User className="h-4 w-4 mr-2" />
-            My Account
-          </Link>
+          {user ? (
+            <div className="flex space-x-2">
+              <Link href="/customer-dashboard" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
+                <User className="h-4 w-4 mr-2" />
+                Dashboard
+              </Link>
+              <Button 
+                onClick={handleLogout} 
+                variant="outline" 
+                className="font-montserrat flex items-center" 
+                disabled={logoutMutation.isPending}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                {logoutMutation.isPending ? "Logging out..." : "Logout"}
+              </Button>
+            </div>
+          ) : (
+            <Link href="/auth" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
+              <User className="h-4 w-4 mr-2" />
+              Login / Register
+            </Link>
+          )}
         </div>
         
         {/* Mobile menu button */}
@@ -96,14 +120,39 @@ export default function Header() {
                   </Link>
                 ))}
                 
-                <Link 
-                  href="/customer-dashboard"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center mt-4"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  My Account
-                </Link>
+                {user ? (
+                  <div className="flex flex-col space-y-4 mt-4">
+                    <Link 
+                      href="/customer-dashboard"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                    <Button 
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }} 
+                      variant="outline" 
+                      className="font-montserrat flex items-center justify-center" 
+                      disabled={logoutMutation.isPending}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      {logoutMutation.isPending ? "Logging out..." : "Logout"}
+                    </Button>
+                  </div>
+                ) : (
+                  <Link 
+                    href="/auth"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center mt-4"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Login / Register
+                  </Link>
+                )}
               </div>
             </div>
           </SheetContent>
