@@ -4,7 +4,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { Helmet } from "react-helmet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, ShoppingBag, Heart, Award, Info, Package, Sun, Star } from "lucide-react";
+import { ArrowLeft, ArrowRight, ShoppingBag, Heart as HeartIcon, Award, Info, Package, Sun, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, getImageUrl } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";

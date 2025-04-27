@@ -1,0 +1,102 @@
+Fetching product data for ID: 27
+edit-product-new-D3NsERcf.js:1 Current authenticated user: Object
+edit-product-new-D3NsERcf.js:1 Product fetch response status: 200
+edit-product-new-D3NsERcf.js:1 Product data retrieved successfully: Object
+edit-product-new-D3NsERcf.js:1 Product data received: Object
+edit-product-new-D3NsERcf.js:1 Product data type: object
+edit-product-new-D3NsERcf.js:1 Product data keys: Array(16)
+edit-product-new-D3NsERcf.js:1 Raw priceUSD: undefined
+edit-product-new-D3NsERcf.js:1 Raw basePrice: 637500
+edit-product-new-D3NsERcf.js:1 Parsed details: Object
+edit-product-new-D3NsERcf.js:1 Additional data: Object
+edit-product-new-D3NsERcf.js:1 Additional data keys: Array(15)
+edit-product-new-D3NsERcf.js:1 Raw basePriceINR: 637500
+edit-product-new-D3NsERcf.js:1 AI inputs: Object
+edit-product-new-D3NsERcf.js:1 AI inputs keys: Array(10)
+edit-product-new-D3NsERcf.js:1 Using metalType from aiInputs: 14K Yellow Gold
+edit-product-new-D3NsERcf.js:1 Using metalWeight from aiInputs: 36
+edit-product-new-D3NsERcf.js:1 Using mainStoneType from aiInputs: Semi-Precious Beads(Amethyst, Rose Quartz, Lavendar Quartz, Morganite)
+edit-product-new-D3NsERcf.js:1 Using mainStoneWeight from aiInputs: 219.99
+edit-product-new-D3NsERcf.js:1 Using secondaryStoneType from aiInputs: Lab Grown Polki
+edit-product-new-D3NsERcf.js:1 ----DETAILED STONE DEBUG----
+edit-product-new-D3NsERcf.js:1 Raw aiInputs: Object
+edit-product-new-D3NsERcf.js:1 Raw additionalData: Object
+edit-product-new-D3NsERcf.js:1 Raw details: Object
+edit-product-new-D3NsERcf.js:1 aiInputs.secondaryStoneType: Lab Grown Polki type: string
+edit-product-new-D3NsERcf.js:1 additionalData.secondaryStoneType: Lab Grown Polki type: string
+edit-product-new-D3NsERcf.js:1 details?.secondaryStoneType: undefined type: undefined
+edit-product-new-D3NsERcf.js:1 Final secondaryStoneType: Lab Grown Polki
+edit-product-new-D3NsERcf.js:1 Using secondaryStoneWeight from aiInputs: 14.09
+edit-product-new-D3NsERcf.js:1 ----DETAILED OTHER STONE DEBUG----
+edit-product-new-D3NsERcf.js:1 aiInputs.otherStoneType:  type: string
+edit-product-new-D3NsERcf.js:1 additionalData.otherStoneType:  type: string
+edit-product-new-D3NsERcf.js:1 details?.otherStoneType: undefined type: undefined
+edit-product-new-D3NsERcf.js:1 Final otherStoneType: none_selected
+edit-product-new-D3NsERcf.js:1 Setting form values: Object
+edit-product-new-D3NsERcf.js:1 Setting main image preview: /uploads/05e02bab-ff30-4a9a-a2aa-28311745540d.jpg
+edit-product-new-D3NsERcf.js:1 Setting additional image previews: Array(0)
+price-calculator-display-DKMI41KG.js:6 Price calculation request: Object
+price-calculator-display-DKMI41KG.js:6 Price calculation response: Object
+price-calculator-display-DKMI41KG.js:6 Price calculation request: Object
+price-calculator-display-DKMI41KG.js:6 Price calculation request: Object
+price-calculator-display-DKMI41KG.js:6 Price calculation response: Object
+price-calculator-display-DKMI41KG.js:6 Price calculation response: Object
+edit-product-new-D3NsERcf.js:1 Fetching product data for ID: 27
+edit-product-new-D3NsERcf.js:1 Current authenticated user: Object
+/api/admin/products/27:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+edit-product-new-D3NsERcf.js:1 Product fetch response status: 404
+edit-product-new-D3NsERcf.js:1 Server error response: {"message":"Product not found"}
+J @ edit-product-new-D3NsERcf.js:1Understand this error
+edit-product-new-D3NsERcf.js:1 Error fetching product data: Error: Failed to fetch product: 404 
+    at J (edit-product-new-D3NsERcf.js:1:10549)
+J @ edit-product-new-D3NsERcf.js:1Understand this error
+edit-product-new-D3NsERcf.js:1 Fetching product data for ID: 26
+edit-product-new-D3NsERcf.js:1 Current authenticated user: Object
+edit-product-new-D3NsERcf.js:1 Product fetch response status: 200
+edit-product-new-D3NsERcf.js:1 Product data retrieved successfully: Object
+edit-product-new-D3NsERcf.js:1 Product data received: Object
+edit-product-new-D3NsERcf.js:1 Product data type: object
+edit-product-new-D3NsERcf.js:1 Product data keys: Array(16)
+edit-product-new-D3NsERcf.js:1 Raw priceUSD: undefined
+edit-product-new-D3NsERcf.js:1 Raw basePrice: 1020000
+edit-product-new-D3NsERcf.js:1 Parsed details: Object
+edit-product-new-D3NsERcf.js:1 Additional data: Object
+edit-product-new-D3NsERcf.js:1 Additional data keys: Array(15)
+edit-product-new-D3NsERcf.js:1 Raw basePriceINR: 1020000
+edit-product-new-D3NsERcf.js:1 AI inputs: Object
+edit-product-new-D3NsERcf.js:1 AI inputs keys: Array(10)
+edit-product-new-D3NsERcf.js:1 Using metalType from aiInputs: 18K Yellow Gold
+edit-product-new-D3NsERcf.js:1 Using metalWeight from aiInputs: 51.9
+edit-product-new-D3NsERcf.js:1 Using mainStoneType from aiInputs: Navaratan Precious Stones
+edit-product-new-D3NsERcf.js:1 Using mainStoneWeight from aiInputs: 65
+edit-product-new-D3NsERcf.js:1 Using secondaryStoneType from aiInputs: Moissanite
+edit-product-new-D3NsERcf.js:1 ----DETAILED STONE DEBUG----
+edit-product-new-D3NsERcf.js:1 Raw aiInputs: Object
+edit-product-new-D3NsERcf.js:1 Raw additionalData: Object
+edit-product-new-D3NsERcf.js:1 Raw details: Object
+edit-product-new-D3NsERcf.js:1 aiInputs.secondaryStoneType: Moissanite type: string
+edit-product-new-D3NsERcf.js:1 additionalData.secondaryStoneType: Moissanite type: string
+edit-product-new-D3NsERcf.js:1 details?.secondaryStoneType: undefined type: undefined
+edit-product-new-D3NsERcf.js:1 Final secondaryStoneType: Moissanite
+edit-product-new-D3NsERcf.js:1 Using secondaryStoneWeight from aiInputs: 36
+edit-product-new-D3NsERcf.js:1 Using otherStoneType from aiInputs: Carved Emerald
+edit-product-new-D3NsERcf.js:1 ----DETAILED OTHER STONE DEBUG----
+edit-product-new-D3NsERcf.js:1 aiInputs.otherStoneType: Carved Emerald type: string
+edit-product-new-D3NsERcf.js:1 additionalData.otherStoneType: Carved Emerald type: string
+edit-product-new-D3NsERcf.js:1 details?.otherStoneType: undefined type: undefined
+edit-product-new-D3NsERcf.js:1 Final otherStoneType: Carved Emerald
+edit-product-new-D3NsERcf.js:1 Using otherStoneWeight from aiInputs: 30
+edit-product-new-D3NsERcf.js:1 Setting form values: Object
+edit-product-new-D3NsERcf.js:1 Setting main image preview: /uploads/def6b99f-9163-4499-a000-d0512028aad4.jpeg
+edit-product-new-D3NsERcf.js:1 Setting additional image previews: Array(0)
+price-calculator-display-DKMI41KG.js:6 Price calculation request: Object
+price-calculator-display-DKMI41KG.js:6 Price calculation response: Object
+heart-DdeI_HQL.js:1 Failed to load module script: Expected a JavaScript module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.Understand this error
+product-detail-yIK5Axns.js:1 Failed to load module script: Expected a JavaScript module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.Understand this error
+use-price-calculator-TsaFlGRb.js:1 Failed to load module script: Expected a JavaScript module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec.Understand this error
+index-yL8FP4iH.js:41 TypeError: Failed to fetch dynamically imported module: https://fresh-start-ajitha72.replit.app/assets/product-detail-yIK5Axns.js
+La @ index-yL8FP4iH.js:41Understand this error
+index-yL8FP4iH.js:41 Uncaught TypeError: Failed to fetch dynamically imported module: https://fresh-start-ajitha72.replit.app/assets/product-detail-yIK5Axns.jsUnderstand this error
