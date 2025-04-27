@@ -6,6 +6,7 @@ import WhatsAppButton from "@/components/ui/whatsapp-button";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("@/pages/home"));
@@ -72,7 +73,7 @@ function App() {
             <Route path="/product-detail/:id" component={ProductDetail} />
             <Route path="/checkout" component={Checkout} />
             <Route path="/inspiration" component={InspirationGallery} />
-            <Route path="/customer-dashboard" component={CustomerDashboard} />
+            <ProtectedRoute path="/customer-dashboard" component={CustomerDashboard} />
             <Route path="/auth" component={AuthPage} />
             
             {/* Tools */}
@@ -89,8 +90,8 @@ function App() {
             
             {/* Admin routes */}
             <Route path="/admin" component={AdminLogin} />
-            <Route path="/admin/dashboard" component={AdminDashboard} />
-            <Route path="/admin/products" component={AdminProducts} />
+            <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly />
+            <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
             {/* Redirect old add-product URL to the AI generator */}
             <Route path="/admin/add-product">
               {() => {
@@ -98,14 +99,14 @@ function App() {
                 return null;
               }}
             </Route>
-            <Route path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} />
-            <Route path="/admin/edit-product/:id" component={AdminEditProductNew} />
-            <Route path="/admin/metal-types" component={AdminMetalTypes} />
-            <Route path="/admin/stone-types" component={AdminStoneTypes} />
-            <Route path="/admin/product-types" component={AdminProductTypes} />
-            <Route path="/admin/orders" component={AdminOrders} />
-            <Route path="/admin/designs" component={AdminDesigns} />
-            <Route path="/admin/ai-generator" component={AIContentGenerator} />
+            <ProtectedRoute path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} adminOnly />
+            <ProtectedRoute path="/admin/edit-product/:id" component={AdminEditProductNew} adminOnly />
+            <ProtectedRoute path="/admin/metal-types" component={AdminMetalTypes} adminOnly />
+            <ProtectedRoute path="/admin/stone-types" component={AdminStoneTypes} adminOnly />
+            <ProtectedRoute path="/admin/product-types" component={AdminProductTypes} adminOnly />
+            <ProtectedRoute path="/admin/orders" component={AdminOrders} adminOnly />
+            <ProtectedRoute path="/admin/designs" component={AdminDesigns} adminOnly />
+            <ProtectedRoute path="/admin/ai-generator" component={AIContentGenerator} adminOnly />
             
             {/* Fallback to 404 */}
             <Route component={NotFound} />
