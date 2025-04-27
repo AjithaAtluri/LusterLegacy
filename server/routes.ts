@@ -279,12 +279,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
               productType: aiInputs.productType || "",
               metalType: aiInputs.metalType || "",
               metalWeight: parseFloat(aiInputs.metalWeight) || 0,
-              primaryGems: aiInputs.primaryGems || [],
+              primaryGems: [], // We'll manually add all gems below
               otherStone: aiInputs.otherStoneType ? {
                 stoneTypeId: aiInputs.otherStoneType,
                 caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
               } : undefined
             };
+            
+            // Add main stone if available
+            if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.mainStoneType,
+                carats: parseFloat(aiInputs.mainStoneWeight) || 0
+              });
+            }
+            
+            // Add secondary stone if available
+            if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.secondaryStoneType,
+                carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
+              });
+            }
             
             console.log(`Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
             
@@ -358,12 +374,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
               productType: aiInputs.productType || "",
               metalType: aiInputs.metalType || "",
               metalWeight: parseFloat(aiInputs.metalWeight) || 0,
-              primaryGems: aiInputs.primaryGems || [],
+              primaryGems: [], // We'll manually add all gems below
               otherStone: aiInputs.otherStoneType ? {
                 stoneTypeId: aiInputs.otherStoneType,
                 caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
               } : undefined
             };
+            
+            // Add main stone if available
+            if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.mainStoneType,
+                carats: parseFloat(aiInputs.mainStoneWeight) || 0
+              });
+            }
+            
+            // Add secondary stone if available
+            if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.secondaryStoneType,
+                carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
+              });
+            }
             
             console.log(`Featured Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
             
@@ -430,16 +462,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (aiInputs) {
             // Extract parameters for the price calculator
-            const result = await calculateJewelryPrice({
+            const params = {
               productType: aiInputs.productType || "",
               metalType: aiInputs.metalType || "",
               metalWeight: parseFloat(aiInputs.metalWeight) || 0,
-              primaryGems: aiInputs.primaryGems || [],
+              primaryGems: [], // We'll manually add all gems below
               otherStone: aiInputs.otherStoneType ? {
                 stoneTypeId: aiInputs.otherStoneType,
                 caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
               } : undefined
-            });
+            };
+            
+            // Add main stone if available
+            if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.mainStoneType,
+                carats: parseFloat(aiInputs.mainStoneWeight) || 0
+              });
+            }
+            
+            // Add secondary stone if available
+            if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.secondaryStoneType,
+                carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
+              });
+            }
+            
+            const result = await calculateJewelryPrice(params);
             
             // Add the accurate prices to the product
             return {
@@ -521,12 +571,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             productType: aiInputs.productType || "",
             metalType: aiInputs.metalType || "",
             metalWeight: parseFloat(aiInputs.metalWeight) || 0,
-            primaryGems: aiInputs.primaryGems || [],
+            primaryGems: [], // We'll manually add all gems below
             otherStone: aiInputs.otherStoneType ? {
               stoneTypeId: aiInputs.otherStoneType,
               caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
             } : undefined
           };
+          
+          // Add main stone if available
+          if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
+            params.primaryGems.push({
+              name: aiInputs.mainStoneType,
+              carats: parseFloat(aiInputs.mainStoneWeight) || 0
+            });
+          }
+          
+          // Add secondary stone if available
+          if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
+            params.primaryGems.push({
+              name: aiInputs.secondaryStoneType,
+              carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
+            });
+          }
           
           console.log(`Detail Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
           
