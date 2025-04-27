@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
-import { Eye, Loader2 } from "lucide-react";
+import { Eye, Loader2, MessageCircle } from "lucide-react";
 
 interface DesignDetailProps {
   design: {
@@ -26,15 +28,24 @@ interface DesignDetailProps {
     estimatedPrice: number | null;
     cadImageUrl: string | null;
     createdAt: string;
+    comments?: Array<{
+      id: number;
+      content: string;
+      createdAt: string;
+      createdBy: string;
+      isAdmin: boolean;
+    }>;
   };
 }
 
 export default function DesignDetail({ design }: DesignDetailProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [estimatedPrice, setEstimatedPrice] = useState(design.estimatedPrice?.toString() || "");
   const [cadImageUrl, setCadImageUrl] = useState(design.cadImageUrl || "");
   const [status, setStatus] = useState(design.status);
+  const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -95,6 +106,38 @@ export default function DesignDetail({ design }: DesignDetailProps) {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+  
+  const handleCommentSubmit = async () => {
+    if (!newComment.trim()) return;
+    
+    setIsSubmittingComment(true);
+    
+    try {
+      await apiRequest("POST", `/api/custom-designs/${design.id}/comments`, {
+        content: newComment
+      });
+      
+      toast({
+        title: "Comment added",
+        description: "Your comment has been added to the design request"
+      });
+      
+      // Invalidate query to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/custom-designs'] });
+      
+      // Clear comment field
+      setNewComment("");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Comment failed",
+        description: "Failed to add comment",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingComment(false);
     }
   };
   
@@ -284,6 +327,74 @@ export default function DesignDetail({ design }: DesignDetailProps) {
               </CardContent>
             </Card>
           )}
+          
+          {/* Comments Section */}
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Communication with Customer</CardTitle>
+              <CardDescription>
+                Messages between you and the customer
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {design.comments && design.comments.length > 0 ? (
+                  design.comments.map((comment) => (
+                    <div 
+                      key={comment.id} 
+                      className={`p-3 rounded-md ${comment.isAdmin ? 'bg-primary/10 mr-6' : 'bg-background border ml-6'}`}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-medium">
+                          {comment.isAdmin ? 'Luster Legacy Team' : comment.createdBy}
+                        </span>
+                        <span className="text-xs text-foreground/60">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-foreground/60">
+                    No comments yet. Use the form below to communicate with the customer.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            
+            <Separator />
+            
+            {/* Comment Form */}
+            <CardFooter className="pt-4">
+              <div className="w-full space-y-3">
+                <Textarea 
+                  placeholder="Add a comment or message for the customer..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  rows={3}
+                />
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={handleCommentSubmit}
+                    disabled={isSubmittingComment || !newComment.trim()}
+                  >
+                    {isSubmittingComment ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Send Message
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardFooter>
+          </Card>
         </div>
       </DialogContent>
     </Dialog>
