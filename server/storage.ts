@@ -1580,10 +1580,10 @@ export class DatabaseStorage implements IStorage {
   // Cart methods
   async getCartItemsBySession(sessionId: string): Promise<any> {
     try {
-      let cartItems = [];
+      let cartItemsList = [];
       
       if (sessionId) {
-        cartItems = await db
+        cartItemsList = await db
           .select()
           .from(cartItems)
           .where(eq(cartItems.sessionId, sessionId));
@@ -1591,21 +1591,21 @@ export class DatabaseStorage implements IStorage {
       
       // Fetch product details for each cart item
       const itemsWithProducts = await Promise.all(
-        cartItems.map(async (item) => {
-          const [product] = await db
+        cartItemsList.map(async (item) => {
+          const [productData] = await db
             .select()
             .from(products)
             .where(eq(products.id, item.productId));
           
           return {
             ...item,
-            product: product || null
+            product: productData || null
           };
         })
       );
       
       // Calculate total price
-      const total = itemsWithProducts.reduce((sum, item) => sum + item.price, 0);
+      const total = itemsWithProducts.reduce((sum, item) => sum + (item.price || 0), 0);
       
       return {
         items: itemsWithProducts,
@@ -1619,28 +1619,28 @@ export class DatabaseStorage implements IStorage {
   
   async getCartItemsByUser(userId: number): Promise<any> {
     try {
-      const cartItems = await db
+      const userCartItems = await db
         .select()
         .from(cartItems)
         .where(eq(cartItems.userId, userId));
       
       // Fetch product details for each cart item
       const itemsWithProducts = await Promise.all(
-        cartItems.map(async (item) => {
-          const [product] = await db
+        userCartItems.map(async (item) => {
+          const [productData] = await db
             .select()
             .from(products)
             .where(eq(products.id, item.productId));
           
           return {
             ...item,
-            product: product || null
+            product: productData || null
           };
         })
       );
       
       // Calculate total price
-      const total = itemsWithProducts.reduce((sum, item) => sum + item.price, 0);
+      const total = itemsWithProducts.reduce((sum, item) => sum + (item.price || 0), 0);
       
       return {
         items: itemsWithProducts,
@@ -1688,6 +1688,19 @@ export class DatabaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error clearing cart:", error);
+      return false;
+    }
+  }
+  
+  async clearCartByUser(userId: number): Promise<boolean> {
+    try {
+      await db
+        .delete(cartItems)
+        .where(eq(cartItems.userId, userId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error clearing user cart:", error);
       return false;
     }
   }

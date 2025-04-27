@@ -776,35 +776,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get cart items for current session
   app.get('/api/cart', async (req, res) => {
     try {
-      const sessionId = req.sessionId;
+      const sessionId = req.sessionId || '';
+      const userId = req.user?.id;
       
       // Debug logging
       console.log('GET /api/cart - Session ID:', sessionId);
-      console.log('GET /api/cart - Cookies:', req.cookies);
+      console.log('GET /api/cart - User ID:', userId);
       
-      const cartItems = await storage.getCartItemsBySession(sessionId);
+      let cartData;
+      if (userId) {
+        // If user is logged in, get cart by user ID
+        cartData = await storage.getCartItemsByUser(userId);
+      } else {
+        // Otherwise get cart by session ID
+        cartData = await storage.getCartItemsBySession(sessionId);
+      }
       
       // Debug logging
-      console.log(`GET /api/cart - Found ${cartItems.length} items for session ${sessionId}`);
+      console.log(`GET /api/cart - Found ${cartData.items.length} items`);
       
-      // For each cart item, fetch the corresponding product
-      const itemsWithDetails = await Promise.all(
-        cartItems.map(async (item) => {
-          const product = await storage.getProduct(item.productId);
-          return {
-            ...item,
-            product
-          };
-        })
-      );
-
-      // Calculate total
-      const total = itemsWithDetails.reduce((sum, item) => sum + item.price, 0);
-
-      res.json({
-        items: itemsWithDetails,
-        total
-      });
+      // The storage methods now handle fetching product details
+      // and calculating the total price
+      res.json(cartData);
     } catch (error) {
       console.error('Error fetching cart:', error);
       res.status(500).json({ message: 'Error fetching cart' });
@@ -886,8 +879,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clear cart
   app.delete('/api/cart', async (req, res) => {
     try {
-      const sessionId = req.sessionId;
-      await storage.clearCart(sessionId);
+      const sessionId = req.sessionId || '';
+      const userId = req.user?.id;
+      
+      if (userId) {
+        // Clear user's cart
+        await storage.clearCartByUser(userId);
+      } else if (sessionId) {
+        // Clear session cart
+        await storage.clearCart(sessionId);
+      }
+      
       res.json({ message: 'Cart cleared successfully' });
     } catch (error) {
       console.error('Error clearing cart:', error);
