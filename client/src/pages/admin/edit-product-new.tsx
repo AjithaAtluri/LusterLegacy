@@ -1116,10 +1116,12 @@ export default function EditProductNew() {
                                     metalCost = metalWeight * 7500 * purityFactor * typeMultiplier;
                                   }
                                   
-                                  // Estimate stone costs
-                                  const mainStoneCost = mainStoneWeight * 3000; // Average stone price
-                                  const secondaryStoneCost = secondaryStoneWeight * 2000;
-                                  const otherStoneCost = otherStoneWeight * 1500;
+                                  // We can't get exact stone prices here without more API calls
+                                  // The accurate prices will be shown in the PriceBreakdownItem components
+                                  // Here we just need a rough estimate for the overhead display
+                                  const mainStoneCost = mainStoneWeight * 1000; // Minimal placeholder for calculation
+                                  const secondaryStoneCost = secondaryStoneWeight * 1000;
+                                  const otherStoneCost = otherStoneWeight * 1000;
                                   
                                   // Calculate total base cost
                                   const totalBaseCost = metalCost + mainStoneCost + secondaryStoneCost + otherStoneCost;

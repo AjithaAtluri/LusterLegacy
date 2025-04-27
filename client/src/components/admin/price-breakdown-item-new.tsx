@@ -101,40 +101,13 @@ export function PriceBreakdownItem({
             return;
           }
           
-          // Set initial description
+          // Set initial description and values
           setDescription(`${weightNum} carat of ${stoneType}`);
+          setCost(0);
           setIsLoading(true);
           
-          // First provide a quick estimate
-          let estimatedPricePerCarat = 500; // Default base price
-          
-          // Estimate based on stone name, same logic as the server-side calculator
-          const name = stoneType.toLowerCase();
-          if (name.includes('diamond')) {
-            estimatedPricePerCarat = name.includes('lab') ? 20000 : 56000;
-          } else if (name.includes('polki')) {
-            estimatedPricePerCarat = name.includes('lab') ? 7000 : 15000;
-          } else if (name.includes('ruby') || name.includes('sapphire')) {
-            estimatedPricePerCarat = 3000;
-          } else if (name.includes('emerald')) {
-            estimatedPricePerCarat = 3500;
-          } else if (name.includes('tanzanite')) {
-            estimatedPricePerCarat = 1500;
-          } else if (name.includes('pearl')) {
-            estimatedPricePerCarat = name.includes('south sea') ? 300 : 100;
-          } else if (name.includes('amethyst') || name.includes('quartz') || name.includes('morganite')) {
-            estimatedPricePerCarat = 1500;
-          } else if (name.includes('cz') || name.includes('swarovski')) {
-            estimatedPricePerCarat = 1000;
-          } else if (name.includes('opal')) {
-            estimatedPricePerCarat = 2000;
-          } else if (name.includes('topaz')) {
-            estimatedPricePerCarat = 800;
-          }
-          
-          // Set initial cost estimate
-          const estimatedCost = weightNum * estimatedPricePerCarat;
-          setCost(Math.round(estimatedCost));
+          // Don't use stone name based estimation - only use admin entered values via API
+          // We'll fetch from the API which uses the proper database values entered by the admin
           
           // Now try to get the accurate stone cost from the API, same as main calculator
           // Only do this if we have a specific stone type
@@ -168,8 +141,8 @@ export function PriceBreakdownItem({
                 }
               }
             } catch (apiError) {
-              console.log("Using estimate for stone cost:", estimatedCost);
-              // Keep using the estimate if the API call fails
+              console.log("Error fetching stone cost from API, unable to display price");
+              // Display error state if API call fails
             }
           }
         }
