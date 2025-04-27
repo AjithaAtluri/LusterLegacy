@@ -698,7 +698,7 @@ export default function EditProductNew() {
             otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
             otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
             productTypeId: values.productType || '',
-            userDescription: values.userDescription,
+            // userDescription removed
             // dimensions removed as requested
             // Save all AI generator inputs as a dedicated structure for easier retrieval
             aiInputs: {
@@ -710,7 +710,7 @@ export default function EditProductNew() {
               secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
               otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
               otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
-              userDescription: values.userDescription,
+              // userDescription removed
               productType: values.productType || '',
             }
           }
@@ -814,7 +814,6 @@ export default function EditProductNew() {
             secondaryStoneWeight={form.watch("secondaryStoneWeight")}
             otherStoneType={form.watch("otherStoneType")}
             otherStoneWeight={form.watch("otherStoneWeight")}
-            userDescription={form.watch("userDescription")}
             mainImageUrl={mainImagePreview}
             additionalImageUrls={additionalImagePreviews}
             onContentGenerated={handleContentGenerated}

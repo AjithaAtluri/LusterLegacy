@@ -32,7 +32,6 @@ export default function EditProductAIGenerator({
   secondaryStoneWeight,
   otherStoneType,
   otherStoneWeight,
-  userDescription,
   mainImageUrl,
   additionalImageUrls = [],
   onContentGenerated,
@@ -48,7 +47,6 @@ export default function EditProductAIGenerator({
   secondaryStoneWeight: string;
   otherStoneType: string;
   otherStoneWeight: string;
-  userDescription: string;
   mainImageUrl: string | null;
   additionalImageUrls: string[];
   onContentGenerated: (content: any) => void;
@@ -91,7 +89,7 @@ export default function EditProductAIGenerator({
       productType: productType || "",
       metalType: metalType || "",
       metalWeight: metalWeight || "",
-      userDescription: userDescription || "",
+      userDescription: "", // Default to empty string
     },
   });
 
@@ -315,24 +313,7 @@ export default function EditProductAIGenerator({
               </p>
             </div>
 
-            {/* User Description */}
-            <FormField
-              control={form.control}
-              name="userDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Details (optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter any additional details about the product, e.g., design inspiration, special features..."
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* User Description input removed as requested */}
 
             {/* Image Upload */}
             <div className="space-y-2">
