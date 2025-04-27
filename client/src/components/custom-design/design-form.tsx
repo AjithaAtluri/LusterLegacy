@@ -44,7 +44,7 @@ export default function DesignForm() {
       fullName: user?.username || "",
       email: user?.email || "",
       phone: "",
-      country: "in", // Default to India
+      country: "us", // Default to United States
       metalType: "",
       primaryStone: "",
       notes: "",
