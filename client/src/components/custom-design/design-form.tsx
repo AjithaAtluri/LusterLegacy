@@ -57,16 +57,61 @@ export default function DesignForm() {
     if (user) {
       form.setValue("fullName", user.username);
       form.setValue("email", user.email);
+      
+      // Try to restore saved form data from session storage
+      try {
+        const savedFormData = sessionStorage.getItem('designFormData');
+        if (savedFormData) {
+          const parsedData = JSON.parse(savedFormData);
+          
+          // Restore form fields
+          form.setValue("fullName", user.username); // Always use logged-in username
+          form.setValue("email", user.email); // Always use logged-in email
+          form.setValue("phone", parsedData.phone || "");
+          form.setValue("country", parsedData.country || "us");
+          form.setValue("metalType", parsedData.metalType || "");
+          form.setValue("primaryStone", parsedData.primaryStone || "");
+          form.setValue("notes", parsedData.notes || "");
+          form.setValue("agreeToTerms", parsedData.agreeToTerms || false);
+          
+          // Show a success message
+          toast({
+            title: "Design details restored",
+            description: "We've restored your previous design information.",
+          });
+          
+          // Clear the saved data to prevent reloading it on subsequent visits
+          sessionStorage.removeItem('designFormData');
+        }
+      } catch (error) {
+        console.error('Error restoring form data from session storage', error);
+      }
     }
-  }, [user, form]);
+  }, [user, form, toast]);
   
   const onSubmit = async (data: DesignFormValues) => {
     // Check if user is logged in
     if (!user) {
+      // Save form data to session storage before redirecting
+      try {
+        const formData = {
+          ...data,
+          imageFile: uploadedImage ? {
+            name: uploadedImage.name,
+            type: uploadedImage.type,
+            size: uploadedImage.size,
+            lastModified: uploadedImage.lastModified,
+            previewUrl: previewUrl
+          } : null
+        };
+        sessionStorage.setItem('designFormData', JSON.stringify(formData));
+      } catch (error) {
+        console.error('Error saving form data to session storage', error);
+      }
+      
       toast({
         title: "Login required",
-        description: "Please log in or create an account to submit a custom design request.",
-        variant: "destructive"
+        description: "Your design details have been saved. Please log in or create an account to continue."
       });
       
       // Redirect to auth page with return URL
