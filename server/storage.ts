@@ -42,7 +42,17 @@ import { db } from "./db";
 import { eq, desc, asc, and, SQL, sql } from "drizzle-orm";
 
 // Storage interface definition
+import session from "express-session";
+import createMemoryStore from "memorystore";
+import connectPg from "connect-pg-simple";
+
+const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
+
 export interface IStorage {
+  // Session store for authentication
+  sessionStore: session.SessionStore;
+  
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -177,6 +187,9 @@ export class MemStorage implements IStorage {
   private currentProductTypeId: number;
   private currentCustomizationRequestId: number;
   private productTypes: Map<number, ProductType>;
+  
+  // Session store for authentication
+  public sessionStore: session.SessionStore;
 
   constructor() {
     this.users = new Map();
@@ -207,6 +220,11 @@ export class MemStorage implements IStorage {
     this.currentInspirationItemId = 1;
     this.currentProductTypeId = 1;
     this.currentCustomizationRequestId = 1;
+    
+    // Initialize session store for authentication
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // 24 hours
+    });
     
     // Initialize with sample data
     this.initSampleData();

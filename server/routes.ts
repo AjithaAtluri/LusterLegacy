@@ -3,6 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as z from "zod";
+import { setupAuth } from "./auth";
 import { 
   insertProductSchema, 
   insertDesignRequestSchema, 
@@ -101,6 +102,9 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create HTTP server
   const httpServer = createServer(app);
+
+  // Set up authentication
+  setupAuth(app);
 
   // Health check route for deployments - moved to /api/health to avoid conflict with frontend
   app.get('/api/health', (_req, res) => {
