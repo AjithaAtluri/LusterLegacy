@@ -51,7 +51,7 @@ export default function CustomDesign() {
                 <div>
                   <h3 className="font-playfair text-lg font-semibold text-foreground mb-2">CAD Model & Quote</h3>
                   <p className="font-montserrat text-foreground/70">
-                    Our design team will create a detailed CAD model for your approval and provide a comprehensive quote. If your design is accepted, a ${PAYMENT_TERMS.cadFee} {PAYMENT_TERMS.cadFeeDescription} will be required before work begins, which is fully adjustable against your final order.
+                    Our design team will create a detailed CAD model for your approval and provide a comprehensive quote. If your design is accepted, a ${PAYMENT_TERMS.cadFee} {PAYMENT_TERMS.cadFeeDescription} will be required before design work begins, which is fully adjustable against your final order.
                   </p>
                 </div>
               </div>
