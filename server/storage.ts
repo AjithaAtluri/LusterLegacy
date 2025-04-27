@@ -1619,7 +1619,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Cart methods
-  async getCartItemsBySession(sessionId: string): Promise<any> {
+  async getCartItemsDetailsBySession(sessionId: string): Promise<any> {
     try {
       let cartItemsList = [];
       

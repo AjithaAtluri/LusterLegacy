@@ -108,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health check routes for deployments
   app.get('/', (_req, res) => {
-    res.status(200).send('OK');
+    res.status(200).json({ status: 'ok' });
   });
 
   app.get('/api/health', (_req, res) => {
