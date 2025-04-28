@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,30 @@ import { Menu, X, ShoppingBag, User, LogOut } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logoutMutation } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Check if the admin auth cookie is set
+  useEffect(() => {
+    // Check admin authentication status
+    const checkAdminAuth = async () => {
+      try {
+        const response = await apiRequest('GET', '/api/auth/me');
+        if (response.ok) {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.log('Not logged in as admin');
+      }
+    };
+    
+    checkAdminAuth();
+  }, [location]); // Check on location change
   
   // Fetch cart items count
   const { data: cartData } = useQuery({
@@ -23,8 +42,20 @@ export default function Header() {
   const cartItems = cartData?.items || [];
   const cartCount = cartItems.length;
   
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  const handleLogout = async () => {
+    // If we're admin, clear the admin auth cookie
+    if (isAdmin) {
+      try {
+        await apiRequest('POST', '/api/auth/logout');
+        // Force reload to clear all auth state
+        window.location.href = '/';
+      } catch (error) {
+        console.error('Failed to logout admin:', error);
+      }
+    } else {
+      // Regular user logout
+      logoutMutation.mutate();
+    }
   };
   
   const isActive = (path: string) => {
@@ -62,12 +93,19 @@ export default function Header() {
             </Link>
           ))}
           
-          {user ? (
+          {user || isAdmin ? (
             <div className="flex space-x-2">
-              <Link href="/customer-dashboard" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
-                <User className="h-4 w-4 mr-2" />
-                Dashboard
-              </Link>
+              {isAdmin ? (
+                <Link href="/admin/direct-dashboard" className="font-montserrat text-background bg-rose-600 px-4 py-2 rounded hover:bg-rose-700 transition duration-300 flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  Admin Dashboard
+                </Link>
+              ) : (
+                <Link href="/customer-dashboard" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Link>
+              )}
               <Button 
                 onClick={handleLogout} 
                 variant="outline" 
@@ -120,16 +158,27 @@ export default function Header() {
                   </Link>
                 ))}
                 
-                {user ? (
+                {user || isAdmin ? (
                   <div className="flex flex-col space-y-4 mt-4">
-                    <Link 
-                      href="/customer-dashboard"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Dashboard
-                    </Link>
+                    {isAdmin ? (
+                      <Link 
+                        href="/admin/direct-dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="font-montserrat text-background bg-rose-600 px-4 py-2 rounded hover:bg-rose-700 transition duration-300 flex items-center justify-center"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Admin Dashboard
+                      </Link>
+                    ) : (
+                      <Link 
+                        href="/customer-dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Dashboard
+                      </Link>
+                    )}
                     <Button 
                       onClick={() => {
                         handleLogout();
