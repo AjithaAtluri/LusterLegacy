@@ -414,6 +414,122 @@ export default function AuthPage() {
                 </p>
               </div>
             </TabsContent>
+            
+            {/* Debug Tools */}
+            <TabsContent value="debug" className="space-y-6 pt-4">
+              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md mb-4">
+                <h3 className="text-amber-800 font-medium mb-2">Debug Tools</h3>
+                <p className="text-amber-700 text-sm">
+                  These tools are for development and debugging purposes only.
+                </p>
+              </div>
+              
+              {/* Direct Login */}
+              <div className="space-y-4 border border-border p-4 rounded-md">
+                <h3 className="font-medium">Direct Login</h3>
+                <p className="text-sm text-muted-foreground">
+                  Bypass password verification and log in directly as any user
+                </p>
+                
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="Enter username"
+                    value={debugUsername}
+                    onChange={(e) => setDebugUsername(e.target.value)}
+                    disabled={isDirectLoginLoading}
+                  />
+                  <Button 
+                    onClick={handleDirectLogin}
+                    disabled={isDirectLoginLoading}
+                  >
+                    {isDirectLoginLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Logging in...
+                      </>
+                    ) : (
+                      "Direct Login"
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setDebugUsername("admin")}
+                  >
+                    Admin
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setDebugUsername("Ajitha72")}
+                  >
+                    Customer
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Authentication Status */}
+              <div className="space-y-4 border border-border p-4 rounded-md">
+                <h3 className="font-medium">Authentication Status</h3>
+                <p className="text-sm text-muted-foreground">
+                  Check current authentication status
+                </p>
+                
+                <Button onClick={handleCheckAuthStatus}>
+                  Check Auth Status
+                </Button>
+              </div>
+              
+              {/* User List */}
+              <div className="space-y-4 border border-border p-4 rounded-md">
+                <h3 className="font-medium">User List</h3>
+                <p className="text-sm text-muted-foreground">
+                  List all users in the database
+                </p>
+                
+                <Button 
+                  onClick={handleLoadUsers}
+                  disabled={isLoadingUserList}
+                >
+                  {isLoadingUserList ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading users...
+                    </>
+                  ) : (
+                    "Load Users"
+                  )}
+                </Button>
+                
+                {userList.length > 0 && (
+                  <div className="mt-4 max-h-60 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="px-2 py-1 text-left">ID</th>
+                          <th className="px-2 py-1 text-left">Username</th>
+                          <th className="px-2 py-1 text-left">Email</th>
+                          <th className="px-2 py-1 text-left">Role</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {userList.map((user) => (
+                          <tr key={user.id} className="border-b border-border hover:bg-muted/50">
+                            <td className="px-2 py-1">{user.id}</td>
+                            <td className="px-2 py-1">{user.username}</td>
+                            <td className="px-2 py-1">{user.email}</td>
+                            <td className="px-2 py-1">{user.role}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </div>

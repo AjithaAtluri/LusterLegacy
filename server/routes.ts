@@ -321,6 +321,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Server error during direct login" });
     }
   });
+  
+  // Debug route to list all users (NEVER USE IN PRODUCTION)
+  app.get('/api/debug/users', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      
+      // Only return safe user info (no passwords)
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt
+      }));
+      
+      res.status(200).json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      res.status(500).json({ message: "Server error fetching users" });
+    }
+  });
 
   /**
    * Debug routes (temporary)
