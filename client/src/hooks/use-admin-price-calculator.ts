@@ -108,7 +108,7 @@ export function useAdminPriceCalculator({
             stoneTypeId: mainStoneType,
             caratWeight: mainStoneWeightNum
           } : null,
-          secondaryStones: secondaryStoneData ? [secondaryStoneData] : null,
+          secondaryStones: secondaryStoneData ? [secondaryStoneData] : [],
           otherStone: otherStoneType !== "none_selected" && otherStoneType !== "none" ? {
             stoneTypeId: otherStoneType,
             caratWeight: otherStoneWeightNum
