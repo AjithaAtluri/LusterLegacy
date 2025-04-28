@@ -232,7 +232,43 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
     console.log("Trying admin jewelry content endpoint with proper authentication...");
     
     try {
-      const response = await apiRequest("POST", "/api/admin/generate-jewelry-content", data);
+      // First validate current authentication in real-time
+      console.log("Checking current admin authentication status...");
+      try {
+        const authCheckResponse = await fetch('/api/user', {
+          credentials: 'include',
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+          }
+        });
+        
+        if (authCheckResponse.ok) {
+          const authUser = await authCheckResponse.json();
+          console.log("Current authenticated user:", authUser);
+          
+          if (authUser.role !== 'admin') {
+            console.warn("Authenticated user is not an admin:", authUser.role);
+          }
+        } else {
+          console.warn("Not authenticated according to /api/user endpoint");
+        }
+      } catch (authCheckError) {
+        console.error("Error checking authentication:", authCheckError);
+      }
+      
+      // Add auth debug headers to track auth state
+      const headers = {
+        "X-Auth-Debug": "true",
+        "X-Request-Source": "admin-ai-generator",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      };
+      
+      console.log("Making AI content generation request with explicit credentials...");
+      const response = await apiRequest("POST", "/api/admin/generate-jewelry-content", data, { headers });
       
       if (response.ok) {
         console.log("Admin jewelry endpoint successful!");
@@ -254,8 +290,23 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
         }
       }
       
+      // Get detailed error info if available
+      let errorDetail = "";
+      try {
+        const errorText = await response.text();
+        console.error("Admin endpoint error response:", errorText);
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorDetail = errorJson.detail || errorJson.message || "";
+        } catch (e) {
+          errorDetail = errorText;
+        }
+      } catch (e) {
+        console.error("Could not read error details from response");
+      }
+      
       console.error("Admin endpoint failed with status:", response.status);
-      throw new Error(`Admin API request failed with status: ${response.status}`);
+      throw new Error(`Admin API request failed with status: ${response.status}${errorDetail ? ` - ${errorDetail}` : ''}`);
     } catch (error) {
       console.error("Admin endpoint error:", error);
       
@@ -276,7 +327,25 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
           
           console.log("Calling direct jewelry image analysis with image data");
           
-          const directResponse = await apiRequest("POST", "/api/admin/analyze-jewelry-image", directImageData);
+          // Special headers for admin auth debugging
+          const headers = {
+            "X-Auth-Debug": "true",
+            "X-Request-Source": "admin-image-analyzer",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+          };
+          
+          // Create a direct fetch request to bypass potential API request issues
+          const directResponse = await fetch("/api/admin/analyze-jewelry-image", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...headers
+            },
+            body: JSON.stringify(directImageData),
+            credentials: "include"
+          });
           
           if (directResponse.ok) {
             console.log("Direct jewelry image analysis successful!");
@@ -296,8 +365,23 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
               throw new Error("Failed to parse image analysis response"); 
             }
           } else {
+            // Get detailed error info if available
+            let errorDetail = "";
+            try {
+              const errorText = await directResponse.text();
+              console.error("Image analysis error response:", errorText);
+              try {
+                const errorJson = JSON.parse(errorText);
+                errorDetail = errorJson.detail || errorJson.message || "";
+              } catch (e) {
+                errorDetail = errorText;
+              }
+            } catch (e) {
+              console.error("Could not read error details from response");
+            }
+            
             console.error("Direct jewelry image analysis failed, status:", directResponse.status);
-            throw new Error(`Image analysis failed with status: ${directResponse.status}`);
+            throw new Error(`Image analysis failed with status: ${directResponse.status}${errorDetail ? ` - ${errorDetail}` : ''}`);
           }
         } catch (directError) {
           console.error("Error with direct jewelry image analysis:", directError);

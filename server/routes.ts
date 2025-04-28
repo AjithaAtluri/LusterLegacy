@@ -2357,10 +2357,24 @@ Respond in JSON format:
     }
   });
   
-  // Admin-protected jewelry image analysis endpoint
+  // Admin-protected jewelry image analysis endpoint with enhanced logging
   app.post("/api/admin/analyze-jewelry-image", validateAdmin, async (req, res) => {
     try {
       console.log("Admin jewelry image analysis endpoint called");
+      console.log("Request headers:", {
+        authDebug: req.headers['x-auth-debug'],
+        requestSource: req.headers['x-request-source'],
+        contentType: req.headers['content-type'],
+        hasAuthCookie: !!req.cookies?.admin_id || !!req.cookies?.userId
+      });
+      
+      // Enhanced auth logging on direct endpoint access
+      console.log("Request authentication details:", {
+        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        sessionID: req.sessionID || 'none'
+      });
       
       // Check if we have the required fields before proceeding
       const { imageData, productType, metalType } = req.body;

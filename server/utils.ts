@@ -1,14 +1,26 @@
 import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 
-// Enhanced admin validation middleware with multi-token support
+// Enhanced admin validation middleware with multi-token support and improved diagnostics
 export const validateAdmin = async (
   req: Request, 
   res: Response, 
   next: NextFunction
 ) => {
   try {
-    console.log("ADMIN ACCESS - Validating admin request");
+    const endpoint = req.originalUrl || req.url;
+    console.log(`ADMIN ACCESS - Validating admin request to ${endpoint}`);
+    
+    // Log detailed request info for debugging admin API calls
+    console.log("Admin auth check - request details:", {
+      method: req.method,
+      path: endpoint,
+      contentType: req.headers['content-type'],
+      cookies: Object.keys(req.cookies || {}),
+      hasBody: !!req.body,
+      sessionId: req.sessionID,
+      isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false
+    });
     
     // Try multiple admin auth methods, with priority on dedicated admin cookies
     
@@ -22,7 +34,7 @@ export const validateAdmin = async (
           
           const adminUser = await storage.getUser(parsedAdminId);
           if (adminUser && adminUser.role === 'admin') {
-            console.log("Admin auth check - verified admin via dedicated admin cookie");
+            console.log("Admin auth check - verified admin via dedicated admin cookie:", adminUser.username);
             
             // Set user on request for downstream handlers
             req.user = adminUser;
@@ -64,6 +76,7 @@ export const validateAdmin = async (
             }
             
             // Allow the request to proceed
+            console.log(`Admin auth GRANTED via admin_id cookie for ${endpoint}`);
             return next();
           } else if (adminUser) {
             console.log("Admin auth check - user found but not admin, role:", adminUser.role);
@@ -80,6 +93,8 @@ export const validateAdmin = async (
       } catch (cookieError) {
         console.error("Admin auth check - error checking admin cookie:", cookieError);
       }
+    } else {
+      console.log("Admin auth check - no admin_id cookie found");
     }
     
     // 2. Next check legacy cookie auth (backward compatibility)
@@ -92,7 +107,7 @@ export const validateAdmin = async (
           
           const legacyUser = await storage.getUser(parsedUserId);
           if (legacyUser && legacyUser.role === 'admin') {
-            console.log("Admin auth check - verified admin via legacy cookie");
+            console.log("Admin auth check - verified admin via legacy cookie:", legacyUser.username);
             
             // Set user on request for downstream handlers
             req.user = legacyUser;
@@ -128,6 +143,7 @@ export const validateAdmin = async (
             }
             
             // Allow the request to proceed
+            console.log(`Admin auth GRANTED via legacy userId cookie for ${endpoint}`);
             return next();
           } else if (legacyUser) {
             console.log("Admin auth check - legacy user found but not admin, role:", legacyUser.role);
@@ -138,12 +154,16 @@ export const validateAdmin = async (
       } catch (cookieError) {
         console.error("Admin auth check - error checking legacy cookie:", cookieError);
       }
+    } else {
+      console.log("Admin auth check - no legacy userId cookie found");
     }
     
     // 3. Finally check passport session auth
     if (req.isAuthenticated && req.isAuthenticated()) {
+      console.log("Admin auth check - passport session is authenticated, checking user:", req.user);
+      
       if (req.user && req.user.role === 'admin') {
-        console.log("Admin auth check - verified admin via passport session");
+        console.log("Admin auth check - verified admin via passport session:", req.user.username);
         
         // Set admin cookies for future requests
         console.log("Admin auth check - setting admin cookies from passport session");
@@ -163,16 +183,35 @@ export const validateAdmin = async (
         });
         
         // Allow the request to proceed
+        console.log(`Admin auth GRANTED via passport session for ${endpoint}`);
         return next();
+      } else if (req.user) {
+        console.log("Admin auth check - passport user found but not admin, role:", req.user.role);
+        return res.status(403).json({ 
+          message: 'Admin access required', 
+          detail: 'User is authenticated but lacks admin role'
+        });
       } else {
-        console.log("Admin auth check - passport user found but not admin");
-        return res.status(403).json({ message: 'Admin access required' });
+        console.log("Admin auth check - passport session authenticated but no user object");
       }
+    } else {
+      console.log("Admin auth check - passport session is NOT authenticated");
     }
     
     // If we get here, no valid admin auth was found with any method
-    console.log("Admin auth check - no admin authentication found by any method");
-    return res.status(401).json({ message: 'Authentication required' });
+    console.log(`Admin auth DENIED for ${endpoint} - no admin authentication found with any method`);
+    
+    // Return a more detailed error message to help diagnose the issue
+    return res.status(401).json({ 
+      message: 'Authentication required',
+      detail: 'Valid admin authentication not found. Please login as an admin user.',
+      endpoint: endpoint,
+      authMethods: {
+        adminCookie: !!req.cookies?.admin_id,
+        legacyCookie: !!req.cookies?.userId,
+        passportSession: !!(req.isAuthenticated && req.isAuthenticated()),
+      }
+    });
   } catch (error) {
     console.error('Unexpected error validating admin:', error);
     res.status(500).json({ 

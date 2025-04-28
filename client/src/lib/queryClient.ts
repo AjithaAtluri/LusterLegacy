@@ -29,30 +29,56 @@ export async function apiRequest(
     }
   }
   
+  // Enhanced auth headers for admin endpoints
   // Always include cache control headers for auth requests
-  if (!headers["Cache-Control"]) {
-    headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
-  }
+  headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+  headers["Pragma"] = "no-cache";
+  headers["Expires"] = "0";
   
-  if (!headers["Pragma"]) {
-    headers["Pragma"] = "no-cache";
+  // Add cookie handling improvements for admin APIs
+  const isAdminEndpoint = url.includes('/admin/');
+  if (isAdminEndpoint) {
+    console.log(`Making admin API request to ${url}`, {
+      method,
+      hasData: !!data,
+      contentType: headers["Content-Type"],
+      withCredentials: true
+    });
   }
-  
-  if (!headers["Expires"]) {
-    headers["Expires"] = "0";
-  }
-  
-  const res = await fetch(url, {
-    method,
-    headers,
-    body,
-    credentials: "include", // Always include credentials for auth cookies
-  });
 
-  await throwIfResNotOk(res);
-  
-  // Return response instead of trying to parse it
-  return res;
+  try {
+    // Use same-origin credentials mode for all requests to ensure cookies are sent
+    const res = await fetch(url, {
+      method,
+      headers,
+      body,
+      credentials: "include", // Always include credentials for auth cookies
+    });
+    
+    if (isAdminEndpoint) {
+      // Log key headers instead of trying to iterate through HeadersIterator
+      const responseHeaders = {
+        'content-type': res.headers.get('content-type'),
+        'content-length': res.headers.get('content-length'),
+        'set-cookie': res.headers.get('set-cookie')
+      };
+      
+      console.log(`Admin API response status: ${res.status}`, {
+        url,
+        status: res.status,
+        statusText: res.statusText,
+        headers: responseHeaders
+      });
+    }
+
+    await throwIfResNotOk(res);
+    
+    // Return response instead of trying to parse it
+    return res;
+  } catch (error) {
+    console.error(`API request error to ${url}:`, error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
