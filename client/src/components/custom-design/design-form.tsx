@@ -317,6 +317,14 @@ export default function DesignForm() {
       setUploadedImage(null);
       setPreviewUrl(null);
       setSelectedStones([]);
+      
+      // Remove stored form data if any
+      localStorage.removeItem("designFormData");
+      
+      // Redirect to collections page after a short delay
+      setTimeout(() => {
+        window.location.href = window.location.origin + "/collections";
+      }, 1500); // Give the toast a moment to be seen before redirecting
     } catch (error) {
       console.error("Design form error:", error);
       toast({
