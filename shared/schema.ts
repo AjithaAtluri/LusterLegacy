@@ -86,7 +86,7 @@ export const designRequests = pgTable("design_requests", {
   country: text("country"),
   metalType: text("metal_type").notNull(),
   primaryStone: text("primary_stone"), // Keep for backward compatibility
-  primaryStones: json("primary_stones").$type<string[]>(), // New field for multi-select stones
+  primaryStones: json("primary_stones").$type<string[]>().default([]).notNull(), // New field for multi-select stones with default empty array
   notes: text("notes"),
   imageUrl: text("image_url").notNull(),
   status: text("status").notNull().default("pending"), // "pending", "quoted", "approved", "rejected", "completed"

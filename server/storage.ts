@@ -1001,7 +1001,18 @@ export class DatabaseStorage implements IStorage {
 
   async createDesignRequest(insertDesignRequest: InsertDesignRequest): Promise<DesignRequest> {
     try {
-      const [request] = await db.insert(designRequests).values(insertDesignRequest).returning();
+      // Ensure primaryStones is always an array
+      const formattedData = {
+        ...insertDesignRequest,
+        primaryStones: Array.isArray(insertDesignRequest.primaryStones) 
+          ? insertDesignRequest.primaryStones 
+          : (insertDesignRequest.primaryStone ? [insertDesignRequest.primaryStone] : [])
+      };
+      
+      // Log the data being inserted
+      console.log("Creating design request with data:", JSON.stringify(formattedData, null, 2));
+      
+      const [request] = await db.insert(designRequests).values(formattedData).returning();
       return request;
     } catch (error) {
       console.error("Error creating design request:", error);
