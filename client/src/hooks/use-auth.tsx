@@ -157,34 +157,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  // Mutation for logout
+  // Mutation for logout - handles both auth systems
   const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
-      console.log("Logging out from primary auth system...");
-      // First logout from the main system
-      const res = await apiRequest("POST", "/api/logout");
+      console.log("Unified logout - logging out from both auth systems");
       
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Logout failed");
-      }
-      
-      // Also logout from admin auth system for compatibility
       try {
-        console.log("Also logging out from admin auth system...");
-        await apiRequest("POST", "/api/auth/logout");
-        console.log("Successfully logged out from both auth systems");
+        // First try admin system logout
+        console.log("1. Attempting admin auth system logout...");
+        try {
+          const adminLogoutRes = await apiRequest("POST", "/api/auth/logout");
+          if (adminLogoutRes.ok) {
+            console.log("Admin auth logout successful");
+          } else {
+            console.warn("Admin auth logout returned non-ok status:", adminLogoutRes.status);
+          }
+        } catch (adminError) {
+          console.warn("Admin auth logout error (continuing):", adminError);
+        }
+        
+        // Then do main system logout
+        console.log("2. Attempting main auth system logout...");
+        const mainLogoutRes = await apiRequest("POST", "/api/logout");
+        
+        if (!mainLogoutRes.ok) {
+          const errorData = await mainLogoutRes.json();
+          throw new Error(errorData.message || "Main logout failed");
+        }
+        
+        console.log("Main auth logout successful");
+        
+        // Verify logout by checking both endpoints
+        console.log("3. Verifying logout status...");
+        try {
+          // Check main auth endpoint
+          const mainCheck = await apiRequest("GET", "/api/user");
+          if (mainCheck.status !== 401) {
+            console.warn("Main auth session still active after logout! Status:", mainCheck.status);
+          } else {
+            console.log("Main auth session properly terminated");
+          }
+          
+          // Check admin auth endpoint
+          const adminCheck = await apiRequest("GET", "/api/auth/me");
+          if (adminCheck.status !== 401) {
+            console.warn("Admin auth session still active after logout! Status:", adminCheck.status);
+          } else {
+            console.log("Admin auth session properly terminated");
+          }
+        } catch (verifyError) {
+          console.warn("Error during logout verification (continuing):", verifyError);
+        }
+        
+        console.log("Logout process completed");
       } catch (error) {
-        console.warn("Error during admin logout:", error);
-        // Continue anyway since the main logout succeeded
+        console.error("Logout process failed:", error);
+        // Try one more fallback approach - force clear cookies
+        try {
+          console.log("Attempting fallback cookie clearing through iframe...");
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = '/api/auth/logout';
+          document.body.appendChild(iframe);
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        } catch (fallbackError) {
+          console.error("Even fallback logout failed:", fallbackError);
+        }
+        throw error;
       }
     },
     onSuccess: () => {
-      console.log("Logout successful, clearing auth state");
-      // Clear user data from cache
+      console.log("Logout successful, clearing client-side auth state");
+      
+      // Clear all user data from cache
       queryClient.setQueryData(["/api/user"], null);
       
-      // Also ensure admin-specific endpoints are invalidated
+      // Invalidate all auth-related queries to ensure fresh state
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       
       // Force refetch to confirm logout state from server
@@ -192,12 +243,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast({
         title: "Logged out successfully",
+        description: "You have been securely logged out of your account",
       });
+      
+      // Optional: For a fully clean state, consider a page reload
+      // window.location.href = "/";
     },
     onError: (error: Error) => {
+      console.error("Logout mutation error handler:", error);
+      
+      // Even if the official logout failed, still clear the local state
+      queryClient.setQueryData(["/api/user"], null);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      
       toast({
-        title: "Logout failed",
-        description: error.message,
+        title: "Logout issue",
+        description: "Your session may still be active on the server. Please refresh the page.",
         variant: "destructive",
       });
     },
