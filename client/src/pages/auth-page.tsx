@@ -48,6 +48,8 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [location] = useLocation();
   const [returnPath, setReturnPath] = useState<string>("/");
@@ -108,7 +110,6 @@ export default function AuthPage() {
   }
   
   // Debug utility functions
-  const { toast } = useToast();
   const [debugUsername, setDebugUsername] = useState<string>("");
   const [userList, setUserList] = useState<any[]>([]);
   const [isLoadingUserList, setIsLoadingUserList] = useState<boolean>(false);
