@@ -2065,39 +2065,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // NEW: Improved AI Content Generation for Products
+  // NEW: Improved AI Content Generation for Products with enhanced auth diagnostics
   app.post('/api/admin/generate-jewelry-content', validateAdmin, async (req, res) => {
     try {
+      // Enhanced auth logging for troubleshooting
+      console.log("Admin jewelry content generator endpoint called");
+      console.log("Request headers:", {
+        authDebug: req.headers['x-auth-debug'],
+        requestSource: req.headers['x-request-source'],
+        contentType: req.headers['content-type'],
+        hasAuthCookie: !!req.cookies?.admin_id || !!req.cookies?.userId
+      });
+      
+      // Log auth state
+      console.log("Request authentication details:", {
+        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        username: req.user?.username || 'none',
+        userId: req.user?.id || 'none',
+        sessionID: req.sessionID || 'none',
+        cookieCount: Object.keys(req.cookies || {}).length
+      });
+      
       console.log("Using improved jewelry content generator (admin endpoint)");
       // Pass the request to the improved OpenAI service
       await generateJewelryContent(req, res);
     } catch (error) {
       console.error('Error generating jewelry content:', error);
-      res.status(500).json({ message: 'Failed to generate content' });
+      res.status(500).json({ 
+        message: 'Failed to generate content',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
   
-  // Public endpoint for generating jewelry content
+  // Public endpoint for generating jewelry content with auth diagnostics
   app.post('/api/generate-jewelry-content', validateAdmin, async (req, res) => {
     try {
+      // Enhanced auth logging for troubleshooting
+      console.log("Public jewelry content generator endpoint called");
+      console.log("Request headers:", {
+        authDebug: req.headers['x-auth-debug'],
+        requestSource: req.headers['x-request-source'],
+        contentType: req.headers['content-type'],
+        hasAuthCookie: !!req.cookies?.admin_id || !!req.cookies?.userId
+      });
+      
+      // Log auth state
+      console.log("Request authentication details:", {
+        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        username: req.user?.username || 'none',
+        userId: req.user?.id || 'none',
+        sessionID: req.sessionID || 'none'
+      });
+      
       console.log("Using improved jewelry content generator (public endpoint)");
       // Pass the request to the improved OpenAI service
       await generateJewelryContent(req, res);
     } catch (error) {
       console.error('Error generating jewelry content:', error);
-      res.status(500).json({ message: 'Failed to generate content' });
+      res.status(500).json({ 
+        message: 'Failed to generate content',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
   
-  // Advanced AI product content generator with image analysis
+  // Advanced AI product content generator with image analysis and enhanced auth diagnostics
   app.post('/api/admin/generate-product-content', validateAdmin, async (req, res) => {
     try {
+      // Enhanced auth logging for troubleshooting
+      console.log("Admin product content generator endpoint called");
+      console.log("Request headers:", {
+        authDebug: req.headers['x-auth-debug'],
+        requestSource: req.headers['x-request-source'],
+        contentType: req.headers['content-type'],
+        hasAuthCookie: !!req.cookies?.admin_id || !!req.cookies?.userId
+      });
+      
+      // Log auth state
+      console.log("Request authentication details:", {
+        isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false,
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        username: req.user?.username || 'none',
+        userId: req.user?.id || 'none',
+        sessionID: req.sessionID || 'none'
+      });
+      
       console.log("Using advanced product content generator with image analysis (admin endpoint)");
       // Pass the request to the product content generator
       await generateProductContent(req, res);
     } catch (error) {
       console.error('Error generating product content:', error);
-      res.status(500).json({ message: 'Failed to generate product content' });
+      res.status(500).json({ 
+        message: 'Failed to generate product content',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
   

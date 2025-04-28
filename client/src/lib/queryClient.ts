@@ -35,15 +35,39 @@ export async function apiRequest(
   headers["Pragma"] = "no-cache";
   headers["Expires"] = "0";
   
-  // Add cookie handling improvements for admin APIs
+  // Enhanced debugging for admin and AI APIs
   const isAdminEndpoint = url.includes('/admin/');
-  if (isAdminEndpoint) {
-    console.log(`Making admin API request to ${url}`, {
+  const isAIEndpoint = url.includes('generate') || url.includes('analyze') || url.includes('content');
+  
+  // Debug level varies by endpoint type
+  const shouldLog = isAdminEndpoint || isAIEndpoint;
+  
+  if (shouldLog) {
+    console.log(`Making ${isAIEndpoint ? 'AI' : 'admin'} API request to ${url}`, {
       method,
       hasData: !!data,
+      dataSize: data ? (typeof data === 'string' ? data.length : 'object') : 0,
       contentType: headers["Content-Type"],
       withCredentials: true
     });
+    
+    // For AI endpoints, add special debug header
+    if (isAIEndpoint) {
+      headers["X-Debug-AI-Request"] = "true";
+      
+      // Test document.cookie access to verify cookies are available to JS
+      try {
+        const cookieStr = document.cookie;
+        const hasCookies = cookieStr && cookieStr.length > 0;
+        
+        console.log("Browser cookies available:", {
+          hasCookies,
+          cookieCount: hasCookies ? cookieStr.split(';').length : 0
+        });
+      } catch (e) {
+        console.error("Could not access document.cookie:", e);
+      }
+    }
   }
 
   try {
@@ -55,7 +79,7 @@ export async function apiRequest(
       credentials: "include", // Always include credentials for auth cookies
     });
     
-    if (isAdminEndpoint) {
+    if (shouldLog) {
       // Log key headers instead of trying to iterate through HeadersIterator
       const responseHeaders = {
         'content-type': res.headers.get('content-type'),
@@ -63,12 +87,32 @@ export async function apiRequest(
         'set-cookie': res.headers.get('set-cookie')
       };
       
-      console.log(`Admin API response status: ${res.status}`, {
+      console.log(`${isAIEndpoint ? 'AI' : 'Admin'} API response status: ${res.status}`, {
         url,
         status: res.status,
         statusText: res.statusText,
         headers: responseHeaders
       });
+      
+      // For AI endpoints with error response, try to extract more details
+      if (isAIEndpoint && !res.ok) {
+        try {
+          const errorText = await res.clone().text();
+          console.error(`AI endpoint error response:`, {
+            statusCode: res.status,
+            responseText: errorText.substring(0, 500) + (errorText.length > 500 ? '...' : '')
+          });
+          
+          try {
+            const errorJson = JSON.parse(errorText);
+            console.error("Parsed error details:", errorJson);
+          } catch (parseErr) {
+            // Text wasn't valid JSON
+          }
+        } catch (textErr) {
+          console.error("Could not extract error response text");
+        }
+      }
     }
 
     await throwIfResNotOk(res);

@@ -9,15 +9,35 @@ export const validateAdmin = async (
 ) => {
   try {
     const endpoint = req.originalUrl || req.url;
-    console.log(`ADMIN ACCESS - Validating admin request to ${endpoint}`);
+    const isAIEndpoint = endpoint.includes('generate') || endpoint.includes('analyze') || endpoint.includes('content');
+    
+    console.log(`ADMIN ACCESS - Validating admin request to ${endpoint}${isAIEndpoint ? ' [AI ENDPOINT]' : ''}`);
+    
+    // Give more detailed diagnostics for AI-related endpoints
+    if (isAIEndpoint) {
+      console.log("=== AI ENDPOINT ACCESS DIAGNOSTICS ===");
+      console.log("X-Headers:", Object.keys(req.headers)
+        .filter(key => key.toLowerCase().startsWith('x-'))
+        .reduce((obj, key) => {
+          obj[key] = req.headers[key];
+          return obj;
+        }, {} as Record<string, any>));
+    }
     
     // Log detailed request info for debugging admin API calls
     console.log("Admin auth check - request details:", {
       method: req.method,
       path: endpoint,
       contentType: req.headers['content-type'],
+      origin: req.headers.origin || req.headers.referer,
       cookies: Object.keys(req.cookies || {}),
+      cookieValues: isAIEndpoint ? {
+        adminId: req.cookies?.admin_id,
+        userId: req.cookies?.userId,
+        sessionID: req.sessionID
+      } : undefined,
       hasBody: !!req.body,
+      bodyKeys: req.body ? Object.keys(req.body) : [],
       sessionId: req.sessionID,
       isAuthenticated: req.isAuthenticated ? req.isAuthenticated() : false
     });
@@ -201,7 +221,30 @@ export const validateAdmin = async (
     // If we get here, no valid admin auth was found with any method
     console.log(`Admin auth DENIED for ${endpoint} - no admin authentication found with any method`);
     
-    // Return a more detailed error message to help diagnose the issue
+    // Special handling for AI endpoints to aid in debugging
+    if (isAIEndpoint) {
+      console.log("=== AI ENDPOINT ACCESS FAILURE DETAILS ===");
+      console.log("Full cookie list:", req.cookies);
+      console.log("Session data:", req.session);
+      console.log("Headers:", req.headers);
+      
+      // For AI endpoints, try to provide a more specific error message
+      return res.status(401).json({
+        message: 'AI Content Generation Authentication Failed',
+        detail: 'Valid admin authentication not found for AI content generation. Please login as an admin user and try again.',
+        endpoint: endpoint,
+        authStatus: {
+          adminCookie: !!req.cookies?.admin_id,
+          legacyCookie: !!req.cookies?.userId,
+          passportSession: !!(req.isAuthenticated && req.isAuthenticated()),
+          hasSession: !!req.sessionID,
+          hasCredentials: req.headers.authorization ? 'provided' : 'missing'
+        },
+        troubleshooting: "Try refreshing the admin page, logging out and back in, or clearing browser cookies and cache."
+      });
+    }
+    
+    // Standard admin auth failure response for non-AI endpoints
     return res.status(401).json({ 
       message: 'Authentication required',
       detail: 'Valid admin authentication not found. Please login as an admin user.',
