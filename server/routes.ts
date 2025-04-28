@@ -715,23 +715,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle both old and new formats for stones
         let formattedData = { ...designData };
         
-        // Ensure primaryStones is always a valid array
-        if (!formattedData.primaryStones) {
-          formattedData.primaryStones = [];
-        } else if (!Array.isArray(formattedData.primaryStones)) {
-          // Convert to array if it's not already one
-          formattedData.primaryStones = [formattedData.primaryStones];
+        // Simplified approach: convert primaryStones to a proper string array
+        // Start with an empty array 
+        let primaryStonesArray: string[] = [];
+        
+        // If it's already an array, use it
+        if (Array.isArray(formattedData.primaryStones)) {
+          primaryStonesArray = formattedData.primaryStones;
+        }
+        // If it's a string, create a single-item array
+        else if (typeof formattedData.primaryStones === 'string') {
+          primaryStonesArray = [formattedData.primaryStones];
+        }
+        // If it's something unexpected, log it and use empty array
+        else if (formattedData.primaryStones !== null && formattedData.primaryStones !== undefined) {
+          console.log("Unexpected primaryStones type:", typeof formattedData.primaryStones);
+          console.log("Value:", formattedData.primaryStones);
+        }
+
+        // For backward compatibility with older schema
+        if (!primaryStonesArray.length && formattedData.primaryStone) {
+          primaryStonesArray.push(formattedData.primaryStone);
+        } else if (primaryStonesArray.length && !formattedData.primaryStone) {
+          formattedData.primaryStone = primaryStonesArray[0];
         }
         
-        // For backward compatibility, ensure primaryStone is set if primaryStones array exists
-        if (formattedData.primaryStones.length > 0 && !formattedData.primaryStone) {
-          formattedData.primaryStone = formattedData.primaryStones[0];
-        }
-        
-        // For forward compatibility, add primaryStone to primaryStones array if it's not already there
-        if (formattedData.primaryStone && formattedData.primaryStones.indexOf(formattedData.primaryStone) === -1) {
-          formattedData.primaryStones.push(formattedData.primaryStone);
-        }
+        // Overwrite with clean array
+        formattedData.primaryStones = primaryStonesArray;
         
         console.log("Processing design request with stones:", 
           formattedData.primaryStones, 
@@ -757,8 +767,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...formattedData,
             userId: req.user.id,
             imageUrl: `/uploads/${req.file.filename}`,
-            // Ensure primaryStones is correctly formatted for database
-            primaryStones: Array.isArray(formattedData.primaryStones) ? formattedData.primaryStones : []
+            // Ensure primaryStones is correctly formatted for database - it should be a string array
+            primaryStones: primaryStonesArray
           };
           
           const validatedData = insertDesignRequestSchema.parse(dataToValidate);
