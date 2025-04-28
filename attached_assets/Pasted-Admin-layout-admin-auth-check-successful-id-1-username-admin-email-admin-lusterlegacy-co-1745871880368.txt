@@ -1,0 +1,32 @@
+Admin layout - admin auth check successful: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+admin-layout-C_aN84T2.js:27 Admin layout - user is verified admin via /api/auth/me
+index-Bnl4QTnj.js:158 Auth Context - User data: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+index-Bnl4QTnj.js:158 Auth Context - Loading: false
+index-Bnl4QTnj.js:158 Auth Context - Error: null
+admin-layout-C_aN84T2.js:27 Admin layout - checking auth state: {user: {…}, isLoading: false}
+admin-layout-C_aN84T2.js:27 Admin layout - cached user appears to be admin, verifying with direct API call
+admin-layout-C_aN84T2.js:27 Admin layout - checking admin auth endpoint...
+admin-layout-C_aN84T2.js:27 Admin layout - admin auth check successful: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+admin-layout-C_aN84T2.js:27 Admin layout - user is verified admin via /api/auth/me
+index-Bnl4QTnj.js:158 Auth Context - User data: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+index-Bnl4QTnj.js:158 Auth Context - Loading: false
+index-Bnl4QTnj.js:158 Auth Context - Error: null
+admin-layout-C_aN84T2.js:27 Admin layout - checking auth state: {user: {…}, isLoading: false}
+admin-layout-C_aN84T2.js:27 Admin layout - cached user appears to be admin, verifying with direct API call
+admin-layout-C_aN84T2.js:27 Admin layout - checking admin auth endpoint...
+admin-layout-C_aN84T2.js:27 Admin layout - admin auth check successful: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+admin-layout-C_aN84T2.js:27 Admin layout - user is verified admin via /api/auth/me
+index-Bnl4QTnj.js:158 Auth Context - User data: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+index-Bnl4QTnj.js:158 Auth Context - Loading: false
+index-Bnl4QTnj.js:158 Auth Context - Error: null
+admin-layout-C_aN84T2.js:27 Admin layout - checking auth state: {user: {…}, isLoading: false}
+admin-layout-C_aN84T2.js:27 Admin layout - cached user appears to be admin, verifying with direct API call
+admin-layout-C_aN84T2.js:27 Admin layout - checking admin auth endpoint...
+admin-layout-C_aN84T2.js:27 Admin layout - admin auth check successful: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+admin-layout-C_aN84T2.js:27 Admin layout - user is verified admin via /api/auth/me
+index-Bnl4QTnj.js:158 Auth Context - User data: {id: 1, username: 'admin', email: 'admin@lusterlegacy.com', role: 'admin', createdAt: '2025-04-23T01:42:31.147Z', …}
+index-Bnl4QTnj.js:158 Auth Context - Loading: false
+index-Bnl4QTnj.js:158 Auth Context - Error: null
+admin-layout-C_aN84T2.js:27 Admin layout - checking auth state: {user: {…}, isLoading: false}
+admin-layout-C_aN84T2.js:27 Admin layout - cached user appears to be admin, verifying with direct API call
+admin-layout-C_aN84T2.js:27 Admin layout - checking admin auth endpoint...
