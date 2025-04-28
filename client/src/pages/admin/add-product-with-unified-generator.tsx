@@ -264,6 +264,7 @@ export default function AddProduct() {
           userDescription: data.userDescription || '',
           // Save all AI generator inputs explicitly
           aiInputs: {
+            productType: productType || '',  // Add productType to aiInputs
             metalType: data.metalType || '',
             metalWeight: parseFloat(data.metalWeight) || 0,
             mainStoneType: mainStoneType || '',
