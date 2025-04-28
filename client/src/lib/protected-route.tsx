@@ -56,7 +56,7 @@ export function ProtectedRoute({
         if (!user) {
           console.log("User not authenticated, redirecting to auth page");
           // Add returnTo parameter for easier navigation back to the intended page
-          const returnPath = pathString.startsWith('/admin') ? '/admin/dashboard' : pathString;
+          const returnPath = pathString.startsWith('/admin') ? '/admin/direct-dashboard' : pathString;
           
           // Special handling for admin routes - redirect to admin login
           if (pathString.startsWith('/admin')) {
@@ -76,7 +76,7 @@ export function ProtectedRoute({
 
         // Special case for admin dashboard direct access
         if (adminOnly && user.role === "admin" && 
-            (pathString === "/admin" || pathString === "/admin/dashboard")) {
+            (pathString === "/admin" || pathString === "/admin/dashboard" || pathString === "/admin/direct-dashboard")) {
           console.log("Admin user accessing dashboard");
           
           // Run additional auth check for admin dashboard

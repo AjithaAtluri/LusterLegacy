@@ -29,7 +29,7 @@ export default function AdminLogin() {
   useEffect(() => {
     if (user && user.role === "admin") {
       console.log("Admin already authenticated, redirecting to dashboard");
-      window.location.href = window.location.origin + "/admin/dashboard";
+      window.location.href = window.location.origin + "/admin/direct-dashboard";
     }
   }, [user]);
   
@@ -64,8 +64,8 @@ export default function AdminLogin() {
         
         // Navigate to the direct admin dashboard
         console.log("Admin login successful, redirecting to dashboard");
-        // Use the standardized dashboard route
-        window.location.href = window.location.origin + "/admin/dashboard";
+        // Use the direct dashboard route for better compatibility
+        window.location.href = window.location.origin + "/admin/direct-dashboard";
       },
       onError: (error) => {
         console.error("Login error:", error);
