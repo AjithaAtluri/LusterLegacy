@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -314,9 +314,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               <SheetContent side="left" className="p-0">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center p-4 border-b">
-                    <Link href="/admin/dashboard" className="font-playfair text-xl font-bold">
+                    <a href="/admin/direct-dashboard" className="font-playfair text-xl font-bold">
                       Luster<span className="text-primary">Legacy</span> Admin
-                    </Link>
+                    </a>
                     <Button variant="ghost" size="icon" className="ml-auto" onClick={() => setIsMobileMenuOpen(false)}>
                       <X className="h-5 w-5" />
                     </Button>
