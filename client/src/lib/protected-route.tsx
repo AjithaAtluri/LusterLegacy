@@ -58,11 +58,13 @@ export function ProtectedRoute({
           // Add returnTo parameter for easier navigation back to the intended page
           const returnPath = pathString.startsWith('/admin') ? '/admin/dashboard' : pathString;
           
-          // Special handling for admin routes
+          // Special handling for admin routes - redirect to admin login
           if (pathString.startsWith('/admin')) {
-            return <Redirect to={`/admin/login`} />;
+            console.log("Admin route requires authentication, redirecting to admin login");
+            return <Redirect to="/admin/login" />;
           }
           
+          // Regular routes redirect to the main auth page
           return <Redirect to={`/auth?returnTo=${encodeURIComponent(returnPath)}`} />;
         }
 

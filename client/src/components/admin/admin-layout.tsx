@@ -46,110 +46,63 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         return; // Wait for loading to complete
       }
 
-      // Approach 1: Use direct fetch calls to ensure we're not using stale data
+      // Use a direct backend check to get the freshest authentication state
       try {
-        // First try the admin-specific endpoint
-        console.log("Checking admin auth directly from server...");
-        const adminAuthResponse = await fetch("/api/auth/me", { 
-          credentials: "include" // Important for cookies
+        // Make a direct fetch call to the user endpoint (no React Query caching)
+        const response = await fetch("/api/user", { 
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+          }
         });
         
-        if (adminAuthResponse.ok) {
-          const adminUser = await adminAuthResponse.json();
-          console.log("Admin layout - admin auth check successful:", adminUser);
+        if (response.ok) {
+          const userData = await response.json();
+          console.log("Admin layout - auth check successful:", userData);
           
-          if (adminUser.role === "admin") {
-            // Admin is authenticated via admin auth system
-            console.log("Admin layout - admin auth confirmed");
-            
-            // If main auth doesn't have user data but admin auth does, sync them
-            if (!user) {
-              console.log("Admin auth exists but main auth doesn't - syncing by reloading");
-              
-              // First try to refresh React Query cache
-              try {
-                await apiRequest("GET", "/api/user");
-                console.log("Manually refreshed main auth");
-              } catch (refreshError) {
-                console.warn("Failed to refresh main auth:", refreshError);
-              }
-              
-              // Force reload if needed to sync auth states
-              window.location.reload();
-              return;
-            }
-            
-            // Already authenticated in both systems, nothing to do
+          if (userData.role === "admin") {
+            console.log("Admin layout - user is verified admin");
+            // Update the cache with this fresh data
+            import("@/lib/queryClient").then(({queryClient}) => {
+              queryClient.setQueryData(["/api/user"], userData);
+            });
+            return; // Allow access
+          } else {
+            // User is authenticated but not an admin
+            console.log("User is authenticated but not an admin");
+            toast({
+              title: "Access restricted",
+              description: "You don't have permission to access the admin dashboard",
+              variant: "destructive"
+            });
+            window.location.href = "/";
             return;
           }
         } else {
-          console.log("Admin auth check failed:", adminAuthResponse.status);
-        }
-        
-        // If admin auth failed, check main auth as fallback
-        const mainAuthResponse = await fetch("/api/user", { 
-          credentials: "include" 
-        });
-        
-        if (mainAuthResponse.ok) {
-          const mainUser = await mainAuthResponse.json();
-          console.log("Admin layout - main auth check successful:", mainUser);
-          
-          if (mainUser.role === "admin") {
-            // Admin is authenticated via main auth but not admin auth
-            console.log("Admin layout - main auth is admin but admin auth failed - syncing");
-            
-            // Force a reload to ensure both auths are in sync
-            window.location.reload();
-            return;
-          }
-          
-          // User is authenticated but not an admin
-          console.log("User is authenticated but not an admin");
+          // Not authenticated
+          console.log("User not authenticated");
           toast({
-            title: "Access restricted",
-            description: "You don't have permission to access the admin dashboard",
+            title: "Authentication required",
+            description: "Please log in to access the admin dashboard",
             variant: "destructive"
           });
+          window.location.href = "/admin/login";
+          return;
+        }
+      } catch (error) {
+        console.error("Error during auth check:", error);
+        // Fall back to React Query state
+        if (!user) {
+          console.log("Error in auth check and no cached user - redirecting to login");
+          window.location.href = "/admin/login";
+          return;
+        } else if (user.role !== "admin") {
+          console.log("Error in auth check and cached user is not admin - redirecting home");
           window.location.href = "/";
           return;
         }
-        
-        // If we get here, neither auth system has a valid session
-        console.log("Neither auth system has a valid admin session");
-        toast({
-          title: "Authentication required",
-          description: "Please log in to access the admin dashboard",
-          variant: "destructive"
-        });
-        window.location.href = "/admin/login";
-        return;
-      } catch (error) {
-        console.error("Error during direct auth checks:", error);
-      }
-      
-      // Approach 2 (fallback): Use React Query user state if direct checks failed
-      if (!user) {
-        console.log("Fallback - No user in React Query state");
-        toast({
-          title: "Authentication required",
-          description: "Please log in to access the admin dashboard",
-          variant: "destructive"
-        });
-        window.location.href = "/admin/login";
-        return;
-      } 
-      
-      // Check if user has admin role in main auth
-      if (user.role !== "admin") {
-        console.log("Fallback - User not admin in React Query state");
-        toast({
-          title: "Access restricted",
-          description: "You don't have permission to access the admin dashboard",
-          variant: "destructive"
-        });
-        window.location.href = "/";
-        return;
       }
     };
     

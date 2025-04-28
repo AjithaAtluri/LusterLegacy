@@ -62,8 +62,9 @@ export default function AdminLogin() {
           description: "Welcome to Luster Legacy admin dashboard",
         });
         
-        // Redirect will happen automatically through the useAuth hook
-        // which sets the user data in the React Query cache
+        // Navigate to the admin dashboard
+        console.log("Admin login successful, redirecting to dashboard");
+        setLocation("/admin/dashboard");
       },
       onError: (error) => {
         console.error("Login error:", error);

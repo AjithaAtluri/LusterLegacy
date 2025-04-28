@@ -93,6 +93,7 @@ function App() {
             <Route path="/faq" component={FAQ} />
             
             {/* Admin routes */}
+            <Route path="/admin/login" component={AdminLogin} />
             <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
             <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly />
             <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
