@@ -250,23 +250,59 @@ export default function DirectAdminDashboard() {
         <aside className="w-64 border-r hidden md:block">
           <div className="h-full py-6 px-3 overflow-y-auto">
             <nav className="space-y-1">
-              <Link href="/admin/direct-dashboard" className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary bg-accent/50 font-medium">
+              <Link 
+                href="/admin/direct-dashboard" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-primary bg-accent/50 font-medium"
+              >
                 <Home className="h-5 w-5" />
                 Dashboard
               </Link>
-              <Link href="/admin/products" className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground">
+              <Link 
+                href="/admin/direct-dashboard?section=products" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
                 <Package className="h-5 w-5" />
                 Products
               </Link>
-              <Link href="/admin/orders" className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground">
+              <Link 
+                href="/admin/direct-dashboard?section=product-types" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Package className="h-5 w-5" />
+                Product Types
+              </Link>
+              <Link 
+                href="/admin/direct-dashboard?section=metal-types" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Package className="h-5 w-5" />
+                Metal Types
+              </Link>
+              <Link 
+                href="/admin/direct-dashboard?section=stone-types" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Package className="h-5 w-5" />
+                Stone Types
+              </Link>
+              <Link 
+                href="/admin/direct-dashboard?section=orders" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
                 <ShoppingBag className="h-5 w-5" />
                 Orders
               </Link>
-              <Link href="/admin/designs" className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground">
+              <Link 
+                href="/admin/direct-dashboard?section=designs" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
                 <Settings className="h-5 w-5" />
                 Custom Designs
               </Link>
-              <Link href="/admin/ai-generator" className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground">
+              <Link 
+                href="/admin/ai-generator" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+              >
                 <Settings className="h-5 w-5" />
                 AI Generator
               </Link>
@@ -407,7 +443,7 @@ export default function DirectAdminDashboard() {
                                 </div>
                               </div>
                               <Button asChild variant="ghost" size="sm">
-                                <Link href={`/admin/orders?id=${order.id}`}>
+                                <Link href={`/admin/direct-dashboard?section=orders&id=${order.id}`}>
                                   <ExternalLink className="h-4 w-4" />
                                 </Link>
                               </Button>
@@ -424,7 +460,7 @@ export default function DirectAdminDashboard() {
                     {recentOrders.length > 0 && (
                       <div className="mt-4 text-center">
                         <Button asChild variant="outline">
-                          <Link href="/admin/orders">
+                          <Link href="/admin/direct-dashboard?section=orders">
                             View All Orders
                           </Link>
                         </Button>
@@ -467,7 +503,7 @@ export default function DirectAdminDashboard() {
                               </div>
                             </div>
                             <Button asChild variant="ghost" size="sm">
-                              <Link href={`/admin/designs?id=${design.id}`}>
+                              <Link href={`/admin/direct-dashboard?section=designs&id=${design.id}`}>
                                 <ExternalLink className="h-4 w-4" />
                               </Link>
                             </Button>
@@ -483,7 +519,7 @@ export default function DirectAdminDashboard() {
                     {pendingDesigns.length > 0 && (
                       <div className="mt-4 text-center">
                         <Button asChild variant="outline">
-                          <Link href="/admin/designs">
+                          <Link href="/admin/direct-dashboard?section=designs">
                             View All Design Requests
                           </Link>
                         </Button>
@@ -515,7 +551,7 @@ export default function DirectAdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button asChild className="w-full" variant="outline">
-                    <Link href="/admin/orders">
+                    <Link href="/admin/direct-dashboard?section=orders">
                       View All Orders
                     </Link>
                   </Button>
@@ -528,7 +564,7 @@ export default function DirectAdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button asChild className="w-full" variant="outline">
-                    <Link href="/admin/designs">
+                    <Link href="/admin/direct-dashboard?section=designs">
                       Manage Design Requests
                     </Link>
                   </Button>
