@@ -379,7 +379,7 @@ export default function ProductDetail() {
               {product.name}
             </h1>
             {tagline && (
-              <p className="font-cormorant text-xl md:text-2xl italic text-primary mb-6 max-w-2xl">
+              <p className="font-cormorant text-xl md:text-2xl italic text-pearl mb-6 max-w-2xl">
                 {tagline}
               </p>
             )}
@@ -426,6 +426,7 @@ export default function ProductDetail() {
                   {allImages.map((img, index) => (
                     <div key={index} className="rounded-md overflow-hidden border border-border">
                       <ReliableProductImage
+                        productId={0}
                         imageUrl={img}
                         alt={`${product.name} view ${index + 1}`}
                         className="w-full h-auto aspect-square object-cover"
