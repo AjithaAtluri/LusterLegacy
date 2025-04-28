@@ -1575,10 +1575,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * Authentication routes
    */
-  // Admin login - completely rewritten to fix authentication
-  app.post('/api/auth/login', async (req, res, next) => {
+  // DIRECT ADMIN LOGIN with ADMIN TOKENS - completely separate from main auth
+  app.post('/api/auth/login', async (req, res) => {
     try {
-      console.log('ADMIN LOGIN - Starting IMPROVED admin login process with auth sync');
+      console.log('DIRECT ADMIN LOGIN - New dedicated lightweight admin auth');
       
       // Destructure credentials from request body
       const { username, password } = req.body;
@@ -1587,19 +1587,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Username and password are required' });
       }
       
-      console.log(`Login attempt for username: ${username}`);
+      console.log(`Admin login attempt for username: ${username}`);
       
-      // First look up the user directly
+      // Look up the user directly from database
       const user = await storage.getUserByUsername(username);
       
       if (!user) {
-        console.log('Login failed - user not found:', username);
+        console.log('Admin login failed - user not found:', username);
         return res.status(401).json({ message: 'Invalid credentials' });
       }
       
       // Check if user is an admin
       if (user.role !== 'admin') {
-        console.log('Login failed - user is not an admin:', username);
+        console.log('Admin login failed - user is not an admin:', username);
         return res.status(403).json({ message: 'Admin privileges required' });
       }
       
@@ -1607,16 +1607,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const passwordValid = await comparePasswords(password, user.password);
       
       if (!passwordValid) {
-        console.log('Login failed - invalid password for user:', username);
+        console.log('Admin login failed - invalid password for user:', username);
         return res.status(401).json({ message: 'Invalid credentials' });
       }
       
       console.log('Password verified for admin user:', username);
       
-      // SUCCESSFUL LOGIN - Now establish both auth mechanisms
+      // SUCCESSFUL LOGIN - Create multiple auth tokens for redundancy
       
-      // 1. Set the legacy cookie first (most reliable for admin routes)
-      console.log('Setting admin cookie auth for user ID:', user.id);
+      // 1. Set the main admin auth cookie
+      console.log('Setting admin auth cookie for user ID:', user.id);
+      res.cookie('admin_id', user.id, { 
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+      
+      // 2. Set the legacy cookie (backward compatibility)
       res.cookie('userId', user.id, { 
         httpOnly: true, 
         secure: process.env.NODE_ENV === 'production',
@@ -1625,32 +1634,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
       
-      // 2. Also establish a passport session for overall site auth
-      console.log('Establishing passport session for user:', username);
-      req.login(user, (loginErr) => {
-        if (loginErr) {
-          console.error('Error creating passport session:', loginErr);
-          
-          // Even with login error, continue with cookie-based auth
-          console.log('Continuing with cookie auth only');
-          
-          // Prepare sanitized user data (remove password)
-          const { password, ...userWithoutPassword } = user;
-          return res.json(userWithoutPassword);
-        }
-        
-        console.log('Login successful! Both auth systems in sync');
-        
-        // Double-check if session is established
-        if (req.isAuthenticated && req.isAuthenticated()) {
-          console.log('Passport session verified: User is authenticated');
-        } else {
-          console.warn('Passport session not immediately verified - this might be normal');
-        }
-        
-        // Return user data without password
-        const { password, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
+      // 3. Set an admin timestamp cookie for additional validation
+      res.cookie('admin_auth_time', Date.now(), { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+      
+      // 4. Also establish a passport session for site-wide auth
+      try {
+        req.login(user, (loginErr) => {
+          if (loginErr) {
+            console.warn('Passport session setup error (non-critical):', loginErr);
+            // Continue anyway with cookie auth
+          } else {
+            console.log('Passport session set up successfully');
+          }
+        });
+      } catch (passportError) {
+        console.warn('Passport error (continuing with cookie auth):', passportError);
+      }
+      
+      console.log('Admin login successful with multiple auth mechanisms');
+      
+      // Return user data without password
+      const { password, ...userWithoutPassword } = user;
+      return res.json({
+        ...userWithoutPassword,
+        adminAuth: true,
+        authTime: Date.now()
       });
     } catch (error) {
       console.error('Unexpected error in admin login:', error);
@@ -1663,10 +1677,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("ADMIN LOGOUT - Starting improved logout process");
     
     try {
-      // 1. Clear all possible admin cookie variations
+      // 1. Clear all admin cookies (all possible variations)
       console.log("Clearing admin cookies");
+      
+      // Clear new admin-specific cookies
+      res.clearCookie('admin_id', { path: '/' });
+      res.clearCookie('admin_auth_time', { path: '/' });
+      
+      // Clear legacy cookies with path
       res.clearCookie('userId', { path: '/' });
-      res.clearCookie('userId'); // Also clear without path for older cookies
+      
+      // Clear legacy cookies without path for older cookies
+      res.clearCookie('userId');
+      res.clearCookie('admin_id');
+      res.clearCookie('admin_auth_time');
       
       // 2. Also destroy passport session if it exists
       if (req.isAuthenticated && req.isAuthenticated()) {
@@ -1699,8 +1723,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Still try to clear cookies even if an error occurred
       try {
+        // Attempt to clear all cookies one more time
+        res.clearCookie('admin_id', { path: '/' });
+        res.clearCookie('admin_auth_time', { path: '/' });
         res.clearCookie('userId', { path: '/' });
         res.clearCookie('userId');
+        res.clearCookie('admin_id');
+        res.clearCookie('admin_auth_time');
       } catch (cookieError) {
         console.error("Error clearing cookies:", cookieError);
       }
@@ -3512,84 +3541,182 @@ Respond in JSON format:
     }
   });
 
-  // Get current user - completely rewritten admin authentication check endpoint
+  // Get current user - completely rewritten to use the new dedicated admin tokens
   app.get('/api/auth/me', async (req, res) => {
-    console.log("AUTH CHECK - /api/auth/me endpoint called");
+    console.log("ADMIN AUTH CHECK - /api/auth/me endpoint called");
     
     try {
-      // First check admin-specific cookie auth (most reliable for admin routes)
-      const cookieUserId = req.cookies?.userId;
+      // First check dedicated admin cookie (preferred method)
+      const adminId = req.cookies?.admin_id;
       
-      if (cookieUserId) {
+      if (adminId) {
         try {
-          const userId = parseInt(cookieUserId);
-          if (!isNaN(userId)) {
-            console.log("Auth check - found userId cookie:", userId);
+          const parsedAdminId = parseInt(adminId);
+          if (!isNaN(parsedAdminId)) {
+            console.log("Admin auth check - found admin_id cookie:", parsedAdminId);
             
-            // Try to get user by ID from cookie
-            const cookieUser = await storage.getUser(userId);
+            // Try to get admin user by ID from cookie
+            const adminUser = await storage.getUser(parsedAdminId);
             
-            if (cookieUser) {
-              console.log("Auth check - found valid cookie user:", cookieUser.username);
+            if (adminUser && adminUser.role === 'admin') {
+              console.log("Admin auth check - verified admin user from cookie:", adminUser.username);
               
-              // Valid admin user from cookie
-              if (cookieUser.role === 'admin') {
-                console.log("Auth check - cookie user is admin, setting up proper session");
-                
-                // Sync with passport session if needed
-                if (!req.isAuthenticated || !req.isAuthenticated()) {
-                  // Establish passport session for this admin user
-                  try {
-                    await new Promise<void>((resolve, reject) => {
-                      req.login(cookieUser, (loginErr) => {
-                        if (loginErr) {
-                          console.warn("Failed to sync passport session for admin user:", loginErr);
-                          // Continue anyway with cookie auth
-                        } else {
-                          console.log("Successfully synced passport session for admin user");
-                        }
-                        resolve(); // Always resolve to continue execution
-                      });
+              // Return sanitized user data
+              const { password, ...userWithoutPassword } = adminUser;
+              
+              // Also check auth timestamp and refresh if needed
+              const authTime = req.cookies?.admin_auth_time;
+              if (authTime) {
+                const now = Date.now();
+                const authTimeVal = parseInt(authTime);
+                if (!isNaN(authTimeVal)) {
+                  const authAgeHours = (now - authTimeVal) / (1000 * 60 * 60);
+                  
+                  // If auth is too old (over 24 hours), refresh the timestamp
+                  if (authAgeHours > 24) {
+                    console.log("Admin auth check - refreshing admin auth timestamp cookie");
+                    res.cookie('admin_auth_time', now, { 
+                      httpOnly: true, 
+                      secure: process.env.NODE_ENV === 'production',
+                      sameSite: 'lax',
+                      path: '/',
+                      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
                     });
-                  } catch (sessionError) {
-                    console.warn("Error syncing sessions:", sessionError);
-                    // Continue with cookie auth
                   }
                 }
-                
-                // Return sanitized user data
-                const { password, ...userWithoutPassword } = cookieUser;
-                console.log("Auth check - returning admin user from cookie auth");
-                return res.json(userWithoutPassword);
-              } else {
-                console.log("Auth check - cookie user is not an admin, role:", cookieUser.role);
-                // Non-admin user shouldn't use this endpoint
-                res.clearCookie('userId'); // Clear the cookie to avoid confusion
               }
+              
+              // Also sync with passport if needed
+              if (!req.isAuthenticated || !req.isAuthenticated() || req.user?.id !== adminUser.id) {
+                try {
+                  req.login(adminUser, (loginErr) => {
+                    if (loginErr) {
+                      console.warn("Admin auth check - could not sync passport (non-critical):", loginErr);
+                    } else {
+                      console.log("Admin auth check - synced passport session with admin cookie auth");
+                    }
+                  });
+                } catch (sessionError) {
+                  console.warn("Admin auth check - error syncing passport session (non-critical):", sessionError);
+                }
+              }
+              
+              console.log("Admin auth check - returning admin user from dedicated cookie");
+              return res.json({
+                ...userWithoutPassword,
+                adminAuth: true,
+                authTime: Date.now(),
+                authSource: 'admin_cookie'
+              });
+            } else if (adminUser) {
+              console.log("Admin auth check - user found but not admin role:", adminUser.role);
+              // Clear invalid admin cookie
+              res.clearCookie('admin_id', { path: '/' });
+              res.clearCookie('admin_auth_time', { path: '/' });
             } else {
-              console.log("Auth check - user not found for cookie ID:", userId);
-              res.clearCookie('userId'); // Clear the invalid cookie
+              console.log("Admin auth check - no user found for admin cookie ID:", parsedAdminId);
+              // Clear invalid admin cookie
+              res.clearCookie('admin_id', { path: '/' });
+              res.clearCookie('admin_auth_time', { path: '/' });
             }
-          } else {
-            console.log("Auth check - invalid userId cookie format");
-            res.clearCookie('userId'); // Clear the invalid cookie
           }
         } catch (cookieError) {
-          console.error('Error checking cookie auth:', cookieError);
+          console.error('Error checking admin cookie auth:', cookieError);
         }
-      } else {
-        console.log("Auth check - no userId cookie found");
       }
       
-      // Next, check Passport session auth
+      // Next check legacy cookie auth (backward compatibility)
+      const userId = req.cookies?.userId;
+      if (userId) {
+        try {
+          const parsedUserId = parseInt(userId);
+          if (!isNaN(parsedUserId)) {
+            console.log("Admin auth check - found legacy userId cookie:", parsedUserId);
+            
+            const legacyUser = await storage.getUser(parsedUserId);
+            if (legacyUser && legacyUser.role === 'admin') {
+              console.log("Admin auth check - verified admin via legacy cookie:", legacyUser.username);
+              
+              // Set the new admin cookies for future requests
+              console.log("Admin auth check - upgrading to dedicated admin cookies");
+              res.cookie('admin_id', legacyUser.id, { 
+                httpOnly: true, 
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax', 
+                path: '/',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+              });
+              res.cookie('admin_auth_time', Date.now(), { 
+                httpOnly: true, 
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+              });
+              
+              // Also sync with passport if needed
+              if (!req.isAuthenticated || !req.isAuthenticated() || req.user?.id !== legacyUser.id) {
+                try {
+                  req.login(legacyUser, (loginErr) => {
+                    if (loginErr) {
+                      console.warn("Admin auth check - could not sync passport with legacy (non-critical):", loginErr);
+                    } else {
+                      console.log("Admin auth check - synced passport session with legacy cookie auth");
+                    }
+                  });
+                } catch (sessionError) {
+                  console.warn("Admin auth check - error syncing passport from legacy (non-critical):", sessionError);
+                }
+              }
+              
+              // Return sanitized user data with auth info
+              const { password, ...userWithoutPassword } = legacyUser;
+              console.log("Admin auth check - returning admin user from legacy cookie");
+              return res.json({
+                ...userWithoutPassword,
+                adminAuth: true,
+                authTime: Date.now(),
+                authSource: 'legacy_cookie',
+                upgraded: true
+              });
+            } else if (legacyUser) {
+              console.log("Admin auth check - legacy user found but not admin, role:", legacyUser.role);
+              // Clear invalid cookie
+              res.clearCookie('userId', { path: '/' });
+            } else {
+              console.log("Admin auth check - no user found for legacy cookie ID:", parsedUserId);
+              // Clear invalid cookie
+              res.clearCookie('userId', { path: '/' });
+            }
+          }
+        } catch (legacyError) {
+          console.error('Error checking legacy cookie auth:', legacyError);
+        }
+      }
+      
+      // Finally check passport session auth
       if (req.isAuthenticated && req.isAuthenticated()) {
-        console.log("Auth check - user authenticated via Passport:", 
-                    { id: req.user.id, username: req.user.username, role: req.user.role });
-        
-        // Need to explicitly check if the user has admin role
         if (req.user && req.user.role === 'admin') {
-          // Also set the admin cookie for compatibility with admin routes
-          console.log("Auth check - setting admin cookie for passport-authenticated admin");
+          console.log("Admin auth check - verified admin via passport session:", req.user.username);
+          
+          // Set admin cookies for future requests (making auth more robust)
+          console.log("Admin auth check - setting admin cookies from passport session");
+          res.cookie('admin_id', req.user.id, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          });
+          res.cookie('admin_auth_time', Date.now(), { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          });
+          
+          // Also set legacy cookie for maximum compatibility
           res.cookie('userId', req.user.id, { 
             httpOnly: true, 
             secure: process.env.NODE_ENV === 'production',
@@ -3598,28 +3725,35 @@ Respond in JSON format:
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
           });
           
-          // Return sanitized user data
+          // Return sanitized user data with auth info
           const { password, ...userWithoutPassword } = req.user;
-          console.log("Auth check - returning admin user from Passport auth");
-          return res.json(userWithoutPassword);
+          console.log("Admin auth check - returning admin user from passport auth");
+          return res.json({
+            ...userWithoutPassword,
+            adminAuth: true,
+            authTime: Date.now(),
+            authSource: 'passport'
+          });
         } else {
-          console.log("Auth check - passport user is not an admin, role:", req.user.role);
+          console.log("Admin auth check - passport user found but not admin, role:", req.user?.role);
         }
       } else {
-        console.log("Auth check - no Passport authentication found");
+        console.log("Admin auth check - no passport authentication found");
       }
       
-      // No authenticated admin user found via either method
-      console.log("Auth check - no admin authentication found, returning 401");
+      // No authenticated admin user found with any method
+      console.log("Admin auth check - no admin authentication found via any method");
       return res.status(401).json({ 
         message: 'Not authenticated as admin',
-        authenticated: false
+        authenticated: false,
+        timestamp: Date.now()
       });
     } catch (error) {
-      console.error("Unexpected error in auth check:", error);
+      console.error("Unexpected error in admin auth check:", error);
       return res.status(500).json({ 
-        message: 'Error checking authentication status',
-        error: error.message
+        message: 'Error checking admin authentication status',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: Date.now()
       });
     }
   });
