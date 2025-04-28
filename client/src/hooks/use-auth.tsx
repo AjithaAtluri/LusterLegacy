@@ -57,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Mutation for login
   const loginMutation = useMutation<Omit<User, "password">, Error, LoginData>({
     mutationFn: async (credentials: LoginData) => {
+      // First try logging in with the main auth system
+      console.log("Attempting login with primary auth system...");
       const res = await apiRequest("POST", "/api/login", credentials);
       
       if (!res.ok) {
@@ -64,13 +66,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(errorData.message || "Login failed");
       }
       
-      return await res.json();
+      const userData = await res.json();
+      console.log("Login API response:", userData);
+      
+      // For admin users, also log in to the legacy admin system for compatibility
+      if (userData.role === "admin") {
+        console.log("Admin user detected, ensuring both auth systems are in sync");
+        try {
+          // Also log in to the admin system
+          const adminLoginRes = await apiRequest("POST", "/api/auth/login", credentials);
+          if (adminLoginRes.ok) {
+            console.log("Successfully logged into both auth systems");
+          } else {
+            console.warn("Admin login succeeded but legacy admin auth failed");
+          }
+        } catch (error) {
+          console.warn("Error during admin compatibility login:", error);
+          // Continue anyway since the main login succeeded
+        }
+      }
+      
+      return userData;
     },
     onSuccess: (userData) => {
       // Log the user data to see what's happening
       console.log("Login success - user data:", userData);
       
+      // Update the query cache with user data
       queryClient.setQueryData(["/api/user"], userData);
+      
       // Force refetch user data to ensure we have the most up-to-date session
       refetchUser();
       
@@ -136,17 +160,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Mutation for logout
   const logoutMutation = useMutation<void, Error, void>({
     mutationFn: async () => {
+      console.log("Logging out from primary auth system...");
+      // First logout from the main system
       const res = await apiRequest("POST", "/api/logout");
       
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Logout failed");
       }
+      
+      // Also logout from admin auth system for compatibility
+      try {
+        console.log("Also logging out from admin auth system...");
+        await apiRequest("POST", "/api/auth/logout");
+        console.log("Successfully logged out from both auth systems");
+      } catch (error) {
+        console.warn("Error during admin logout:", error);
+        // Continue anyway since the main logout succeeded
+      }
     },
     onSuccess: () => {
+      console.log("Logout successful, clearing auth state");
+      // Clear user data from cache
       queryClient.setQueryData(["/api/user"], null);
-      // Make sure to refetch to confirm logout state from server
+      
+      // Also ensure admin-specific endpoints are invalidated
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      
+      // Force refetch to confirm logout state from server
       refetchUser();
+      
       toast({
         title: "Logged out successfully",
       });
