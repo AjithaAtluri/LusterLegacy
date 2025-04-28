@@ -2837,7 +2837,7 @@ Respond in JSON format:
   });
   
   // Get product types for admin
-  app.get('/api/admin/product-types', async (req, res) => {
+  app.get('/api/admin/product-types', validateAdmin, async (req, res) => {
     try {
       const productTypes = await storage.getAllProductTypes();
       res.json(productTypes);

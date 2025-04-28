@@ -176,19 +176,19 @@ export default function AIContentGeneratorPage() {
   const [additionalImages, setAdditionalImages] = useState<File[]>([]);
   const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
   
-  // Fetch data from API
+  // Fetch data from API using public endpoints that don't require admin auth
   const { data: stoneTypes, isLoading: isLoadingStoneTypes, error: stoneTypesError } = useQuery<StoneType[]>({
-    queryKey: ['/api/admin/stone-types'],
+    queryKey: ['/api/stone-types'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
   const { data: metalTypes, isLoading: isLoadingMetalTypes, error: metalTypesError } = useQuery<MetalType[]>({
-    queryKey: ['/api/admin/metal-types'],
+    queryKey: ['/api/metal-types'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
   const { data: productTypes, isLoading: isLoadingProductTypes, error: productTypesError } = useQuery<ProductType[]>({
-    queryKey: ['/api/admin/product-types'],
+    queryKey: ['/api/product-types'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
