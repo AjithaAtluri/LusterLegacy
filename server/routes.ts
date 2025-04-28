@@ -709,23 +709,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Request body data:", 
         req.body.data ? (
           typeof req.body.data === 'string' 
-            ? req.body.data.substring(0, 100) 
+            ? req.body.data.substring(0, 100) + (req.body.data.length > 100 ? '...' : '')
             : "Data exists but is not a string"
         ) : "No data"
       );
       console.log("Request body data type:", typeof req.body.data);
+      console.log("User authentication state:", req.user ? `Authenticated as ${req.user.username} (${req.user.id})` : "Not authenticated");
+      
+      if (!req.body.data) {
+        console.error('No data field in request body');
+        return res.status(400).json({ message: 'No form data submitted' });
+      }
       
       try {
         // Handle both string and object cases
         let designData;
         if (typeof req.body.data === 'string') {
-          // Try to parse if it's a string
-          designData = JSON.parse(req.body.data);
+          try {
+            // Try to parse if it's a string
+            designData = JSON.parse(req.body.data);
+            console.log("Successfully parsed JSON data");
+          } catch (jsonError) {
+            console.error("JSON parse error:", jsonError);
+            return res.status(400).json({ 
+              message: 'Failed to parse JSON data', 
+              error: jsonError instanceof Error ? jsonError.message : 'Unknown JSON error',
+              data: req.body.data.substring(0, 100) + (req.body.data.length > 100 ? '...' : '')
+            });
+          }
         } else if (typeof req.body.data === 'object') {
           // Use directly if it's already an object
           designData = req.body.data;
+          console.log("Using object data directly");
         } else {
-          throw new Error(`Invalid data type: ${typeof req.body.data}`);
+          console.error(`Invalid data type: ${typeof req.body.data}`);
+          return res.status(400).json({ message: `Invalid data type: ${typeof req.body.data}` });
         }
         
         console.log("Parsed design data:", JSON.stringify(designData, null, 2));

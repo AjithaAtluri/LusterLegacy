@@ -249,20 +249,34 @@ export default function DesignForm() {
       console.log("Submitting design form with data:", JSON.stringify(processedData, null, 2));
       console.log("User authentication state:", user ? `Authenticated as ${user.username} (${user.id})` : "Not authenticated");
       
+      // Log data to debug
+      console.log("Final processed data before submitting:", processedData);
+      
       // Create FormData for file upload
       const formData = new FormData();
       formData.append("designImage", uploadedImage);
-      formData.append("data", JSON.stringify(processedData));
+      
+      // Convert complex fields to strings to avoid issues
+      const dataToSend = {
+        ...processedData,
+        // Ensure primaryStones is a simple string array
+        primaryStones: Array.isArray(processedData.primaryStones) 
+          ? processedData.primaryStones 
+          : []
+      };
+      
+      // Convert the entire object to a JSON string
+      const jsonData = JSON.stringify(dataToSend);
+      console.log("JSON data being sent:", jsonData);
+      
+      // Append as a simple string field
+      formData.append("data", jsonData);
       
       // Send form data to server
       const response = await fetch("/api/custom-design", {
         method: "POST",
         body: formData,
         credentials: "include",
-        headers: {
-          // Don't set Content-Type header for FormData
-          // The browser will automatically set it with the correct boundary
-        }
       });
       
       // Log the response status
