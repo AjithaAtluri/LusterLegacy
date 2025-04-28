@@ -106,23 +106,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: `Welcome back, ${userData.username}!`,
         });
         
-        // Add a slight delay to ensure toast is shown before redirect
-        setTimeout(() => {
-          // Use more forceful redirect for admin dashboard
-          console.log("Redirecting admin to dashboard...");
-          window.location.href = "/admin/dashboard";
-        }, 500);
+        // Force a direct window location change - most reliable method
+        console.log("REDIRECTING ADMIN NOW: setting window.location.href directly");
+        // This is a hard navigation, not using React Router
+        window.location.href = "/admin/dashboard";
       } else {
         toast({
           title: "Login successful",
           description: `Welcome ${userData.username}!`,
         });
         
-        // Redirect regular users to homepage after login
-        setTimeout(() => {
-          console.log("Redirecting customer to homepage...");
-          window.location.href = "/";
-        }, 500);
+        // Force a direct window location change for customers
+        console.log("REDIRECTING CUSTOMER NOW: setting window.location.href directly");
+        window.location.href = "/";
       }
     },
     onError: (error: Error) => {
@@ -160,11 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome to Luster Legacy, ${userData.username}!`,
       });
       
-      // Redirect customers to homepage after registration
-      setTimeout(() => {
-        console.log("Redirecting new customer to homepage...");
-        window.location.href = "/";
-      }, 500);
+      // Use direct navigation for registration redirect
+      console.log("REDIRECTING NEW CUSTOMER NOW: setting window.location.href directly");
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
@@ -264,8 +258,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been securely logged out of your account",
       });
       
-      // Optional: For a fully clean state, consider a page reload
-      // window.location.href = "/";
+      // Redirect to login page after logout
+      console.log("REDIRECTING TO LOGIN AFTER LOGOUT");
+      window.location.href = "/auth";
     },
     onError: (error: Error) => {
       console.error("Logout mutation error handler:", error);
@@ -280,6 +275,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "Your session may still be active on the server. Please refresh the page.",
         variant: "destructive",
       });
+      
+      // Even with errors, redirect to auth page
+      console.log("REDIRECTING TO AUTH PAGE AFTER FAILED LOGOUT");
+      window.location.href = "/auth";
     },
   });
 
