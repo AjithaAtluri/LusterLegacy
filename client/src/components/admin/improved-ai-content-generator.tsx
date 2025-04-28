@@ -108,21 +108,21 @@ export default function ImprovedAIContentGenerator({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [stoneTypeFields, setStoneTypeFields] = useState([{ name: "", carats: 0.1 }]);
   
-  // Fetch stone types from the API
+  // Fetch stone types from the API using public endpoints
   const { data: stoneTypes, isLoading: isLoadingStoneTypes, error: stoneTypesError } = useQuery<StoneType[]>({
-    queryKey: ['/api/admin/stone-types'],
+    queryKey: ['/api/stone-types'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
-  // Fetch metal types from the API
+  // Fetch metal types from the API using public endpoints
   const { data: metalTypes, isLoading: isLoadingMetalTypes, error: metalTypesError } = useQuery<MetalType[]>({
-    queryKey: ['/api/admin/metal-types'],
+    queryKey: ['/api/metal-types'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
-  // Fetch product types from the API
+  // Fetch product types from the API using public endpoints
   const { data: productTypes, isLoading: isLoadingProductTypes, error: productTypesError } = useQuery<ProductType[]>({
-    queryKey: ['/api/admin/product-types'],
+    queryKey: ['/api/product-types'],
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
   
