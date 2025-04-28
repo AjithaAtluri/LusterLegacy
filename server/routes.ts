@@ -3408,30 +3408,10 @@ Respond in JSON format:
   /**
    * Stone Type Routes (Admin only)
    */
-  // Get all stone types
-  app.get('/api/admin/stone-types', async (_req, res) => {
-    try {
-      const stoneTypes = await storage.getAllStoneTypes();
-      res.json(stoneTypes);
-    } catch (error) {
-      console.error('Error fetching stone types:', error);
-      res.status(500).json({ message: 'Failed to fetch stone types' });
-    }
-  });
-
-  // Get all stone types
-  app.get('/api/admin/stone-types', async (req, res) => {
-    try {
-      const stoneTypes = await storage.getAllStoneTypes();
-      return res.status(200).json(stoneTypes);
-    } catch (error) {
-      console.error('Error fetching stone types:', error);
-      return res.status(500).json({ message: 'Failed to fetch stone types' });
-    }
-  });
+  // These endpoints have been moved to earlier in the file with proper validateAdmin middleware
 
   // Get stone type by ID
-  app.get('/api/admin/stone-types/:id', async (req, res) => {
+  app.get('/api/admin/stone-types/:id', validateAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
