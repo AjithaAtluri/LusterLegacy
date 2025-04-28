@@ -70,10 +70,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], userData);
       // Force refetch user data to ensure we have the most up-to-date session
       refetchUser();
-      toast({
-        title: "Login successful",
-        description: `Welcome ${userData.username}!`,
-      });
+      
+      // Show appropriate toast message based on role
+      if (userData.role === "admin") {
+        toast({
+          title: "Admin login successful",
+          description: `Welcome back, ${userData.username}!`,
+        });
+        // Navigate admin to dashboard
+        window.location.href = "/admin/dashboard";
+      } else {
+        toast({
+          title: "Login successful",
+          description: `Welcome ${userData.username}!`,
+        });
+      }
     },
     onError: (error: Error) => {
       toast({

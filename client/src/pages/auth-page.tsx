@@ -96,6 +96,12 @@ export default function AuthPage() {
   
   // Redirect if user is already logged in
   if (user) {
+    // If admin, redirect to admin dashboard
+    if (user.role === "admin") {
+      console.log("Admin user detected, redirecting to admin dashboard");
+      return <Redirect to="/admin/dashboard" />;
+    }
+    // Otherwise go to return path or home
     return <Redirect to={returnPath} />;
   }
   
