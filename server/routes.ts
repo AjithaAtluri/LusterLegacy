@@ -2357,6 +2357,48 @@ Respond in JSON format:
     }
   });
   
+  // Admin-protected jewelry image analysis endpoint
+  app.post("/api/admin/analyze-jewelry-image", validateAdmin, async (req, res) => {
+    try {
+      console.log("Admin jewelry image analysis endpoint called");
+      
+      // Check if we have the required fields before proceeding
+      const { imageData, productType, metalType } = req.body;
+      
+      // Log payload details to troubleshoot size issues
+      console.log(`Admin jewelry analysis request details:
+      - Product Type: ${productType || 'Not provided'}
+      - Metal Type: ${metalType || 'Not provided'}
+      - Image Data Length: ${imageData ? `${(imageData.length / 1024).toFixed(2)}KB` : 'No image data'}
+      - Request Body Size: ${JSON.stringify(req.body).length / (1024 * 1024)}MB`);
+      
+      if (!imageData) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing image data"
+        });
+      }
+      
+      if (!productType || !metalType) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing product details (productType and metalType required)"
+        });
+      }
+      
+      // Proceed with the analysis
+      await analyzeJewelryImage(req, res);
+      
+    } catch (error: any) {
+      console.error("Error in admin jewelry image analysis:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error analyzing jewelry image",
+        details: error.message || "Unknown error"
+      });
+    }
+  });
+
   // Direct jewelry image analysis endpoint - simplified approach with no authentication
   app.post("/api/direct-jewelry-analysis", async (req, res) => {
     try {
