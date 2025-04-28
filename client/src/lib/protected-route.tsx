@@ -15,8 +15,13 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
   
+  // Get the path as string for return URL
+  const pathString = path !== undefined ? 
+    (typeof path === 'string' ? path : path.toString()) : 
+    '/';
+  
   // For debugging
-  console.log(`Protected Route: ${path}`, { 
+  console.log(`Protected Route: ${pathString}`, { 
     isLoading, 
     user, 
     adminOnly,
@@ -41,7 +46,6 @@ export function ProtectedRoute({
         if (!user) {
           console.log("User not authenticated, redirecting to auth page");
           // Add returnTo parameter for easier navigation back to the intended page
-          const pathString = typeof path === 'string' ? path : path.toString();
           const returnPath = pathString.startsWith('/admin') ? '/admin/dashboard' : pathString;
           return <Redirect to={`/auth?returnTo=${encodeURIComponent(returnPath)}`} />;
         }
@@ -54,7 +58,7 @@ export function ProtectedRoute({
 
         // Special case for admin dashboard direct access
         if (adminOnly && user.role === "admin" && 
-            (path === "/admin" || path === "/admin/dashboard")) {
+            (pathString === "/admin" || pathString === "/admin/dashboard")) {
           console.log("Admin user accessing dashboard");
         }
 

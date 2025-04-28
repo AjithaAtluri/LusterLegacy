@@ -31,40 +31,41 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { toast } = useToast();
   
-  // Check if user is authenticated
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ['/api/auth/me']
-  });
+  // Use the main auth hook for authentication
+  const { user, isLoading, error, logoutMutation } = useAuth();
   
-  // Redirect to login page if not authenticated
+  // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
-    if (!isLoading && !user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to access the admin dashboard",
-        variant: "destructive"
-      });
-      setLocation("/admin");
+    if (!isLoading) {
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to access the admin dashboard",
+          variant: "destructive"
+        });
+        setLocation("/auth?returnTo=%2Fadmin%2Fdashboard");
+      } else if (user.role !== "admin") {
+        toast({
+          title: "Access restricted",
+          description: "You don't have permission to access the admin dashboard",
+          variant: "destructive"
+        });
+        setLocation("/");
+      }
     }
   }, [user, isLoading, setLocation, toast]);
   
   // Handle logout
-  const handleLogout = async () => {
-    try {
-      await apiRequest("POST", "/api/auth/logout", {});
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of the admin dashboard",
-      });
-      setLocation("/admin");
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast({
-        title: "Logout failed",
-        description: "There was an error logging out",
-        variant: "destructive"
-      });
-    }
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast({
+          title: "Logged out successfully",
+          description: "You have been logged out of the admin dashboard",
+        });
+        setLocation("/");
+      }
+    });
   };
   
   // Navigation items

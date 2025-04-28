@@ -36,10 +36,17 @@ export default function AdminLogin() {
     setIsLoading(true);
     
     try {
-      await apiRequest("POST", "/api/auth/login", data);
+      // Use the main authentication system instead of the separate admin auth
+      const response = await apiRequest("POST", "/api/login", data);
+      const userData = await response.json();
+      
+      // Check if user has admin role
+      if (userData.role !== 'admin') {
+        throw new Error('Unauthorized: Admin access required');
+      }
       
       toast({
-        title: "Login successful",
+        title: "Admin login successful",
         description: "Welcome to Luster Legacy admin dashboard",
       });
       
@@ -49,7 +56,7 @@ export default function AdminLogin() {
       console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: "Invalid username or password",
+        description: "Invalid credentials or insufficient permissions",
         variant: "destructive"
       });
     } finally {
