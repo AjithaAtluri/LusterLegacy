@@ -178,8 +178,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: `Welcome ${userData.username}!`,
         });
         
+        // Check for returnTo parameter in URL
+        const params = new URLSearchParams(window.location.search);
+        const returnTo = params.get("returnTo");
+        const redirectPath = returnTo || "/";
+        
         // Force a direct window location change for customers
-        console.log("REDIRECTING CUSTOMER NOW: setting window.location.href directly to", window.location.origin + "/");
+        console.log("REDIRECTING CUSTOMER NOW: setting window.location.href directly to", window.location.origin + redirectPath);
         
         // DEBUG - show the current URL for analysis
         console.log("Current window.location:", {
@@ -189,23 +194,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           host: window.location.host,
           protocol: window.location.protocol,
           search: window.location.search,
-          hash: window.location.hash
+          hash: window.location.hash,
+          returnTo: returnTo
         });
         
         try {
           // This is a hard navigation, not using React Router - with explicit origin
-          window.location.href = window.location.origin + "/";
+          window.location.href = window.location.origin + redirectPath;
           
           // If not redirected after 100ms, try alternate approaches
           setTimeout(() => {
             console.log("DEBUG: Redirect didn't happen immediately, trying alternate approach");
             // Try absolute path with origin
-            window.location.replace(window.location.origin + "/");
+            window.location.replace(window.location.origin + redirectPath);
           }, 100);
         } catch (navError) {
           console.error("Navigation error:", navError);
           // Fallback method - use pathname directly
-          window.location.pathname = "/";
+          window.location.pathname = redirectPath;
         }
       }
     },
@@ -244,8 +250,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome to Luster Legacy, ${userData.username}!`,
       });
       
+      // Check for returnTo parameter in URL, also for registration
+      const params = new URLSearchParams(window.location.search);
+      const returnTo = params.get("returnTo");
+      const redirectPath = returnTo || "/";
+      
       // Use direct navigation for registration redirect
-      console.log("REDIRECTING NEW CUSTOMER NOW: setting window.location.href directly to", window.location.origin + "/");
+      console.log("REDIRECTING NEW CUSTOMER NOW: setting window.location.href directly to", window.location.origin + redirectPath);
       
       // DEBUG - show the current URL for analysis
       console.log("Current window.location (registration):", {
@@ -253,23 +264,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         origin: window.location.origin,
         pathname: window.location.pathname,
         host: window.location.host,
-        protocol: window.location.protocol
+        protocol: window.location.protocol,
+        search: window.location.search,
+        hash: window.location.hash,
+        returnTo: returnTo
       });
       
       try {
         // This is a hard navigation, with explicit origin
-        window.location.href = window.location.origin + "/";
+        window.location.href = window.location.origin + redirectPath;
         
         // If not redirected after 100ms, try alternate approaches
         setTimeout(() => {
           console.log("DEBUG: Redirect didn't happen immediately after registration, trying alternate approach");
           // Try using replace
-          window.location.replace(window.location.origin + "/");
+          window.location.replace(window.location.origin + redirectPath);
         }, 100);
       } catch (navError) {
         console.error("Navigation error during registration redirect:", navError);
         // Fallback method
-        window.location.pathname = "/";
+        window.location.pathname = redirectPath;
       }
     },
     onError: (error: Error) => {
