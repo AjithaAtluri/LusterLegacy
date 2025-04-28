@@ -37,9 +37,9 @@ export default function AdminProducts() {
     }
   });
   
-  // Fetch products
+  // Fetch products from the standard products endpoint that contains all product data
   const { data: products, isLoading } = useQuery({
-    queryKey: ['/api/admin/products'],
+    queryKey: ['/api/products'],
   });
   
   // Filter products by search query
@@ -78,7 +78,7 @@ export default function AdminProducts() {
     setIsDeleting(true);
     
     try {
-      await apiRequest("DELETE", `/api/admin/products/${selectedProduct.id}`, {});
+      await apiRequest("DELETE", `/api/products/${selectedProduct.id}`, {});
       
       toast({
         title: "Product deleted",
@@ -86,7 +86,7 @@ export default function AdminProducts() {
       });
       
       // Invalidate products query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       
       // Close dialog
       setIsDeleteDialogOpen(false);
