@@ -2068,7 +2068,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NEW: Improved AI Content Generation for Products
   app.post('/api/admin/generate-jewelry-content', validateAdmin, async (req, res) => {
     try {
-      console.log("Using improved jewelry content generator");
+      console.log("Using improved jewelry content generator (admin endpoint)");
+      // Pass the request to the improved OpenAI service
+      await generateJewelryContent(req, res);
+    } catch (error) {
+      console.error('Error generating jewelry content:', error);
+      res.status(500).json({ message: 'Failed to generate content' });
+    }
+  });
+  
+  // Public endpoint for generating jewelry content
+  app.post('/api/generate-jewelry-content', async (req, res) => {
+    try {
+      console.log("Using improved jewelry content generator (public endpoint)");
       // Pass the request to the improved OpenAI service
       await generateJewelryContent(req, res);
     } catch (error) {
