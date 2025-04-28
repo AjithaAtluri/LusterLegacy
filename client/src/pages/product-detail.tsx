@@ -369,6 +369,7 @@ export default function ProductDetail() {
           <div className="absolute inset-0 opacity-40">
             <ReliableProductImage 
               productId={product.id}
+              imageUrl={product.imageUrl}
               alt={product.name}
               className="w-full h-full object-cover object-center"
             />
@@ -413,6 +414,7 @@ export default function ProductDetail() {
               <div className="mb-6 rounded-xl overflow-hidden shadow-lg bg-card">
                 <ReliableProductImage
                   productId={product.id}
+                  imageUrl={product.imageUrl}
                   alt={product.name}
                   className="w-full h-auto object-contain aspect-square"
                 />
@@ -423,8 +425,8 @@ export default function ProductDetail() {
                 <div className="grid grid-cols-4 gap-2">
                   {allImages.map((img, index) => (
                     <div key={index} className="rounded-md overflow-hidden border border-border">
-                      <img
-                        src={getImageUrl(img)}
+                      <ReliableProductImage
+                        imageUrl={img}
                         alt={`${product.name} view ${index + 1}`}
                         className="w-full h-auto aspect-square object-cover"
                       />
