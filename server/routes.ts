@@ -2601,44 +2601,107 @@ Respond in JSON format:
       let primaryStoneCost = 0;
       let secondaryStoneCost = 0;
       
-      // Handle separately fetching stone costs for accurate breakdown
-      // Calculate costs individually for accurate reporting
-      for (let i = 0; i < primaryGems.length; i++) {
-        const gem = primaryGems[i];
-        const carats = gem.carats || 0.5;
-        let perCaratPrice = 0;
+      // Track which stones we've already processed to avoid double-counting
+      const processedStoneNames = new Set<string>();
+      
+      // Process the primary stone separately
+      if (primaryStone && primaryStone.stoneTypeId) {
+        try {
+          const carats = primaryStone.caratWeight || 1;
+          let perCaratPrice = 0;
+          let stoneTypeData = null;
+          
+          // Check if stoneTypeId is a number or string
+          if (typeof primaryStone.stoneTypeId === 'string' && !primaryStone.stoneTypeId.match(/^\d+$/)) {
+            // It's a stone name, look it up by name
+            stoneTypeData = await storage.getStoneTypeByName(primaryStone.stoneTypeId);
+            console.log(`Looked up primary stone by name "${primaryStone.stoneTypeId}": Found ${stoneTypeData?.name}`);
+          } else {
+            // It's a numeric ID, look it up by ID
+            const numericId = typeof primaryStone.stoneTypeId === 'number' ? 
+                      primaryStone.stoneTypeId : 
+                      parseInt(primaryStone.stoneTypeId as string);
+            stoneTypeData = await storage.getStoneTypeById(numericId);
+          }
+          
+          if (stoneTypeData?.priceModifier) {
+            perCaratPrice = stoneTypeData.priceModifier;
+            primaryStoneCost = carats * perCaratPrice;
+            console.log(`Primary stone: ${stoneTypeData.name} (${carats} carats at ₹${perCaratPrice}/carat) = ₹${primaryStoneCost}`);
+            
+            // Mark this stone name as processed to avoid double-counting
+            processedStoneNames.add(stoneTypeData.name.toLowerCase());
+          } else {
+            // Try fallback pricing by name if database lookup failed
+            perCaratPrice = await getGemPricePerCaratFromName(
+              typeof primaryStone.stoneTypeId === 'string' ? 
+                primaryStone.stoneTypeId : 
+                String(primaryStone.stoneTypeId)
+            );
+            primaryStoneCost = carats * perCaratPrice;
+            console.log(`Primary stone (fallback pricing): ${primaryStone.stoneTypeId} (${carats} carats at ₹${perCaratPrice}/carat) = ₹${primaryStoneCost}`);
+          }
+        } catch (error) {
+          console.error("Error processing primary stone:", error);
+        }
+      }
+      
+      // Process secondary stones with a separate loop
+      if (secondaryStones && Array.isArray(secondaryStones) && secondaryStones.length > 0) {
+        console.log(`Processing ${secondaryStones.length} secondary stones`);
         
-        // Get the stone price from the database
-        if (gem.stoneTypeId) {
+        for (const stone of secondaryStones) {
+          if (!stone || !stone.stoneTypeId) continue;
+          
           try {
-            const stoneTypeId = typeof gem.stoneTypeId === 'number' ? 
-                              gem.stoneTypeId : 
-                              parseInt(gem.stoneTypeId as string);
-                              
-            const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+            const carats = stone.caratWeight || 0.5;
+            let perCaratPrice = 0;
+            let stoneTypeData = null;
+            let stoneName = '';
+            
+            // Check if it's a name or ID
+            if (typeof stone.stoneTypeId === 'string' && !stone.stoneTypeId.match(/^\d+$/)) {
+              // It's a name string
+              stoneName = stone.stoneTypeId;
+              stoneTypeData = await storage.getStoneTypeByName(stone.stoneTypeId);
+              console.log(`Looked up secondary stone by name "${stone.stoneTypeId}": Found ${stoneTypeData?.name}`);
+            } else {
+              // It's a numeric ID
+              const numericId = typeof stone.stoneTypeId === 'number' ? 
+                       stone.stoneTypeId : 
+                       parseInt(stone.stoneTypeId as string);
+              stoneTypeData = await storage.getStoneTypeById(numericId);
+              stoneName = stoneTypeData?.name || String(stone.stoneTypeId);
+            }
+            
+            // Skip if this stone was already counted in primary
+            if (stoneTypeData && processedStoneNames.has(stoneTypeData.name.toLowerCase())) {
+              console.log(`Skipping already processed stone: ${stoneTypeData.name}`);
+              continue;
+            }
             
             if (stoneTypeData?.priceModifier) {
               perCaratPrice = stoneTypeData.priceModifier;
+              const thisGemCost = carats * perCaratPrice;
+              secondaryStoneCost += thisGemCost;
+              console.log(`Secondary stone: ${stoneTypeData.name} (${carats} carats at ₹${perCaratPrice}/carat) = ₹${thisGemCost}`);
+              
+              // Mark as processed
+              processedStoneNames.add(stoneTypeData.name.toLowerCase());
             } else {
-              // If not found in database, estimate based on name
-              perCaratPrice = await getGemPricePerCaratFromName(gem.name);
+              // Use fallback pricing by name
+              perCaratPrice = await getGemPricePerCaratFromName(stoneName);
+              const thisGemCost = carats * perCaratPrice;
+              secondaryStoneCost += thisGemCost;
+              console.log(`Secondary stone (fallback pricing): ${stoneName} (${carats} carats at ₹${perCaratPrice}/carat) = ₹${thisGemCost}`);
             }
-            
-            const thisStoneCost = carats * perCaratPrice;
-            
-            // Add to primary or secondary cost based on index
-            if (i < numberOfPrimaryGems) {
-              primaryStoneCost += thisStoneCost;
-            } else {
-              secondaryStoneCost += thisStoneCost;
-            }
-          } catch (e) {
-            console.error(`Error calculating stone cost for ${gem.name}:`, e);
+          } catch (error) {
+            console.error(`Error processing secondary stone:`, error);
           }
         }
       }
       
-      const hasPrimaryStone = primaryStone && numberOfPrimaryGems > 0 && primaryStoneCost > 0;
+      const hasPrimaryStone = primaryStone && primaryStone.stoneTypeId && primaryStoneCost > 0;
       const hasSecondaryStones = secondaryStones && secondaryStones.length > 0 && secondaryStoneCost > 0;
       
       console.log(`Stone costs - Primary: ₹${primaryStoneCost}, Secondary: ₹${secondaryStoneCost}`);
