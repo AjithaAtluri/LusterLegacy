@@ -137,41 +137,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Show appropriate toast message based on role
       if (userData.role === "admin") {
         console.log("Admin user detected - redirecting to dashboard");
+        
+        // Show toast first
         toast({
           title: "Admin login successful",
           description: `Welcome back, ${userData.username}!`,
         });
         
-        // Force a direct window location change with full URL for reliability
-        const dashboardUrl = window.location.origin + "/admin/dashboard";
-        console.log("REDIRECTING ADMIN NOW: setting window.location.href directly to", dashboardUrl);
-        
-        // DEBUG - show the current URL for analysis
-        console.log("Current window.location:", {
-          href: window.location.href,
-          origin: window.location.origin,
-          pathname: window.location.pathname,
-          host: window.location.host,
-          protocol: window.location.protocol,
-          search: window.location.search,
-          hash: window.location.hash
-        });
-        
-        try {
-          // This is a hard navigation, not using React Router - with explicit origin
-          window.location.href = window.location.origin + "/admin/dashboard";
-          
-          // If not redirected after 100ms, try alternate approaches
-          setTimeout(() => {
-            console.log("DEBUG: Redirect didn't happen immediately, trying alternate approach");
-            // Try absolute path with origin
-            window.location.replace(window.location.origin + "/admin/dashboard");
-          }, 100);
-        } catch (navError) {
-          console.error("Navigation error:", navError);
-          // Fallback method - use pathname directly
-          window.location.pathname = "/admin/dashboard";
-        }
+        // Use a longer timeout to ensure the user data is set in queryClient
+        // and toast is visible before redirect
+        setTimeout(() => {
+          try {
+            console.log("Executing admin redirect after delay");
+            // First try with full URL
+            window.location.href = window.location.origin + "/admin/dashboard";
+          } catch (navError) {
+            console.error("Navigation error:", navError);
+            // Fallback method - use pathname directly
+            window.location.pathname = "/admin/dashboard";
+          }
+        }, 500); // Longer delay to ensure authentication is properly established
       } else {
         toast({
           title: "Login successful",

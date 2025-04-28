@@ -113,10 +113,15 @@ export default function AdminLogin() {
         description: "Welcome to Luster Legacy admin dashboard",
       });
       
-      console.log("4. Login process complete - redirecting to dashboard with hard navigation");
+      console.log("4. Login process complete - preparing to redirect to dashboard");
       
-      // Use hard navigation to ensure full page reload and clean state
-      window.location.href = "/admin/dashboard";
+      // Use a timeout to ensure cookies and session state are properly established
+      // before redirecting to the dashboard
+      setTimeout(() => {
+        console.log("Executing admin dashboard redirect after delay");
+        // Use hard navigation to ensure full page reload and clean state
+        window.location.href = window.location.origin + "/admin/dashboard";
+      }, 500);
     } catch (error) {
       console.error("Login error:", error);
       toast({
