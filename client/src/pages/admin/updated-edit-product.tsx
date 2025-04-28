@@ -154,8 +154,48 @@ export default function EditProduct() {
         setMainStoneWeight(productData.mainStoneWeight.toString());
       }
       
+      // Check for secondary stone type in different possible locations
+      const extractSecondaryStoneType = () => {
+        // First try to get from aiInputs if available
+        if (productData.aiInputs?.secondaryStoneType) {
+          console.log("aiInputs.secondaryStoneType:", productData.aiInputs.secondaryStoneType, "type:", typeof productData.aiInputs.secondaryStoneType);
+          return productData.aiInputs.secondaryStoneType;
+        }
+        
+        // Try to get from additionalData if exists in details
+        try {
+          if (productData.details) {
+            const details = JSON.parse(productData.details);
+            if (details?.secondaryStoneType) {
+              console.log("details?.secondaryStoneType:", details.secondaryStoneType, "type:", typeof details.secondaryStoneType);
+              return details.secondaryStoneType;
+            }
+            
+            // Check in additionalData which is sometimes nested
+            if (details?.additionalData?.secondaryStoneType) {
+              console.log("additionalData.secondaryStoneType:", details.additionalData.secondaryStoneType, "type:", typeof details.additionalData.secondaryStoneType);
+              return details.additionalData.secondaryStoneType;
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing details JSON:", error);
+        }
+        
+        // Default to none_selected if no secondary stone type found
+        console.log("Final secondaryStoneType:", "none_selected");
+        return "none_selected";
+      };
+      
+      // Set secondary stone type
+      const secondaryStoneTp = extractSecondaryStoneType();
+      setSecondaryStoneType(secondaryStoneTp);
+      
+      // Set secondary stone weight with proper defaults
       if (productData.secondaryStoneWeight) {
         setSecondaryStoneWeight(productData.secondaryStoneWeight.toString());
+      } else if (secondaryStoneTp === "none_selected") {
+        // If no secondary stone is selected, set weight to 0
+        setSecondaryStoneWeight("0");
       }
       
       // Set image previews
