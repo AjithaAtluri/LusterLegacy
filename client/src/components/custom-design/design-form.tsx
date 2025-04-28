@@ -468,7 +468,7 @@ export default function DesignForm() {
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
@@ -650,7 +650,7 @@ export default function DesignForm() {
                     </FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
