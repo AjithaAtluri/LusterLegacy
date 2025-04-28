@@ -568,9 +568,9 @@ export default function DirectAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <Button asChild className="w-full" variant="outline">
-                        <Link href="/admin/direct-dashboard?section=orders">
+                        <a href="/admin/direct-dashboard?section=orders">
                           View All Orders
-                        </Link>
+                        </a>
                       </Button>
                     </CardContent>
                   </Card>
@@ -581,9 +581,9 @@ export default function DirectAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <Button asChild className="w-full" variant="outline">
-                        <Link href="/admin/direct-dashboard?section=designs">
+                        <a href="/admin/direct-dashboard?section=designs">
                           Manage Design Requests
-                        </Link>
+                        </a>
                       </Button>
                     </CardContent>
                   </Card>
@@ -643,9 +643,9 @@ export default function DirectAdminDashboard() {
                                 </div>
                               </div>
                               <Button asChild variant="ghost" size="sm">
-                                <Link href={`/admin/direct-dashboard?section=orders&id=${order.id}`}>
+                                <a href={`/admin/direct-dashboard?section=orders&id=${order.id}`}>
                                   <ExternalLink className="h-4 w-4" />
-                                </Link>
+                                </a>
                               </Button>
                             </div>
                           </div>
@@ -701,9 +701,9 @@ export default function DirectAdminDashboard() {
                               </div>
                             </div>
                             <Button asChild variant="ghost" size="sm">
-                              <Link href={`/admin/direct-dashboard?section=designs&id=${design.id}`}>
+                              <a href={`/admin/direct-dashboard?section=designs&id=${design.id}`}>
                                 <ExternalLink className="h-4 w-4" />
-                              </Link>
+                              </a>
                             </Button>
                           </div>
                         ))}
@@ -753,9 +753,9 @@ export default function DirectAdminDashboard() {
                               </div>
                             </div>
                             <Button asChild variant="ghost" size="sm">
-                              <Link href={`/admin/direct-dashboard?section=products&id=${product.id}`}>
+                              <a href={`/admin/direct-dashboard?section=products&id=${product.id}`}>
                                 <ExternalLink className="h-4 w-4" />
-                              </Link>
+                              </a>
                             </Button>
                           </div>
                         ))}
