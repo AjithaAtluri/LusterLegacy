@@ -107,9 +107,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         
         // Force a direct window location change - most reliable method
-        console.log("REDIRECTING ADMIN NOW: setting window.location.href directly");
-        // This is a hard navigation, not using React Router
-        window.location.href = "/admin/dashboard";
+        console.log("REDIRECTING ADMIN NOW: setting window.location.href directly to", window.location.origin + "/admin/dashboard");
+        
+        // DEBUG - show the current URL for analysis
+        console.log("Current window.location:", {
+          href: window.location.href,
+          origin: window.location.origin,
+          pathname: window.location.pathname,
+          host: window.location.host,
+          protocol: window.location.protocol,
+          search: window.location.search,
+          hash: window.location.hash
+        });
+        
+        try {
+          // This is a hard navigation, not using React Router - with explicit origin
+          window.location.href = window.location.origin + "/admin/dashboard";
+          
+          // If not redirected after 100ms, try alternate approaches
+          setTimeout(() => {
+            console.log("DEBUG: Redirect didn't happen immediately, trying alternate approach");
+            // Try absolute path with origin
+            window.location.replace(window.location.origin + "/admin/dashboard");
+          }, 100);
+        } catch (navError) {
+          console.error("Navigation error:", navError);
+          // Fallback method - use pathname directly
+          window.location.pathname = "/admin/dashboard";
+        }
       } else {
         toast({
           title: "Login successful",
@@ -117,8 +142,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         
         // Force a direct window location change for customers
-        console.log("REDIRECTING CUSTOMER NOW: setting window.location.href directly");
-        window.location.href = "/";
+        console.log("REDIRECTING CUSTOMER NOW: setting window.location.href directly to", window.location.origin + "/");
+        
+        // DEBUG - show the current URL for analysis
+        console.log("Current window.location:", {
+          href: window.location.href,
+          origin: window.location.origin,
+          pathname: window.location.pathname,
+          host: window.location.host,
+          protocol: window.location.protocol,
+          search: window.location.search,
+          hash: window.location.hash
+        });
+        
+        try {
+          // This is a hard navigation, not using React Router - with explicit origin
+          window.location.href = window.location.origin + "/";
+          
+          // If not redirected after 100ms, try alternate approaches
+          setTimeout(() => {
+            console.log("DEBUG: Redirect didn't happen immediately, trying alternate approach");
+            // Try absolute path with origin
+            window.location.replace(window.location.origin + "/");
+          }, 100);
+        } catch (navError) {
+          console.error("Navigation error:", navError);
+          // Fallback method - use pathname directly
+          window.location.pathname = "/";
+        }
       }
     },
     onError: (error: Error) => {
@@ -157,8 +208,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Use direct navigation for registration redirect
-      console.log("REDIRECTING NEW CUSTOMER NOW: setting window.location.href directly");
-      window.location.href = "/";
+      console.log("REDIRECTING NEW CUSTOMER NOW: setting window.location.href directly to", window.location.origin + "/");
+      
+      // DEBUG - show the current URL for analysis
+      console.log("Current window.location (registration):", {
+        href: window.location.href,
+        origin: window.location.origin,
+        pathname: window.location.pathname,
+        host: window.location.host,
+        protocol: window.location.protocol
+      });
+      
+      try {
+        // This is a hard navigation, with explicit origin
+        window.location.href = window.location.origin + "/";
+        
+        // If not redirected after 100ms, try alternate approaches
+        setTimeout(() => {
+          console.log("DEBUG: Redirect didn't happen immediately after registration, trying alternate approach");
+          // Try using replace
+          window.location.replace(window.location.origin + "/");
+        }, 100);
+      } catch (navError) {
+        console.error("Navigation error during registration redirect:", navError);
+        // Fallback method
+        window.location.pathname = "/";
+      }
     },
     onError: (error: Error) => {
       toast({
