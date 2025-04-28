@@ -116,6 +116,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
   });
+  
+  // Special debug endpoint for development - REMOVE IN PRODUCTION
+  app.get('/api/debug/users', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        passwordFormat: user.password ? `${user.password.substring(0, 15)}... (${user.password.length} chars)` : 'no password',
+      }));
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Debug endpoint error:", error);
+      res.status(500).json({ error: "Unable to fetch users for debugging" });
+    }
+  });
 
   // Serve static files from uploads directory (root-level persistent storage)
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
