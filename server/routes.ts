@@ -713,30 +713,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Parsed design data:", JSON.stringify(designData, null, 2));
         
         // Handle both old and new formats for stones
-        // If primaryStones is present as an array, use it
-        // If only primaryStone is present (string), convert it to array format
         let formattedData = { ...designData };
         
-        // For backward compatibility, ensure primaryStone is set if only primaryStones array exists
-        if (formattedData.primaryStones && formattedData.primaryStones.length > 0 && !formattedData.primaryStone) {
+        // Ensure primaryStones is always a valid array
+        if (!formattedData.primaryStones) {
+          formattedData.primaryStones = [];
+        } else if (!Array.isArray(formattedData.primaryStones)) {
+          // Convert to array if it's not already one
+          formattedData.primaryStones = [formattedData.primaryStones];
+        }
+        
+        // For backward compatibility, ensure primaryStone is set if primaryStones array exists
+        if (formattedData.primaryStones.length > 0 && !formattedData.primaryStone) {
           formattedData.primaryStone = formattedData.primaryStones[0];
         }
         
-        // For forward compatibility, ensure primaryStones array exists if only primaryStone is provided
-        if (formattedData.primaryStone && (!formattedData.primaryStones || !formattedData.primaryStones.length)) {
-          formattedData.primaryStones = [formattedData.primaryStone];
+        // For forward compatibility, add primaryStone to primaryStones array if it's not already there
+        if (formattedData.primaryStone && formattedData.primaryStones.indexOf(formattedData.primaryStone) === -1) {
+          formattedData.primaryStones.push(formattedData.primaryStone);
         }
         
         console.log("Processing design request with stones:", 
-          formattedData.primaryStones || [], 
+          formattedData.primaryStones, 
           "Primary stone for backward compatibility:", 
           formattedData.primaryStone
         );
-
-        // Ensure primaryStones is always an array
-        if (!formattedData.primaryStones || !Array.isArray(formattedData.primaryStones)) {
-          formattedData.primaryStones = formattedData.primaryStone ? [formattedData.primaryStone] : [];
-        }
 
         // Make sure we have a user ID
         if (!req.user || !req.user.id) {
@@ -751,13 +752,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         try {
-          const validatedData = insertDesignRequestSchema.parse({
+          // Create data object for validation with explicit type handling
+          const dataToValidate = {
             ...formattedData,
-            userId: req.user.id, // Add the authenticated user's ID
-            imageUrl: `/uploads/${req.file.filename}`
-          });
+            userId: req.user.id,
+            imageUrl: `/uploads/${req.file.filename}`,
+            // Ensure primaryStones is correctly formatted for database
+            primaryStones: Array.isArray(formattedData.primaryStones) ? formattedData.primaryStones : []
+          };
+          
+          const validatedData = insertDesignRequestSchema.parse(dataToValidate);
 
           console.log("Validation successful, creating design request with user ID:", req.user.id);
+          console.log("Data being sent to storage:", JSON.stringify(validatedData, null, 2));
+          
           const designRequest = await storage.createDesignRequest(validatedData);
           res.status(201).json(designRequest);
         } catch (validationError) {
@@ -777,7 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('Critical error submitting design request:', error);
-      res.status(500).json({ message: 'Error submitting design request: ' + (error.message || 'Unknown error') });
+      res.status(500).json({ message: 'Error submitting design request: ' + (error instanceof Error ? error.message : 'Unknown error') });
     }
   });
 
