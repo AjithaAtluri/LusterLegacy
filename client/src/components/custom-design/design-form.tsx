@@ -178,6 +178,12 @@ export default function DesignForm() {
           imageDataUrl: null // Will be populated below if image is small enough
         };
         
+        // Make sure primaryStones is properly saved as an array
+        formData.primaryStones = Array.isArray(data.primaryStones) ? data.primaryStones : [];
+        
+        // Update selectedStones state to match form data
+        setSelectedStones(formData.primaryStones);
+        
         // Save the initial form data first (without image)
         sessionStorage.setItem('designFormData', JSON.stringify(formData));
         
@@ -233,23 +239,43 @@ export default function DesignForm() {
     setIsSubmitting(true);
     
     try {
+      // Ensure primaryStones is an array
+      const processedData = {
+        ...data,
+        primaryStones: Array.isArray(data.primaryStones) ? data.primaryStones : []
+      };
+      
+      // Log the form data for debugging
+      console.log("Submitting design form with data:", JSON.stringify(processedData, null, 2));
+      console.log("User authentication state:", user ? `Authenticated as ${user.username} (${user.id})` : "Not authenticated");
+      
       // Create FormData for file upload
       const formData = new FormData();
       formData.append("designImage", uploadedImage);
-      formData.append("data", JSON.stringify(data));
+      formData.append("data", JSON.stringify(processedData));
       
       // Send form data to server
       const response = await fetch("/api/custom-design", {
         method: "POST",
         body: formData,
-        credentials: "include"
+        credentials: "include",
+        headers: {
+          // Don't set Content-Type header for FormData
+          // The browser will automatically set it with the correct boundary
+        }
       });
+      
+      // Log the response status
+      console.log("Design form submission response status:", response.status);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
         console.error("Design form server error:", errorData);
         throw new Error(errorData.message || "Failed to submit design request");
       }
+      
+      const responseData = await response.json();
+      console.log("Design form submission successful:", responseData);
       
       toast({
         title: "Design submitted successfully!",
@@ -260,11 +286,12 @@ export default function DesignForm() {
       form.reset();
       setUploadedImage(null);
       setPreviewUrl(null);
+      setSelectedStones([]);
     } catch (error) {
       console.error("Design form error:", error);
       toast({
         title: "Error submitting design",
-        description: "Please try again later.",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive"
       });
     } finally {
