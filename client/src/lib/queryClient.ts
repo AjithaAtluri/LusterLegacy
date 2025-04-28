@@ -73,6 +73,101 @@ export const getQueryFn: <T>(options: {
     }
   };
 
+// Development helper functions
+export const devHelpers = {
+  /**
+   * Direct login utility for development purposes only
+   * This bypasses password verification and directly authenticates as the given user
+   * @param username Username to login as
+   * @returns Promise with login result
+   */
+  async directLogin(username: string): Promise<any> {
+    console.log(`[DEV] Attempting direct login as: ${username}`);
+    try {
+      const response = await fetch(`/api/debug/direct-login/${username}`, {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache"
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Direct login failed: ${response.status} - ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log(`[DEV] Direct login successful:`, result);
+      
+      // Invalidate auth query to refresh user state
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      return result;
+    } catch (error) {
+      console.error(`[DEV] Direct login error:`, error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Check authentication status
+   * @returns Promise with current user info or null if not authenticated
+   */
+  async checkAuthStatus(): Promise<any> {
+    try {
+      const response = await fetch('/api/user', {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache", 
+          "Pragma": "no-cache"
+        }
+      });
+      
+      if (response.status === 401) {
+        console.log('[DEV] User is not authenticated');
+        return null;
+      }
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Auth check failed: ${response.status} - ${errorText}`);
+      }
+      
+      const user = await response.json();
+      console.log('[DEV] User is authenticated:', user);
+      return user;
+    } catch (error) {
+      console.error('[DEV] Auth check error:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * List all users in the system (for debugging only)
+   * @returns Promise with list of users
+   */
+  async listAllUsers(): Promise<any[]> {
+    try {
+      const response = await fetch('/api/debug/users', {
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`User list failed: ${response.status} - ${errorText}`);
+      }
+      
+      const users = await response.json();
+      console.log('[DEV] User list:', users);
+      return users;
+    } catch (error) {
+      console.error('[DEV] User list error:', error);
+      return [];
+    }
+  }
+};
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

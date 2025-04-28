@@ -19,6 +19,8 @@ import { Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { devHelpers } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Login form validation schema
 const loginSchema = z.object({
@@ -105,6 +107,86 @@ export default function AuthPage() {
     return <Redirect to={returnPath} />;
   }
   
+  // Debug utility functions
+  const { toast } = useToast();
+  const [debugUsername, setDebugUsername] = useState<string>("");
+  const [userList, setUserList] = useState<any[]>([]);
+  const [isLoadingUserList, setIsLoadingUserList] = useState<boolean>(false);
+  const [isDirectLoginLoading, setIsDirectLoginLoading] = useState<boolean>(false);
+
+  // Debug actions
+  const handleDirectLogin = async () => {
+    if (!debugUsername) {
+      toast({
+        title: "Username required",
+        description: "Please enter a username for direct login",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsDirectLoginLoading(true);
+    try {
+      const result = await devHelpers.directLogin(debugUsername);
+      toast({
+        title: "Direct login successful",
+        description: `Logged in as ${debugUsername} (${result.redirectTo})`,
+      });
+    } catch (error) {
+      toast({
+        title: "Direct login failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDirectLoginLoading(false);
+    }
+  };
+  
+  const handleLoadUsers = async () => {
+    setIsLoadingUserList(true);
+    try {
+      const users = await devHelpers.listAllUsers();
+      setUserList(users);
+      toast({
+        title: "Users loaded",
+        description: `Found ${users.length} users in the database`
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to load users",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingUserList(false);
+    }
+  };
+  
+  const handleCheckAuthStatus = async () => {
+    try {
+      const user = await devHelpers.checkAuthStatus();
+      if (user) {
+        toast({
+          title: "Authentication status",
+          description: `Logged in as ${user.username} (${user.role})`,
+        });
+      } else {
+        toast({
+          title: "Authentication status",
+          description: "Not currently authenticated",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error checking auth status",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Left side - Form */}
@@ -125,9 +207,10 @@ export default function AuthPage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="register">Sign Up</TabsTrigger>
+              <TabsTrigger value="debug">Debug</TabsTrigger>
             </TabsList>
             
             {/* Login Form */}

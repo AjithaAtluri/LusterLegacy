@@ -133,6 +133,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Unable to fetch users for debugging" });
     }
   });
+  
+  // DEV ONLY: Special login route for development troubleshooting
+  // This bypasses password verification for testing purposes
+  app.post('/api/dev-login', async (req, res) => {
+    try {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ message: "Username is required" });
+      }
+      
+      console.log(`[DEV LOGIN] Bypassing password check for user: ${username}`);
+      
+      // Look up user without password verification
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Manually log the user in by setting session data
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Error during login" });
+        }
+        
+        // Remove password from response
+        const { password, ...userWithoutPassword } = user;
+        
+        console.log(`[DEV LOGIN] Successfully authenticated ${username} with role ${user.role}`);
+        return res.status(200).json(userWithoutPassword);
+      });
+    } catch (error) {
+      console.error("Dev login error:", error);
+      res.status(500).json({ message: "Server error during login" });
+    }
+  });
 
   // Serve static files from uploads directory (root-level persistent storage)
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -245,6 +283,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       sessionId: req.sessionId,
       cookies: req.cookies
     });
+  });
+  
+  // Special URL login route for debugging (NEVER USE IN PRODUCTION)
+  app.get('/api/debug/direct-login/:username', async (req, res) => {
+    try {
+      const { username } = req.params;
+      
+      if (!username) {
+        return res.status(400).json({ message: "Username parameter is required" });
+      }
+      
+      console.log(`[DIRECT LOGIN] Bypassing password check for user: ${username}`);
+      
+      // Look up user without password verification
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Manually log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Direct login error:", err);
+          return res.status(500).json({ message: "Error during login" });
+        }
+        
+        // Send a success response with information about the login
+        res.status(200).json({ 
+          message: `Successfully logged in as ${username} (${user.role})`,
+          redirectTo: user.role === 'admin' ? '/admin/dashboard' : '/' 
+        });
+      });
+    } catch (error) {
+      console.error("Direct login error:", error);
+      res.status(500).json({ message: "Server error during direct login" });
+    }
   });
 
   /**
