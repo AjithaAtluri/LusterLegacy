@@ -100,36 +100,66 @@ export const devHelpers = {
       const result = await response.json();
       console.log(`[DEV] Direct login successful:`, result);
       
+      // First invalidate any stale data 
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
       // After direct login, fetch the user data to update the React Query cache
       try {
+        // Explicit anti-cache headers to ensure we get fresh data
         const userResponse = await fetch('/api/user', {
           credentials: "include",
           headers: {
-            "Cache-Control": "no-cache",
-            "Pragma": "no-cache"
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
           }
         });
         
         if (userResponse.ok) {
           const userData = await userResponse.json();
           console.log("[DEV] Fetched user data after login:", userData);
+          
+          // Log complete auth state for debugging
+          console.log("[DEV] Complete authentication state:", {
+            userData,
+            cookies: document.cookie
+          });
+          
           // Directly update the cache with fresh user data
           queryClient.setQueryData(["/api/user"], userData);
+          
+          // Force cache invalidation for all related queries to ensure fresh data
+          queryClient.invalidateQueries();
+          
+          // Execute redirect with a short delay to allow cache updates to propagate
+          setTimeout(() => {
+            if (result.redirectTo) {
+              console.log("[DEV] Redirecting to:", result.redirectTo);
+              console.log("[DEV] Current URL:", window.location.href);
+              console.log("[DEV] Target URL:", window.location.origin + result.redirectTo);
+              
+              // Use the most reliable redirect method with full URL
+              window.location.href = window.location.origin + result.redirectTo;
+            } else {
+              console.log("[DEV] No redirect specified, reloading page");
+              window.location.reload();
+            }
+          }, 300);
+          
+          return;
+        } else {
+          console.warn("[DEV] Failed to fetch user data after login:", userResponse.status);
         }
       } catch (fetchError) {
         console.error("[DEV] Error fetching user data after login:", fetchError);
       }
       
-      // Also invalidate auth query to refresh user state
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      
-      // Force a page reload to ensure all auth systems are in sync
+      // Fallback: force a page reload as last resort
+      console.log("[DEV] Using fallback redirect mechanism");
       setTimeout(() => {
         if (result.redirectTo) {
-          console.log("[DEV] Redirecting to:", result.redirectTo);
-          window.location.href = result.redirectTo;
+          window.location.href = window.location.origin + result.redirectTo;
         } else {
-          console.log("[DEV] No redirect specified, reloading page");
           window.location.reload();
         }
       }, 500);
