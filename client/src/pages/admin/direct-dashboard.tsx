@@ -264,43 +264,43 @@ export default function DirectAdminDashboard() {
                 Dashboard
               </a>
               <a 
-                href="/admin/direct-dashboard?section=products" 
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'products' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                href="/admin/products" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <Package className="h-5 w-5" />
                 Products
               </a>
               <a 
-                href="/admin/direct-dashboard?section=product-types" 
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'product-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                href="/admin/product-types" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <Package className="h-5 w-5" />
                 Product Types
               </a>
               <a 
-                href="/admin/direct-dashboard?section=metal-types" 
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'metal-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                href="/admin/metal-types" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <Package className="h-5 w-5" />
                 Metal Types
               </a>
               <a 
-                href="/admin/direct-dashboard?section=stone-types" 
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'stone-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                href="/admin/stone-types" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <Package className="h-5 w-5" />
                 Stone Types
               </a>
               <a 
-                href="/admin/direct-dashboard?section=orders" 
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'orders' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                href="/admin/orders" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <ShoppingBag className="h-5 w-5" />
                 Orders
               </a>
               <a 
-                href="/admin/direct-dashboard?section=designs" 
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'designs' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                href="/admin/designs" 
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <Settings className="h-5 w-5" />
                 Custom Designs
@@ -477,7 +477,7 @@ export default function DirectAdminDashboard() {
                         {recentOrders.length > 0 && (
                           <div className="mt-4 text-center">
                             <Button variant="outline" asChild>
-                              <a href="/admin/direct-dashboard?section=orders">
+                              <a href="/admin/orders">
                                 View All Orders
                               </a>
                             </Button>
@@ -536,7 +536,7 @@ export default function DirectAdminDashboard() {
                         {pendingDesigns.length > 0 && (
                           <div className="mt-4 text-center">
                             <Button variant="outline" asChild>
-                              <a href="/admin/direct-dashboard?section=designs">
+                              <a href="/admin/designs">
                                 View All Design Requests
                               </a>
                             </Button>
@@ -568,7 +568,7 @@ export default function DirectAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <Button asChild className="w-full" variant="outline">
-                        <a href="/admin/direct-dashboard?section=orders">
+                        <a href="/admin/orders">
                           View All Orders
                         </a>
                       </Button>
@@ -581,7 +581,7 @@ export default function DirectAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <Button asChild className="w-full" variant="outline">
-                        <a href="/admin/direct-dashboard?section=designs">
+                        <a href="/admin/designs">
                           Manage Design Requests
                         </a>
                       </Button>
@@ -643,7 +643,7 @@ export default function DirectAdminDashboard() {
                                 </div>
                               </div>
                               <Button asChild variant="ghost" size="sm">
-                                <a href={`/admin/direct-dashboard?section=orders&id=${order.id}`}>
+                                <a href={`/admin/orders?id=${order.id}`}>
                                   <ExternalLink className="h-4 w-4" />
                                 </a>
                               </Button>
@@ -701,7 +701,7 @@ export default function DirectAdminDashboard() {
                               </div>
                             </div>
                             <Button asChild variant="ghost" size="sm">
-                              <a href={`/admin/direct-dashboard?section=designs&id=${design.id}`}>
+                              <a href={`/admin/designs?id=${design.id}`}>
                                 <ExternalLink className="h-4 w-4" />
                               </a>
                             </Button>
@@ -753,7 +753,7 @@ export default function DirectAdminDashboard() {
                               </div>
                             </div>
                             <Button asChild variant="ghost" size="sm">
-                              <a href={`/admin/direct-dashboard?section=products&id=${product.id}`}>
+                              <a href={`/admin/edit-product/${product.id}`}>
                                 <ExternalLink className="h-4 w-4" />
                               </a>
                             </Button>
