@@ -1581,9 +1581,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('DIRECT ADMIN LOGIN - New dedicated lightweight admin auth');
       
       // Destructure credentials from request body
-      const { username, password } = req.body;
+      const { username, password: providedPassword } = req.body;
       
-      if (!username || !password) {
+      if (!username || !providedPassword) {
         return res.status(400).json({ message: 'Username and password are required' });
       }
       
@@ -1604,7 +1604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify password using the exported comparePasswords function
-      const passwordValid = await comparePasswords(password, user.password);
+      const passwordValid = await comparePasswords(providedPassword, user.password);
       
       if (!passwordValid) {
         console.log('Admin login failed - invalid password for user:', username);
@@ -1659,10 +1659,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Admin login successful with multiple auth mechanisms');
       
-      // Return user data without password
-      const { password, ...userWithoutPassword } = user;
+      // Return user data without password (renamed to avoid conflict)
+      const { password: _password, ...userDataSanitized } = user;
       return res.json({
-        ...userWithoutPassword,
+        ...userDataSanitized,
         adminAuth: true,
         authTime: Date.now()
       });
@@ -3601,9 +3601,12 @@ Respond in JSON format:
                 }
               }
               
+              // Sanitize user data (renamed to avoid variable naming conflict)
+              const { password: _userPassword, ...adminUserData } = adminUser;
+              
               console.log("Admin auth check - returning admin user from dedicated cookie");
               return res.json({
-                ...userWithoutPassword,
+                ...adminUserData,
                 adminAuth: true,
                 authTime: Date.now(),
                 authSource: 'admin_cookie'
@@ -3670,10 +3673,10 @@ Respond in JSON format:
               }
               
               // Return sanitized user data with auth info
-              const { password, ...userWithoutPassword } = legacyUser;
+              const { password: _legacyPassword, ...legacyUserData } = legacyUser;
               console.log("Admin auth check - returning admin user from legacy cookie");
               return res.json({
-                ...userWithoutPassword,
+                ...legacyUserData,
                 adminAuth: true,
                 authTime: Date.now(),
                 authSource: 'legacy_cookie',
@@ -3726,10 +3729,10 @@ Respond in JSON format:
           });
           
           // Return sanitized user data with auth info
-          const { password, ...userWithoutPassword } = req.user;
+          const { password: _passportPassword, ...passportUserData } = req.user;
           console.log("Admin auth check - returning admin user from passport auth");
           return res.json({
-            ...userWithoutPassword,
+            ...passportUserData,
             adminAuth: true,
             authTime: Date.now(),
             authSource: 'passport'
