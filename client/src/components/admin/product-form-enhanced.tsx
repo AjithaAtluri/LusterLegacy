@@ -299,7 +299,7 @@ export default function ProductFormEnhanced({ initialData, productId, onSuccess 
       }
       
       // Invalidate products query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       
       // Call success callback if provided
       if (onSuccess) {
