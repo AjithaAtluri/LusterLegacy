@@ -59,7 +59,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: LoginData) => {
       // First try logging in with the main auth system
       console.log("Attempting login with primary auth system...");
-      const res = await apiRequest("POST", "/api/login", credentials);
+      const res = await apiRequest("POST", "/api/login", credentials, {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        }
+      });
       
       if (!res.ok) {
         const errorData = await res.json();
@@ -74,7 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Admin user detected, ensuring both auth systems are in sync");
         try {
           // Also log in to the admin system
-          const adminLoginRes = await apiRequest("POST", "/api/auth/login", credentials);
+          const adminLoginRes = await apiRequest("POST", "/api/auth/login", credentials, {
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            }
+          });
           if (adminLoginRes.ok) {
             console.log("Successfully logged into both auth systems");
           } else {
@@ -92,11 +104,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Log the user data to see what's happening
       console.log("Login success - user data:", userData);
       
-      // Update the query cache with user data
+      // First invalidate any stale queries
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Then update the query cache with user data
       queryClient.setQueryData(["/api/user"], userData);
       
-      // Force refetch user data to ensure we have the most up-to-date session
-      refetchUser();
+      // Immediately verify the auth state by fetching fresh user data
+      setTimeout(async () => {
+        try {
+          const userResponse = await fetch('/api/user', {
+            credentials: "include",
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            }
+          });
+          
+          if (userResponse.ok) {
+            const freshUserData = await userResponse.json();
+            console.log("Auth verified with fresh data:", freshUserData);
+            queryClient.setQueryData(["/api/user"], freshUserData);
+          } else {
+            console.error("Auth verification failed - still not authenticated after login");
+          }
+        } catch (error) {
+          console.error("Error verifying auth state:", error);
+        }
+      }, 300);
       
       // Show appropriate toast message based on role
       if (userData.role === "admin") {
@@ -106,8 +142,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: `Welcome back, ${userData.username}!`,
         });
         
-        // Force a direct window location change - most reliable method
-        console.log("REDIRECTING ADMIN NOW: setting window.location.href directly to", window.location.origin + "/admin/dashboard");
+        // Force a direct window location change with full URL for reliability
+        const dashboardUrl = window.location.origin + "/admin/dashboard";
+        console.log("REDIRECTING ADMIN NOW: setting window.location.href directly to", dashboardUrl);
         
         // DEBUG - show the current URL for analysis
         console.log("Current window.location:", {

@@ -134,6 +134,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Debug endpoint to examine session data - REMOVE IN PRODUCTION
+  app.get('/api/debug/session', (req, res) => {
+    try {
+      console.log(`[DEBUG] Session request - Session ID: ${req.sessionID}`);
+      console.log(`[DEBUG] Session authenticated: ${req.isAuthenticated()}`);
+      
+      const sessionInfo = {
+        sessionID: req.sessionID,
+        authenticated: req.isAuthenticated(),
+        user: req.user ? {
+          id: req.user.id,
+          username: req.user.username,
+          role: req.user.role
+        } : null,
+        cookies: {
+          names: req.cookies ? Object.keys(req.cookies) : [],
+          hasConnectSid: req.cookies && 'connect.sid' in req.cookies,
+          hasAdminId: req.cookies && 'admin_id' in req.cookies,
+        },
+        session: req.session ? {
+          cookie: req.session.cookie,
+          passport: req.session.passport,
+        } : null,
+        headers: {
+          userAgent: req.headers['user-agent'],
+          hasAuthorizationHeader: !!req.headers.authorization,
+          cookie: req.headers.cookie,
+        }
+      };
+      
+      res.json(sessionInfo);
+    } catch (error) {
+      console.error("Session debug error:", error);
+      res.status(500).json({ error: "Unable to fetch session debug info" });
+    }
+  });
+  
   // DEV ONLY: Special login route for development troubleshooting
   // This bypasses password verification for testing purposes
   app.post('/api/dev-login', async (req, res) => {

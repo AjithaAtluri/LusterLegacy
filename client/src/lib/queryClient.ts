@@ -11,13 +11,16 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
-  isFormData?: boolean,
+  options?: {
+    isFormData?: boolean;
+    headers?: Record<string, string>;
+  }
 ): Promise<Response> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = options?.headers || {};
   let body: any = undefined;
   
   if (data) {
-    if (isFormData || data instanceof FormData) {
+    if ((options?.isFormData) || data instanceof FormData) {
       // Don't set Content-Type for FormData; browser will set it with boundary
       body = data;
     } else {
@@ -26,15 +29,24 @@ export async function apiRequest(
     }
   }
   
+  // Always include cache control headers for auth requests
+  if (!headers["Cache-Control"]) {
+    headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+  }
+  
+  if (!headers["Pragma"]) {
+    headers["Pragma"] = "no-cache";
+  }
+  
+  if (!headers["Expires"]) {
+    headers["Expires"] = "0";
+  }
+  
   const res = await fetch(url, {
     method,
-    headers: {
-      ...headers,
-      "Cache-Control": "no-cache", // Prevent caching auth state
-      "Pragma": "no-cache"
-    },
+    headers,
     body,
-    credentials: "include",
+    credentials: "include", // Always include credentials for auth cookies
   });
 
   await throwIfResNotOk(res);
@@ -177,30 +189,89 @@ export const devHelpers = {
    */
   async checkAuthStatus(): Promise<any> {
     try {
-      const response = await fetch('/api/user', {
+      console.log('[DEV] Performing comprehensive auth status check');
+      
+      // First check main auth system
+      const mainResponse = await fetch('/api/user', {
         credentials: "include",
         headers: {
-          "Cache-Control": "no-cache", 
-          "Pragma": "no-cache"
+          "Cache-Control": "no-cache, no-store, must-revalidate", 
+          "Pragma": "no-cache",
+          "Expires": "0"
         }
       });
       
-      if (response.status === 401) {
-        console.log('[DEV] User is not authenticated');
-        return null;
+      // Then check admin auth system
+      const adminResponse = await fetch('/api/auth/me', {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate", 
+          "Pragma": "no-cache",
+          "Expires": "0"
+        }
+      });
+      
+      // Get session info
+      const sessionResponse = await fetch('/api/debug/session', {
+        credentials: "include",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate", 
+          "Pragma": "no-cache",
+          "Expires": "0"
+        }
+      });
+      
+      // Analyze results
+      const mainAuthStatus = mainResponse.status === 200 ? 'authenticated' : 'not authenticated';
+      const adminAuthStatus = adminResponse.status === 200 ? 'authenticated' : 'not authenticated';
+      const sessionInfo = sessionResponse.ok ? await sessionResponse.json() : null;
+      
+      console.log(`[DEV] Auth check results: Main auth: ${mainAuthStatus}, Admin auth: ${adminAuthStatus}`);
+      console.log('[DEV] Session info:', sessionInfo);
+      
+      // Check cookies without displaying values
+      const cookies = document.cookie.split(';').map(cookie => cookie.trim().split('=')[0]);
+      console.log('[DEV] Cookies present:', cookies);
+      
+      // If main auth is authenticated, return the user data
+      if (mainResponse.status === 200) {
+        try {
+          const user = await mainResponse.json();
+          console.log('[DEV] User is authenticated:', user);
+          
+          // Also update the React Query cache with this user data
+          queryClient.setQueryData(["/api/user"], user);
+          
+          return {
+            authenticated: true,
+            user,
+            mainAuth: true,
+            adminAuth: adminResponse.status === 200,
+            sessionInfo,
+            cookies
+          };
+        } catch (parseError) {
+          console.error('[DEV] Error parsing user data:', parseError);
+        }
       }
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Auth check failed: ${response.status} - ${errorText}`);
-      }
-      
-      const user = await response.json();
-      console.log('[DEV] User is authenticated:', user);
-      return user;
+      // If we reach here, user is not authenticated
+      console.log('[DEV] User is not authenticated');
+      return {
+        authenticated: false,
+        user: null,
+        mainAuth: false,
+        adminAuth: adminResponse.status === 200,
+        sessionInfo,
+        cookies
+      };
     } catch (error) {
       console.error('[DEV] Auth check error:', error);
-      return null;
+      return {
+        authenticated: false,
+        user: null,
+        error: String(error)
+      };
     }
   },
   
