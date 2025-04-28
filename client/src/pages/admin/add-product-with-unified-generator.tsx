@@ -236,6 +236,8 @@ export default function AddProduct() {
         description: "Please wait while your product is being saved...",
       });
       
+      console.log("Form submission started", data);
+      
       // Convert images to base64 for API submission
       const formData = new FormData();
       
@@ -309,13 +311,26 @@ export default function AddProduct() {
         });
       }
       
+      // Debug form data
+      console.log('Form data entries:');
+      for (let pair of formData.entries()) {
+        if (pair[0] !== 'mainImage' && pair[0] !== 'additionalImage1' && pair[0] !== 'additionalImage2' && pair[0] !== 'additionalImage3') {
+          console.log(pair[0] + ': ' + pair[1]);
+        } else {
+          console.log(pair[0] + ': [File object]');
+        }
+      }
+      
       // Send the API request
+      console.log('Sending API request to /api/admin/products');
       const response = await fetch('/api/admin/products', {
         method: 'POST',
         body: formData,
         credentials: 'include', // Add credentials to include cookies
         // Don't set Content-Type, browser will set it with the correct boundary for FormData
       });
+      
+      console.log('API response status:', response.status);
       
       if (!response.ok) {
         // Try to get detailed error message
