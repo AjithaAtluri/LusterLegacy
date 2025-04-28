@@ -706,10 +706,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Authentication required' });
       }
 
-      console.log("Request body data:", req.body.data ? req.body.data.substring(0, 100) : "No data");
+      console.log("Request body data:", 
+        req.body.data ? (
+          typeof req.body.data === 'string' 
+            ? req.body.data.substring(0, 100) 
+            : "Data exists but is not a string"
+        ) : "No data"
+      );
+      console.log("Request body data type:", typeof req.body.data);
       
       try {
-        const designData = JSON.parse(req.body.data);
+        // Handle both string and object cases
+        let designData;
+        if (typeof req.body.data === 'string') {
+          // Try to parse if it's a string
+          designData = JSON.parse(req.body.data);
+        } else if (typeof req.body.data === 'object') {
+          // Use directly if it's already an object
+          designData = req.body.data;
+        } else {
+          throw new Error(`Invalid data type: ${typeof req.body.data}`);
+        }
+        
         console.log("Parsed design data:", JSON.stringify(designData, null, 2));
         
         // Handle both old and new formats for stones
