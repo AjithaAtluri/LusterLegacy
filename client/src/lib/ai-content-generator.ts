@@ -226,17 +226,10 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
-    // Try admin jewelry content endpoint first
+    // Try admin jewelry content endpoint first, using apiRequest for consistent auth
     try {
       console.log("Trying admin jewelry content endpoint first...");
-      const improvedResponse = await fetch("/api/admin/generate-jewelry-content", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data),
-        credentials: "include"
-      });
+      const improvedResponse = await apiRequest("POST", "/api/admin/generate-jewelry-content", data);
       
       if (improvedResponse.ok) {
         console.log("Admin jewelry endpoint successful");
@@ -257,17 +250,10 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       console.log("Admin endpoint error:", e);
     }
     
-    // Then try the test endpoint as a backup option using direct fetch
+    // Then try the test endpoint as a backup option using apiRequest
     try {
       console.log("Trying test endpoint next...");
-      const testResponse = await fetch("/api/generate-jewelry-content", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data),
-        credentials: "include"
-      });
+      const testResponse = await apiRequest("POST", "/api/generate-jewelry-content", data);
       
       if (testResponse.ok) {
         console.log("Test endpoint successful");
@@ -310,14 +296,7 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
           gemCount: directImageData.primaryGems?.length || 0
         });
         
-        const directResponse = await fetch("/api/admin/analyze-jewelry-image", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(directImageData),
-          credentials: "include"
-        });
+        const directResponse = await apiRequest("POST", "/api/admin/analyze-jewelry-image", directImageData);
         
         if (directResponse.ok) {
           console.log("Direct jewelry image analysis successful");
@@ -340,16 +319,9 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       }
     }
     
-    // Try the public content generation endpoint using regular fetch instead of apiRequest
+    // Try the public content generation endpoint using apiRequest for consistent auth
     console.log("Falling back to public content generation endpoint...");
-    const response = await fetch("/api/generate-jewelry-content", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data),
-      credentials: "include"
-    });
+    const response = await apiRequest("POST", "/api/generate-jewelry-content", data);
     
     // Error handling
     if (!response.ok) {
