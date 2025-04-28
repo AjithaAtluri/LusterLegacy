@@ -45,9 +45,9 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Fetch product types from database
+  // Fetch product types from database using public endpoint
   const { data: productTypesData, isLoading: isLoadingProductTypes } = useQuery<ProductType[]>({
-    queryKey: ['/api/admin/product-types'],
+    queryKey: ['/api/product-types'],
     refetchOnWindowFocus: false,
   });
   

@@ -49,13 +49,13 @@ export default function ProductFormEnhanced({ initialData, productId, onSuccess 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Fetch metal types and stone types
+  // Fetch metal types and stone types from public endpoints
   const { data: metalTypes, isLoading: isLoadingMetalTypes } = useQuery({
-    queryKey: ['/api/admin/metal-types'],
+    queryKey: ['/api/metal-types'],
   });
   
   const { data: stoneTypes, isLoading: isLoadingStoneTypes } = useQuery({
-    queryKey: ['/api/admin/stone-types'],
+    queryKey: ['/api/stone-types'],
   });
   
   // Set selected stone types from initial data
