@@ -260,7 +260,7 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
     // Then try the test endpoint as a backup option using direct fetch
     try {
       console.log("Trying test endpoint next...");
-      const testResponse = await fetch("/api/test-content-generation", {
+      const testResponse = await fetch("/api/generate-jewelry-content", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -342,7 +342,7 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
     
     // Try the public content generation endpoint using regular fetch instead of apiRequest
     console.log("Falling back to public content generation endpoint...");
-    const response = await fetch("/api/generate-content", {
+    const response = await fetch("/api/generate-jewelry-content", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
