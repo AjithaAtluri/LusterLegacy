@@ -89,12 +89,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
           if (adminLoginRes.ok) {
             console.log("Successfully logged into both auth systems");
+            // Perform additional admin auth verification to ensure we're fully logged in
+            await new Promise(resolve => setTimeout(resolve, 300));  // Small delay
+            
+            const adminVerifyRes = await fetch('/api/auth/me', { 
+              credentials: 'include',
+              headers: {
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+              }
+            });
+            
+            if (adminVerifyRes.ok) {
+              console.log("Admin auth successfully verified with /api/auth/me");
+            } else {
+              console.warn("Admin auth verification failed - admin login may not be fully established");
+              // Try one more time with the admin login
+              await apiRequest("POST", "/api/auth/login", credentials);
+            }
           } else {
             console.warn("Admin login succeeded but legacy admin auth failed");
+            // Make one more attempt
+            await apiRequest("POST", "/api/auth/login", credentials);
           }
         } catch (error) {
           console.warn("Error during admin compatibility login:", error);
-          // Continue anyway since the main login succeeded
+          // Try one more time in case of a network error
+          try {
+            await apiRequest("POST", "/api/auth/login", credentials);
+          } catch (secondError) {
+            console.warn("Second attempt at admin login also failed:", secondError);
+          }
         }
       }
       

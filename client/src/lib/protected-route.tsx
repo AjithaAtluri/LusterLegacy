@@ -78,6 +78,31 @@ export function ProtectedRoute({
         if (adminOnly && user.role === "admin" && 
             (pathString === "/admin" || pathString === "/admin/dashboard")) {
           console.log("Admin user accessing dashboard");
+          
+          // Run additional auth check for admin dashboard
+          setTimeout(async () => {
+            try {
+              // Make a direct fetch call to the admin endpoint
+              const adminAuthResponse = await fetch("/api/auth/me", { 
+                credentials: "include",
+                headers: {
+                  "Cache-Control": "no-cache, no-store, must-revalidate",
+                  "Pragma": "no-cache",
+                  "Expires": "0"
+                }
+              });
+              
+              if (!adminAuthResponse.ok) {
+                console.warn("Admin auth verification failed in protected route - attempting to fix");
+                // Attempt recovery - refresh the page
+                window.location.reload();
+              } else {
+                console.log("Admin auth verification successful in protected route");
+              }
+            } catch (error) {
+              console.error("Error during admin auth check in protected route:", error);
+            }
+          }, 300);
         }
 
         // Render the protected component

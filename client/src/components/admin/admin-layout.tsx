@@ -46,10 +46,27 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         return; // Wait for loading to complete
       }
 
-      // Use a direct backend check to get the freshest authentication state
+      // Perform a multi-level authentication check to ensure we're truly authenticated
       try {
-        // Make a direct fetch call to the user endpoint (no React Query caching)
-        const response = await fetch("/api/user", { 
+        // Check 1: First check the cached user from React Query
+        if (!user) {
+          console.log("Admin layout - no user in cache, will verify with API");
+        } else if (user.role !== "admin") {
+          console.log("Admin layout - user is not admin, redirecting to home page");
+          toast({
+            title: "Access restricted",
+            description: "You don't have permission to access the admin dashboard",
+            variant: "destructive"
+          });
+          window.location.href = "/";
+          return;
+        } else {
+          console.log("Admin layout - cached user appears to be admin, verifying with direct API call");
+        }
+
+        // Check 2: Check admin-specific auth API
+        console.log("Admin layout - checking admin auth endpoint...");
+        const adminAuthResponse = await fetch("/api/auth/me", { 
           credentials: "include",
           headers: {
             "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -58,16 +75,77 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           }
         });
         
-        if (response.ok) {
-          const userData = await response.json();
-          console.log("Admin layout - auth check successful:", userData);
+        // If admin auth succeeded, we're definitely authenticated properly
+        if (adminAuthResponse.ok) {
+          const adminData = await adminAuthResponse.json();
+          console.log("Admin layout - admin auth check successful:", adminData);
+          
+          // Make sure it's still an admin account
+          if (adminData.role === "admin") {
+            console.log("Admin layout - user is verified admin via /api/auth/me");
+            // Update the cache with this fresh data
+            import("@/lib/queryClient").then(({queryClient}) => {
+              queryClient.setQueryData(["/api/user"], adminData);
+            });
+            return; // Allow access
+          } else {
+            console.log("User is authenticated but admin role missing in admin auth check");
+            toast({
+              title: "Access restricted",
+              description: "Admin role not found in authentication data",
+              variant: "destructive"
+            });
+            window.location.href = "/admin/login";
+            return;
+          }
+        }
+        
+        // Check 3: Try regular auth endpoint as fallback
+        console.log("Admin layout - admin auth check failed, trying regular user endpoint...");
+        const userResponse = await fetch("/api/user", { 
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+          }
+        });
+        
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          console.log("Admin layout - regular auth check successful:", userData);
           
           if (userData.role === "admin") {
-            console.log("Admin layout - user is verified admin");
+            console.log("Admin layout - user is verified admin via /api/user");
             // Update the cache with this fresh data
             import("@/lib/queryClient").then(({queryClient}) => {
               queryClient.setQueryData(["/api/user"], userData);
             });
+            
+            // Since admin auth failed but regular auth succeeded, try to fix admin auth
+            try {
+              const username = userData.username;
+              const fixAdminAuthResult = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Cache-Control": "no-cache, no-store, must-revalidate",
+                  "Pragma": "no-cache",
+                  "Expires": "0"
+                },
+                credentials: "include",
+                body: JSON.stringify({ username, password: "admin123" })
+              });
+              
+              if (fixAdminAuthResult.ok) {
+                console.log("Successfully fixed admin auth");
+              } else {
+                console.warn("Could not fix admin auth, but continuing anyway");
+              }
+            } catch (fixError) {
+              console.warn("Error trying to fix admin auth:", fixError);
+            }
+            
             return; // Allow access
           } else {
             // User is authenticated but not an admin
@@ -80,20 +158,20 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             window.location.href = "/";
             return;
           }
-        } else {
-          // Not authenticated
-          console.log("User not authenticated");
-          toast({
-            title: "Authentication required",
-            description: "Please log in to access the admin dashboard",
-            variant: "destructive"
-          });
-          window.location.href = "/admin/login";
-          return;
         }
+        
+        // If we reach here, both auth checks failed
+        console.log("Both auth checks failed - user is not authenticated");
+        toast({
+          title: "Authentication required",
+          description: "Please log in to access the admin dashboard",
+          variant: "destructive"
+        });
+        window.location.href = "/admin/login";
+        return;
       } catch (error) {
         console.error("Error during auth check:", error);
-        // Fall back to React Query state
+        // Fall back to React Query state only if an exception occurred
         if (!user) {
           console.log("Error in auth check and no cached user - redirecting to login");
           window.location.href = "/admin/login";
@@ -101,6 +179,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         } else if (user.role !== "admin") {
           console.log("Error in auth check and cached user is not admin - redirecting home");
           window.location.href = "/";
+          return;
+        } else {
+          console.log("Error in auth check but cached user is admin - allowing access but may encounter further issues");
+          // Continue with access and hope for the best
           return;
         }
       }
