@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface ReliableProductImageProps {
   productId: number;
+  imageUrl?: string;  // Add direct imageUrl prop
   alt: string;
   className?: string;
   fallbackSrc?: string;
@@ -27,6 +28,7 @@ const getImagePath = (imageUrl: string | null | undefined): string => {
 
 export default function ReliableProductImage({ 
   productId, 
+  imageUrl,  // Accept imageUrl directly
   alt, 
   className = "", 
   fallbackSrc = "/uploads/40c3afd0-d8d5-4fa4-87b0-f717a6941660.jpg" 
@@ -34,20 +36,35 @@ export default function ReliableProductImage({
   const [imageSrc, setImageSrc] = useState<string>(fallbackSrc);
   const [hasError, setHasError] = useState(false);
   
-  // If we have a direct product ID, query the product data to get its image
-  const { data: product } = useQuery<any>({
-    queryKey: ['/api/products', productId],
-    enabled: productId > 0
-  });
-  
+  // First try to use the directly provided imageUrl
   useEffect(() => {
-    if (product) {
-      const imageUrl = product.imageUrl || (product as any).image_url;
-      if (imageUrl) {
-        setImageSrc(getImagePath(imageUrl));
-      }
+    if (imageUrl) {
+      setImageSrc(getImagePath(imageUrl));
+      return;
     }
-  }, [product]);
+    
+    // Only if imageUrl is not provided directly, try to fetch product data
+    if (!imageUrl && productId > 0) {
+      // Keep the existing API fetching logic as a fallback
+      fetchProductImage();
+    }
+  }, [imageUrl, productId]);
+  
+  // Fetch product image only when necessary
+  const fetchProductImage = async () => {
+    try {
+      const response = await fetch(`/api/product/${productId}`);
+      if (response.ok) {
+        const product = await response.json();
+        const productImageUrl = product.imageUrl || product.image_url;
+        if (productImageUrl) {
+          setImageSrc(getImagePath(productImageUrl));
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to fetch image for product ${productId}:`, error);
+    }
+  };
   
   // Handle image loading errors
   const handleImageError = () => {
