@@ -313,13 +313,14 @@ export default function AddProduct() {
       
       // Debug form data
       console.log('Form data entries:');
-      for (let pair of formData.entries()) {
+      // Use Array.from to convert FormData entries to array to avoid TypeScript iterator issues
+      Array.from(formData.entries()).forEach(pair => {
         if (pair[0] !== 'mainImage' && pair[0] !== 'additionalImage1' && pair[0] !== 'additionalImage2' && pair[0] !== 'additionalImage3') {
           console.log(pair[0] + ': ' + pair[1]);
         } else {
           console.log(pair[0] + ': [File object]');
         }
-      }
+      });
       
       // Send the API request
       console.log('Sending API request to /api/admin/products');
@@ -835,7 +836,7 @@ export default function AddProduct() {
             
             {/* Submit Button */}
             <div className="mt-8 flex justify-end">
-              <Button type="submit" className="w-full sm:w-auto">
+              <Button type="submit" onClick={form.handleSubmit(onSubmit)} className="w-full sm:w-auto">
                 <Save className="mr-2 h-4 w-4" /> Save Product
               </Button>
             </div>
