@@ -2452,18 +2452,27 @@ Respond in JSON format:
       // Add primary stone if provided
       if (primaryStone && primaryStone.stoneTypeId) {
         try {
-          // Look up stone type from database
-          const stoneTypeId = typeof primaryStone.stoneTypeId === 'string' && primaryStone.stoneTypeId.match(/^\d+$/)
-            ? parseInt(primaryStone.stoneTypeId)
-            : primaryStone.stoneTypeId;
-          
-          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          let stoneTypeData;
+              
+          // Check if stoneTypeId is a number or a string
+          if (typeof primaryStone.stoneTypeId === 'string' && primaryStone.stoneTypeId.match(/^\d+$/)) {
+            // It's a numeric string, try to find by ID
+            const stoneTypeId = parseInt(primaryStone.stoneTypeId);
+            stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          } else if (typeof primaryStone.stoneTypeId === 'number') {
+            // It's a number, try to find by ID
+            stoneTypeData = await storage.getStoneTypeById(primaryStone.stoneTypeId);
+          } else if (typeof primaryStone.stoneTypeId === 'string') {
+            // It's a string that's not a number, try to find by name
+            console.log(`Searching database for stone type by name: "${primaryStone.stoneTypeId}"`);
+            stoneTypeData = await storage.getStoneTypeByName(primaryStone.stoneTypeId);
+          }
           
           if (stoneTypeData) {
             primaryGems.push({
               name: stoneTypeData.name,
               carats: primaryStone.caratWeight || 1,
-              stoneTypeId: stoneTypeId
+              stoneTypeId: stoneTypeData.id
             });
           }
         } catch (e) {
@@ -2476,18 +2485,27 @@ Respond in JSON format:
         for (const stone of secondaryStones) {
           if (stone && stone.stoneTypeId) {
             try {
-              // Look up stone type from database
-              const stoneTypeId = typeof stone.stoneTypeId === 'string' && stone.stoneTypeId.match(/^\d+$/)
-                ? parseInt(stone.stoneTypeId)
-                : stone.stoneTypeId;
+              let stoneTypeData;
               
-              const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+              // Check if stoneTypeId is a number or a string
+              if (typeof stone.stoneTypeId === 'string' && stone.stoneTypeId.match(/^\d+$/)) {
+                // It's a numeric string, try to find by ID
+                const stoneTypeId = parseInt(stone.stoneTypeId);
+                stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+              } else if (typeof stone.stoneTypeId === 'number') {
+                // It's a number, try to find by ID
+                stoneTypeData = await storage.getStoneTypeById(stone.stoneTypeId);
+              } else if (typeof stone.stoneTypeId === 'string') {
+                // It's a string that's not a number, try to find by name
+                console.log(`Searching database for stone type by name: "${stone.stoneTypeId}"`);
+                stoneTypeData = await storage.getStoneTypeByName(stone.stoneTypeId);
+              }
               
               if (stoneTypeData) {
                 primaryGems.push({
                   name: stoneTypeData.name,
                   carats: stone.caratWeight || 0.5,
-                  stoneTypeId: stoneTypeId
+                  stoneTypeId: stoneTypeData.id
                 });
               }
             } catch (e) {
@@ -2500,19 +2518,28 @@ Respond in JSON format:
       // Add other stone if provided
       if (otherStone && otherStone.stoneTypeId) {
         try {
-          // Look up stone type from database
-          const stoneTypeId = typeof otherStone.stoneTypeId === 'string' && otherStone.stoneTypeId.match(/^\d+$/)
-            ? parseInt(otherStone.stoneTypeId)
-            : otherStone.stoneTypeId;
-          
-          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          let stoneTypeData;
+              
+          // Check if stoneTypeId is a number or a string
+          if (typeof otherStone.stoneTypeId === 'string' && otherStone.stoneTypeId.match(/^\d+$/)) {
+            // It's a numeric string, try to find by ID
+            const stoneTypeId = parseInt(otherStone.stoneTypeId);
+            stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          } else if (typeof otherStone.stoneTypeId === 'number') {
+            // It's a number, try to find by ID
+            stoneTypeData = await storage.getStoneTypeById(otherStone.stoneTypeId);
+          } else if (typeof otherStone.stoneTypeId === 'string') {
+            // It's a string that's not a number, try to find by name
+            console.log(`Searching database for stone type by name: "${otherStone.stoneTypeId}"`);
+            stoneTypeData = await storage.getStoneTypeByName(otherStone.stoneTypeId);
+          }
           
           if (stoneTypeData) {
             console.log(`Adding other stone: ${stoneTypeData.name} with weight ${otherStone.caratWeight || 0.25} carats`);
             primaryGems.push({
               name: stoneTypeData.name,
               carats: otherStone.caratWeight || 0.25,
-              stoneTypeId: stoneTypeId
+              stoneTypeId: stoneTypeData.id
             });
           }
         } catch (e) {
@@ -2534,10 +2561,21 @@ Respond in JSON format:
       if (otherStone && otherStone.stoneTypeId) {
         const stoneTypeId = otherStone.stoneTypeId;
         try {
-          // Get stone type data from database
-          const stoneTypeData = await storage.getStoneTypeById(
-            typeof stoneTypeId === 'string' ? parseInt(stoneTypeId) : stoneTypeId
-          );
+          let stoneTypeData;
+          
+          // Check if stoneTypeId is a number or a string
+          if (typeof stoneTypeId === 'string' && stoneTypeId.match(/^\d+$/)) {
+            // It's a numeric string, try to find by ID
+            const numericId = parseInt(stoneTypeId);
+            stoneTypeData = await storage.getStoneTypeById(numericId);
+          } else if (typeof stoneTypeId === 'number') {
+            // It's a number, try to find by ID
+            stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          } else if (typeof stoneTypeId === 'string') {
+            // It's a string that's not a number, try to find by name
+            console.log(`Looking up stone by string ID/name "${stoneTypeId}"`);
+            stoneTypeData = await storage.getStoneTypeByName(stoneTypeId);
+          }
           
           if (stoneTypeData) {
             otherStoneType = stoneTypeData.name;
@@ -2639,10 +2677,21 @@ Respond in JSON format:
       // try to calculate it directly using the stone data
       if (hasOtherStone && otherStoneCost === 0 && otherStone.caratWeight) {
         try {
-          const stoneTypeId = typeof otherStone.stoneTypeId === 'string' ? 
-            parseInt(otherStone.stoneTypeId) : otherStone.stoneTypeId;
-            
-          const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+          let stoneTypeData;
+          
+          if (typeof otherStone.stoneTypeId === 'string' && otherStone.stoneTypeId.match(/^\d+$/)) {
+            // It's a numeric string, try to find by ID
+            const numericId = parseInt(otherStone.stoneTypeId);
+            stoneTypeData = await storage.getStoneTypeById(numericId);
+          } else if (typeof otherStone.stoneTypeId === 'number') {
+            // It's a number, try to find by ID
+            stoneTypeData = await storage.getStoneTypeById(otherStone.stoneTypeId);
+          } else if (typeof otherStone.stoneTypeId === 'string') {
+            // It's a string that's not a number, try to find by name
+            console.log(`Looking up other stone by string ID/name "${otherStone.stoneTypeId}"`);
+            stoneTypeData = await storage.getStoneTypeByName(otherStone.stoneTypeId);
+          }
+          
           if (stoneTypeData?.priceModifier) {
             const caratWeight = otherStone.caratWeight || 0.5;
             otherStoneCost = caratWeight * stoneTypeData.priceModifier;
