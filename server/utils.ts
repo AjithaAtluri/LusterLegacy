@@ -9,6 +9,33 @@ export const validateAdmin = async (
 ) => {
   try {
     const endpoint = req.originalUrl || req.url;
+    
+    // Check for admin headers first (for client-side API requests that include headers)
+    const hasAdminDebugHeader = req.headers['x-admin-debug-auth'] === 'true';
+    const hasAdminApiKey = req.headers['x-admin-api-key'] === 'dev_admin_key_12345';
+    const adminUsername = req.headers['x-admin-username'];
+    
+    if (hasAdminDebugHeader && hasAdminApiKey) {
+      console.log(`ADMIN ACCESS - API KEY AUTHENTICATED for ${endpoint} via headers`);
+      
+      // Try to set the admin user from the header
+      if (adminUsername && typeof adminUsername === 'string') {
+        try {
+          const adminUser = await storage.getUserByUsername(adminUsername);
+          if (adminUser) {
+            req.user = adminUser;
+            console.log("Admin auth via headers - set admin user:", adminUser.username);
+          }
+        } catch (error) {
+          console.log("Admin auth via headers - error finding specified admin user:", error);
+        }
+      }
+      
+      // Even if we couldn't set the user, proceed with access
+      return next();
+    }
+    
+    // Regular bypass for direct API calls without headers
     console.log(`ADMIN ACCESS - AUTHENTICATION BYPASSED for ${endpoint}`);
     
     // Try to set a default admin user
