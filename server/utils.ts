@@ -8,6 +8,16 @@ export const validateAdmin = async (
   next: NextFunction
 ) => {
   try {
+    // First check if this is using passport auth
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      if (req.user && req.user.role === 'admin') {
+        return next();
+      } else {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+    }
+    
+    // Fallback to cookie-based auth for legacy support
     const userId = req.cookies?.userId;
     if (!userId) {
       return res.status(401).json({ message: 'Authentication required' });
