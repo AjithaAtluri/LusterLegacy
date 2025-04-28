@@ -1575,114 +1575,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * Authentication routes
    */
-  // Admin login - unified approach that works with both auth systems
+  // Admin login - completely rewritten to fix authentication
   app.post('/api/auth/login', async (req, res, next) => {
     try {
-      console.log('Admin login attempt - using unified auth approach');
+      console.log('ADMIN LOGIN - Starting IMPROVED admin login process with auth sync');
       
-      // Use passport authentication with our custom callback
-      passport.authenticate("local", async (err, user, info) => {
-        if (err) {
-          console.error('Passport auth error:', err);
-          return next(err);
-        }
-        
-        // If passport authentication fails, try the legacy system
-        if (!user) {
-          console.log('Passport auth failed, trying legacy auth');
-          const { username, password } = req.body;
-          const legacyUser = await storage.getUserByUsername(username);
+      // Destructure credentials from request body
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
+      }
+      
+      console.log(`Login attempt for username: ${username}`);
+      
+      // First look up the user directly
+      const user = await storage.getUserByUsername(username);
+      
+      if (!user) {
+        console.log('Login failed - user not found:', username);
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      
+      // Check if user is an admin
+      if (user.role !== 'admin') {
+        console.log('Login failed - user is not an admin:', username);
+        return res.status(403).json({ message: 'Admin privileges required' });
+      }
+      
+      // Verify password using the exported comparePasswords function
+      const passwordValid = await comparePasswords(password, user.password);
+      
+      if (!passwordValid) {
+        console.log('Login failed - invalid password for user:', username);
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      
+      console.log('Password verified for admin user:', username);
+      
+      // SUCCESSFUL LOGIN - Now establish both auth mechanisms
+      
+      // 1. Set the legacy cookie first (most reliable for admin routes)
+      console.log('Setting admin cookie auth for user ID:', user.id);
+      res.cookie('userId', user.id, { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+      
+      // 2. Also establish a passport session for overall site auth
+      console.log('Establishing passport session for user:', username);
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('Error creating passport session:', loginErr);
           
-          if (!legacyUser) {
-            console.log('Legacy auth failed - user not found:', username);
-            return res.status(401).json({ message: 'Invalid credentials' });
-          }
+          // Even with login error, continue with cookie-based auth
+          console.log('Continuing with cookie auth only');
           
-          // In the legacy system, passwords were stored differently
-          // Check if passwords match
-          if (!(await comparePasswords(password, legacyUser.password))) {
-            console.log('Legacy auth failed - password mismatch for user:', username);
-            return res.status(401).json({ message: 'Invalid credentials' });
-          }
-          
-          // Both auth systems will be used for maximum compatibility
-          
-          // 1. Set cookie for legacy auth system
-          res.cookie('userId', legacyUser.id, { 
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-          });
-          
-          console.log('Legacy cookie auth set for user:', legacyUser.username);
-          
-          // 2. Also establish a passport session
-          req.login(legacyUser, (loginErr) => {
-            if (loginErr) {
-              console.error('Error creating passport session after legacy auth:', loginErr);
-              // Continue with just the cookie-based auth
-            } else {
-              console.log('Passport session established for legacy user:', legacyUser.username);
-            }
-            
-            // Return user info (without password)
-            const { password, ...userWithoutPassword } = legacyUser;
-            return res.json(userWithoutPassword);
-          });
-          
-          return;
-        }
-        
-        // If passport auth succeeded, also set a cookie for the legacy system
-        // This ensures both auth systems are in sync
-        console.log('Passport auth successful, syncing with legacy system');
-        
-        res.cookie('userId', user.id, { 
-          httpOnly: true, 
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
-        
-        // Ensure the passport session is established
-        req.login(user, (loginErr) => {
-          if (loginErr) {
-            console.error('Error finalizing passport session:', loginErr);
-            return next(loginErr);
-          }
-          
-          console.log('Admin login successful - both auth systems in sync');
-          
-          // Return user without password
+          // Prepare sanitized user data (remove password)
           const { password, ...userWithoutPassword } = user;
           return res.json(userWithoutPassword);
-        });
-      })(req, res, next);
+        }
+        
+        console.log('Login successful! Both auth systems in sync');
+        
+        // Double-check if session is established
+        if (req.isAuthenticated && req.isAuthenticated()) {
+          console.log('Passport session verified: User is authenticated');
+        } else {
+          console.warn('Passport session not immediately verified - this might be normal');
+        }
+        
+        // Return user data without password
+        const { password, ...userWithoutPassword } = user;
+        return res.json(userWithoutPassword);
+      });
     } catch (error) {
       console.error('Unexpected error in admin login:', error);
-      res.status(500).json({ message: 'Error logging in' });
+      return res.status(500).json({ message: 'Internal server error during login' });
     }
   });
 
-  // Logout - handle both auth systems
+  // Logout - completely rewritten to ensure thorough logout from all systems
   app.post('/api/auth/logout', (req, res, next) => {
-    // Clear the cookie for the legacy system
-    res.clearCookie('userId');
+    console.log("ADMIN LOGOUT - Starting improved logout process");
     
-    // Also logout from passport if authenticated
-    if (req.isAuthenticated && req.isAuthenticated()) {
-      req.logout((err) => {
-        if (err) {
-          console.error('Error logging out of passport session:', err);
-          // Continue anyway since we at least cleared the cookie
-        }
-        console.log('Logged out of both auth systems');
-        res.json({ message: 'Logged out successfully' });
+    try {
+      // 1. Clear all possible admin cookie variations
+      console.log("Clearing admin cookies");
+      res.clearCookie('userId', { path: '/' });
+      res.clearCookie('userId'); // Also clear without path for older cookies
+      
+      // 2. Also destroy passport session if it exists
+      if (req.isAuthenticated && req.isAuthenticated()) {
+        console.log("Destroying passport session");
+        req.logout((err) => {
+          if (err) {
+            console.error('Error during passport logout:', err);
+          } else {
+            console.log('Passport session successfully terminated');
+          }
+          
+          // Always return success - we've done our best to log out
+          console.log('Admin logout process complete');
+          res.json({ 
+            message: 'Logged out successfully', 
+            success: true,
+            timestamp: new Date().toISOString()
+          });
+        });
+      } else {
+        console.log('No passport session found, cookie-based logout complete');
+        res.json({ 
+          message: 'Logged out successfully', 
+          success: true,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error during logout:", error);
+      
+      // Still try to clear cookies even if an error occurred
+      try {
+        res.clearCookie('userId', { path: '/' });
+        res.clearCookie('userId');
+      } catch (cookieError) {
+        console.error("Error clearing cookies:", cookieError);
+      }
+      
+      // Return success anyway to ensure client proceeds with logout
+      res.json({ 
+        message: 'Logout attempted with errors', 
+        success: true,
+        error: error.message
       });
-    } else {
-      console.log('Logged out of legacy auth system only');
-      res.json({ message: 'Logged out successfully' });
     }
   });
   
@@ -3484,61 +3512,115 @@ Respond in JSON format:
     }
   });
 
-  // Get current user - unified endpoint for both auth systems
+  // Get current user - completely rewritten admin authentication check endpoint
   app.get('/api/auth/me', async (req, res) => {
+    console.log("AUTH CHECK - /api/auth/me endpoint called");
+    
     try {
-      // Check for passport session first (preferred method)
+      // First check admin-specific cookie auth (most reliable for admin routes)
+      const cookieUserId = req.cookies?.userId;
+      
+      if (cookieUserId) {
+        try {
+          const userId = parseInt(cookieUserId);
+          if (!isNaN(userId)) {
+            console.log("Auth check - found userId cookie:", userId);
+            
+            // Try to get user by ID from cookie
+            const cookieUser = await storage.getUser(userId);
+            
+            if (cookieUser) {
+              console.log("Auth check - found valid cookie user:", cookieUser.username);
+              
+              // Valid admin user from cookie
+              if (cookieUser.role === 'admin') {
+                console.log("Auth check - cookie user is admin, setting up proper session");
+                
+                // Sync with passport session if needed
+                if (!req.isAuthenticated || !req.isAuthenticated()) {
+                  // Establish passport session for this admin user
+                  try {
+                    await new Promise<void>((resolve, reject) => {
+                      req.login(cookieUser, (loginErr) => {
+                        if (loginErr) {
+                          console.warn("Failed to sync passport session for admin user:", loginErr);
+                          // Continue anyway with cookie auth
+                        } else {
+                          console.log("Successfully synced passport session for admin user");
+                        }
+                        resolve(); // Always resolve to continue execution
+                      });
+                    });
+                  } catch (sessionError) {
+                    console.warn("Error syncing sessions:", sessionError);
+                    // Continue with cookie auth
+                  }
+                }
+                
+                // Return sanitized user data
+                const { password, ...userWithoutPassword } = cookieUser;
+                console.log("Auth check - returning admin user from cookie auth");
+                return res.json(userWithoutPassword);
+              } else {
+                console.log("Auth check - cookie user is not an admin, role:", cookieUser.role);
+                // Non-admin user shouldn't use this endpoint
+                res.clearCookie('userId'); // Clear the cookie to avoid confusion
+              }
+            } else {
+              console.log("Auth check - user not found for cookie ID:", userId);
+              res.clearCookie('userId'); // Clear the invalid cookie
+            }
+          } else {
+            console.log("Auth check - invalid userId cookie format");
+            res.clearCookie('userId'); // Clear the invalid cookie
+          }
+        } catch (cookieError) {
+          console.error('Error checking cookie auth:', cookieError);
+        }
+      } else {
+        console.log("Auth check - no userId cookie found");
+      }
+      
+      // Next, check Passport session auth
       if (req.isAuthenticated && req.isAuthenticated()) {
-        console.log('Passport session found in /api/auth/me for user:', 
+        console.log("Auth check - user authenticated via Passport:", 
                     { id: req.user.id, username: req.user.username, role: req.user.role });
         
-        // Ensure admin cookie is also set for legacy compatibility
-        if (req.user.role === 'admin' && (!req.cookies?.userId || parseInt(req.cookies.userId) !== req.user.id)) {
-          console.log('Syncing admin cookie with passport session');
+        // Need to explicitly check if the user has admin role
+        if (req.user && req.user.role === 'admin') {
+          // Also set the admin cookie for compatibility with admin routes
+          console.log("Auth check - setting admin cookie for passport-authenticated admin");
           res.cookie('userId', req.user.id, { 
             httpOnly: true, 
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
           });
-        }
-        
-        // Return user data from the passport session (without password)
-        const { password, ...userWithoutPassword } = req.user;
-        return res.json(userWithoutPassword);
-      }
-      
-      // Fall back to cookie-based auth if no passport session
-      const userId = req.cookies?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: 'Not authenticated' });
-      }
-
-      const user = await storage.getUser(parseInt(userId));
-      if (!user) {
-        console.log('Cookie auth failed - clearing invalid cookie');
-        res.clearCookie('userId');
-        return res.status(401).json({ message: 'User not found' });
-      }
-      
-      // If we found a user with cookie auth but no passport session,
-      // establish the passport session as well for full compatibility
-      console.log('Cookie auth successful - syncing with passport session');
-      req.login(user, (loginErr) => {
-        if (loginErr) {
-          console.error('Error establishing passport session after cookie auth:', loginErr);
-          // Continue with just cookie auth
+          
+          // Return sanitized user data
+          const { password, ...userWithoutPassword } = req.user;
+          console.log("Auth check - returning admin user from Passport auth");
+          return res.json(userWithoutPassword);
         } else {
-          console.log('Created passport session for cookie-authenticated user');
+          console.log("Auth check - passport user is not an admin, role:", req.user.role);
         }
-        
-        // Return consistent user data format 
-        const { password, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
+      } else {
+        console.log("Auth check - no Passport authentication found");
+      }
+      
+      // No authenticated admin user found via either method
+      console.log("Auth check - no admin authentication found, returning 401");
+      return res.status(401).json({ 
+        message: 'Not authenticated as admin',
+        authenticated: false
       });
     } catch (error) {
-      console.error('Error in /api/auth/me:', error);
-      res.status(500).json({ message: 'Error fetching current user' });
+      console.error("Unexpected error in auth check:", error);
+      return res.status(500).json({ 
+        message: 'Error checking authentication status',
+        error: error.message
+      });
     }
   });
 

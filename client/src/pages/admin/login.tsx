@@ -36,41 +36,84 @@ export default function AdminLogin() {
     setIsLoading(true);
     
     try {
-      console.log("Admin login attempt...");
+      console.log("ADMIN LOGIN - STARTING IMPROVED LOGIN FLOW");
       
-      // First use the main authentication system
-      const response = await apiRequest("POST", "/api/login", data);
-      const userData = await response.json();
+      // Try admin-specific login first for direct admin session
+      console.log("1. Attempting admin-specific login...");
+      try {
+        const adminResponse = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+          credentials: "include" // Important for cookies
+        });
+        
+        if (!adminResponse.ok) {
+          console.warn("Admin login API failed:", adminResponse.status);
+        } else {
+          console.log("Admin API login successful");
+        }
+      } catch (adminLoginError) {
+        console.error("Error during admin login:", adminLoginError);
+      }
+      
+      // Now also try the main login system 
+      console.log("2. Attempting main auth login...");
+      const mainResponse = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include" // Important for cookies
+      });
+      
+      if (!mainResponse.ok) {
+        throw new Error("Main login failed");
+      }
+      
+      const userData = await mainResponse.json();
       
       // Check if user has admin role
       if (userData.role !== 'admin') {
         throw new Error('Unauthorized: Admin access required');
       }
       
-      console.log("Main auth successful, now syncing with admin auth...");
+      console.log("3. Both login systems completed, now verifying login state...");
       
-      // Also sync with the admin auth system for extra compatibility
-      try {
-        const adminResponse = await apiRequest("POST", "/api/auth/login", data);
-        console.log("Admin auth system response:", adminResponse.status);
-      } catch (adminAuthError) {
-        console.warn("Admin auth sync failed, but continuing with main auth:", adminAuthError);
-        // Continue anyway since main auth succeeded
-      }
+      // Verify login state (do this with fetch instead of apiRequest to ensure fresh state)
+      const verifyPromises = [
+        fetch("/api/user", { credentials: "include" }),
+        fetch("/api/auth/me", { credentials: "include" })
+      ];
       
-      // Verify auth state is correct by checking both endpoints
-      const userCheckResponse = await apiRequest("GET", "/api/user");
-      const adminCheckResponse = await apiRequest("GET", "/api/auth/me");
-      
-      console.log("Auth verification results:", { 
-        mainAuth: userCheckResponse.status, 
-        adminAuth: adminCheckResponse.status 
+      const [mainVerify, adminVerify] = await Promise.all(verifyPromises);
+      console.log("Verification results:", { 
+        mainAuth: mainVerify.status, 
+        adminAuth: adminVerify.status 
       });
+      
+      if (mainVerify.status !== 200 || adminVerify.status !== 200) {
+        console.warn("Login verification failed, trying one more time after delay...");
+        
+        // One more attempt after a delay to ensure sessions are properly established
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const [secondMainVerify, secondAdminVerify] = await Promise.all([
+          fetch("/api/user", { credentials: "include" }),
+          fetch("/api/auth/me", { credentials: "include" })
+        ]);
+        
+        console.log("Second verification results:", { 
+          mainAuth: secondMainVerify.status, 
+          adminAuth: secondAdminVerify.status 
+        });
+      }
       
       toast({
         title: "Admin login successful",
         description: "Welcome to Luster Legacy admin dashboard",
       });
+      
+      console.log("4. Login process complete - redirecting to dashboard with hard navigation");
       
       // Use hard navigation to ensure full page reload and clean state
       window.location.href = "/admin/dashboard";

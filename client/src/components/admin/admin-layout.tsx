@@ -38,57 +38,124 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
     const checkAdminAuth = async () => {
-      if (!isLoading) {
-        console.log("Admin layout - checking auth state:", { user, isLoading });
+      console.log("Admin layout - checking auth state:", { user, isLoading });
+      
+      // First check if currently loading
+      if (isLoading) {
+        console.log("Admin layout - still loading auth state...");
+        return; // Wait for loading to complete
+      }
+
+      // Approach 1: Use direct fetch calls to ensure we're not using stale data
+      try {
+        // First try the admin-specific endpoint
+        console.log("Checking admin auth directly from server...");
+        const adminAuthResponse = await fetch("/api/auth/me", { 
+          credentials: "include" // Important for cookies
+        });
         
-        // If no user in main auth, check legacy admin auth as well
-        if (!user) {
-          try {
-            // Try to fetch the admin auth status
-            const adminAuthResponse = await apiRequest("GET", "/api/auth/me");
-            if (adminAuthResponse.ok) {
-              const adminUser = await adminAuthResponse.json();
+        if (adminAuthResponse.ok) {
+          const adminUser = await adminAuthResponse.json();
+          console.log("Admin layout - admin auth check successful:", adminUser);
+          
+          if (adminUser.role === "admin") {
+            // Admin is authenticated via admin auth system
+            console.log("Admin layout - admin auth confirmed");
+            
+            // If main auth doesn't have user data but admin auth does, sync them
+            if (!user) {
+              console.log("Admin auth exists but main auth doesn't - syncing by reloading");
               
-              console.log("Admin layout - found admin auth:", adminUser);
-              
-              if (adminUser.role === "admin") {
-                // User is authenticated with admin auth but not with main auth
-                // Sync the auth states by forcing a full refresh
-                console.log("Admin layout - syncing auth states - admin auth exists but main auth doesn't");
-                window.location.reload();
-                return;
+              // First try to refresh React Query cache
+              try {
+                await apiRequest("GET", "/api/user");
+                console.log("Manually refreshed main auth");
+              } catch (refreshError) {
+                console.warn("Failed to refresh main auth:", refreshError);
               }
+              
+              // Force reload if needed to sync auth states
+              window.location.reload();
+              return;
             }
-          } catch (error) {
-            console.error("Error checking admin auth:", error);
+            
+            // Already authenticated in both systems, nothing to do
+            return;
+          }
+        } else {
+          console.log("Admin auth check failed:", adminAuthResponse.status);
+        }
+        
+        // If admin auth failed, check main auth as fallback
+        const mainAuthResponse = await fetch("/api/user", { 
+          credentials: "include" 
+        });
+        
+        if (mainAuthResponse.ok) {
+          const mainUser = await mainAuthResponse.json();
+          console.log("Admin layout - main auth check successful:", mainUser);
+          
+          if (mainUser.role === "admin") {
+            // Admin is authenticated via main auth but not admin auth
+            console.log("Admin layout - main auth is admin but admin auth failed - syncing");
+            
+            // Force a reload to ensure both auths are in sync
+            window.location.reload();
+            return;
           }
           
-          // If we get here, user is not authenticated in either system
-          toast({
-            title: "Authentication required",
-            description: "Please log in to access the admin dashboard",
-            variant: "destructive"
-          });
-          
-          // Use hard navigation to restart the auth flow
-          window.location.href = "/admin/login";
-          return;
-        } 
-        
-        // Check if user has admin role in main auth
-        if (user.role !== "admin") {
+          // User is authenticated but not an admin
+          console.log("User is authenticated but not an admin");
           toast({
             title: "Access restricted",
             description: "You don't have permission to access the admin dashboard",
             variant: "destructive"
           });
-          setLocation("/");
+          window.location.href = "/";
+          return;
         }
+        
+        // If we get here, neither auth system has a valid session
+        console.log("Neither auth system has a valid admin session");
+        toast({
+          title: "Authentication required",
+          description: "Please log in to access the admin dashboard",
+          variant: "destructive"
+        });
+        window.location.href = "/admin/login";
+        return;
+      } catch (error) {
+        console.error("Error during direct auth checks:", error);
+      }
+      
+      // Approach 2 (fallback): Use React Query user state if direct checks failed
+      if (!user) {
+        console.log("Fallback - No user in React Query state");
+        toast({
+          title: "Authentication required",
+          description: "Please log in to access the admin dashboard",
+          variant: "destructive"
+        });
+        window.location.href = "/admin/login";
+        return;
+      } 
+      
+      // Check if user has admin role in main auth
+      if (user.role !== "admin") {
+        console.log("Fallback - User not admin in React Query state");
+        toast({
+          title: "Access restricted",
+          description: "You don't have permission to access the admin dashboard",
+          variant: "destructive"
+        });
+        window.location.href = "/";
+        return;
       }
     };
     
+    // Run the check immediately
     checkAdminAuth();
-  }, [user, isLoading, setLocation, toast]);
+  }, [user, isLoading, toast]);
   
   // Handle logout from both auth systems
   const handleLogout = async () => {

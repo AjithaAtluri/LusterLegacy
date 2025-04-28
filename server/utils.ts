@@ -1,43 +1,94 @@
 import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 
-// Admin validation middleware
+// Enhanced admin validation middleware
 export const validateAdmin = async (
   req: Request, 
   res: Response, 
   next: NextFunction
 ) => {
   try {
-    // First check if this is using passport auth
+    console.log("ADMIN ACCESS - Validating admin request");
+    
+    // Try both auth systems, with priority on cookie-based auth for reliability
+    let adminUser = null;
+    
+    // 1. First check cookie auth
+    const userId = req.cookies?.userId;
+    if (userId) {
+      try {
+        const parsedUserId = parseInt(userId);
+        if (!isNaN(parsedUserId)) {
+          console.log("Auth check - found userId cookie:", parsedUserId);
+          
+          const cookieUser = await storage.getUser(parsedUserId);
+          if (cookieUser && cookieUser.role === 'admin') {
+            console.log("Auth check - verified admin via cookie auth");
+            adminUser = cookieUser;
+            
+            // Set user on request for downstream handlers
+            req.user = cookieUser;
+            
+            // Ensure passport session is synced
+            if (!req.isAuthenticated || !req.isAuthenticated()) {
+              try {
+                req.login(cookieUser, (loginErr) => {
+                  if (loginErr) {
+                    console.warn("Could not sync passport session:", loginErr);
+                    // Continue anyway since we have valid cookie auth
+                  }
+                });
+              } catch (sessionError) {
+                console.warn("Error syncing sessions:", sessionError);
+                // Continue with cookie auth
+              }
+            }
+            
+            // Allow the request to proceed
+            return next();
+          } else if (cookieUser) {
+            console.log("Auth check - cookie user found but not admin, role:", cookieUser.role);
+          } else {
+            console.log("Auth check - no user found for cookie ID:", parsedUserId);
+          }
+        }
+      } catch (cookieError) {
+        console.error("Error checking cookie auth:", cookieError);
+      }
+    } else {
+      console.log("Auth check - no userId cookie found");
+    }
+    
+    // 2. If no admin via cookie, check passport auth
     if (req.isAuthenticated && req.isAuthenticated()) {
       if (req.user && req.user.role === 'admin') {
+        console.log("Auth check - verified admin via passport auth");
+        
+        // Set admin cookie for future requests (making both auth systems consistent)
+        res.cookie('userId', req.user.id, { 
+          httpOnly: true, 
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+        
         return next();
       } else {
+        console.log("Auth check - passport user found but not admin");
         return res.status(403).json({ message: 'Admin access required' });
       }
     }
     
-    // Fallback to cookie-based auth for legacy support
-    const userId = req.cookies?.userId;
-    if (!userId) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    const user = await storage.getUser(parseInt(userId));
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
-    }
-
-    if (user.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-
-    // Add user to request for downstream middleware/handlers
-    req.user = user;
-    next();
+    // If we get here, no valid admin auth was found in either system
+    console.log("Auth check - no admin authentication found");
+    return res.status(401).json({ message: 'Authentication required' });
   } catch (error) {
     console.error('Error validating admin:', error);
-    res.status(500).json({ message: 'Server error during authentication' });
+    res.status(500).json({ 
+      message: 'Server error during authentication', 
+      error: error.message 
+    });
   }
 };
 
