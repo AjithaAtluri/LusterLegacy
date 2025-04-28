@@ -2852,7 +2852,7 @@ Respond in JSON format:
   });
   
   // Get metal types for admin
-  app.get('/api/admin/metal-types', async (req, res) => {
+  app.get('/api/admin/metal-types', validateAdmin, async (req, res) => {
     try {
       const metalTypes = await storage.getAllMetalTypes();
       res.json(metalTypes);
@@ -2867,7 +2867,7 @@ Respond in JSON format:
   });
   
   // Get stone types for admin
-  app.get('/api/admin/stone-types', async (req, res) => {
+  app.get('/api/admin/stone-types', validateAdmin, async (req, res) => {
     try {
       const stoneTypes = await storage.getAllStoneTypes();
       res.json(stoneTypes);
