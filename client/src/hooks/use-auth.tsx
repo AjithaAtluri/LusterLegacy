@@ -109,13 +109,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Add a slight delay to ensure toast is shown before redirect
         setTimeout(() => {
           // Use more forceful redirect for admin dashboard
-          window.location.replace("/admin/dashboard");
+          console.log("Redirecting admin to dashboard...");
+          window.location.href = "/admin/dashboard";
         }, 500);
       } else {
         toast({
           title: "Login successful",
           description: `Welcome ${userData.username}!`,
         });
+        
+        // Redirect regular users to homepage after login
+        setTimeout(() => {
+          console.log("Redirecting customer to homepage...");
+          window.location.href = "/";
+        }, 500);
       }
     },
     onError: (error: Error) => {
@@ -140,13 +147,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData) => {
+      console.log("Registration success - user data:", userData);
+      
+      // Update the query cache with user data
       queryClient.setQueryData(["/api/user"], userData);
+      
       // Force refetch user data to ensure we have the most up-to-date session
       refetchUser();
+      
       toast({
         title: "Registration successful",
         description: `Welcome to Luster Legacy, ${userData.username}!`,
       });
+      
+      // Redirect customers to homepage after registration
+      setTimeout(() => {
+        console.log("Redirecting new customer to homepage...");
+        window.location.href = "/";
+      }, 500);
     },
     onError: (error: Error) => {
       toast({
