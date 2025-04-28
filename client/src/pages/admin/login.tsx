@@ -36,7 +36,9 @@ export default function AdminLogin() {
     setIsLoading(true);
     
     try {
-      // Use the main authentication system instead of the separate admin auth
+      console.log("Admin login attempt...");
+      
+      // First use the main authentication system
       const response = await apiRequest("POST", "/api/login", data);
       const userData = await response.json();
       
@@ -45,13 +47,33 @@ export default function AdminLogin() {
         throw new Error('Unauthorized: Admin access required');
       }
       
+      console.log("Main auth successful, now syncing with admin auth...");
+      
+      // Also sync with the admin auth system for extra compatibility
+      try {
+        const adminResponse = await apiRequest("POST", "/api/auth/login", data);
+        console.log("Admin auth system response:", adminResponse.status);
+      } catch (adminAuthError) {
+        console.warn("Admin auth sync failed, but continuing with main auth:", adminAuthError);
+        // Continue anyway since main auth succeeded
+      }
+      
+      // Verify auth state is correct by checking both endpoints
+      const userCheckResponse = await apiRequest("GET", "/api/user");
+      const adminCheckResponse = await apiRequest("GET", "/api/auth/me");
+      
+      console.log("Auth verification results:", { 
+        mainAuth: userCheckResponse.status, 
+        adminAuth: adminCheckResponse.status 
+      });
+      
       toast({
         title: "Admin login successful",
         description: "Welcome to Luster Legacy admin dashboard",
       });
       
-      // Redirect to admin dashboard
-      setLocation("/admin/dashboard");
+      // Use hard navigation to ensure full page reload and clean state
+      window.location.href = "/admin/dashboard";
     } catch (error) {
       console.error("Login error:", error);
       toast({

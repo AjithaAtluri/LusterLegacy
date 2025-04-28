@@ -37,36 +37,109 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   
   // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to access the admin dashboard",
-          variant: "destructive"
-        });
-        setLocation("/auth?returnTo=%2Fadmin%2Fdashboard");
-      } else if (user.role !== "admin") {
-        toast({
-          title: "Access restricted",
-          description: "You don't have permission to access the admin dashboard",
-          variant: "destructive"
-        });
-        setLocation("/");
+    const checkAdminAuth = async () => {
+      if (!isLoading) {
+        console.log("Admin layout - checking auth state:", { user, isLoading });
+        
+        // If no user in main auth, check legacy admin auth as well
+        if (!user) {
+          try {
+            // Try to fetch the admin auth status
+            const adminAuthResponse = await apiRequest("GET", "/api/auth/me");
+            if (adminAuthResponse.ok) {
+              const adminUser = await adminAuthResponse.json();
+              
+              console.log("Admin layout - found admin auth:", adminUser);
+              
+              if (adminUser.role === "admin") {
+                // User is authenticated with admin auth but not with main auth
+                // Sync the auth states by forcing a full refresh
+                console.log("Admin layout - syncing auth states - admin auth exists but main auth doesn't");
+                window.location.reload();
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Error checking admin auth:", error);
+          }
+          
+          // If we get here, user is not authenticated in either system
+          toast({
+            title: "Authentication required",
+            description: "Please log in to access the admin dashboard",
+            variant: "destructive"
+          });
+          
+          // Use hard navigation to restart the auth flow
+          window.location.href = "/admin/login";
+          return;
+        } 
+        
+        // Check if user has admin role in main auth
+        if (user.role !== "admin") {
+          toast({
+            title: "Access restricted",
+            description: "You don't have permission to access the admin dashboard",
+            variant: "destructive"
+          });
+          setLocation("/");
+        }
       }
-    }
+    };
+    
+    checkAdminAuth();
   }, [user, isLoading, setLocation, toast]);
   
-  // Handle logout
-  const handleLogout = () => {
-    logoutMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast({
-          title: "Logged out successfully",
-          description: "You have been logged out of the admin dashboard",
-        });
-        setLocation("/");
+  // Handle logout from both auth systems
+  const handleLogout = async () => {
+    try {
+      console.log("Admin logout - logging out from both auth systems");
+      
+      // First try to log out from legacy admin auth
+      try {
+        await apiRequest("POST", "/api/auth/logout");
+        console.log("Admin logout - successfully logged out from admin auth");
+      } catch (adminLogoutError) {
+        console.warn("Admin logout - error logging out from admin auth:", adminLogoutError);
+        // Continue with main logout anyway
       }
-    });
+      
+      // Now use the main logout mutation which also attempts both logouts
+      logoutMutation.mutate(undefined, {
+        onSuccess: () => {
+          console.log("Admin logout - successfully logged out from main auth");
+          
+          toast({
+            title: "Logged out successfully",
+            description: "You have been logged out of the admin dashboard",
+          });
+          
+          // Use hard navigation for clean slate
+          window.location.href = "/";
+        },
+        onError: (error) => {
+          console.error("Admin logout - error logging out from main auth:", error);
+          
+          // Force logout by clearing cookies manually and redirecting
+          document.cookie.split(";").forEach(cookie => {
+            const [name] = cookie.trim().split("=");
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+          });
+          
+          toast({
+            title: "Logged out (forced)",
+            description: "You have been logged out of the admin dashboard",
+          });
+          
+          // Redirect to home
+          window.location.href = "/";
+        }
+      });
+    } catch (error) {
+      console.error("Admin logout - unexpected error:", error);
+      // Force redirect to home on any error
+      window.location.href = "/";
+    }
   };
   
   // Navigation items
