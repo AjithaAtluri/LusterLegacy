@@ -44,10 +44,18 @@ interface ProductDetails {
   mainStoneType?: string;
   mainStoneWeight?: number;
   secondaryStoneWeight?: number;
+  otherStoneType?: string;
+  otherStoneWeight?: number;
   isNew: boolean;
   isBestseller: boolean;
   isFeatured: boolean;
   userDescription?: string;
+  details?: string;
+  aiInputs?: {
+    secondaryStoneType?: string;
+    otherStoneType?: string;
+    otherStoneWeight?: number;
+  };
 }
 
 interface FormValues {
@@ -82,6 +90,8 @@ export default function EditProduct() {
   const [mainStoneWeight, setMainStoneWeight] = useState<string>("");
   const [secondaryStoneType, setSecondaryStoneType] = useState<string>("none_selected");
   const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<string>("");
+  const [otherStoneType, setOtherStoneType] = useState<string>("none_selected");
+  const [otherStoneWeight, setOtherStoneWeight] = useState<string>("");
   const queryClient = useQueryClient();
   
   // Fetch product types from database
@@ -198,6 +208,50 @@ export default function EditProduct() {
         setSecondaryStoneWeight("0");
       }
       
+      // Check for other stone type in different possible locations
+      const extractOtherStoneType = () => {
+        // First try to get from aiInputs if available
+        if (productData.aiInputs?.otherStoneType) {
+          console.log("aiInputs.otherStoneType:", productData.aiInputs.otherStoneType, "type:", typeof productData.aiInputs.otherStoneType);
+          return productData.aiInputs.otherStoneType;
+        }
+        
+        // Try to get from additionalData if exists in details
+        try {
+          if (productData.details) {
+            const details = JSON.parse(productData.details);
+            if (details?.otherStoneType) {
+              console.log("details?.otherStoneType:", details.otherStoneType, "type:", typeof details.otherStoneType);
+              return details.otherStoneType;
+            }
+            
+            // Check in additionalData which is sometimes nested
+            if (details?.additionalData?.otherStoneType) {
+              console.log("additionalData.otherStoneType:", details.additionalData.otherStoneType, "type:", typeof details.additionalData.otherStoneType);
+              return details.additionalData.otherStoneType;
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing details JSON for other stone type:", error);
+        }
+        
+        // Default to none_selected if no other stone type found
+        console.log("Final otherStoneType:", "none_selected");
+        return "none_selected";
+      };
+      
+      // Set other stone type
+      const otherStoneTp = extractOtherStoneType();
+      setOtherStoneType(otherStoneTp);
+      
+      // Set other stone weight with proper defaults
+      if (productData.otherStoneWeight) {
+        setOtherStoneWeight(productData.otherStoneWeight.toString());
+      } else if (otherStoneTp === "none_selected") {
+        // If no other stone is selected, set weight to 0
+        setOtherStoneWeight("0");
+      }
+      
       // Set image previews
       if (productData.imageUrl) {
         setMainImagePreview(productData.imageUrl);
@@ -276,6 +330,15 @@ export default function EditProduct() {
       
       if (secondaryStoneWeight) {
         formData.append('secondaryStoneWeight', secondaryStoneWeight);
+      }
+      
+      // Include secondary stone type
+      formData.append('secondaryStoneType', secondaryStoneType);
+      
+      // Include other stone type and weight
+      formData.append('otherStoneType', otherStoneType);
+      if (otherStoneWeight) {
+        formData.append('otherStoneWeight', otherStoneWeight);
       }
       
       // Add main image if changed
