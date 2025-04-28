@@ -324,7 +324,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                   <div className="flex-1 overflow-auto py-2">
                     <nav className="flex flex-col gap-1 px-2">
                       {navItems.map((item) => (
-                        <Link
+                        <a
                           key={item.href}
                           href={item.href}
                           onClick={() => setIsMobileMenuOpen(false)}
@@ -334,7 +334,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                         >
                           {item.icon}
                           {item.title}
-                        </Link>
+                        </a>
                       ))}
                     </nav>
                   </div>
@@ -374,13 +374,13 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         {/* Sidebar (desktop only) */}
         <div className="hidden md:flex w-64 flex-col border-r bg-background z-20">
           <div className="flex h-14 items-center border-b px-4">
-            <Link href="/admin/dashboard" className="font-playfair text-xl font-bold">
+            <a href="/admin/direct-dashboard" className="font-playfair text-xl font-bold">
               Luster<span className="text-primary">Legacy</span>
-            </Link>
+            </a>
           </div>
           <nav className="flex flex-col gap-1 p-4">
             {navItems.map((item) => (
-              <Link
+              <a
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
@@ -389,7 +389,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               >
                 {item.icon}
                 {item.title}
-              </Link>
+              </a>
             ))}
           </nav>
         </div>
