@@ -96,7 +96,7 @@ export default function Header() {
           {user || isAdmin ? (
             <div className="flex space-x-2">
               {isAdmin ? (
-                <Link href="/admin/direct-dashboard" className="font-montserrat text-background bg-rose-600 px-4 py-2 rounded hover:bg-rose-700 transition duration-300 flex items-center">
+                <Link href="/admin/dashboard" className="font-montserrat text-background bg-rose-600 px-4 py-2 rounded hover:bg-rose-700 transition duration-300 flex items-center">
                   <User className="h-4 w-4 mr-2" />
                   Admin Dashboard
                 </Link>
@@ -162,7 +162,7 @@ export default function Header() {
                   <div className="flex flex-col space-y-4 mt-4">
                     {isAdmin ? (
                       <Link 
-                        href="/admin/direct-dashboard"
+                        href="/admin/dashboard"
                         onClick={() => setIsMenuOpen(false)}
                         className="font-montserrat text-background bg-rose-600 px-4 py-2 rounded hover:bg-rose-700 transition duration-300 flex items-center justify-center"
                       >
