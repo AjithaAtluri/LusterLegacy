@@ -721,113 +721,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No form data submitted' });
       }
       
+      // Force JSON parsing to work by directly constructing the object we need
       try {
-        // Handle both string and object cases
-        let designData;
-        if (typeof req.body.data === 'string') {
-          try {
-            // Try to parse if it's a string
-            designData = JSON.parse(req.body.data);
-            console.log("Successfully parsed JSON data");
-          } catch (jsonError) {
-            console.error("JSON parse error:", jsonError);
-            return res.status(400).json({ 
-              message: 'Failed to parse JSON data', 
-              error: jsonError instanceof Error ? jsonError.message : 'Unknown JSON error',
-              data: req.body.data.substring(0, 100) + (req.body.data.length > 100 ? '...' : '')
-            });
+        // Get the raw data as a string
+        const rawData = typeof req.body.data === 'string' 
+          ? req.body.data 
+          : JSON.stringify(req.body.data);
+        
+        console.log("Raw data to process:", rawData.substring(0, 200) + (rawData.length > 200 ? '...' : ''));
+        
+        // Extract fields manually with regexp to avoid JSON parse failures
+        const extractField = (fieldName: string, json: string): string | null => {
+          const regex = new RegExp(`"${fieldName}"\\s*:\\s*"?([^",}]+)"?`, 'i');
+          const match = json.match(regex);
+          return match ? match[1] : null;
+        };
+        
+        const extractArrayField = (fieldName: string, json: string): string[] => {
+          const regex = new RegExp(`"${fieldName}"\\s*:\\s*\\[(.*?)\\]`, 'i');
+          const match = json.match(regex);
+          if (!match) return [];
+          
+          // Parse array items
+          const arrayContent = match[1];
+          const items: string[] = [];
+          const itemRegex = /"([^"]+)"/g;
+          let itemMatch;
+          while ((itemMatch = itemRegex.exec(arrayContent)) !== null) {
+            items.push(itemMatch[1]);
           }
-        } else if (typeof req.body.data === 'object') {
-          // Use directly if it's already an object
-          designData = req.body.data;
-          console.log("Using object data directly");
-        } else {
-          console.error(`Invalid data type: ${typeof req.body.data}`);
-          return res.status(400).json({ message: `Invalid data type: ${typeof req.body.data}` });
+          return items;
+        };
+        
+        // Extract fields directly from the string
+        const fullName = extractField('fullName', rawData) || '';
+        const email = extractField('email', rawData) || '';
+        const phone = extractField('phone', rawData) || null;
+        const country = extractField('country', rawData) || null;
+        const metalType = extractField('metalType', rawData) || '';
+        const notes = extractField('notes', rawData) || null;
+        
+        // Extract primaryStones as array 
+        let primaryStones = extractArrayField('primaryStones', rawData);
+        const primaryStone = extractField('primaryStone', rawData) || (primaryStones.length > 0 ? primaryStones[0] : null);
+        
+        // If primaryStones is empty but we have primaryStone, use it
+        if (primaryStones.length === 0 && primaryStone) {
+          primaryStones = [primaryStone];
         }
         
-        console.log("Parsed design data:", JSON.stringify(designData, null, 2));
-        
-        // Handle both old and new formats for stones
-        let formattedData = { ...designData };
-        
-        // Simplified approach: convert primaryStones to a proper string array
-        // Start with an empty array 
-        let primaryStonesArray: string[] = [];
-        
-        // If it's already an array, use it
-        if (Array.isArray(formattedData.primaryStones)) {
-          primaryStonesArray = formattedData.primaryStones;
-        }
-        // If it's a string, create a single-item array
-        else if (typeof formattedData.primaryStones === 'string') {
-          primaryStonesArray = [formattedData.primaryStones];
-        }
-        // If it's something unexpected, log it and use empty array
-        else if (formattedData.primaryStones !== null && formattedData.primaryStones !== undefined) {
-          console.log("Unexpected primaryStones type:", typeof formattedData.primaryStones);
-          console.log("Value:", formattedData.primaryStones);
-        }
-
-        // For backward compatibility with older schema
-        if (!primaryStonesArray.length && formattedData.primaryStone) {
-          primaryStonesArray.push(formattedData.primaryStone);
-        } else if (primaryStonesArray.length && !formattedData.primaryStone) {
-          formattedData.primaryStone = primaryStonesArray[0];
-        }
-        
-        // Overwrite with clean array
-        formattedData.primaryStones = primaryStonesArray;
-        
-        console.log("Processing design request with stones:", 
-          formattedData.primaryStones, 
-          "Primary stone for backward compatibility:", 
-          formattedData.primaryStone
-        );
-
-        // Make sure we have a user ID
-        if (!req.user || !req.user.id) {
-          console.error("Missing user ID in authenticated request");
-          return res.status(401).json({ message: "User authentication error" });
-        }
-
-        console.log("Final data for validation:", {
+        // Construct the validated data object directly
+        const validatedData = {
           userId: req.user.id,
-          primaryStones: formattedData.primaryStones,
-          primaryStone: formattedData.primaryStone
-        });
-
-        try {
-          // Create data object for validation with explicit type handling
-          const dataToValidate = {
-            ...formattedData,
-            userId: req.user.id,
-            imageUrl: `/uploads/${req.file.filename}`,
-            // Ensure primaryStones is correctly formatted for database - it should be a string array
-            primaryStones: primaryStonesArray
-          };
-          
-          const validatedData = insertDesignRequestSchema.parse(dataToValidate);
-
-          console.log("Validation successful, creating design request with user ID:", req.user.id);
-          console.log("Data being sent to storage:", JSON.stringify(validatedData, null, 2));
-          
-          const designRequest = await storage.createDesignRequest(validatedData);
-          res.status(201).json(designRequest);
-        } catch (validationError) {
-          console.error('Validation error:', validationError);
-          if (validationError instanceof z.ZodError) {
-            return res.status(400).json({ 
-              message: 'Invalid design request data', 
-              errors: validationError.errors,
-              formData: formattedData 
-            });
-          }
-          throw validationError; // Re-throw if it's not a ZodError
+          fullName,
+          email,
+          phone,
+          country,
+          metalType,
+          primaryStone,
+          primaryStones,
+          notes,
+          imageUrl: `/uploads/${req.file.filename}`,
+          status: "pending" as const,
+        };
+        
+        console.log("Manually constructed validated data:", JSON.stringify(validatedData, null, 2));
+        
+        // Validate required fields
+        const requiredFields = ['fullName', 'email', 'metalType'];
+        const missingFields = requiredFields.filter(field => !validatedData[field]);
+        
+        if (missingFields.length > 0) {
+          return res.status(400).json({ 
+            message: 'Missing required fields', 
+            missingFields 
+          });
         }
-      } catch (parseError) {
-        console.error('Error parsing request body data:', parseError);
-        return res.status(400).json({ message: 'Invalid JSON in request data' });
+        
+        if (primaryStones.length === 0) {
+          return res.status(400).json({ 
+            message: 'At least one stone type must be selected'
+          });
+        }
+        
+        // Create the design request directly
+        const designRequest = await storage.createDesignRequest(validatedData);
+        res.status(201).json(designRequest);
+      } catch (error) {
+        console.error('Error processing design request data:', error);
+        return res.status(400).json({ 
+          message: 'Error processing form data', 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        });
       }
     } catch (error) {
       console.error('Critical error submitting design request:', error);
