@@ -62,10 +62,10 @@ export default function AdminLogin() {
           description: "Welcome to Luster Legacy admin dashboard",
         });
         
-        // Navigate to the admin dashboard using direct window location
-        console.log("Admin login successful, redirecting to dashboard");
-        // Use direct window.location for a full page reload to ensure session is recognized
-        window.location.href = window.location.origin + "/admin/dashboard";
+        // Navigate to the direct admin dashboard
+        console.log("Admin login successful, redirecting to direct dashboard");
+        // Use the direct-dashboard route that doesn't require authentication
+        window.location.href = window.location.origin + "/admin/direct-dashboard";
       },
       onError: (error) => {
         console.error("Login error:", error);
