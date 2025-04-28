@@ -100,8 +100,39 @@ export const devHelpers = {
       const result = await response.json();
       console.log(`[DEV] Direct login successful:`, result);
       
-      // Invalidate auth query to refresh user state
+      // After direct login, fetch the user data to update the React Query cache
+      try {
+        const userResponse = await fetch('/api/user', {
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+          }
+        });
+        
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          console.log("[DEV] Fetched user data after login:", userData);
+          // Directly update the cache with fresh user data
+          queryClient.setQueryData(["/api/user"], userData);
+        }
+      } catch (fetchError) {
+        console.error("[DEV] Error fetching user data after login:", fetchError);
+      }
+      
+      // Also invalidate auth query to refresh user state
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Force a page reload to ensure all auth systems are in sync
+      setTimeout(() => {
+        if (result.redirectTo) {
+          console.log("[DEV] Redirecting to:", result.redirectTo);
+          window.location.href = result.redirectTo;
+        } else {
+          console.log("[DEV] No redirect specified, reloading page");
+          window.location.reload();
+        }
+      }, 500);
       
       return result;
     } catch (error) {
