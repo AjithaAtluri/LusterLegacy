@@ -12,6 +12,9 @@ export interface AIContentRequest {
   imageUrls?: string[];
 }
 
+// Alias type to handle legacy code using JewelryContentRequest
+export type JewelryContentRequest = AIContentRequest;
+
 export interface AIGeneratedContent {
   title: string;
   tagline: string;
@@ -214,7 +217,6 @@ export const fileToBase64 = (file: File): Promise<string> => {
  */
 export async function generateProductContent(data: AIContentRequest): Promise<AIGeneratedContent> {
   try {
-    // Show detailed error handling for any issues
     const startTime = Date.now();
     
     // Log what we're sending to the server for diagnostics
@@ -226,201 +228,103 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
-    // Try admin jewelry content endpoint first, using apiRequest for consistent auth
+    // Primary API endpoint attempt (admin route with admin auth)
+    console.log("Trying admin jewelry content endpoint with proper authentication...");
+    
     try {
-      console.log("Trying admin jewelry content endpoint first...");
-      const improvedResponse = await apiRequest("POST", "/api/admin/generate-jewelry-content", data);
+      const response = await apiRequest("POST", "/api/admin/generate-jewelry-content", data);
       
-      if (improvedResponse.ok) {
-        console.log("Admin jewelry endpoint successful");
-        const responseText = await improvedResponse.text();
+      if (response.ok) {
+        console.log("Admin jewelry endpoint successful!");
+        const responseText = await response.text();
         console.log("Got admin endpoint response text:", responseText.substring(0, 50) + "...");
         
         try {
           const result = JSON.parse(responseText);
           console.log("Successfully parsed admin response JSON");
+          
+          // Calculate generation time
+          const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
+          console.log(`AI content generated in ${generationTime} seconds`);
+          
           return result;
         } catch (parseError) {
-          console.log("Failed to parse admin endpoint response as JSON:", parseError);
-          // Continue to next endpoint
+          console.error("Failed to parse admin endpoint response as JSON:", parseError);
+          throw new Error("Failed to parse AI response as JSON");
         }
       }
-      console.log("Admin endpoint failed (status: " + improvedResponse.status + "), falling back to other endpoints");
-    } catch (e) {
-      console.log("Admin endpoint error:", e);
-    }
-    
-    // Then try the test endpoint as a backup option using apiRequest
-    try {
-      console.log("Trying test endpoint next...");
-      const testResponse = await apiRequest("POST", "/api/generate-jewelry-content", data);
       
-      if (testResponse.ok) {
-        console.log("Test endpoint successful");
-        const responseText = await testResponse.text();
-        console.log("Got test endpoint response text:", responseText.substring(0, 50) + "...");
+      console.error("Admin endpoint failed with status:", response.status);
+      throw new Error(`Admin API request failed with status: ${response.status}`);
+    } catch (error) {
+      console.error("Admin endpoint error:", error);
+      
+      // If we have images, try the image analysis endpoint as fallback
+      if (data.imageUrls && data.imageUrls.length > 0) {
+        console.log("Primary endpoint failed. Trying direct jewelry image analysis...");
         
-        try {
-          const result = JSON.parse(responseText);
-          console.log("Successfully parsed test response JSON");
-          return result;
-        } catch (parseError) {
-          console.log("Failed to parse test endpoint response as JSON:", parseError);
-          // Continue to next endpoint
-        }
-      }
-      console.log("Test endpoint failed, falling back to standard endpoint");
-    } catch (e) {
-      console.log("Test endpoint error:", e);
-    }
-    
-    // Try our new direct jewelry image analysis endpoint first
-    console.log("Trying direct jewelry image analysis endpoint...");
-    if (data.imageUrls && data.imageUrls.length > 0) {
-      try {
         // Prepare data for direct jewelry image analysis
-        const directImageData = {
-          imageData: data.imageUrls[0], // Send only the first image
-          productType: data.productType,
-          metalType: data.metalType,
-          metalWeight: data.metalWeight,
-          primaryGems: data.primaryGems,
-          userDescription: data.userDescription
-        };
-        
-        console.log("Calling direct jewelry image analysis with:", {
-          hasImage: !!directImageData.imageData,
-          imageDataLength: directImageData.imageData ? directImageData.imageData.length : 0,
-          productType: directImageData.productType,
-          metalType: directImageData.metalType,
-          gemCount: directImageData.primaryGems?.length || 0
-        });
-        
-        const directResponse = await apiRequest("POST", "/api/admin/analyze-jewelry-image", directImageData);
-        
-        if (directResponse.ok) {
-          console.log("Direct jewelry image analysis successful");
-          const responseText = await directResponse.text();
-          console.log("Got direct jewelry analysis response text:", responseText.substring(0, 50) + "...");
-          
-          try {
-            const result = JSON.parse(responseText);
-            console.log("Successfully parsed direct jewelry analysis response");
-            return result;
-          } catch (parseError) {
-            console.error("Failed to parse direct jewelry analysis response:", parseError);
-            // Continue to next approach
-          }
-        } else {
-          console.log("Direct jewelry image analysis failed, status:", directResponse.status);
-        }
-      } catch (directError) {
-        console.error("Error with direct jewelry image analysis:", directError);
-      }
-    }
-    
-    // Try the public content generation endpoint using apiRequest for consistent auth
-    console.log("Falling back to public content generation endpoint...");
-    const response = await apiRequest("POST", "/api/generate-jewelry-content", data);
-    
-    // Error handling
-    if (!response.ok) {
-      let errorMessage = "Failed to generate content";
-      let errorDetails = "";
-      
-      try {
-        // Try to get error response as text first
-        const responseText = await response.text();
-        
-        // Then attempt to parse it as JSON
         try {
-          const errorData = JSON.parse(responseText);
+          const directImageData = {
+            imageData: data.imageUrls[0], // Send only the first image
+            productType: data.productType,
+            metalType: data.metalType,
+            metalWeight: data.metalWeight,
+            primaryGems: data.primaryGems,
+            userDescription: data.userDescription
+          };
           
-          // Get more detailed error information if available
-          errorMessage = errorData.message || errorMessage;
-          errorDetails = errorData.details || errorData.error || "";
+          console.log("Calling direct jewelry image analysis with image data");
           
-          // Specific error handling based on status code
-          if (response.status === 401 || response.status === 402) {
-            errorMessage = "OpenAI API key issue. Please verify your API key is valid and has sufficient credits.";
-          } else if (response.status === 429) {
-            errorMessage = "Rate limit exceeded. Please try again in a few moments.";
-          } else if (response.status === 413) {
-            errorMessage = "Request too large. Try with fewer or smaller images.";
-          } else if (response.status >= 500) {
-            errorMessage = "Server error processing your request. Please try again or use text-only mode.";
+          const directResponse = await apiRequest("POST", "/api/admin/analyze-jewelry-image", directImageData);
+          
+          if (directResponse.ok) {
+            console.log("Direct jewelry image analysis successful!");
+            const responseText = await directResponse.text();
+            
+            try {
+              const result = JSON.parse(responseText);
+              console.log("Successfully parsed direct jewelry analysis response");
+              
+              // Calculate generation time
+              const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
+              console.log(`AI content generated in ${generationTime} seconds (via image analysis)`);
+              
+              return result;
+            } catch (parseError) {
+              console.error("Failed to parse direct jewelry analysis response:", parseError);
+              throw new Error("Failed to parse image analysis response"); 
+            }
+          } else {
+            console.error("Direct jewelry image analysis failed, status:", directResponse.status);
+            throw new Error(`Image analysis failed with status: ${directResponse.status}`);
           }
-          
-          // Log more details for debugging
-          console.error("API Error Response:", {
-            status: response.status,
-            errorMessage,
-            errorDetails,
-            rawError: errorData
-          });
-        } catch (parseError) {
-          // JSON parsing failed, use the text response
-          errorDetails = responseText || response.statusText;
-          console.error("Failed to parse error response as JSON", parseError);
+        } catch (directError) {
+          console.error("Error with direct jewelry image analysis:", directError);
+          // Let this error propagate up to be caught by the outer catch block
+          throw directError;
         }
-      } catch (e) {
-        // If text retrieval fails, use response status text
-        errorDetails = response.statusText;
-        console.error("Failed to get error response text", e);
       }
       
-      const finalErrorMessage = errorDetails 
-        ? `${errorMessage}: ${errorDetails}`
-        : errorMessage;
-        
-      throw new Error(finalErrorMessage);
+      // If no images or image analysis failed, throw the original error
+      throw error;
     }
-    
-    // Get response text first and safely parse
-    const responseText = await response.text();
-    console.log("Got successful response text:", responseText.substring(0, 50) + "...");
-    
-    let result;
-    try {
-      result = JSON.parse(responseText);
-      console.log("Successfully parsed response JSON");
-    } catch (parseError) {
-      console.error("Failed to parse success response as JSON:", parseError);
-      
-      // Try to find JSON in the response text using regex
-      try {
-        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          console.log("Found JSON pattern in response, trying to parse it");
-          result = JSON.parse(jsonMatch[0]);
-          console.log("Successfully parsed JSON from matched pattern");
-        } else {
-          throw new Error("Could not find valid JSON in response");
-        }
-      } catch (matchError) {
-        console.error("JSON extraction failed:", matchError);
-        throw new Error("Failed to parse AI response: " + responseText.substring(0, 100));
-      }
-    }
-    
-    // Validate the result has the expected fields
-    if (!result.title || !result.tagline || !result.shortDescription || !result.detailedDescription) {
-      console.error("AI response missing required fields:", result);
-      throw new Error("Incomplete content generated. The AI response is missing required fields.");
-    }
-    
-    // Calculate generation time
-    const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`AI content generated in ${generationTime} seconds`);
-    
-    return result;
   } catch (error: any) {
-    console.error("Error generating content:", error);
-    // Make sure we always return a proper Error object with message
+    console.error("All AI content generation attempts failed:", error);
+    
+    // Always return a proper Error object with message
     if (error instanceof Error) {
       throw error;
     } else {
       throw new Error(error?.message || "Unknown error generating content");
     }
   }
+}
+
+/**
+ * Alias function for backward compatibility with older code that uses generateJewelryContent
+ * This simply calls generateProductContent with the same parameters
+ */
+export async function generateJewelryContent(data: JewelryContentRequest): Promise<AIGeneratedContent> {
+  return generateProductContent(data);
 }
