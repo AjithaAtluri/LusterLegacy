@@ -70,21 +70,17 @@ export default function CustomerDashboard() {
     }
   });
   
-  // Combine both types of requests when available
+  // Use only customizationRequests to avoid duplicates
+  // Since both endpoints return the same data, just use one of them
   const allDesignRequests = useMemo(() => {
+    // Only use the data from customizationRequests to avoid duplicates
     const requests = [...(customizationRequests || [])];
-    if (customDesigns && Array.isArray(customDesigns)) {
-      // Add custom designs with a property to identify their source
-      requests.push(...customDesigns.map(design => ({
-        ...design,
-        isCustomDesign: true
-      })));
-    }
+    
     // Sort by date
     return requests.sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  }, [customizationRequests, customDesigns]);
+  }, [customizationRequests]);
   
   // Fetch orders
   const { data: orders, isLoading: isLoadingOrders } = useQuery({
@@ -405,7 +401,7 @@ export default function CustomerDashboard() {
                                   </Button>
                                 ) : (
                                   <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/custom-designs/${request.id}`}>
+                                    <Link href={`/custom-design?view=${request.id}`}>
                                       <ExternalLink className="h-3 w-3 mr-1" />
                                       View Details
                                     </Link>
@@ -414,7 +410,7 @@ export default function CustomerDashboard() {
                               </div>
                             </div>
                             <CardDescription>
-                              {new Date(request.createdAt).toLocaleDateString()} • 
+                              {new Date(request.createdAt).toLocaleDateString()} {new Date(request.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • 
                               Status: <span className="font-medium capitalize">{request.status}</span>
                             </CardDescription>
                           </CardHeader>
