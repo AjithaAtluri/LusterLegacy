@@ -76,8 +76,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group h-[550px] flex flex-col">
-      <div className="relative h-64 overflow-hidden flex-shrink-0">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group h-[600px] flex flex-col">
+      <div className="relative h-80 overflow-hidden flex-shrink-0">
         {/* Using the reliable product image component for consistent images */}
         <ReliableProductImage 
           productId={product.id}

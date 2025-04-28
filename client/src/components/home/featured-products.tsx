@@ -132,7 +132,7 @@ export default function FeaturedProducts() {
                 // Actual products with dynamic ordering
                 shuffledProducts.length > 0 ? (
                   shuffledProducts.map((product) => (
-                    <div key={product.id} className="flex-[0_0_100%] sm:flex-[0_0_80%] md:flex-[0_0_45%] lg:flex-[0_0_30%] min-w-0">
+                    <div key={product.id} className="flex-[0_0_100%] sm:flex-[0_0_80%] md:flex-[0_0_48%] lg:flex-[0_0_32%] min-w-0 px-2">
                       <ProductCard product={product} />
                     </div>
                   ))

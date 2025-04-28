@@ -153,34 +153,38 @@ export default function Collections() {
         </div>
         
         {productsLoading || typesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {Array(6).fill(0).map((_, index) => (
-              <div key={index} className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
-                <Skeleton className="h-80 w-full" />
-                <div className="p-6">
-                  <Skeleton className="h-6 w-2/3 mb-2" />
-                  <Skeleton className="h-4 w-full mb-4" />
-                  <div className="mb-4">
-                    <Skeleton className="h-4 w-1/3 mb-1" />
-                    <Skeleton className="h-10 w-full mb-3" />
-                    <Skeleton className="h-4 w-1/3 mb-1" />
-                    <Skeleton className="h-10 w-full mb-3" />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <Skeleton className="h-3 w-16 mb-1" />
-                      <Skeleton className="h-6 w-24" />
+              <div className="flex justify-center" key={index}>
+                <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 max-w-full">
+                  <Skeleton className="h-96 w-full" /> {/* Increased height to match new card size */}
+                  <div className="p-6">
+                    <Skeleton className="h-6 w-2/3 mb-2" />
+                    <Skeleton className="h-4 w-full mb-4" />
+                    <div className="mb-4">
+                      <Skeleton className="h-4 w-1/3 mb-1" />
+                      <Skeleton className="h-10 w-full mb-3" />
+                      <Skeleton className="h-4 w-1/3 mb-1" />
+                      <Skeleton className="h-10 w-full mb-3" />
                     </div>
-                    <Skeleton className="h-10 w-24" />
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <Skeleton className="h-3 w-16 mb-1" />
+                        <Skeleton className="h-6 w-24" />
+                      </div>
+                      <Skeleton className="h-10 w-24" />
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : sortedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {sortedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <div className="flex justify-center" key={product.id}>
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         ) : (
