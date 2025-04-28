@@ -244,32 +244,32 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   };
   
-  // Navigation items
+  // Navigation items - all pointing to direct dashboard pages
   const navItems = [
     { 
       title: "Dashboard", 
       icon: <LayoutDashboard className="h-5 w-5" />, 
-      href: "/admin/dashboard" 
+      href: "/admin/direct-dashboard" 
     },
     { 
       title: "Products", 
       icon: <GalleryHorizontal className="h-5 w-5" />, 
-      href: "/admin/products" 
+      href: "/admin/direct-dashboard?section=products" 
     },
     {
       title: "Product Types",
       icon: <Package className="h-5 w-5" />,
-      href: "/admin/product-types"
+      href: "/admin/direct-dashboard?section=product-types"
     },
     { 
       title: "Metal Types", 
       icon: <Diamond className="h-5 w-5" />, 
-      href: "/admin/metal-types" 
+      href: "/admin/direct-dashboard?section=metal-types" 
     },
     { 
       title: "Stone Types", 
       icon: <Gem className="h-5 w-5" />, 
-      href: "/admin/stone-types" 
+      href: "/admin/direct-dashboard?section=stone-types" 
     },
     { 
       title: "AI Generator", 
@@ -279,12 +279,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     { 
       title: "Custom Designs", 
       icon: <Package className="h-5 w-5" />, 
-      href: "/admin/designs" 
+      href: "/admin/direct-dashboard?section=designs" 
     },
     { 
       title: "Orders", 
       icon: <ShoppingBag className="h-5 w-5" />, 
-      href: "/admin/orders" 
+      href: "/admin/direct-dashboard?section=orders" 
     }
   ];
   
