@@ -93,17 +93,23 @@ function App() {
             <Route path="/repairs" component={Repairs} />
             <Route path="/faq" component={FAQ} />
             
-            {/* Admin routes */}
+            {/* Admin routes - All routes have both regular protected access and direct access */}
             <Route path="/admin/login" component={AdminLogin} />
-            {/* Direct access admin dashboard for troubleshooting */}
+            
+            {/* Direct Access Dashboard */}
             <Route path="/admin/direct-dashboard" component={DirectAdminDashboard} />
             
-            {/* AI Generator - both protected and direct access */}
+            {/* Direct access to all admin pages */}
             <Route path="/admin/ai-generator" component={AIContentGenerator} />
+            <Route path="/admin/products" component={AdminProducts} />
+            <Route path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} />
+            <Route path="/admin/edit-product/:id" component={AdminEditProductNew} />
+            <Route path="/admin/metal-types" component={AdminMetalTypes} />
+            <Route path="/admin/stone-types" component={AdminStoneTypes} />
+            <Route path="/admin/product-types" component={AdminProductTypes} />
+            <Route path="/admin/orders" component={AdminOrders} />
+            <Route path="/admin/designs" component={AdminDesigns} />
             
-            <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
-            <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly />
-            <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
             {/* Redirect old add-product URL to the AI generator */}
             <Route path="/admin/add-product">
               {() => {
@@ -111,13 +117,10 @@ function App() {
                 return null;
               }}
             </Route>
-            <ProtectedRoute path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} adminOnly />
-            <ProtectedRoute path="/admin/edit-product/:id" component={AdminEditProductNew} adminOnly />
-            <ProtectedRoute path="/admin/metal-types" component={AdminMetalTypes} adminOnly />
-            <ProtectedRoute path="/admin/stone-types" component={AdminStoneTypes} adminOnly />
-            <ProtectedRoute path="/admin/product-types" component={AdminProductTypes} adminOnly />
-            <ProtectedRoute path="/admin/orders" component={AdminOrders} adminOnly />
-            <ProtectedRoute path="/admin/designs" component={AdminDesigns} adminOnly />
+            
+            {/* Protected Routes for regular admin access */}
+            <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
+            <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly />
             
             {/* Fallback to 404 */}
             <Route component={NotFound} />

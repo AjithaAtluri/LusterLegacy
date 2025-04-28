@@ -555,9 +555,9 @@ export default function DirectAdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <Button asChild className="w-full">
-                        <Link href="/admin/ai-generator">
+                        <a href="/admin/ai-generator">
                           Create New Product with AI
-                        </Link>
+                        </a>
                       </Button>
                     </CardContent>
                   </Card>
@@ -768,9 +768,9 @@ export default function DirectAdminDashboard() {
                     
                     <div className="mt-4 text-center">
                       <Button asChild>
-                        <Link href="/admin/ai-generator">
+                        <a href="/admin/ai-generator">
                           Create New Product with AI
-                        </Link>
+                        </a>
                       </Button>
                     </div>
                   </CardContent>
