@@ -22,9 +22,9 @@ export default function AdminMetalTypes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Fetch metal types
+  // Fetch metal types from public endpoint
   const { data: metalTypes, isLoading } = useQuery({
-    queryKey: ['/api/admin/metal-types'],
+    queryKey: ['/api/metal-types'],
   });
   
   // Filter metal types by search query
@@ -69,7 +69,7 @@ export default function AdminMetalTypes() {
       });
       
       // Invalidate metal types query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/metal-types'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/metal-types'] });
       
       // Close dialog
       setIsDeleteDialogOpen(false);

@@ -22,9 +22,9 @@ export default function AdminStoneTypes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Fetch stone types
+  // Fetch stone types from public endpoint
   const { data: stoneTypes, isLoading } = useQuery({
-    queryKey: ['/api/admin/stone-types'],
+    queryKey: ['/api/stone-types'],
   });
   
   // Filter stone types by search query
@@ -69,7 +69,7 @@ export default function AdminStoneTypes() {
       });
       
       // Invalidate stone types query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/stone-types'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stone-types'] });
       
       // Close dialog
       setIsDeleteDialogOpen(false);
