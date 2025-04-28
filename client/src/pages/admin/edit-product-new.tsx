@@ -26,6 +26,7 @@ import { PriceCalculatorDisplay } from "@/components/admin/price-calculator-disp
 import { PriceBreakdownItem } from "@/components/admin/price-breakdown-item-new";
 import { PriceBreakdownTotal } from "@/components/admin/price-breakdown-total";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth"; // Import the auth hook
 import { apiRequest } from "@/lib/queryClient";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
@@ -96,11 +97,8 @@ export default function EditProductNew() {
     },
   });
 
-  // First fetch user data to ensure we have admin authentication
-  const { data: userData } = useQuery({
-    queryKey: ['/api/auth/me'],
-    retry: 1
-  });
+  // Use the central auth hook to get user data and authentication status
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   // Define a custom query function to properly fetch product data
   const fetchProduct = async () => {
@@ -110,7 +108,7 @@ export default function EditProductNew() {
 
     try {
       console.log(`Fetching product data for ID: ${params.id}`);
-      console.log(`Current authenticated user:`, userData);
+      console.log(`Current authenticated user:`, user);
 
       // Make sure cookies are included for authentication
       const response = await fetch(`/api/admin/products/${params.id}`, {
