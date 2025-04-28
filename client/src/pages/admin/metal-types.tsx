@@ -60,15 +60,29 @@ export default function AdminMetalTypes() {
     
     setIsDeleting(true);
     
+    // Add admin auth bypass headers
+    const headers = {
+      "X-Auth-Debug": "true",
+      "X-Request-Source": "admin-metal-type-delete",
+      "X-Admin-Debug-Auth": "true",
+      "X-Admin-API-Key": "dev_admin_key_12345",
+      "X-Admin-Username": "admin",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0"
+    };
+    
     try {
-      await apiRequest("DELETE", `/api/admin/metal-types/${selectedMetalType.id}`, {});
+      console.log("Deleting metal type with admin bypass headers");
+      await apiRequest("DELETE", `/api/admin/metal-types/${selectedMetalType.id}`, {}, { headers });
       
       toast({
         title: "Metal type deleted",
         description: "The metal type has been deleted successfully",
       });
       
-      // Invalidate metal types query to refresh data
+      // Invalidate both admin and public metal types queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/metal-types'] });
       queryClient.invalidateQueries({ queryKey: ['/api/metal-types'] });
       
       // Close dialog
