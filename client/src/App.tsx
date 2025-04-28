@@ -98,6 +98,9 @@ function App() {
             {/* Direct access admin dashboard for troubleshooting */}
             <Route path="/admin/direct-dashboard" component={DirectAdminDashboard} />
             
+            {/* AI Generator - both protected and direct access */}
+            <Route path="/admin/ai-generator" component={AIContentGenerator} />
+            
             <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
             <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly />
             <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
@@ -115,7 +118,6 @@ function App() {
             <ProtectedRoute path="/admin/product-types" component={AdminProductTypes} adminOnly />
             <ProtectedRoute path="/admin/orders" component={AdminOrders} adminOnly />
             <ProtectedRoute path="/admin/designs" component={AdminDesigns} adminOnly />
-            <ProtectedRoute path="/admin/ai-generator" component={AIContentGenerator} adminOnly />
             
             {/* Fallback to 404 */}
             <Route component={NotFound} />
