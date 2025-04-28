@@ -28,7 +28,11 @@ export async function apiRequest(
   
   const res = await fetch(url, {
     method,
-    headers,
+    headers: {
+      ...headers,
+      "Cache-Control": "no-cache", // Prevent caching auth state
+      "Pragma": "no-cache"
+    },
     body,
     credentials: "include",
   });

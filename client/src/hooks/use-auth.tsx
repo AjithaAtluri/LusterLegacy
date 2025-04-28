@@ -40,10 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch: refetchUser
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false, // Don't retry on 401 (not authenticated)
+    refetchOnWindowFocus: true, // Allow refetching when focus returns to window
+    refetchOnMount: true,
+    staleTime: 1000 * 60 * 5, // Consider data stale after 5 minutes
   });
   
   console.log("Auth Context - User data:", user);
@@ -64,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (userData) => {
       queryClient.setQueryData(["/api/user"], userData);
+      // Force refetch user data to ensure we have the most up-to-date session
+      refetchUser();
       toast({
         title: "Login successful",
         description: `Welcome ${userData.username}!`,
@@ -92,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (userData) => {
       queryClient.setQueryData(["/api/user"], userData);
+      // Force refetch user data to ensure we have the most up-to-date session
+      refetchUser();
       toast({
         title: "Registration successful",
         description: `Welcome to Luster Legacy, ${userData.username}!`,
@@ -118,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      // Make sure to refetch to confirm logout state from server
+      refetchUser();
       toast({
         title: "Logged out successfully",
       });
