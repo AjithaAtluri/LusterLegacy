@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { GoldPriceDisplay } from "@/components/admin/gold-price-display";
 import { 
   ShoppingBag, 
@@ -476,10 +476,10 @@ export default function DirectAdminDashboard() {
                         
                         {recentOrders.length > 0 && (
                           <div className="mt-4 text-center">
-                            <Button asChild variant="outline">
-                              <Link href="/admin/direct-dashboard?section=orders">
+                            <Button variant="outline" asChild>
+                              <a href="/admin/direct-dashboard?section=orders">
                                 View All Orders
-                              </Link>
+                              </a>
                             </Button>
                           </div>
                         )}
@@ -535,10 +535,10 @@ export default function DirectAdminDashboard() {
                         
                         {pendingDesigns.length > 0 && (
                           <div className="mt-4 text-center">
-                            <Button asChild variant="outline">
-                              <Link href="/admin/direct-dashboard?section=designs">
+                            <Button variant="outline" asChild>
+                              <a href="/admin/direct-dashboard?section=designs">
                                 View All Design Requests
-                              </Link>
+                              </a>
                             </Button>
                           </div>
                         )}
