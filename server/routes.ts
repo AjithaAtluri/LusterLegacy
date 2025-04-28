@@ -2078,7 +2078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Public endpoint for generating jewelry content
-  app.post('/api/generate-jewelry-content', async (req, res) => {
+  app.post('/api/generate-jewelry-content', validateAdmin, async (req, res) => {
     try {
       console.log("Using improved jewelry content generator (public endpoint)");
       // Pass the request to the improved OpenAI service
@@ -2102,7 +2102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Public endpoint for advanced AI product content generation with image analysis
-  app.post('/api/generate-product-content', async (req, res) => {
+  app.post('/api/generate-product-content', validateAdmin, async (req, res) => {
     try {
       console.log("Using advanced product content generator with image analysis (public endpoint)");
       // Pass the request to the product content generator
@@ -2186,7 +2186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Test endpoint to directly generate content (non-admin, for testing only)
-  app.post('/api/test-content-generation', async (req, res) => {
+  app.post('/api/test-content-generation', validateAdmin, async (req, res) => {
     try {
       console.log("Testing content generation with data:", req.body);
       
@@ -2400,7 +2400,7 @@ Respond in JSON format:
   });
 
   // Direct jewelry image analysis endpoint - simplified approach with no authentication
-  app.post("/api/direct-jewelry-analysis", async (req, res) => {
+  app.post("/api/direct-jewelry-analysis", validateAdmin, async (req, res) => {
     try {
       console.log("Direct jewelry image analysis endpoint called");
       
