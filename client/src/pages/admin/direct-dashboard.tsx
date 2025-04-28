@@ -256,58 +256,90 @@ export default function DirectAdminDashboard() {
         <aside className="w-64 border-r hidden md:block">
           <div className="h-full py-6 px-3 overflow-y-auto">
             <nav className="space-y-1">
-              <a 
+              <a
                 href="/admin/direct-dashboard" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'dashboard' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/direct-dashboard"; 
+                }}
               >
                 <Home className="h-5 w-5" />
                 Dashboard
               </a>
-              <a 
+              <a
                 href="/admin/direct-dashboard?section=products" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'products' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/direct-dashboard?section=products"; 
+                }}
               >
                 <Package className="h-5 w-5" />
                 Products
               </a>
-              <a 
+              <a
                 href="/admin/direct-dashboard?section=product-types" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'product-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/direct-dashboard?section=product-types"; 
+                }}
               >
                 <Package className="h-5 w-5" />
                 Product Types
               </a>
-              <a 
+              <a
                 href="/admin/direct-dashboard?section=metal-types" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'metal-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/direct-dashboard?section=metal-types"; 
+                }}
               >
                 <Package className="h-5 w-5" />
                 Metal Types
               </a>
-              <a 
+              <a
                 href="/admin/direct-dashboard?section=stone-types" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'stone-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/direct-dashboard?section=stone-types"; 
+                }}
               >
                 <Package className="h-5 w-5" />
                 Stone Types
               </a>
-              <a 
+              <a
                 href="/admin/direct-dashboard?section=orders" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'orders' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/direct-dashboard?section=orders"; 
+                }}
               >
                 <ShoppingBag className="h-5 w-5" />
                 Orders
               </a>
-              <a 
+              <a
                 href="/admin/direct-dashboard?section=designs" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'designs' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/direct-dashboard?section=designs"; 
+                }}
               >
                 <Settings className="h-5 w-5" />
                 Custom Designs
               </a>
-              <a 
+              <a
                 href="/admin/ai-generator" 
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  window.location.href = "/admin/ai-generator"; 
+                }}
               >
                 <Settings className="h-5 w-5" />
                 AI Generator
