@@ -226,10 +226,10 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
-    // Try our public jewelry content endpoint first using direct fetch
+    // Try admin jewelry content endpoint first
     try {
-      console.log("Trying public jewelry content endpoint first...");
-      const improvedResponse = await fetch("/api/generate-jewelry-content", {
+      console.log("Trying admin jewelry content endpoint first...");
+      const improvedResponse = await fetch("/api/admin/generate-jewelry-content", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -239,22 +239,22 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       });
       
       if (improvedResponse.ok) {
-        console.log("Public jewelry endpoint successful");
+        console.log("Admin jewelry endpoint successful");
         const responseText = await improvedResponse.text();
-        console.log("Got public endpoint response text:", responseText.substring(0, 50) + "...");
+        console.log("Got admin endpoint response text:", responseText.substring(0, 50) + "...");
         
         try {
           const result = JSON.parse(responseText);
-          console.log("Successfully parsed public response JSON");
+          console.log("Successfully parsed admin response JSON");
           return result;
         } catch (parseError) {
-          console.log("Failed to parse public endpoint response as JSON:", parseError);
+          console.log("Failed to parse admin endpoint response as JSON:", parseError);
           // Continue to next endpoint
         }
       }
-      console.log("Public endpoint failed (status: " + improvedResponse.status + "), falling back to other endpoints");
+      console.log("Admin endpoint failed (status: " + improvedResponse.status + "), falling back to other endpoints");
     } catch (e) {
-      console.log("Public endpoint error:", e);
+      console.log("Admin endpoint error:", e);
     }
     
     // Then try the test endpoint as a backup option using direct fetch
@@ -310,7 +310,7 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
           gemCount: directImageData.primaryGems?.length || 0
         });
         
-        const directResponse = await fetch("/api/analyze-jewelry-image", {
+        const directResponse = await fetch("/api/admin/analyze-jewelry-image", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
