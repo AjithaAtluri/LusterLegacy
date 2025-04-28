@@ -294,8 +294,9 @@ export default function AddProduct() {
       if (data.dimensions) formData.append('dimensions', data.dimensions.toString());
       if (data.userDescription) formData.append('userDescription', data.userDescription.toString());
       
-      // Add stone types as a JSON string
-      formData.append('selectedStones', JSON.stringify(selectedStoneTypes));
+      // Add stone types as a JSON string - extract just the IDs since the server expects an array of integers
+      const stoneIds = selectedStoneTypes.map(stone => stone.id);
+      formData.append('selectedStones', JSON.stringify(stoneIds));
       
       // Add main image if available
       if (mainImageFile) {
