@@ -398,7 +398,13 @@ export default function UnifiedAIGenerator({
                   <FormLabel htmlFor="mainStoneType">7. Main Stone Type</FormLabel>
                   <Select
                     value={mainStoneType}
-                    onValueChange={setMainStoneType}
+                    onValueChange={(value) => {
+                      setMainStoneType(value);
+                      // Set weight to "0" when "no-main-stone" is selected
+                      if (value === "no-main-stone") {
+                        setMainStoneWeight("0");
+                      }
+                    }}
                   >
                     <SelectTrigger id="mainStoneType">
                       <SelectValue placeholder="Select main stone" />
@@ -468,7 +474,13 @@ export default function UnifiedAIGenerator({
                 <FormLabel>9. Secondary Stone Type</FormLabel>
                 <Select
                   value={secondaryStoneType}
-                  onValueChange={setSecondaryStoneType}
+                  onValueChange={(value) => {
+                    setSecondaryStoneType(value);
+                    // Set weight to "0" when "none_selected" is selected
+                    if (value === "none_selected") {
+                      setSecondaryStoneWeight("0");
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select secondary stone" />

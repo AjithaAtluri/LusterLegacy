@@ -80,6 +80,7 @@ export default function EditProduct() {
   const [additionalImagesChanged, setAdditionalImagesChanged] = useState<boolean>(false);
   const [mainStoneType, setMainStoneType] = useState<string>("");
   const [mainStoneWeight, setMainStoneWeight] = useState<string>("");
+  const [secondaryStoneType, setSecondaryStoneType] = useState<string>("none_selected");
   const [secondaryStoneWeight, setSecondaryStoneWeight] = useState<string>("");
   const queryClient = useQueryClient();
   
