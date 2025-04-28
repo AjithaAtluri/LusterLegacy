@@ -67,18 +67,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (userData) => {
+      // Log the user data to see what's happening
+      console.log("Login success - user data:", userData);
+      
       queryClient.setQueryData(["/api/user"], userData);
       // Force refetch user data to ensure we have the most up-to-date session
       refetchUser();
       
       // Show appropriate toast message based on role
       if (userData.role === "admin") {
+        console.log("Admin user detected - redirecting to dashboard");
         toast({
           title: "Admin login successful",
           description: `Welcome back, ${userData.username}!`,
         });
-        // Navigate admin to dashboard
-        window.location.href = "/admin/dashboard";
+        
+        // Add a slight delay to ensure toast is shown before redirect
+        setTimeout(() => {
+          // Use more forceful redirect for admin dashboard
+          window.location.replace("/admin/dashboard");
+        }, 500);
       } else {
         toast({
           title: "Login successful",
