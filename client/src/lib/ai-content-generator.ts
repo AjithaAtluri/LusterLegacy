@@ -226,10 +226,10 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
-    // Try our new improved jewelry content endpoint first using direct fetch
+    // Try our public jewelry content endpoint first using direct fetch
     try {
-      console.log("Trying improved jewelry content endpoint first...");
-      const improvedResponse = await fetch("/api/admin/generate-jewelry-content", {
+      console.log("Trying public jewelry content endpoint first...");
+      const improvedResponse = await fetch("/api/generate-jewelry-content", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -239,22 +239,22 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       });
       
       if (improvedResponse.ok) {
-        console.log("Improved endpoint successful");
+        console.log("Public jewelry endpoint successful");
         const responseText = await improvedResponse.text();
-        console.log("Got improved endpoint response text:", responseText.substring(0, 50) + "...");
+        console.log("Got public endpoint response text:", responseText.substring(0, 50) + "...");
         
         try {
           const result = JSON.parse(responseText);
-          console.log("Successfully parsed improved response JSON");
+          console.log("Successfully parsed public response JSON");
           return result;
         } catch (parseError) {
-          console.log("Failed to parse improved endpoint response as JSON:", parseError);
+          console.log("Failed to parse public endpoint response as JSON:", parseError);
           // Continue to next endpoint
         }
       }
-      console.log("Improved endpoint failed (status: " + improvedResponse.status + "), falling back to main endpoint");
+      console.log("Public endpoint failed (status: " + improvedResponse.status + "), falling back to other endpoints");
     } catch (e) {
-      console.log("Improved endpoint error:", e);
+      console.log("Public endpoint error:", e);
     }
     
     // Then try the test endpoint as a backup option using direct fetch
@@ -310,7 +310,7 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
           gemCount: directImageData.primaryGems?.length || 0
         });
         
-        const directResponse = await fetch("/api/direct-jewelry-analysis", {
+        const directResponse = await fetch("/api/analyze-jewelry-image", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
