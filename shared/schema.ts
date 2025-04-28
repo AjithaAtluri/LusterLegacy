@@ -105,7 +105,8 @@ export const designRequestsRelations = relations(designRequests, ({ one, many })
   orderItems: many(orderItems)
 }));
 
-export const insertDesignRequestSchema = createInsertSchema(designRequests).pick({
+// Base schema from Drizzle
+const baseDesignRequestSchema = createInsertSchema(designRequests).pick({
   userId: true,
   fullName: true,
   email: true,
@@ -113,9 +114,14 @@ export const insertDesignRequestSchema = createInsertSchema(designRequests).pick
   country: true,
   metalType: true,
   primaryStone: true, // Keep for backward compatibility
-  primaryStones: true, // New field for multi-select stones
   notes: true,
   imageUrl: true,
+});
+
+// Extended schema with explicit array validation for primaryStones
+export const insertDesignRequestSchema = baseDesignRequestSchema.extend({
+  // Override primaryStones to ensure it's an array of strings
+  primaryStones: z.array(z.string()).default([]),
 });
 
 // Design request comments schema

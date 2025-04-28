@@ -34,7 +34,12 @@ const designFormSchema = z.object({
   phone: z.string().min(8, "Phone number is required"),
   country: z.string().min(2, "Country is required"),
   metalType: z.string().min(1, "Metal type is required"),
-  primaryStones: z.array(z.string()).min(1, "Select at least one stone type"),
+  // Ensure primaryStones is always processed as a string array
+  primaryStones: z.array(z.string())
+    .min(1, "Select at least one stone type")
+    .default([]),
+  // Add primaryStone for backward compatibility
+  primaryStone: z.string().optional(),
   notes: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms to continue" 
@@ -264,6 +269,17 @@ export default function DesignForm() {
           ? processedData.primaryStones 
           : []
       };
+      
+      // Make 100% sure primaryStones is properly serialized as an array
+      if (!Array.isArray(dataToSend.primaryStones)) {
+        console.error("primaryStones is not an array, forcing it to be an array", dataToSend.primaryStones);
+        dataToSend.primaryStones = [];
+      }
+      
+      // Set primaryStone field for backward compatibility if not already set
+      if (!dataToSend.primaryStone && dataToSend.primaryStones.length > 0) {
+        dataToSend.primaryStone = dataToSend.primaryStones[0];
+      }
       
       // Convert the entire object to a JSON string
       const jsonData = JSON.stringify(dataToSend);
