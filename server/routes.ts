@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import * as z from "zod";
 import { setupAuth } from "./auth";
 import passport from "passport";
+// Import the comparePasswords function for admin auth
+import { comparePasswords } from "./auth";
 import { 
   insertProductSchema, 
   insertDesignRequestSchema, 
@@ -1573,68 +1575,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
   /**
    * Authentication routes
    */
-  // Admin login - compatibility route with main auth system
+  // Admin login - unified approach that works with both auth systems
   app.post('/api/auth/login', async (req, res, next) => {
     try {
-      // First attempt to use the main passport authentication
+      console.log('Admin login attempt - using unified auth approach');
+      
+      // Use passport authentication with our custom callback
       passport.authenticate("local", async (err, user, info) => {
-        if (err) return next(err);
+        if (err) {
+          console.error('Passport auth error:', err);
+          return next(err);
+        }
         
-        // If authentication with passport fails, try the legacy system
+        // If passport authentication fails, try the legacy system
         if (!user) {
           console.log('Passport auth failed, trying legacy auth');
           const { username, password } = req.body;
           const legacyUser = await storage.getUserByUsername(username);
           
           if (!legacyUser) {
+            console.log('Legacy auth failed - user not found:', username);
             return res.status(401).json({ message: 'Invalid credentials' });
           }
           
-          // In the legacy system, passwords were stored in plain text
-          // This is insecure and only kept for compatibility
-          if (legacyUser.password !== password) {
+          // In the legacy system, passwords were stored differently
+          // Check if passwords match
+          if (!(await comparePasswords(password, legacyUser.password))) {
+            console.log('Legacy auth failed - password mismatch for user:', username);
             return res.status(401).json({ message: 'Invalid credentials' });
           }
           
-          // Set cookie for the legacy system
+          // Both auth systems will be used for maximum compatibility
+          
+          // 1. Set cookie for legacy auth system
           res.cookie('userId', legacyUser.id, { 
             httpOnly: true, 
-            maxAge: 8 * 60 * 60 * 1000 // 8 hours
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
           });
           
-          // Also log in with passport if possible
+          console.log('Legacy cookie auth set for user:', legacyUser.username);
+          
+          // 2. Also establish a passport session
           req.login(legacyUser, (loginErr) => {
             if (loginErr) {
-              console.error('Error logging in with passport after legacy auth:', loginErr);
-              // Continue with just the cookie auth
+              console.error('Error creating passport session after legacy auth:', loginErr);
+              // Continue with just the cookie-based auth
+            } else {
+              console.log('Passport session established for legacy user:', legacyUser.username);
             }
             
-            console.log('Legacy auth successful, added passport session');
-            
             // Return user info (without password)
-            return res.json({
-              id: legacyUser.id,
-              username: legacyUser.username,
-              role: legacyUser.role
-            });
+            const { password, ...userWithoutPassword } = legacyUser;
+            return res.json(userWithoutPassword);
           });
           
           return;
         }
         
-        // If passport auth succeeded, set both the cookie (for legacy) and the passport session
+        // If passport auth succeeded, also set a cookie for the legacy system
+        // This ensures both auth systems are in sync
+        console.log('Passport auth successful, syncing with legacy system');
+        
         res.cookie('userId', user.id, { 
           httpOnly: true, 
-          maxAge: 8 * 60 * 60 * 1000 // 8 hours
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
         
+        // Ensure the passport session is established
         req.login(user, (loginErr) => {
           if (loginErr) {
-            console.error('Error establishing passport session:', loginErr);
+            console.error('Error finalizing passport session:', loginErr);
             return next(loginErr);
           }
           
-          console.log('Passport auth successful, added cookie for legacy compatibility');
+          console.log('Admin login successful - both auth systems in sync');
           
           // Return user without password
           const { password, ...userWithoutPassword } = user;
@@ -1642,7 +1660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       })(req, res, next);
     } catch (error) {
-      console.error('Error in admin login:', error);
+      console.error('Unexpected error in admin login:', error);
       res.status(500).json({ message: 'Error logging in' });
     }
   });
@@ -3466,19 +3484,31 @@ Respond in JSON format:
     }
   });
 
-  // Get current user - compatibility route for the old admin system
-  // This now redirects to the main auth system
+  // Get current user - unified endpoint for both auth systems
   app.get('/api/auth/me', async (req, res) => {
     try {
-      // First check if we have a passport session
+      // Check for passport session first (preferred method)
       if (req.isAuthenticated && req.isAuthenticated()) {
-        console.log('Passport session found in /api/auth/me', req.user);
-        // Return the user data from the passport session
+        console.log('Passport session found in /api/auth/me for user:', 
+                    { id: req.user.id, username: req.user.username, role: req.user.role });
+        
+        // Ensure admin cookie is also set for legacy compatibility
+        if (req.user.role === 'admin' && (!req.cookies?.userId || parseInt(req.cookies.userId) !== req.user.id)) {
+          console.log('Syncing admin cookie with passport session');
+          res.cookie('userId', req.user.id, { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          });
+        }
+        
+        // Return user data from the passport session (without password)
         const { password, ...userWithoutPassword } = req.user;
         return res.json(userWithoutPassword);
       }
       
-      // If no passport session, try the old cookie-based auth
+      // Fall back to cookie-based auth if no passport session
       const userId = req.cookies?.userId;
       if (!userId) {
         return res.status(401).json({ message: 'Not authenticated' });
@@ -3486,18 +3516,28 @@ Respond in JSON format:
 
       const user = await storage.getUser(parseInt(userId));
       if (!user) {
+        console.log('Cookie auth failed - clearing invalid cookie');
         res.clearCookie('userId');
         return res.status(401).json({ message: 'User not found' });
       }
-
-      console.log('Cookie-based auth successful in /api/auth/me', { id: user.id, username: user.username, role: user.role });
-      res.json({
-        id: user.id,
-        username: user.username,
-        role: user.role
+      
+      // If we found a user with cookie auth but no passport session,
+      // establish the passport session as well for full compatibility
+      console.log('Cookie auth successful - syncing with passport session');
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('Error establishing passport session after cookie auth:', loginErr);
+          // Continue with just cookie auth
+        } else {
+          console.log('Created passport session for cookie-authenticated user');
+        }
+        
+        // Return consistent user data format 
+        const { password, ...userWithoutPassword } = user;
+        return res.json(userWithoutPassword);
       });
     } catch (error) {
-      console.error('Error fetching current user:', error);
+      console.error('Error in /api/auth/me:', error);
       res.status(500).json({ message: 'Error fetching current user' });
     }
   });
