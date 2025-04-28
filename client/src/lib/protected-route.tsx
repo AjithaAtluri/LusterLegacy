@@ -1,6 +1,8 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route, RouteProps } from "wouter";
+import { useEffect } from "react";
+import { queryClient } from "@/lib/queryClient";
 
 interface ProtectedRouteProps extends Omit<RouteProps, "component"> {
   component: React.ComponentType;
@@ -27,7 +29,15 @@ export function ProtectedRoute({
     adminOnly,
     isAdmin: user?.role === "admin"
   });
-
+  
+  // When accessing admin routes, verify auth state more aggressively
+  useEffect(() => {
+    if (pathString.startsWith('/admin') && !isLoading) {
+      // Force a refetch of the user data to ensure we have the latest state
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    }
+  }, [pathString, isLoading]);
+  
   return (
     <Route
       path={path}
@@ -47,6 +57,12 @@ export function ProtectedRoute({
           console.log("User not authenticated, redirecting to auth page");
           // Add returnTo parameter for easier navigation back to the intended page
           const returnPath = pathString.startsWith('/admin') ? '/admin/dashboard' : pathString;
+          
+          // Special handling for admin routes
+          if (pathString.startsWith('/admin')) {
+            return <Redirect to={`/admin/login`} />;
+          }
+          
           return <Redirect to={`/auth?returnTo=${encodeURIComponent(returnPath)}`} />;
         }
 
