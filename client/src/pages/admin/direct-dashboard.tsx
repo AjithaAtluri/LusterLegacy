@@ -256,62 +256,62 @@ export default function DirectAdminDashboard() {
         <aside className="w-64 border-r hidden md:block">
           <div className="h-full py-6 px-3 overflow-y-auto">
             <nav className="space-y-1">
-              <Link 
+              <a 
                 href="/admin/direct-dashboard" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'dashboard' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
               >
                 <Home className="h-5 w-5" />
                 Dashboard
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/admin/direct-dashboard?section=products" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'products' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
               >
                 <Package className="h-5 w-5" />
                 Products
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/admin/direct-dashboard?section=product-types" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'product-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
               >
                 <Package className="h-5 w-5" />
                 Product Types
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/admin/direct-dashboard?section=metal-types" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'metal-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
               >
                 <Package className="h-5 w-5" />
                 Metal Types
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/admin/direct-dashboard?section=stone-types" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'stone-types' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
               >
                 <Package className="h-5 w-5" />
                 Stone Types
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/admin/direct-dashboard?section=orders" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'orders' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
               >
                 <ShoppingBag className="h-5 w-5" />
                 Orders
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/admin/direct-dashboard?section=designs" 
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 ${currentSection === 'designs' ? 'text-primary bg-accent/50 font-medium' : 'text-foreground hover:bg-accent hover:text-accent-foreground'}`}
               >
                 <Settings className="h-5 w-5" />
                 Custom Designs
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/admin/ai-generator" 
                 className="flex items-center gap-3 rounded-lg px-3 py-2 text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <Settings className="h-5 w-5" />
                 AI Generator
-              </Link>
+              </a>
             </nav>
           </div>
         </aside>
@@ -329,10 +329,10 @@ export default function DirectAdminDashboard() {
                 <p className="text-sm">You are using the direct access mode which bypasses authentication checks.</p>
               </div>
               <Button asChild variant="ghost" size="sm" className="ml-auto">
-                <Link href="/admin">
+                <a href="/admin">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Return to Standard Admin
-                </Link>
+                </a>
               </Button>
             </div>
             
@@ -460,9 +460,9 @@ export default function DirectAdminDashboard() {
                                     </div>
                                   </div>
                                   <Button asChild variant="ghost" size="sm">
-                                    <Link href={`/admin/direct-dashboard?section=orders&id=${order.id}`}>
+                                    <a href={`/admin/direct-dashboard?section=orders&id=${order.id}`}>
                                       <ExternalLink className="h-4 w-4" />
-                                    </Link>
+                                    </a>
                                   </Button>
                                 </div>
                               </div>
@@ -520,9 +520,9 @@ export default function DirectAdminDashboard() {
                                   </div>
                                 </div>
                                 <Button asChild variant="ghost" size="sm">
-                                  <Link href={`/admin/direct-dashboard?section=designs&id=${design.id}`}>
+                                  <a href={`/admin/direct-dashboard?section=designs&id=${design.id}`}>
                                     <ExternalLink className="h-4 w-4" />
-                                  </Link>
+                                  </a>
                                 </Button>
                               </div>
                             ))}
