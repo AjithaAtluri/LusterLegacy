@@ -63,9 +63,9 @@ export default function AdminLogin() {
         });
         
         // Navigate to the direct admin dashboard
-        console.log("Admin login successful, redirecting to direct dashboard");
-        // Use the direct-dashboard route that doesn't require authentication
-        window.location.href = window.location.origin + "/admin/direct-dashboard";
+        console.log("Admin login successful, redirecting to dashboard");
+        // Use the standardized dashboard route
+        window.location.href = window.location.origin + "/admin/dashboard";
       },
       onError: (error) => {
         console.error("Login error:", error);

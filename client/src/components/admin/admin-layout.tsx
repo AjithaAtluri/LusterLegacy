@@ -244,32 +244,32 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   };
   
-  // Navigation items - all pointing to direct dashboard pages
+  // Navigation items - all pointing to direct path routes
   const navItems = [
     { 
       title: "Dashboard", 
       icon: <LayoutDashboard className="h-5 w-5" />, 
-      href: "/admin/direct-dashboard" 
+      href: "/admin/dashboard" 
     },
     { 
       title: "Products", 
       icon: <GalleryHorizontal className="h-5 w-5" />, 
-      href: "/admin/direct-dashboard?section=products" 
+      href: "/admin/products" 
     },
     {
       title: "Product Types",
       icon: <Package className="h-5 w-5" />,
-      href: "/admin/direct-dashboard?section=product-types"
+      href: "/admin/product-types"
     },
     { 
       title: "Metal Types", 
       icon: <Diamond className="h-5 w-5" />, 
-      href: "/admin/direct-dashboard?section=metal-types" 
+      href: "/admin/metal-types" 
     },
     { 
       title: "Stone Types", 
       icon: <Gem className="h-5 w-5" />, 
-      href: "/admin/direct-dashboard?section=stone-types" 
+      href: "/admin/stone-types" 
     },
     { 
       title: "AI Generator", 
@@ -279,12 +279,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     { 
       title: "Custom Designs", 
       icon: <Package className="h-5 w-5" />, 
-      href: "/admin/direct-dashboard?section=designs" 
+      href: "/admin/designs" 
     },
     { 
       title: "Orders", 
       icon: <ShoppingBag className="h-5 w-5" />, 
-      href: "/admin/direct-dashboard?section=orders" 
+      href: "/admin/orders" 
     }
   ];
   
@@ -314,7 +314,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               <SheetContent side="left" className="p-0">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center p-4 border-b">
-                    <a href="/admin/direct-dashboard" className="font-playfair text-xl font-bold">
+                    <a href="/admin/dashboard" className="font-playfair text-xl font-bold">
                       Luster<span className="text-primary">Legacy</span> Admin
                     </a>
                     <Button variant="ghost" size="icon" className="ml-auto" onClick={() => setIsMobileMenuOpen(false)}>
@@ -374,7 +374,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         {/* Sidebar (desktop only) */}
         <div className="hidden md:flex w-64 flex-col border-r bg-background z-20">
           <div className="flex h-14 items-center border-b px-4">
-            <a href="/admin/direct-dashboard" className="font-playfair text-xl font-bold">
+            <a href="/admin/dashboard" className="font-playfair text-xl font-bold">
               Luster<span className="text-primary">Legacy</span>
             </a>
           </div>
