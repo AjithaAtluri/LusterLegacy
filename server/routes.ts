@@ -2092,7 +2092,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Advanced AI product content generator with image analysis
   app.post('/api/admin/generate-product-content', validateAdmin, async (req, res) => {
     try {
-      console.log("Using advanced product content generator with image analysis");
+      console.log("Using advanced product content generator with image analysis (admin endpoint)");
+      // Pass the request to the product content generator
+      await generateProductContent(req, res);
+    } catch (error) {
+      console.error('Error generating product content:', error);
+      res.status(500).json({ message: 'Failed to generate product content' });
+    }
+  });
+  
+  // Public endpoint for advanced AI product content generation with image analysis
+  app.post('/api/generate-product-content', async (req, res) => {
+    try {
+      console.log("Using advanced product content generator with image analysis (public endpoint)");
       // Pass the request to the product content generator
       await generateProductContent(req, res);
     } catch (error) {

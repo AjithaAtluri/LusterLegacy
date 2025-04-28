@@ -208,10 +208,10 @@ export default function ImprovedAIContentGenerator({
 
       console.log("Generating content with data:", requestPayload);
 
-      // Make the API request to the improved endpoint
+      // Make the API request to the public endpoint
       const response = await apiRequest(
         "POST", 
-        "/api/admin/generate-jewelry-content", 
+        "/api/generate-jewelry-content", 
         requestPayload
       );
 
