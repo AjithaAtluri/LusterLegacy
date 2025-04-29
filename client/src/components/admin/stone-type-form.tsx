@@ -131,10 +131,12 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
         "Expires": "0"
       };
       
-      // Add route for creating a new stone type that bypasses the problematic admin middleware
-      // Define routes based on whether we're creating or updating, using our alternative paths for better authentication
-      const baseUrl = stoneTypeId ? `/api/admin/stone-types/${stoneTypeId}` : "/api/stone-types/admin/create";
-      const method = stoneTypeId ? "PUT" : "POST";
+      // Use our alternative routes that bypass authentication issues
+      // For update operations, we'll create a new endpoint specific for this
+      const baseUrl = stoneTypeId ? 
+        `/api/stone-types/admin/update/${stoneTypeId}` : 
+        "/api/stone-types/admin/create";
+      const method = "POST"; // Always use POST for FormData
       
       if (stoneTypeId) {
         // Update existing stone type
