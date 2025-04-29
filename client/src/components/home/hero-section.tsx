@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import backgroundImage from "../../assets/passion-meets-craftsmanship.png";
+import backgroundImage from "../../assets/zhang-liven-MbImicTZK54-unsplash.jpg";
 
 export default function HeroSection() {
   const [scrollY, setScrollY] = useState(0);
