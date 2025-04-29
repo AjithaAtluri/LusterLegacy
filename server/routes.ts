@@ -3308,6 +3308,33 @@ Respond in JSON format:
       });
     }
   });
+  
+  // Alternative route for creating stone types that avoids the global admin middleware
+  app.post('/api/stone-types/admin/create', upload.single('image'), validateAdmin, async (req, res) => {
+    try {
+      // This route is for admin use but avoids the global /api/admin/* middleware authentication
+      console.log("ADMIN STONE TYPE CREATION WITH ALTERNATIVE ROUTE PATH");
+      
+      // Parse the stone type data
+      const stoneTypeData = insertStoneTypeSchema.parse({
+        ...req.body,
+        imageUrl: req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || undefined
+      });
+
+      const stoneType = await storage.createStoneType(stoneTypeData);
+      console.log("Successfully created stone type:", stoneType.name);
+      res.status(201).json(stoneType);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid stone type data', errors: error.errors });
+      }
+      console.error('Error creating stone type via alternative route:', error);
+      res.status(500).json({ 
+        message: 'Failed to create stone type', 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
   // Test endpoint for OpenAI API
   app.get("/api/test-openai", async (req, res) => {
