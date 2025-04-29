@@ -314,6 +314,19 @@ export default function DesignForm() {
       // Log the response status
       console.log("Design form submission response status:", response.status);
       
+      // Special handling for 401 Unauthorized responses
+      if (response.status === 401) {
+        // Show toast notification
+        toast({
+          title: "Login required",
+          description: "Your design details have been saved. Please log in or create an account to continue."
+        });
+        
+        // Redirect to auth page with return URL
+        window.location.href = `/auth?returnTo=${encodeURIComponent('/custom-design')}`;
+        return; // Exit early
+      }
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
         console.error("Design form server error:", errorData);
