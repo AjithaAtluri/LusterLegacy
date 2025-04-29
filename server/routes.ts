@@ -3255,11 +3255,10 @@ Respond in JSON format:
   });
   
   // Get stone types for admin (improved authentication)
-  app.get('/api/admin/stone-types', async (req, res) => {
+  app.get('/api/admin/stone-types', validateAdmin, async (req, res) => {
     try {
-      // WARNING: THIS IS AN EMERGENCY FIX - COMPLETE BYPASS OF AUTHENTICATION FOR DEBUGGING
-      // This endpoint is accessible to anyone - REMOVE IN PRODUCTION
-      console.log("EMERGENCY BYPASS: Serving stone types to any client for debugging");
+      // Use validateAdmin middleware which should bypass authentication in development
+      console.log("ADMIN STONE TYPES WITH validateAdmin MIDDLEWARE");
       
       const stoneTypes = await storage.getAllStoneTypes();
       console.log(`Successfully fetched ${stoneTypes.length} stone types for admin debug mode`);
