@@ -95,10 +95,9 @@ export default function AddProduct() {
     },
   });
   
-  // Load AI generated content and input values from localStorage
+  // First effect to load AI generated content
   useEffect(() => {
     const savedContentJson = localStorage.getItem('aiGeneratedContent');
-    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
 
     // Load AI generated content
     if (savedContentJson) {
@@ -147,28 +146,18 @@ export default function AddProduct() {
         console.error('Error parsing saved content from localStorage:', error);
       }
     }
+  }, [form, toast]);
+  
+  // Second effect to load input values (except product type which requires productTypes to be loaded)
+  useEffect(() => {
+    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
     
     // Load saved input values
     if (savedInputsJson) {
       try {
         const parsedInputs = JSON.parse(savedInputsJson);
         
-        // Set input values if they exist
-        if (parsedInputs.productType) {
-          // Store in local state
-          setProductType(parsedInputs.productType);
-          
-          // Select product type by ID if available
-          if (productTypes?.length) {
-            const foundType = productTypes.find(type => 
-              type.name.toLowerCase() === parsedInputs.productType.toLowerCase()
-            );
-            if (foundType) {
-              form.setValue('productTypeId', foundType.id.toString());
-            }
-          }
-        }
-        
+        // Set input values if they exist (except product type which is handled in a separate effect)
         if (parsedInputs.metalType) {
           form.setValue('metalType', parsedInputs.metalType);
           setMetalType(parsedInputs.metalType);
@@ -190,26 +179,6 @@ export default function AddProduct() {
         // We no longer support the array format for secondary stones
         // Everything uses the single stone type approach
         
-        // New format - single secondary stone type
-        if (parsedInputs.secondaryStoneType) {
-          setSecondaryStoneType(parsedInputs.secondaryStoneType);
-          
-          // If we have a stone type database, try to match it
-          if (stoneTypes && stoneTypes.length > 0) {
-            const matchedStone = stoneTypes.find(stone => 
-              stone.name.toLowerCase() === parsedInputs.secondaryStoneType.toLowerCase()
-            );
-            
-            if (matchedStone) {
-              setSelectedStoneTypes([{ id: matchedStone.id, name: matchedStone.name }]);
-            }
-          }
-        }
-        
-        if (parsedInputs.secondaryStoneWeight) {
-          setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight.toString());
-        }
-        
         // Other stone type (newer format)
         if (parsedInputs.otherStoneType) {
           setOtherStoneType(parsedInputs.otherStoneType);
@@ -222,11 +191,78 @@ export default function AddProduct() {
         if (parsedInputs.userDescription) {
           form.setValue('userDescription', parsedInputs.userDescription);
         }
+        
+        // Store product type in state (for later use with productTypes data)
+        if (parsedInputs.productType) {
+          setProductType(parsedInputs.productType);
+          console.log("Saved product type from localStorage:", parsedInputs.productType);
+        }
       } catch (error) {
         console.error('Error parsing saved inputs from localStorage:', error);
       }
     }
-  }, [form, productTypes, toast]);
+  }, [form]);
+  
+  // Third effect to handle secondary stone type (depends on stoneTypes being loaded)
+  useEffect(() => {
+    if (!stoneTypes || stoneTypes.length === 0) return;
+    
+    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
+    if (!savedInputsJson) return;
+    
+    try {
+      const parsedInputs = JSON.parse(savedInputsJson);
+      
+      // New format - single secondary stone type
+      if (parsedInputs.secondaryStoneType) {
+        setSecondaryStoneType(parsedInputs.secondaryStoneType);
+        
+        const matchedStone = stoneTypes.find(stone => 
+          stone.name.toLowerCase() === parsedInputs.secondaryStoneType.toLowerCase()
+        );
+        
+        if (matchedStone) {
+          setSelectedStoneTypes([{ id: matchedStone.id, name: matchedStone.name }]);
+        }
+      }
+      
+      if (parsedInputs.secondaryStoneWeight) {
+        setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight.toString());
+      }
+    } catch (error) {
+      console.error('Error parsing saved inputs for stone types:', error);
+    }
+  }, [stoneTypes]);
+  
+  // Fourth effect specific for productTypeId (depends on productTypes being loaded)
+  useEffect(() => {
+    if (!productTypes || productTypes.length === 0) return;
+    
+    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
+    if (!savedInputsJson) return;
+    
+    try {
+      const parsedInputs = JSON.parse(savedInputsJson);
+      
+      if (parsedInputs.productType) {
+        console.log("Looking for product type match for:", parsedInputs.productType);
+        console.log("Available product types:", productTypes.map(t => t.name));
+        
+        const foundType = productTypes.find(type => 
+          type.name.toLowerCase() === parsedInputs.productType.toLowerCase()
+        );
+        
+        if (foundType) {
+          console.log("Found matching product type:", foundType.name, "with ID:", foundType.id);
+          form.setValue('productTypeId', foundType.id.toString());
+        } else {
+          console.log("No matching product type found for:", parsedInputs.productType);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing saved inputs for product type:', error);
+    }
+  }, [productTypes, form]);
 
   const onSubmit = async (data: FormValues) => {
     try {
