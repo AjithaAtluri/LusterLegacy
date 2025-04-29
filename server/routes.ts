@@ -3317,17 +3317,33 @@ Respond in JSON format:
       console.log("Request body:", req.body);
       console.log("File:", req.file);
       
-      // Parse the stone type data
-      const stoneTypeData = insertStoneTypeSchema.parse({
-        ...req.body,
-        priceModifier: Number(req.body.priceModifier), // Ensure price is converted to number
-        imageUrl: req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || undefined
-      });
+      // Explicitly handle each field with proper conversion
+      const stoneTypeData = {
+        name: req.body.name,
+        description: req.body.description || "",
+        // Ensure priceModifier is a number
+        priceModifier: parseFloat(req.body.priceModifier),
+        displayOrder: parseInt(req.body.displayOrder || "0"),
+        isActive: req.body.isActive === 'true' || req.body.isActive === true,
+        color: req.body.color || "",
+        imageUrl: req.file ? `/uploads/${req.file.filename}` : (req.body.imageUrl || undefined)
+      };
       
-      console.log("Parsed stone type data:", stoneTypeData);
+      console.log("Prepared stone type data (pre-validation):", stoneTypeData);
+      
+      // Validate with zod
+      const validatedData = insertStoneTypeSchema.parse(stoneTypeData);
+      console.log("Validated stone type data:", validatedData);
 
-      const stoneType = await storage.createStoneType(stoneTypeData);
-      console.log("Successfully created stone type:", stoneType);
+      // Insert into database
+      const stoneType = await storage.createStoneType(validatedData);
+      console.log("ROUTES: Successfully created stone type:", stoneType);
+      
+      // Verify it was created by fetching it
+      const verifyCreated = await storage.getStoneType(stoneType.id);
+      console.log("ROUTES: Verification fetch result:", verifyCreated);
+      
+      // Send response
       res.status(201).json(stoneType);
     } catch (error) {
       if (error instanceof z.ZodError) {

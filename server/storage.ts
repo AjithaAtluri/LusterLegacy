@@ -1365,10 +1365,26 @@ export class DatabaseStorage implements IStorage {
   
   async createStoneType(stoneType: InsertStoneType): Promise<StoneType> {
     try {
-      const [newStoneType] = await db.insert(stoneTypes).values(stoneType).returning();
-      return newStoneType;
+      console.log("STORAGE: Creating stone type with data:", stoneType);
+      
+      // Ensure priceModifier is a number
+      if (typeof stoneType.priceModifier === 'string') {
+        stoneType.priceModifier = parseFloat(stoneType.priceModifier as any);
+      }
+      
+      console.log("STORAGE: Attempting database insert with cleaned data:", stoneType);
+      const insertResult = await db.insert(stoneTypes).values(stoneType).returning();
+      console.log("STORAGE: Insert result:", insertResult);
+      
+      if (insertResult && insertResult.length > 0) {
+        const [newStoneType] = insertResult;
+        console.log("STORAGE: Successfully created stone type:", newStoneType);
+        return newStoneType;
+      } else {
+        throw new Error("No stone type was created or returned from database");
+      }
     } catch (error) {
-      console.error("Error creating stone type:", error);
+      console.error("STORAGE: Error creating stone type:", error);
       throw error;
     }
   }
