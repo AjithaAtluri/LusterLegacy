@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import passionImage from "../assets/passion-meets-craftsmanship.png";
+import passionImage from "../assets/passion-meets-craftsmanship-new.png";
 
 export default function About() {
   return (

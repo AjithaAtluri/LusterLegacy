@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import passionImage from "../../../src/assets/passion-meets-craftsmanship.png";
+import passionImage from "../../../src/assets/passion-meets-craftsmanship-new.png";
 
 export default function StorySection() {
   return (
