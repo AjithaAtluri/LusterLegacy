@@ -141,6 +141,9 @@ export default function AdminStoneTypes() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stone-types'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stone-types'] });
       
+      // Force an immediate refetch to ensure the UI updates
+      queryClient.refetchQueries({ queryKey: ['/api/stone-types/admin'] });
+      
       // Close dialog
       setIsDeleteDialogOpen(false);
       setSelectedStoneType(null);

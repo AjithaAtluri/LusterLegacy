@@ -3543,6 +3543,9 @@ Respond in JSON format:
   // Alternative route for deleting stone types that avoids the global admin middleware
   app.post('/api/stone-types/admin/delete/:id', async (req, res) => {
     try {
+      console.log("STONE TYPE DELETE ENDPOINT CALLED WITH ID:", req.params.id);
+      console.log("Request headers:", req.headers);
+      
       // Check for specialized admin auth headers (for stone type form calling from frontend)
       const hasAdminDebugHeader = req.headers['x-admin-debug-auth'] === 'true';
       const hasAdminApiKey = req.headers['x-admin-api-key'] === 'dev_admin_key_12345';
@@ -3606,6 +3609,8 @@ Respond in JSON format:
         
         await client.query('COMMIT');
         console.log("DIRECT SQL DELETE SUCCESS:", deleteSuccess);
+        console.log("Delete result rowCount:", deleteResult.rowCount);
+        console.log("Delete result rows:", deleteResult.rows);
       } catch (sqlError) {
         await client.query('ROLLBACK');
         console.error("SQL ERROR DETAILS:", sqlError);
@@ -3614,6 +3619,8 @@ Respond in JSON format:
         client.release();
       }
 
+      console.log("After SQL operation, deleteSuccess =", deleteSuccess);
+      
       if (deleteSuccess) {
         // Delete image if it exists
         if (stoneType.imageUrl) {
