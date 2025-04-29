@@ -186,21 +186,17 @@ export default function EditProductNew() {
   // Fetch stone types with custom query function and improved authentication
   const fetchStoneTypes = async () => {
     try {
-      // Add admin auth bypass headers
-      const response = await fetch('/api/admin/stone-types', {
+      // First try getting stone types from the regular API endpoint
+      // This is more likely to work since it doesn't require admin authentication
+      const response = await fetch('/api/stone-types', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'X-Auth-Debug': 'true',
-          'X-Request-Source': 'admin-edit-product',
-          'X-Admin-Debug-Auth': 'true',
-          'X-Admin-API-Key': 'dev_admin_key_12345',
-          'X-Admin-Username': 'admin',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
         },
-        credentials: 'include', // Still include cookies for fallback
+        credentials: 'include',
       });
 
       console.log('Stone types fetch response status:', response.status);
@@ -214,7 +210,34 @@ export default function EditProductNew() {
       return await response.json();
     } catch (error) {
       console.error('Error fetching stone types:', error);
-      throw error;
+      
+      // Fallback to the admin endpoint if the regular one fails
+      try {
+        const adminResponse = await fetch('/api/admin/stone-types', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Debug': 'true',
+            'X-Request-Source': 'admin-edit-product',
+            'X-Admin-Debug-Auth': 'true',
+            'X-Admin-API-Key': 'dev_admin_key_12345',
+            'X-Admin-Username': 'admin',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          credentials: 'include',
+        });
+        
+        if (!adminResponse.ok) {
+          throw new Error(`Admin fallback failed: ${adminResponse.status}`);
+        }
+        
+        return await adminResponse.json();
+      } catch (fallbackError) {
+        console.error('Fallback stone types fetch also failed:', fallbackError);
+        throw error; // Throw the original error
+      }
     }
   };
 
@@ -249,7 +272,7 @@ export default function EditProductNew() {
   });
 
   const { data: stoneTypes } = useQuery<StoneType[]>({
-    queryKey: ['/api/admin/stone-types'],
+    queryKey: ['/api/stone-types'],
     queryFn: fetchStoneTypes,
     retry: 3,
     refetchOnWindowFocus: false
