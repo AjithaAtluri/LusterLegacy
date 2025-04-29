@@ -3314,18 +3314,24 @@ Respond in JSON format:
     try {
       // This route is for admin use but avoids the global /api/admin/* middleware authentication
       console.log("ADMIN STONE TYPE CREATION WITH ALTERNATIVE ROUTE PATH");
+      console.log("Request body:", req.body);
+      console.log("File:", req.file);
       
       // Parse the stone type data
       const stoneTypeData = insertStoneTypeSchema.parse({
         ...req.body,
+        priceModifier: Number(req.body.priceModifier), // Ensure price is converted to number
         imageUrl: req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || undefined
       });
+      
+      console.log("Parsed stone type data:", stoneTypeData);
 
       const stoneType = await storage.createStoneType(stoneTypeData);
-      console.log("Successfully created stone type:", stoneType.name);
+      console.log("Successfully created stone type:", stoneType);
       res.status(201).json(stoneType);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Zod validation error:', error.errors);
         return res.status(400).json({ message: 'Invalid stone type data', errors: error.errors });
       }
       console.error('Error creating stone type via alternative route:', error);
