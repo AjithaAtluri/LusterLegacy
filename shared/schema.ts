@@ -89,7 +89,8 @@ export const designRequests = pgTable("design_requests", {
   // Using text array type for PostgreSQL instead of JSON - this is more reliable
   primaryStones: text("primary_stones").array().notNull().default([]),
   notes: text("notes"),
-  imageUrl: text("image_url").notNull(),
+  imageUrl: text("image_url").notNull(), // Main image (for backward compatibility)
+  imageUrls: text("image_urls").array().notNull().default([]), // Array of additional images
   status: text("status").notNull().default("pending"), // "pending", "quoted", "approved", "rejected", "completed"
   estimatedPrice: integer("estimated_price"),
   cadImageUrl: text("cad_image_url"),
