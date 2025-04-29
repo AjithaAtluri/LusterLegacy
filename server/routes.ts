@@ -2299,10 +2299,220 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log additional authentication diagnostic info
       console.log("Auth headers present:", 
         req.headers['authorization'] ? 'Yes' : 'No',
-        "Admin cookie present:", req.cookies.admin_id ? 'Yes' : 'No');
+        "Admin cookie present:", req.cookies.admin_id ? 'Yes' : 'No',
+        "Request Content-Type:", req.headers['content-type'] || 'None');
       
-      // Pass the request to the product content generator
-      await generateProductContent(req, res);
+      // Check if this is a JSON request from the client-side AI generator
+      if (req.headers['content-type']?.includes('application/json')) {
+        console.log("Detected JSON request from unified client generator");
+        
+        // Ensure the request has the necessary fields
+        const { 
+          productType, 
+          metalType, 
+          metalWeight, 
+          primaryGems, 
+          userDescription, 
+          imageUrls 
+        } = req.body;
+        
+        console.log("JSON request details:", { 
+          productType, 
+          metalType, 
+          hasGems: !!primaryGems, 
+          gemCount: primaryGems?.length || 0,
+          hasImages: !!imageUrls,
+          imageCount: imageUrls?.length || 0
+        });
+        
+        if (!productType || !metalType) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Product type and metal type are required" 
+          });
+        }
+        
+        // For JSON requests with embedded base64 image data, we need to call OpenAI directly
+        // rather than using the form-based approach in generateProductContent
+        if (imageUrls && imageUrls.length > 0) {
+          // Use the first image (simplified for now)
+          const imageData = imageUrls[0];
+          
+          // Initialize OpenAI client
+          const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+          });
+          
+          // Build the prompt
+          const gemsDescription = primaryGems?.length 
+            ? primaryGems.map(gem => `${gem.name} (${gem.carats || 'unknown'} carats)`).join(', ')
+            : 'None';
+            
+          const productDescription = `
+            I am creating content for a luxury jewelry product with the following details:
+            
+            PRODUCT TYPE: ${productType}
+            METAL TYPE: ${metalType}
+            METAL WEIGHT: ${metalWeight || 'Not specified'} grams
+            GEMSTONES: ${gemsDescription}
+            ${userDescription ? `ADDITIONAL DETAILS: ${userDescription}` : ''}
+          `;
+          
+          console.log("Calling OpenAI API with JSON image data...");
+          
+          // Create messages array for the API call
+          const messages = [
+            {
+              role: "system",
+              content: "You are an expert jewelry copywriter and product description specialist for a luxury jewelry brand called 'Luster Legacy'. Create compelling, creative, and detailed jewelry product descriptions and metadata for e-commerce. Focus on craftsmanship, materials, design elements, and the emotional appeal. Price estimates should reflect luxury market positioning with USD and INR pricing."
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: productDescription
+                }
+              ]
+            }
+          ];
+          
+          // Add image if available
+          if (imageData) {
+            (messages[1].content as any).push({
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${imageData}`
+              }
+            });
+          }
+          
+          // Add the specific request
+          messages.push({
+            role: "user",
+            content: `Based on these details${imageData ? ' and image' : ''}, please generate the following for this luxury jewelry product:
+              1. A compelling product title (50-70 characters)
+              2. A catchy tagline (100-120 characters)
+              3. A brief marketing description (150-200 characters)
+              4. A detailed description highlighting materials, craftsmanship, and unique selling points (500-700 characters)
+              5. An estimated price in USD that reflects luxury positioning
+              6. An equivalent price in INR (use approximately 85 INR = 1 USD)
+              ${imageData ? '7. A brief analysis of what you observe in the image' : ''}
+              
+              Format your response as structured JSON with these fields: title, tagline, shortDescription, detailedDescription, priceUSD (number), priceINR (number), and imageInsights.`
+          });
+          
+          try {
+            // Call OpenAI API
+            const completion = await openai.chat.completions.create({
+              model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+              messages: messages as any,
+              temperature: 0.7,
+              max_tokens: 1500,
+              response_format: { type: "json_object" }
+            });
+            
+            // Parse the response
+            const content = completion.choices[0].message.content;
+            if (!content) {
+              throw new Error("Empty response from OpenAI API");
+            }
+            
+            console.log("OpenAI API response received successfully");
+            
+            // Parse and return the JSON
+            const jsonResponse = JSON.parse(content);
+            console.log("Successfully processed JSON request with direct API call");
+            return res.status(200).json(jsonResponse);
+          } catch (apiError) {
+            console.error("OpenAI API error:", apiError);
+            return res.status(500).json({ 
+              success: false, 
+              message: apiError instanceof Error ? apiError.message : "OpenAI API error",
+              endpoint: "public-direct-api"
+            });
+          }
+        } else {
+          // No images, treat as a text-only request
+          console.log("Processing text-only JSON request");
+          
+          // Initialize OpenAI client
+          const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+          });
+          
+          // Build a simpler prompt for text-only requests
+          const gemsDescription = primaryGems?.length 
+            ? primaryGems.map(gem => `${gem.name} (${gem.carats || 'unknown'} carats)`).join(', ')
+            : 'None';
+            
+          const productDescription = `
+            Create content for a luxury jewelry product with the following details:
+            
+            PRODUCT TYPE: ${productType}
+            METAL TYPE: ${metalType}
+            METAL WEIGHT: ${metalWeight || 'Not specified'} grams
+            GEMSTONES: ${gemsDescription}
+            ${userDescription ? `ADDITIONAL DETAILS: ${userDescription}` : ''}
+            
+            Please generate:
+            1. A product title (50-70 characters)
+            2. A tagline (100-120 characters)
+            3. A short description (150-200 characters)
+            4. A detailed description (500-700 characters)
+            5. A price in USD reflecting luxury positioning
+            6. A price in INR (85 INR = 1 USD)
+            
+            Return in JSON format with fields: title, tagline, shortDescription, detailedDescription, priceUSD (number), priceINR (number).
+          `;
+          
+          try {
+            // Call OpenAI API with text-only request
+            const completion = await openai.chat.completions.create({
+              model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+              messages: [
+                {
+                  role: "system",
+                  content: "You are an expert jewelry copywriter for a luxury brand called 'Luster Legacy'."
+                },
+                {
+                  role: "user",
+                  content: productDescription
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 1000,
+              response_format: { type: "json_object" }
+            });
+            
+            // Parse the response
+            const content = completion.choices[0].message.content;
+            if (!content) {
+              throw new Error("Empty response from OpenAI API");
+            }
+            
+            console.log("OpenAI API text-only response received successfully");
+            
+            // Parse and return the JSON
+            const jsonResponse = JSON.parse(content);
+            console.log("Successfully processed text-only JSON request");
+            return res.status(200).json(jsonResponse);
+          } catch (apiError) {
+            console.error("OpenAI API error for text-only request:", apiError);
+            return res.status(500).json({
+              success: false,
+              message: apiError instanceof Error ? apiError.message : "OpenAI API error",
+              endpoint: "public-text-only"
+            });
+          }
+        }
+      } else {
+        // This is a traditional form-based request (with file uploads)
+        console.log("Processing form-based request with multer file uploads");
+        
+        // Pass the request to the original product content generator
+        await generateProductContent(req, res);
+      }
     } catch (error) {
       console.error('Error generating product content (public endpoint):', error);
       res.status(500).json({ message: 'Failed to generate product content' });
