@@ -218,6 +218,28 @@ export default function EditProductNew() {
     }
   };
 
+  // Fetch metal types with custom query function
+  const fetchMetalTypes = async () => {
+    try {
+      const response = await fetch('/api/metal-types', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Important for authentication cookies
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch metal types: ${response.status} ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching metal types:', error);
+      throw error;
+    }
+  };
+
   // Use the custom query functions
   const { data: productTypes } = useQuery<ProductType[]>({
     queryKey: ['/api/product-types'],
@@ -229,6 +251,13 @@ export default function EditProductNew() {
   const { data: stoneTypes } = useQuery<StoneType[]>({
     queryKey: ['/api/admin/stone-types'],
     queryFn: fetchStoneTypes,
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+  
+  const { data: metalTypes } = useQuery<StoneType[]>({
+    queryKey: ['/api/metal-types'],
+    queryFn: fetchMetalTypes,
     retry: 3,
     refetchOnWindowFocus: false
   });
@@ -1246,14 +1275,11 @@ export default function EditProductNew() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="18K Yellow Gold">18K Yellow Gold</SelectItem>
-                              <SelectItem value="18K White Gold">18K White Gold</SelectItem>
-                              <SelectItem value="18K Rose Gold">18K Rose Gold</SelectItem>
-                              <SelectItem value="14K Yellow Gold">14K Yellow Gold</SelectItem>
-                              <SelectItem value="14K White Gold">14K White Gold</SelectItem>
-                              <SelectItem value="14K Rose Gold">14K Rose Gold</SelectItem>
-                              <SelectItem value="Sterling Silver">Sterling Silver</SelectItem>
-                              <SelectItem value="Platinum">Platinum</SelectItem>
+                              {metalTypes?.map(type => (
+                                <SelectItem key={type.id} value={type.name}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
