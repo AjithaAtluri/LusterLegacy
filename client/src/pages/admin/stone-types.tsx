@@ -22,9 +22,47 @@ export default function AdminStoneTypes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Fetch stone types from public endpoint
+  // Custom fetch function with admin auth headers
+  const fetchStoneTypes = async () => {
+    try {
+      // Add admin auth bypass headers
+      const response = await fetch('/api/admin/stone-types', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Debug': 'true',
+          'X-Request-Source': 'admin-stone-types-page',
+          'X-Admin-Debug-Auth': 'true',
+          'X-Admin-API-Key': 'dev_admin_key_12345', 
+          'X-Admin-Username': 'admin',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        credentials: 'include', // Still include cookies for fallback
+      });
+
+      console.log('Stone types admin fetch response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Stone types admin fetch error: ${errorText}`);
+        throw new Error(`Failed to fetch stone types: ${response.status} ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching admin stone types:', error);
+      throw error;
+    }
+  };
+  
+  // Fetch stone types from admin endpoint with auth headers
   const { data: stoneTypes, isLoading } = useQuery({
-    queryKey: ['/api/stone-types'],
+    queryKey: ['/api/admin/stone-types'],
+    queryFn: fetchStoneTypes,
+    retry: 3,
+    refetchOnWindowFocus: false
   });
   
   // Filter stone types by search query

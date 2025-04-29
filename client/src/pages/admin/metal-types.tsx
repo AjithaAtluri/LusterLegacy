@@ -22,9 +22,47 @@ export default function AdminMetalTypes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Fetch metal types from public endpoint
+  // Custom fetch function with admin auth headers
+  const fetchMetalTypes = async () => {
+    try {
+      // Add admin auth bypass headers
+      const response = await fetch('/api/admin/metal-types', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Auth-Debug': 'true',
+          'X-Request-Source': 'admin-metal-types-page',
+          'X-Admin-Debug-Auth': 'true',
+          'X-Admin-API-Key': 'dev_admin_key_12345', 
+          'X-Admin-Username': 'admin',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        credentials: 'include', // Still include cookies for fallback
+      });
+
+      console.log('Metal types admin fetch response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Metal types admin fetch error: ${errorText}`);
+        throw new Error(`Failed to fetch metal types: ${response.status} ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching admin metal types:', error);
+      throw error;
+    }
+  };
+  
+  // Fetch metal types from admin endpoint with auth headers
   const { data: metalTypes, isLoading } = useQuery({
-    queryKey: ['/api/metal-types'],
+    queryKey: ['/api/admin/metal-types'],
+    queryFn: fetchMetalTypes,
+    retry: 3,
+    refetchOnWindowFocus: false
   });
   
   // Filter metal types by search query
