@@ -119,13 +119,16 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
         formData.append("imageUrl", "");
       }
       
-      // Add admin auth bypass headers
+      // Add admin auth bypass headers with improved caching controls
       const headers = {
         "X-Auth-Debug": "true",
         "X-Request-Source": "admin-stone-type-form",
         "X-Admin-Debug-Auth": "true",
         "X-Admin-API-Key": "dev_admin_key_12345",
-        "X-Admin-Username": "admin"
+        "X-Admin-Username": "admin",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
       };
       
       if (stoneTypeId) {

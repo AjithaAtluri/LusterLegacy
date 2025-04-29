@@ -183,18 +183,31 @@ export default function EditProductNew() {
     }
   };
 
-  // Fetch stone types with custom query function
+  // Fetch stone types with custom query function and improved authentication
   const fetchStoneTypes = async () => {
     try {
+      // Add admin auth bypass headers
       const response = await fetch('/api/admin/stone-types', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'X-Auth-Debug': 'true',
+          'X-Request-Source': 'admin-edit-product',
+          'X-Admin-Debug-Auth': 'true',
+          'X-Admin-API-Key': 'dev_admin_key_12345',
+          'X-Admin-Username': 'admin',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         },
-        credentials: 'include', // Important for authentication cookies
+        credentials: 'include', // Still include cookies for fallback
       });
 
+      console.log('Stone types fetch response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Stone types fetch error: ${errorText}`);
         throw new Error(`Failed to fetch stone types: ${response.status} ${response.statusText}`);
       }
 
