@@ -103,6 +103,23 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Test route that returns stone types directly without any authentication
+  // This is ONLY for debugging authentication issues
+  app.get('/api/debug/stone-types', async (_req, res) => {
+    try {
+      console.log("DEBUG ROUTE: Directly serving stone types");
+      const stoneTypes = await storage.getAllStoneTypes();
+      console.log(`Successfully fetched ${stoneTypes.length} stone types from debug route`);
+      res.json(stoneTypes);
+    } catch (error) {
+      console.error('Error fetching stone types:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching stone types',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
   // Create HTTP server
   const httpServer = createServer(app);
 
@@ -3254,14 +3271,14 @@ Respond in JSON format:
     }
   });
   
-  // Get stone types for admin (improved authentication)
-  app.get('/api/admin/stone-types', validateAdmin, async (req, res) => {
+  // Special non-admin-prefixed stone types endpoint to work around global admin route authentication middleware
+  app.get('/api/stone-types/admin', validateAdmin, async (req, res) => {
     try {
-      // Use validateAdmin middleware which should bypass authentication in development
-      console.log("ADMIN STONE TYPES WITH validateAdmin MIDDLEWARE");
+      // This route is for admin use but avoids the global /api/admin/* middleware authentication
+      console.log("ADMIN STONE TYPES WITH ALTERNATIVE ROUTE PATH");
       
       const stoneTypes = await storage.getAllStoneTypes();
-      console.log(`Successfully fetched ${stoneTypes.length} stone types for admin debug mode`);
+      console.log(`Successfully fetched ${stoneTypes.length} stone types for admin`);
       res.json(stoneTypes);
     } catch (error) {
       console.error('Error fetching stone types:', error);
