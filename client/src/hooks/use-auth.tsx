@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check for returnTo parameter in URL
         const params = new URLSearchParams(window.location.search);
         const returnTo = params.get("returnTo");
-        const redirectPath = returnTo || "/";
+        const redirectPath = returnTo || "/customer-dashboard"; // Default to customer dashboard
         
         // Force a direct window location change for customers
         console.log("REDIRECTING CUSTOMER NOW: setting window.location.href directly to", window.location.origin + redirectPath);
@@ -209,21 +209,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           returnTo: returnTo
         });
         
-        try {
-          // This is a hard navigation, not using React Router - with explicit origin
-          window.location.href = window.location.origin + redirectPath;
-          
-          // If not redirected after 100ms, try alternate approaches
-          setTimeout(() => {
-            console.log("DEBUG: Redirect didn't happen immediately, trying alternate approach");
-            // Try absolute path with origin
-            window.location.replace(window.location.origin + redirectPath);
-          }, 100);
-        } catch (navError) {
-          console.error("Navigation error:", navError);
-          // Fallback method - use pathname directly
-          window.location.pathname = redirectPath;
-        }
+        // Give the toast a moment to be visible
+        setTimeout(() => {
+          try {
+            // First try with full origin
+            window.location.href = window.location.origin + redirectPath;
+          } catch (navError) {
+            console.error("Navigation error:", navError);
+            // Fallback method - use pathname directly
+            window.location.pathname = redirectPath;
+          }
+        }, 300);
       }
     },
     onError: (error: Error) => {
@@ -264,7 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check for returnTo parameter in URL, also for registration
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get("returnTo");
-      const redirectPath = returnTo || "/";
+      const redirectPath = returnTo || "/customer-dashboard"; // Default to customer dashboard
       
       // Use direct navigation for registration redirect
       console.log("REDIRECTING NEW CUSTOMER NOW: setting window.location.href directly to", window.location.origin + redirectPath);
@@ -281,21 +277,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         returnTo: returnTo
       });
       
-      try {
-        // This is a hard navigation, with explicit origin
-        window.location.href = window.location.origin + redirectPath;
-        
-        // If not redirected after 100ms, try alternate approaches
-        setTimeout(() => {
-          console.log("DEBUG: Redirect didn't happen immediately after registration, trying alternate approach");
-          // Try using replace
-          window.location.replace(window.location.origin + redirectPath);
-        }, 100);
-      } catch (navError) {
-        console.error("Navigation error during registration redirect:", navError);
-        // Fallback method
-        window.location.pathname = redirectPath;
-      }
+      // Give the toast a moment to be visible
+      setTimeout(() => {
+        try {
+          // First try with full origin
+          window.location.href = window.location.origin + redirectPath;
+        } catch (navError) {
+          console.error("Navigation error during registration redirect:", navError);
+          // Fallback method
+          window.location.pathname = redirectPath;
+        }
+      }, 300);
     },
     onError: (error: Error) => {
       toast({

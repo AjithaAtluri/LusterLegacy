@@ -121,10 +121,24 @@ export default function AuthPage() {
   if (user) {
     // If admin, redirect to admin dashboard
     if (user.role === "admin") {
-      console.log("Admin user detected, redirecting to admin dashboard");
-      return <Redirect to="/admin/dashboard" />;
+      console.log("Admin user detected, redirecting to admin direct dashboard");
+      
+      // For admin users, use direct navigation since wouter Redirect sometimes fails
+      setTimeout(() => {
+        window.location.href = window.location.origin + "/admin/direct-dashboard";
+      }, 100);
+      
+      // Still return the Redirect component for immediate visual feedback
+      return <Redirect to="/admin/direct-dashboard" />;
     }
     // Otherwise go to return path or home
+    console.log("Customer user detected, redirecting to:", returnPath);
+    
+    // For customer users, also use direct navigation to be consistent
+    setTimeout(() => {
+      window.location.href = window.location.origin + returnPath;
+    }, 100);
+    
     return <Redirect to={returnPath} />;
   }
   

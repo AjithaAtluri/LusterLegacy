@@ -84,8 +84,9 @@ export default function DesignForm() {
         
         if (savedFormData) {
           // Parse the saved data and put it in a local variable
+          let parsedData: any = {};
           try {
-            const parsedData = JSON.parse(savedFormData);
+            parsedData = JSON.parse(savedFormData);
             console.log("DesignForm - Successfully parsed form data:", parsedData);
             console.log("DesignForm - Form data details:", {
               hasPrimaryStones: !!parsedData.primaryStones,
@@ -95,13 +96,13 @@ export default function DesignForm() {
               hasImageInfo: !!parsedData.imageInfo,
               hasImageDataUrl: !!parsedData.imageDataUrl
             });
+            
+            // Check if we have the old format data with primaryStone instead of primaryStones
+            if (parsedData.primaryStone && !parsedData.primaryStones) {
+              parsedData.primaryStones = parsedData.primaryStone ? [parsedData.primaryStone] : [];
+            }
           } catch (parseJsonError) {
             console.error("DesignForm - Error parsing JSON data:", parseJsonError);
-          }
-          
-          // Check if we have the old format data with primaryStone instead of primaryStones
-          if (parsedData.primaryStone && !parsedData.primaryStones) {
-            parsedData.primaryStones = parsedData.primaryStone ? [parsedData.primaryStone] : [];
           }
           
           // Restore form fields - make sure to set these right away
