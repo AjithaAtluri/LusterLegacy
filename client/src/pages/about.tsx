@@ -41,8 +41,8 @@ export default function About() {
           </div>
           <div>
             <img 
-              src="https://images.unsplash.com/photo-1616527546362-2f53e6fe420e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
-              alt="Jewelry craftsman at work" 
+              src="/src/assets/passion-meets-craftsmanship.png" 
+              alt="Where passion meets craftsmanship - every masterpiece begins with a spark" 
               className="rounded-lg shadow-xl w-full"
             />
           </div>

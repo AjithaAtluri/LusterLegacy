@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import cadImage from "../../../src/assets/WhatsApp Image 2025-03-28 at 3.06.26 AM.jpeg";
+import passionImage from "../../../src/assets/passion-meets-craftsmanship.png";
 import jewelryImage from "../../../src/assets/final image.jpeg";
 import collageImage1 from "@assets/ChatGPT Image Apr 23, 2025, 09_12_34 PM.png";
 import collageImage2 from "@assets/WhatsApp Image 2025-03-21 at 10.26.13 PM.jpeg";
@@ -45,8 +45,8 @@ export default function StorySection() {
               {/* Main image */}
               <div className="col-span-8 row-span-2 relative">
                 <img 
-                  src={cadImage} 
-                  alt="Designer working on jewelry CAD design" 
+                  src={passionImage} 
+                  alt="Where passion meets craftsmanship - every masterpiece begins with a spark" 
                   className="w-full h-full object-cover rounded-lg shadow-lg"
                   onError={(e) => {
                     e.currentTarget.src = "https://images.pexels.com/photos/3861964/pexels-photo-3861964.jpeg?auto=compress&cs=tinysrgb&w=800";
