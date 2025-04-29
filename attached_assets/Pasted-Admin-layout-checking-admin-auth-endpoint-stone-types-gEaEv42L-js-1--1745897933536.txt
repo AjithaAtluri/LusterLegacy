@@ -1,0 +1,68 @@
+Admin layout - checking admin auth endpoint...
+stone-types-gEaEv42L.js:1 
+            
+            
+           GET https://fresh-start-ajitha72.replit.app/api/admin/stone-types 401 (Unauthorized)
+T @ stone-types-gEaEv42L.js:1
+i @ index-DSreODjl.js:158
+_ @ index-DSreODjl.js:158
+(anonymous) @ index-DSreODjl.js:158
+Promise.then
+(anonymous) @ index-DSreODjl.js:158
+Promise.catch
+_ @ index-DSreODjl.js:158
+(anonymous) @ index-DSreODjl.js:158
+Promise.then
+(anonymous) @ index-DSreODjl.js:158
+Promise.catch
+_ @ index-DSreODjl.js:158
+start @ index-DSreODjl.js:158
+fetch @ index-DSreODjl.js:158
+Vi @ index-DSreODjl.js:158
+onSubscribe @ index-DSreODjl.js:158
+subscribe @ index-DSreODjl.js:158
+(anonymous) @ index-DSreODjl.js:158
+Ww @ index-DSreODjl.js:39
+Bl @ index-DSreODjl.js:41
+Is @ index-DSreODjl.js:41
+mh @ index-DSreODjl.js:41
+Rr @ index-DSreODjl.js:39
+OT @ index-DSreODjl.js:41
+Ir @ index-DSreODjl.js:41
+Ex @ index-DSreODjl.js:41
+b @ index-DSreODjl.js:26
+U @ index-DSreODjl.js:26Understand this error
+stone-types-gEaEv42L.js:1 Stone types admin fetch response status: 401
+stone-types-gEaEv42L.js:1 Stone types admin fetch error: {"message":"Authentication required"}
+T @ stone-types-gEaEv42L.js:1
+await in T
+i @ index-DSreODjl.js:158
+_ @ index-DSreODjl.js:158
+(anonymous) @ index-DSreODjl.js:158
+Promise.then
+(anonymous) @ index-DSreODjl.js:158
+Promise.catch
+_ @ index-DSreODjl.js:158
+(anonymous) @ index-DSreODjl.js:158
+Promise.then
+(anonymous) @ index-DSreODjl.js:158
+Promise.catch
+_ @ index-DSreODjl.js:158
+start @ index-DSreODjl.js:158
+fetch @ index-DSreODjl.js:158
+Vi @ index-DSreODjl.js:158
+onSubscribe @ index-DSreODjl.js:158
+subscribe @ index-DSreODjl.js:158
+(anonymous) @ index-DSreODjl.js:158
+Ww @ index-DSreODjl.js:39
+Bl @ index-DSreODjl.js:41
+Is @ index-DSreODjl.js:41
+mh @ index-DSreODjl.js:41
+Rr @ index-DSreODjl.js:39
+OT @ index-DSreODjl.js:41
+Ir @ index-DSreODjl.js:41
+Ex @ index-DSreODjl.js:41
+b @ index-DSreODjl.js:26
+U @ index-DSreODjl.js:26Understand this error
+stone-types-gEaEv42L.js:1 Error fetching admin stone types: Error: Failed to fetch stone types: 401 
+    at T (stone-types-gEaEv42L.js:1:7467)
