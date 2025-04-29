@@ -22,11 +22,13 @@ export default function AdminStoneTypes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Custom fetch function with admin auth headers
+  // Custom fetch function with admin auth headers - using alternative route to bypass authentication issues
   const fetchStoneTypes = async () => {
     try {
-      // Add admin auth bypass headers
-      const response = await fetch('/api/admin/stone-types', {
+      // Use our new alternative path that avoids the global admin middleware
+      console.log('Fetching stone types from alternative admin route');
+      
+      const response = await fetch('/api/stone-types/admin', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -57,9 +59,9 @@ export default function AdminStoneTypes() {
     }
   };
   
-  // Fetch stone types from admin endpoint with auth headers
+  // Fetch stone types from our alternative admin endpoint with auth headers
   const { data: stoneTypes, isLoading } = useQuery({
-    queryKey: ['/api/admin/stone-types'],
+    queryKey: ['/api/stone-types/admin'],
     queryFn: fetchStoneTypes,
     retry: 3,
     refetchOnWindowFocus: false

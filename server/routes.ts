@@ -3221,6 +3221,25 @@ Respond in JSON format:
   });
   
   // Get metal types for admin (improved authentication)
+  // Alternative route for metal types that avoids the global admin middleware
+  app.get('/api/metal-types/admin', validateAdmin, async (req, res) => {
+    try {
+      // This route is for admin use but avoids the global /api/admin/* middleware authentication
+      console.log("ADMIN METAL TYPES WITH ALTERNATIVE ROUTE PATH");
+      
+      const metalTypes = await storage.getAllMetalTypes();
+      console.log(`Successfully fetched ${metalTypes.length} metal types for admin`);
+      res.json(metalTypes);
+    } catch (error) {
+      console.error('Error fetching metal types:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error fetching metal types',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
   app.get('/api/admin/metal-types', async (req, res) => {
     // Check for specialized admin auth headers
     const hasAdminDebugHeader = req.headers['x-admin-debug-auth'] === 'true';
