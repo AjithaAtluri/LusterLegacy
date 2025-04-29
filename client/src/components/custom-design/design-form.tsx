@@ -183,61 +183,61 @@ export default function DesignForm() {
   }, [user, form, toast]);
   
   const onSubmit = async (data: DesignFormValues) => {
+    // Always save form data to session storage before submitting or redirecting
+    try {
+      // We'll need to handle the image conversion synchronously to ensure it's stored correctly
+      let formData: any = {
+        ...data,
+        imageInfo: uploadedImage ? {
+          name: uploadedImage.name,
+          type: uploadedImage.type,
+          size: uploadedImage.size,
+          lastModified: uploadedImage.lastModified
+        } : null,
+        imageDataUrl: null // Will be populated below if image is small enough
+      };
+      
+      // Make sure primaryStones is properly saved as an array
+      formData.primaryStones = Array.isArray(data.primaryStones) ? data.primaryStones : [];
+      
+      // Update selectedStones state to match form data
+      setSelectedStones(formData.primaryStones);
+      
+      // Save the initial form data first (without image)
+      sessionStorage.setItem('designFormData', JSON.stringify(formData));
+      
+      // Then handle the image separately if available
+      if (uploadedImage && previewUrl && uploadedImage.size < 2 * 1024 * 1024) { // Only for images under 2MB
+        try {
+          // Convert image to data URL synchronously to ensure it's saved
+          const reader = new FileReader();
+          reader.onload = function() {
+            const dataUrl = reader.result;
+            // Get the latest form data to update it
+            const existingData = sessionStorage.getItem('designFormData');
+            if (existingData) {
+              try {
+                const parsedData = JSON.parse(existingData);
+                parsedData.imageDataUrl = dataUrl;
+                sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
+                console.log("Image data saved to session storage");
+              } catch (parseError) {
+                console.error('Error parsing form data for image update:', parseError);
+              }
+            }
+          };
+          // Start reading the file as a data URL
+          reader.readAsDataURL(uploadedImage);
+        } catch (imageError) {
+          console.error('Error converting image to data URL:', imageError);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving form data to session storage', error);
+    }
+    
     // Check if user is logged in
     if (!user) {
-      // Save form data to session storage before redirecting
-      try {
-        // We'll need to handle the image conversion synchronously to ensure it's stored correctly
-        let formData: any = {
-          ...data,
-          imageInfo: uploadedImage ? {
-            name: uploadedImage.name,
-            type: uploadedImage.type,
-            size: uploadedImage.size,
-            lastModified: uploadedImage.lastModified
-          } : null,
-          imageDataUrl: null // Will be populated below if image is small enough
-        };
-        
-        // Make sure primaryStones is properly saved as an array
-        formData.primaryStones = Array.isArray(data.primaryStones) ? data.primaryStones : [];
-        
-        // Update selectedStones state to match form data
-        setSelectedStones(formData.primaryStones);
-        
-        // Save the initial form data first (without image)
-        sessionStorage.setItem('designFormData', JSON.stringify(formData));
-        
-        // Then handle the image separately if available
-        if (uploadedImage && previewUrl && uploadedImage.size < 2 * 1024 * 1024) { // Only for images under 2MB
-          try {
-            // Convert image to data URL synchronously to ensure it's saved
-            const reader = new FileReader();
-            reader.onload = function() {
-              const dataUrl = reader.result;
-              // Get the latest form data to update it
-              const existingData = sessionStorage.getItem('designFormData');
-              if (existingData) {
-                try {
-                  const parsedData = JSON.parse(existingData);
-                  parsedData.imageDataUrl = dataUrl;
-                  sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
-                  console.log("Image data saved to session storage");
-                } catch (parseError) {
-                  console.error('Error parsing form data for image update:', parseError);
-                }
-              }
-            };
-            // Start reading the file as a data URL
-            reader.readAsDataURL(uploadedImage);
-          } catch (imageError) {
-            console.error('Error converting image to data URL:', imageError);
-          }
-        }
-      } catch (error) {
-        console.error('Error saving form data to session storage', error);
-      }
-      
       toast({
         title: "Login required",
         description: "Your design details have been saved. Please log in or create an account to continue."
