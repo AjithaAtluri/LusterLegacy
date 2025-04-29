@@ -458,9 +458,10 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
             throw directError;
           }
         }
-      
-      // If no images or image analysis failed, throw the original error
-      throw error;
+        
+        // If no images or image analysis failed, throw the original error
+        throw error;
+      }
     }
   } catch (error: any) {
     console.error("All AI content generation attempts failed:", error);
@@ -479,5 +480,10 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
  * This simply calls generateProductContent with the same parameters
  */
 export async function generateJewelryContent(data: JewelryContentRequest): Promise<AIGeneratedContent> {
-  return generateProductContent(data);
+  try {
+    return await generateProductContent(data);
+  } catch (error) {
+    console.error("Error in generateJewelryContent:", error);
+    throw error;
+  }
 }
