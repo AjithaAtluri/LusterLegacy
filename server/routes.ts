@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { pool } from "./db"; // Add pool for direct SQL queries
 import * as z from "zod";
 import { setupAuth } from "./auth";
 import passport from "passport";
@@ -3317,97 +3318,76 @@ Respond in JSON format:
       console.log("Request body:", req.body);
       console.log("File:", req.file);
       
-      // Try a direct insert into the database to bypass any potential middleware issues
+      // ULTIMATE APPROACH: Use the SQL tool method directly which we know works
       try {
-        // Insert directly with basic SQL
-        const fs = require('fs');
-        const log = (msg) => {
-          console.log(msg);
-          fs.appendFileSync('./debug-stone-type.log', msg + '\n');
-        };
+        console.log("EXECUTING DIRECT SQL INSERT AS FINAL ATTEMPT");
         
-        log("===== BEGIN STONE TYPE DEBUG =====");
-        log(`Stone type creation attempt at ${new Date().toISOString()}`);
-        log(`Name: ${req.body.name}`);
-        log(`Price Modifier: ${req.body.priceModifier}`);
-        
-        // Explicitly handle each field with proper conversion
-        const stoneTypeData = {
-          name: req.body.name,
-          description: req.body.description || "",
-          // Ensure priceModifier is a number
-          priceModifier: parseFloat(req.body.priceModifier),
-          displayOrder: parseInt(req.body.displayOrder || "0"),
-          isActive: req.body.isActive === 'true' || req.body.isActive === true,
-          color: req.body.color || "",
-          imageUrl: req.file ? `/uploads/${req.file.filename}` : (req.body.imageUrl || undefined)
-        };
-        
-        log("Prepared stone type data (pre-validation):" + JSON.stringify(stoneTypeData, null, 2));
-        
-        // Direct insert using pool instead of Drizzle ORM
-        const result = await pool.query(`
+        const insertSQL = `
           INSERT INTO stone_types 
           (name, description, price_modifier, display_order, is_active, color, image_url) 
           VALUES 
           ($1, $2, $3, $4, $5, $6, $7) 
           RETURNING *
-        `, [
-          stoneTypeData.name,
-          stoneTypeData.description,
-          stoneTypeData.priceModifier,
-          stoneTypeData.displayOrder,
-          stoneTypeData.isActive,
-          stoneTypeData.color,
-          stoneTypeData.imageUrl
-        ]);
+        `;
         
-        log("Direct SQL result: " + JSON.stringify(result.rows[0], null, 2));
+        const params = [
+          req.body.name,
+          req.body.description || "",
+          parseFloat(req.body.priceModifier),
+          parseInt(req.body.displayOrder || "0"),
+          req.body.isActive === 'true' || req.body.isActive === true,
+          req.body.color || "",
+          req.file ? `/uploads/${req.file.filename}` : (req.body.imageUrl || null)
+        ];
         
-        // Return the created stone type
-        res.status(201).json(result.rows[0]);
-        return; // Skip the rest of the code
-      } catch (directError) {
-        const fs = require('fs');
-        fs.appendFileSync('./debug-stone-type.log', "DIRECT INSERT ERROR: " + JSON.stringify(directError, null, 2) + '\n');
-        console.error("DIRECT INSERT ERROR:", directError);
-        // Fall through to try the Drizzle approach
+        console.log("SQL Parameters:", params);
+        
+        // Critical: open a transaction to ensure data is committed
+        const client = await pool.connect();
+        let createdStoneType;
+        
+        try {
+          await client.query('BEGIN');
+          const result = await client.query(insertSQL, params);
+          createdStoneType = result.rows[0];
+          await client.query('COMMIT');
+          console.log("DIRECT SQL INSERT SUCCESS:", createdStoneType);
+        } catch (sqlError) {
+          await client.query('ROLLBACK');
+          console.error("SQL ERROR DETAILS:", sqlError);
+          throw sqlError;
+        } finally {
+          client.release();
+        }
+        
+        if (!createdStoneType) {
+          throw new Error("No stone type was returned from the database");
+        }
+        
+        // Check the database to see if it was actually created
+        const checkResult = await pool.query(
+          `SELECT * FROM stone_types WHERE id = $1`, 
+          [createdStoneType.id]
+        );
+        
+        console.log("VERIFY DB CHECK:", checkResult.rows);
+        
+        // Return with success status
+        return res.status(201).json(createdStoneType);
+      } catch (finalError) {
+        console.error("FINAL APPROACH ERROR:", finalError);
+        return res.status(500).json({ 
+          message: 'Critical database error creating stone type', 
+          error: finalError instanceof Error ? finalError.message : 'Unknown error',
+          stack: finalError instanceof Error ? finalError.stack : 'No stack trace'
+        });
       }
-      
-      // If direct insert fails, fall back to the original approach
-      console.log("Falling back to Drizzle ORM approach...");
-      
-      // Validate with zod
-      const validatedData = insertStoneTypeSchema.parse({
-        name: req.body.name,
-        description: req.body.description || "",
-        priceModifier: parseFloat(req.body.priceModifier),
-        displayOrder: parseInt(req.body.displayOrder || "0"),
-        isActive: req.body.isActive === 'true' || req.body.isActive === true,
-        color: req.body.color || "",
-        imageUrl: req.file ? `/uploads/${req.file.filename}` : (req.body.imageUrl || undefined)
-      });
-      console.log("Validated stone type data:", validatedData);
-
-      // Insert into database
-      const stoneType = await storage.createStoneType(validatedData);
-      console.log("ROUTES: Successfully created stone type:", stoneType);
-      
-      // Verify it was created by fetching it
-      const verifyCreated = await storage.getStoneType(stoneType.id);
-      console.log("ROUTES: Verification fetch result:", verifyCreated);
-      
-      // Send response
-      res.status(201).json(stoneType);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error('Zod validation error:', error.errors);
-        return res.status(400).json({ message: 'Invalid stone type data', errors: error.errors });
-      }
-      console.error('Error creating stone type via alternative route:', error);
+      console.error('Error in route handler:', error);
       res.status(500).json({ 
         message: 'Failed to create stone type', 
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
       });
     }
   });
