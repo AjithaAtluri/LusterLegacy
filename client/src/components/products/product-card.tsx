@@ -142,7 +142,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="mt-auto">
           <Button 
             asChild
-            className="font-montserrat bg-foreground hover:bg-primary text-background w-full py-2 rounded transition duration-300"
+            className="font-montserrat bg-accent hover:bg-accent/90 text-white w-full py-2 rounded transition duration-300"
           >
             <Link href={`/product-detail/${product.id}`}>
               View Details
