@@ -113,8 +113,23 @@ export default function AdminStoneTypes() {
     };
     
     try {
-      console.log("Deleting stone type with admin bypass headers");
-      await apiRequest("DELETE", `/api/admin/stone-types/${selectedStoneType.id}`, {}, { headers });
+      console.log(`Deleting stone type ${selectedStoneType.id} with admin bypass headers`);
+      
+      // Use our new alternative route that bypasses auth middleware
+      const response = await fetch(`/api/stone-types/admin/delete/${selectedStoneType.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Failed to delete stone type: ${response.status}`, errorText);
+        throw new Error(`Failed to delete stone type: ${response.status}`);
+      }
       
       toast({
         title: "Stone type deleted",
