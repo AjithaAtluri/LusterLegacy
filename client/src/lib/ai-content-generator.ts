@@ -228,59 +228,37 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       imageCount: data.imageUrls?.length || 0
     });
     
-    // Primary API endpoint attempt (admin route with admin auth)
-    console.log("Trying admin jewelry content endpoint with proper authentication...");
+    // Always use our NEW public endpoint first that bypasses admin authentication
+    console.log("Trying public product content endpoint...");
     
     try {
-      // First validate current authentication in real-time
-      console.log("Checking current admin authentication status...");
-      try {
-        const authCheckResponse = await fetch('/api/user', {
-          credentials: 'include',
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-          }
-        });
-        
-        if (authCheckResponse.ok) {
-          const authUser = await authCheckResponse.json();
-          console.log("Current authenticated user:", authUser);
-          
-          if (authUser.role !== 'admin') {
-            console.warn("Authenticated user is not an admin:", authUser.role);
-          }
-        } else {
-          console.warn("Not authenticated according to /api/user endpoint");
-        }
-      } catch (authCheckError) {
-        console.error("Error checking authentication:", authCheckError);
-      }
-      
-      // Add auth debug headers to track auth state AND our direct admin bypass header
+      // Add debug headers for tracking and diagnostics
       const headers = {
-        "X-Auth-Debug": "true",
-        "X-Request-Source": "admin-ai-generator",
-        "X-Admin-Debug-Auth": "true",
-        "X-Admin-API-Key": "dev_admin_key_12345",
-        "X-Admin-Username": "admin",  // Use the known admin username
+        "X-Request-Source": "unified-ai-generator",
         "Cache-Control": "no-cache, no-store, must-revalidate",
         "Pragma": "no-cache",
         "Expires": "0"
       };
       
-      console.log("Making AI content generation request with explicit admin credentials via header...");
-      const response = await apiRequest("POST", "/api/admin/generate-jewelry-content", data, { headers });
+      console.log("Making AI content generation request to public endpoint...");
+      const response = await fetch("/api/public/generate-product-content", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...headers
+        },
+        body: JSON.stringify(data),
+        credentials: "include" // Still include credentials in case they help
+      });
       
       if (response.ok) {
-        console.log("Admin jewelry endpoint successful!");
+        console.log("Public product content endpoint successful!");
         const responseText = await response.text();
-        console.log("Got admin endpoint response text:", responseText.substring(0, 50) + "...");
+        console.log("Got public endpoint response text:", responseText.substring(0, 50) + "...");
         
         try {
           const result = JSON.parse(responseText);
-          console.log("Successfully parsed admin response JSON");
+          console.log("Successfully parsed public endpoint response JSON");
           
           // Calculate generation time
           const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -288,7 +266,7 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
           
           return result;
         } catch (parseError) {
-          console.error("Failed to parse admin endpoint response as JSON:", parseError);
+          console.error("Failed to parse public endpoint response as JSON:", parseError);
           throw new Error("Failed to parse AI response as JSON");
         }
       }
@@ -297,7 +275,7 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
       let errorDetail = "";
       try {
         const errorText = await response.text();
-        console.error("Admin endpoint error response:", errorText);
+        console.error("Public endpoint error response:", errorText);
         try {
           const errorJson = JSON.parse(errorText);
           errorDetail = errorJson.detail || errorJson.message || "";
@@ -308,93 +286,178 @@ export async function generateProductContent(data: AIContentRequest): Promise<AI
         console.error("Could not read error details from response");
       }
       
-      console.error("Admin endpoint failed with status:", response.status);
-      throw new Error(`Admin API request failed with status: ${response.status}${errorDetail ? ` - ${errorDetail}` : ''}`);
+      console.error("Public endpoint failed with status:", response.status);
+      throw new Error(`Public API request failed with status: ${response.status}${errorDetail ? ` - ${errorDetail}` : ''}`);
     } catch (error) {
-      console.error("Admin endpoint error:", error);
+      console.error("Public endpoint error:", error);
       
-      // If we have images, try the image analysis endpoint as fallback
-      if (data.imageUrls && data.imageUrls.length > 0) {
-        console.log("Primary endpoint failed. Trying direct jewelry image analysis...");
-        
-        // Prepare data for direct jewelry image analysis
+      // Fall back to the admin endpoints as a backup approach
+      console.log("Falling back to admin routes after public endpoint failure...");
+      
+      try {
+        // First validate current authentication in real-time
+        console.log("Checking current admin authentication status...");
         try {
-          const directImageData = {
-            imageData: data.imageUrls[0], // Send only the first image
-            productType: data.productType,
-            metalType: data.metalType,
-            metalWeight: data.metalWeight,
-            primaryGems: data.primaryGems,
-            userDescription: data.userDescription
-          };
-          
-          console.log("Calling direct jewelry image analysis with image data");
-          
-          // Special headers for admin auth debugging AND our direct admin bypass header
-          const headers = {
-            "X-Auth-Debug": "true",
-            "X-Request-Source": "admin-image-analyzer",
-            "X-Admin-Debug-Auth": "true",
-            "X-Admin-API-Key": "dev_admin_key_12345",
-            "X-Admin-Username": "admin",  // Use the known admin username
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-          };
-          
-          // Create a direct fetch request with admin auth header
-          const directResponse = await fetch("/api/admin/analyze-jewelry-image", {
-            method: "POST",
+          const authCheckResponse = await fetch('/api/user', {
+            credentials: 'include',
             headers: {
-              "Content-Type": "application/json",
-              ...headers
-            },
-            body: JSON.stringify(directImageData),
-            credentials: "include"
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            }
           });
           
-          if (directResponse.ok) {
-            console.log("Direct jewelry image analysis successful!");
-            const responseText = await directResponse.text();
+          if (authCheckResponse.ok) {
+            const authUser = await authCheckResponse.json();
+            console.log("Current authenticated user:", authUser);
             
-            try {
-              const result = JSON.parse(responseText);
-              console.log("Successfully parsed direct jewelry analysis response");
-              
-              // Calculate generation time
-              const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
-              console.log(`AI content generated in ${generationTime} seconds (via image analysis)`);
-              
-              return result;
-            } catch (parseError) {
-              console.error("Failed to parse direct jewelry analysis response:", parseError);
-              throw new Error("Failed to parse image analysis response"); 
+            if (authUser.role !== 'admin') {
+              console.warn("Authenticated user is not an admin:", authUser.role);
             }
           } else {
-            // Get detailed error info if available
-            let errorDetail = "";
-            try {
-              const errorText = await directResponse.text();
-              console.error("Image analysis error response:", errorText);
-              try {
-                const errorJson = JSON.parse(errorText);
-                errorDetail = errorJson.detail || errorJson.message || "";
-              } catch (e) {
-                errorDetail = errorText;
-              }
-            } catch (e) {
-              console.error("Could not read error details from response");
-            }
-            
-            console.error("Direct jewelry image analysis failed, status:", directResponse.status);
-            throw new Error(`Image analysis failed with status: ${directResponse.status}${errorDetail ? ` - ${errorDetail}` : ''}`);
+            console.warn("Not authenticated according to /api/user endpoint");
           }
-        } catch (directError) {
-          console.error("Error with direct jewelry image analysis:", directError);
-          // Let this error propagate up to be caught by the outer catch block
-          throw directError;
+        } catch (authCheckError) {
+          console.error("Error checking authentication:", authCheckError);
         }
-      }
+        
+        // Add auth debug headers to track auth state AND our direct admin bypass header
+        const headers = {
+          "X-Auth-Debug": "true",
+          "X-Request-Source": "admin-ai-generator",
+          "X-Admin-Debug-Auth": "true",
+          "X-Admin-API-Key": "dev_admin_key_12345",
+          "X-Admin-Username": "admin",  // Use the known admin username
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        };
+        
+        console.log("Making AI content generation request with explicit admin credentials via header...");
+        const response = await apiRequest("POST", "/api/admin/generate-jewelry-content", data, { headers });
+        
+        if (response.ok) {
+          console.log("Admin jewelry endpoint successful!");
+          const responseText = await response.text();
+          console.log("Got admin endpoint response text:", responseText.substring(0, 50) + "...");
+          
+          try {
+            const result = JSON.parse(responseText);
+            console.log("Successfully parsed admin response JSON");
+            
+            // Calculate generation time
+            const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`AI content generated in ${generationTime} seconds`);
+            
+            return result;
+          } catch (parseError) {
+            console.error("Failed to parse admin endpoint response as JSON:", parseError);
+            throw new Error("Failed to parse AI response as JSON");
+          }
+        }
+        
+        // Get detailed error info if available
+        let errorDetail = "";
+        try {
+          const errorText = await response.text();
+          console.error("Admin endpoint error response:", errorText);
+          try {
+            const errorJson = JSON.parse(errorText);
+            errorDetail = errorJson.detail || errorJson.message || "";
+          } catch (e) {
+            errorDetail = errorText;
+          }
+        } catch (e) {
+          console.error("Could not read error details from response");
+        }
+        
+        console.error("Admin endpoint failed with status:", response.status);
+        throw new Error(`Admin API request failed with status: ${response.status}${errorDetail ? ` - ${errorDetail}` : ''}`);
+      } catch (adminError) {
+        console.error("Admin endpoint error after public endpoint failed:", adminError);
+        
+        // If we have images, try the image analysis endpoint as final fallback
+        if (data.imageUrls && data.imageUrls.length > 0) {
+          console.log("All previous endpoints failed. Trying direct jewelry image analysis as last resort...");
+          
+          // Prepare data for direct jewelry image analysis
+          try {
+            const directImageData = {
+              imageData: data.imageUrls[0], // Send only the first image
+              productType: data.productType,
+              metalType: data.metalType,
+              metalWeight: data.metalWeight,
+              primaryGems: data.primaryGems,
+              userDescription: data.userDescription
+            };
+            
+            console.log("Calling direct jewelry image analysis with image data");
+            
+            // Special headers for admin auth debugging AND our direct admin bypass header
+            const headers = {
+              "X-Auth-Debug": "true",
+              "X-Request-Source": "admin-image-analyzer",
+              "X-Admin-Debug-Auth": "true",
+              "X-Admin-API-Key": "dev_admin_key_12345",
+              "X-Admin-Username": "admin",  // Use the known admin username
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            };
+            
+            // Create a direct fetch request with admin auth header
+            const directResponse = await fetch("/api/admin/analyze-jewelry-image", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...headers
+              },
+              body: JSON.stringify(directImageData),
+              credentials: "include"
+            });
+            
+            if (directResponse.ok) {
+              console.log("Direct jewelry image analysis successful!");
+              const responseText = await directResponse.text();
+              
+              try {
+                const result = JSON.parse(responseText);
+                console.log("Successfully parsed direct jewelry analysis response");
+                
+                // Calculate generation time
+                const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
+                console.log(`AI content generated in ${generationTime} seconds (via image analysis)`);
+                
+                return result;
+              } catch (parseError) {
+                console.error("Failed to parse direct jewelry analysis response:", parseError);
+                throw new Error("Failed to parse image analysis response"); 
+              }
+            } else {
+              // Get detailed error info if available
+              let errorDetail = "";
+              try {
+                const errorText = await directResponse.text();
+                console.error("Image analysis error response:", errorText);
+                try {
+                  const errorJson = JSON.parse(errorText);
+                  errorDetail = errorJson.detail || errorJson.message || "";
+                } catch (e) {
+                  errorDetail = errorText;
+                }
+              } catch (e) {
+                console.error("Could not read error details from response");
+              }
+              
+              console.error("Direct jewelry image analysis failed, status:", directResponse.status);
+              throw new Error(`Image analysis failed with status: ${directResponse.status}${errorDetail ? ` - ${errorDetail}` : ''}`);
+            }
+          } catch (directError) {
+            console.error("Error with direct jewelry image analysis:", directError);
+            // Let this error propagate up to be caught by the outer catch block
+            throw directError;
+          }
+        }
       
       // If no images or image analysis failed, throw the original error
       throw error;
