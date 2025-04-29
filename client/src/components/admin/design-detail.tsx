@@ -25,6 +25,7 @@ interface DesignDetailProps {
     primaryStones?: string[];
     notes: string | null;
     imageUrl: string;
+    imageUrls?: string[]; // Array of additional images
     status: string;
     estimatedPrice: number | null;
     cadImageUrl: string | null;
@@ -199,19 +200,58 @@ export default function DesignDetail({ design }: DesignDetailProps) {
             </CardContent>
           </Card>
           
-          {/* Design Image */}
+          {/* Design Images */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Design Reference</CardTitle>
+              <CardTitle className="text-lg">Design References</CardTitle>
+              <CardDescription>
+                {design.imageUrls && design.imageUrls.length > 0 
+                  ? `${design.imageUrls.length} reference images provided` 
+                  : 'Main reference image'}
+              </CardDescription>
             </CardHeader>
             <CardContent className="pb-2">
-              <div className="aspect-square w-full rounded-md overflow-hidden">
+              {/* Main reference image */}
+              <div className="aspect-square w-full rounded-md overflow-hidden relative mb-4">
                 <img 
                   src={design.imageUrl} 
-                  alt="Design reference" 
+                  alt="Main design reference" 
                   className="object-cover w-full h-full"
                 />
+                <div className="absolute top-2 left-2 bg-primary/80 text-white text-xs px-2 py-1 rounded-md">
+                  Main Image
+                </div>
               </div>
+              
+              {/* Additional images gallery */}
+              {design.imageUrls && design.imageUrls.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">Additional Images</h4>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {design.imageUrls.map((imageUrl, index) => (
+                      <div 
+                        key={index}
+                        className="border border-border rounded-md overflow-hidden aspect-square relative"
+                      >
+                        <img 
+                          src={imageUrl} 
+                          alt={`Design reference ${index + 1}`} 
+                          className="object-cover w-full h-full"
+                        />
+                        <div className="absolute top-1 right-1 bg-background/80 text-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {(!design.imageUrls || design.imageUrls.length === 0) && (
+                <div className="text-sm text-muted-foreground mt-2">
+                  No additional reference images provided
+                </div>
+              )}
             </CardContent>
           </Card>
           
