@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import passionImage from "../assets/passion-meets-craftsmanship.png";
 
 export default function About() {
   return (
@@ -41,7 +42,7 @@ export default function About() {
           </div>
           <div>
             <img 
-              src="/src/assets/passion-meets-craftsmanship.png" 
+              src={passionImage} 
               alt="Where passion meets craftsmanship - every masterpiece begins with a spark" 
               className="rounded-lg shadow-xl w-full"
             />
