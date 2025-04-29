@@ -122,6 +122,7 @@ export default function AdminStoneTypes() {
       });
       
       // Invalidate both admin and public stone types queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/stone-types/admin'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/stone-types'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stone-types'] });
       

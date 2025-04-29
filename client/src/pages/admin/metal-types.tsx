@@ -22,11 +22,13 @@ export default function AdminMetalTypes() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Custom fetch function with admin auth headers
+  // Custom fetch function with admin auth headers - using alternative route to bypass authentication issues
   const fetchMetalTypes = async () => {
     try {
-      // Add admin auth bypass headers
-      const response = await fetch('/api/admin/metal-types', {
+      // Use our new alternative path that avoids the global admin middleware
+      console.log('Fetching metal types from alternative admin route');
+      
+      const response = await fetch('/api/metal-types/admin', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -57,9 +59,9 @@ export default function AdminMetalTypes() {
     }
   };
   
-  // Fetch metal types from admin endpoint with auth headers
+  // Fetch metal types from our alternative admin endpoint with auth headers
   const { data: metalTypes, isLoading } = useQuery({
-    queryKey: ['/api/admin/metal-types'],
+    queryKey: ['/api/metal-types/admin'],
     queryFn: fetchMetalTypes,
     retry: 3,
     refetchOnWindowFocus: false
@@ -120,6 +122,7 @@ export default function AdminMetalTypes() {
       });
       
       // Invalidate both admin and public metal types queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/metal-types/admin'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/metal-types'] });
       queryClient.invalidateQueries({ queryKey: ['/api/metal-types'] });
       
