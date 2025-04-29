@@ -78,11 +78,26 @@ export default function DesignForm() {
       
       // Try to restore saved form data from session storage
       try {
+        console.log("DesignForm - Checking for saved form data in sessionStorage...");
         const savedFormData = sessionStorage.getItem('designFormData');
+        console.log("DesignForm - savedFormData exists:", !!savedFormData);
+        
         if (savedFormData) {
           // Parse the saved data and put it in a local variable
-          const parsedData = JSON.parse(savedFormData);
-          console.log("Restoring form data:", parsedData);
+          try {
+            const parsedData = JSON.parse(savedFormData);
+            console.log("DesignForm - Successfully parsed form data:", parsedData);
+            console.log("DesignForm - Form data details:", {
+              hasPrimaryStones: !!parsedData.primaryStones,
+              primaryStonesCount: parsedData.primaryStones?.length || 0,
+              hasMetalType: !!parsedData.metalType,
+              metalType: parsedData.metalType || "none",
+              hasImageInfo: !!parsedData.imageInfo,
+              hasImageDataUrl: !!parsedData.imageDataUrl
+            });
+          } catch (parseJsonError) {
+            console.error("DesignForm - Error parsing JSON data:", parseJsonError);
+          }
           
           // Check if we have the old format data with primaryStone instead of primaryStones
           if (parsedData.primaryStone && !parsedData.primaryStones) {
@@ -319,7 +334,7 @@ export default function DesignForm() {
       setSelectedStones([]);
       
       // Remove stored form data if any
-      localStorage.removeItem("designFormData");
+      sessionStorage.removeItem("designFormData");
       
       // Redirect to collections page after a short delay
       setTimeout(() => {

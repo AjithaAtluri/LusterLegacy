@@ -60,6 +60,25 @@ export default function AuthPage() {
     const returnTo = params.get("returnTo");
     if (returnTo) {
       setReturnPath(returnTo);
+      
+      // Debug logging to check if there is form data saved in sessionStorage
+      if (returnTo === '/custom-design') {
+        const savedData = sessionStorage.getItem('designFormData');
+        console.log("Auth page - found saved custom design data:", savedData ? "Yes" : "No");
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            console.log("Auth page - saved form data preview:", {
+              hasPrimaryStones: !!parsedData.primaryStones,
+              primaryStonesCount: parsedData.primaryStones?.length || 0,
+              hasImage: !!parsedData.imageDataUrl,
+              imageInfo: parsedData.imageInfo
+            });
+          } catch (e) {
+            console.error("Auth page - error parsing saved form data:", e);
+          }
+        }
+      }
     }
   }, []);
   
