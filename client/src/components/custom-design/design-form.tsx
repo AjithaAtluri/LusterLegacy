@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS, COUNTRIES } from "@/lib/constants";
 import { useDropzone } from "react-dropzone";
-import { Upload, X, Image as ImageIcon, CheckCircle, Check, ChevronsUpDown } from "lucide-react";
+import { Upload, X, Image as ImageIcon, CheckCircle, Check, ChevronsUpDown, Plus } from "lucide-react";
 import { isImageFile, getFileExtension, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -50,8 +50,10 @@ type DesignFormValues = z.infer<typeof designFormSchema>;
 
 export default function DesignForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null); // Main image (for backward compatibility)
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]); // Array to store multiple images
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // Main image preview
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]); // Array to store multiple image previews
   const [selectedStones, setSelectedStones] = useState<string[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -248,10 +250,10 @@ export default function DesignForm() {
       return;
     }
     
-    if (!uploadedImage) {
+    if (uploadedImages.length === 0) {
       toast({
         title: "Image required",
-        description: "Please upload a reference image for your design.",
+        description: "Please upload at least one reference image for your design.",
         variant: "destructive"
       });
       return;
@@ -269,13 +271,20 @@ export default function DesignForm() {
       // Log the form data for debugging
       console.log("Submitting design form with data:", JSON.stringify(processedData, null, 2));
       console.log("User authentication state:", user ? `Authenticated as ${user.username} (${user.id})` : "Not authenticated");
-      
-      // Log data to debug
-      console.log("Final processed data before submitting:", processedData);
+      console.log("Uploaded images count:", uploadedImages.length);
       
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append("designImage", uploadedImage);
+      
+      // For backward compatibility, include the main image as designImage
+      if (uploadedImage) {
+        formData.append("designImage", uploadedImage);
+      }
+      
+      // Append all images with a different field name for multiple image support
+      uploadedImages.forEach((file, index) => {
+        formData.append(`designImages`, file);
+      });
       
       // Convert complex fields to strings to avoid issues
       const dataToSend = {
@@ -341,10 +350,23 @@ export default function DesignForm() {
         description: "We'll review your request and get back to you soon.",
       });
       
-      // Reset form and uploaded image
+      // Reset form and uploaded images
       form.reset();
+      
+      // Clean up all image preview URLs to prevent memory leaks
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      
+      previewUrls.forEach(url => {
+        if (url) URL.revokeObjectURL(url);
+      });
+      
+      // Reset all image-related state
       setUploadedImage(null);
+      setUploadedImages([]);
       setPreviewUrl(null);
+      setPreviewUrls([]);
       setSelectedStones([]);
       
       // Remove stored form data if any
@@ -366,27 +388,41 @@ export default function DesignForm() {
     }
   };
   
-  // File upload handling
+  // File upload handling for multiple files
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif'],
       'application/pdf': ['.pdf']
     },
     maxSize: 5 * 1024 * 1024, // 5MB
-    maxFiles: 1,
+    maxFiles: 5, // Allow up to 5 files
     onDrop: (acceptedFiles) => {
       if (acceptedFiles.length > 0) {
-        const file = acceptedFiles[0];
-        setUploadedImage(file);
+        // Store all the files in the uploadedImages array
+        setUploadedImages([...uploadedImages, ...acceptedFiles]);
         
-        // Create preview URL for images
-        if (isImageFile(file)) {
-          const previewUrl = URL.createObjectURL(file);
-          setPreviewUrl(previewUrl);
-        } else {
-          // For PDFs, just show icon
-          setPreviewUrl(null);
+        // For backward compatibility, set the first image as the main image if it's not already set
+        if (!uploadedImage && acceptedFiles.length > 0) {
+          const mainFile = acceptedFiles[0];
+          setUploadedImage(mainFile);
+          
+          // Create preview URL for the main image
+          if (isImageFile(mainFile)) {
+            const mainPreviewUrl = URL.createObjectURL(mainFile);
+            setPreviewUrl(mainPreviewUrl);
+          }
         }
+        
+        // Create preview URLs for all the new images
+        const newPreviewUrls = acceptedFiles.map(file => {
+          if (isImageFile(file)) {
+            return URL.createObjectURL(file);
+          }
+          return ''; // Empty string for non-image files
+        }).filter(url => url !== ''); // Remove empty strings
+        
+        // Update the previewUrls array with the new URLs
+        setPreviewUrls([...previewUrls, ...newPreviewUrls]);
       }
     },
     onDropRejected: (fileRejections) => {
@@ -397,6 +433,8 @@ export default function DesignForm() {
         message = "File is too large. Maximum size is 5MB.";
       } else if (error?.code === "file-invalid-type") {
         message = "Invalid file type. Please upload an image or PDF.";
+      } else if (error?.code === "too-many-files") {
+        message = "Too many files. Maximum is 5 files.";
       }
       
       toast({
@@ -407,77 +445,125 @@ export default function DesignForm() {
     }
   });
   
-  const removeUploadedFile = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+  const removeUploadedFile = (index: number) => {
+    // Get the file we're removing
+    const fileToRemove = uploadedImages[index];
+    
+    // Special handling for main image
+    if (uploadedImage && fileToRemove === uploadedImage) {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      
+      // If we have other images, set the next one as main
+      if (uploadedImages.length > 1) {
+        const newMainIndex = index === 0 ? 1 : 0; // If removing first image, use second; otherwise use first
+        setUploadedImage(uploadedImages[newMainIndex]);
+        setPreviewUrl(previewUrls[newMainIndex]);
+      } else {
+        // No other images, clear main image
+        setUploadedImage(null);
+        setPreviewUrl(null);
+      }
     }
-    setUploadedImage(null);
-    setPreviewUrl(null);
+    
+    // Remove the file from uploadedImages
+    const newUploadedImages = [...uploadedImages];
+    newUploadedImages.splice(index, 1);
+    setUploadedImages(newUploadedImages);
+    
+    // Revoke the URL to prevent memory leaks
+    if (previewUrls[index]) {
+      URL.revokeObjectURL(previewUrls[index]);
+    }
+    
+    // Remove the preview URL
+    const newPreviewUrls = [...previewUrls];
+    newPreviewUrls.splice(index, 1);
+    setPreviewUrls(newPreviewUrls);
   };
   
   const renderUploadArea = () => {
-    if (uploadedImage) {
-      return (
-        <div className="mt-2 relative">
-          <div className="flex items-center p-4 border border-foreground/20 rounded-lg bg-background/50">
-            {previewUrl ? (
-              <div className="relative w-20 h-20 mr-4">
-                <img 
-                  src={previewUrl} 
-                  alt="Design preview" 
-                  className="w-full h-full object-cover rounded-md"
-                />
-              </div>
-            ) : (
-              <div className="w-20 h-20 flex items-center justify-center bg-accent/10 rounded-md mr-4">
-                <ImageIcon className="h-10 w-10 text-accent" />
-              </div>
-            )}
-            
-            <div className="flex-1">
-              <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                <p className="font-montserrat text-sm font-medium text-foreground">
-                  {uploadedImage.name}
-                </p>
-              </div>
-              <p className="font-montserrat text-xs text-foreground/60 mt-1">
-                {(uploadedImage.size / 1024 / 1024).toFixed(2)} MB • {getFileExtension(uploadedImage.name).toUpperCase()}
-              </p>
-            </div>
-            
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="icon" 
-              className="ml-2" 
-              onClick={removeUploadedFile}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      );
-    }
-    
     return (
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed ${
-          isDragActive ? 'border-primary' : 'border-foreground/30'
-        } rounded-lg p-8 text-center cursor-pointer hover:border-primary transition duration-300 mt-2`}
-      >
-        <input {...getInputProps()} />
-        <Upload className="h-10 w-10 text-foreground/50 mx-auto mb-3" />
-        <p className="font-montserrat text-foreground/70">
-          {isDragActive
-            ? "Drop your image here..."
-            : "Drag and drop your image here, or click to browse"
-          }
-        </p>
-        <p className="font-montserrat text-xs text-foreground/50 mt-2">
-          Accepts JPG, PNG, PDF (Max size: 5MB)
-        </p>
+      <div className="mt-2 relative">
+        {/* Display all uploaded images */}
+        {uploadedImages.length > 0 && (
+          <div className="mb-4">
+            <div className="grid grid-cols-1 gap-2">
+              {uploadedImages.map((file, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center p-4 border border-foreground/20 rounded-lg bg-background/50"
+                >
+                  {previewUrls[index] ? (
+                    <div className="relative w-20 h-20 mr-4">
+                      <img 
+                        src={previewUrls[index]} 
+                        alt={`Design preview ${index + 1}`}
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                      {file === uploadedImage && (
+                        <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                          1
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 flex items-center justify-center bg-accent/10 rounded-md mr-4">
+                      <ImageIcon className="h-10 w-10 text-accent" />
+                    </div>
+                  )}
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center">
+                      <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                      <p className="font-montserrat text-sm font-medium text-foreground">
+                        {file.name}
+                      </p>
+                    </div>
+                    <p className="font-montserrat text-xs text-foreground/60 mt-1">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB • {getFileExtension(file.name).toUpperCase()}
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="ml-2" 
+                    onClick={() => removeUploadedFile(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Upload more images button/area */}
+        {uploadedImages.length < 5 && (
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed ${
+              isDragActive ? 'border-primary' : 'border-foreground/30'
+            } rounded-lg p-8 text-center cursor-pointer hover:border-primary transition duration-300`}
+          >
+            <input {...getInputProps()} />
+            <Upload className="h-10 w-10 text-foreground/50 mx-auto mb-3" />
+            <p className="font-montserrat text-foreground/70">
+              {isDragActive
+                ? "Drop your images here..."
+                : uploadedImages.length > 0 
+                  ? `Add more images (${uploadedImages.length}/5 uploaded)`
+                  : "Drag and drop your images here, or click to browse"
+              }
+            </p>
+            <p className="font-montserrat text-xs text-foreground/50 mt-2">
+              Upload up to 5 images • Accepts JPG, PNG, PDF (Max size: 5MB each)
+            </p>
+          </div>
+        )}
       </div>
     );
   };

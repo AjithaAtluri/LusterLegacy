@@ -864,11 +864,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
    * Custom Design Request routes
    */
   // Submit a custom design request
-  app.post('/api/custom-design', upload.single('designImage'), async (req, res) => {
+  app.post('/api/custom-design', upload.fields([
+    { name: 'designImage', maxCount: 1 },    // For backward compatibility
+    { name: 'designImages', maxCount: 5 }    // For multiple images
+  ]), async (req, res) => {
     try {
-      if (!req.file) {
-        console.error('No design image uploaded');
-        return res.status(400).json({ message: 'No image file uploaded' });
+      // Get uploaded files
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const mainImage = files?.designImage?.[0];
+      const additionalImages = files?.designImages || [];
+      
+      // Check if we have at least one image
+      if (!mainImage && additionalImages.length === 0) {
+        console.error('No design images uploaded');
+        return res.status(400).json({ message: 'No image files uploaded' });
       }
 
       // Check if user is authenticated
@@ -941,6 +950,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           primaryStones = [primaryStone];
         }
         
+        // Get the main image URL and additional image URLs
+        // Use the first image from additionalImages as main image if mainImage is not available
+        let mainImageUrl = '';
+        if (mainImage) {
+          mainImageUrl = `/uploads/${mainImage.filename}`;
+        } else if (additionalImages.length > 0) {
+          mainImageUrl = `/uploads/${additionalImages[0].filename}`;
+        }
+        
+        // Get all additional image URLs (including the first one that might have been used as main image)
+        const additionalImageUrls = additionalImages.map(img => `/uploads/${img.filename}`);
+        
         // Construct the validated data object directly
         const validatedData = {
           userId: req.user.id,
@@ -952,7 +973,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           primaryStone,
           primaryStones,
           notes,
-          imageUrl: `/uploads/${req.file.filename}`,
+          imageUrl: mainImageUrl, // For backward compatibility
+          imageUrls: additionalImageUrls, // Array of all additional images
           status: "pending" as const,
         };
         
