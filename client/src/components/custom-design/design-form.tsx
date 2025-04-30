@@ -93,10 +93,16 @@ export default function DesignForm() {
             console.log("DesignForm - Form data details:", {
               hasPrimaryStones: !!parsedData.primaryStones,
               primaryStonesCount: parsedData.primaryStones?.length || 0,
+              primaryStonesValues: parsedData.primaryStones || [],
+              hasPrimaryStone: !!parsedData.primaryStone,
+              primaryStone: parsedData.primaryStone || "none",
               hasMetalType: !!parsedData.metalType,
               metalType: parsedData.metalType || "none",
+              hasPhone: !!parsedData.phone,
+              hasCountry: !!parsedData.country,
               hasImageInfo: !!parsedData.imageInfo,
-              hasImageDataUrl: !!parsedData.imageDataUrl
+              hasImageDataUrl: !!parsedData.imageDataUrl,
+              hasAllImagesInfo: !!parsedData.allImagesInfo
             });
             
             // Check if we have the old format data with primaryStone instead of primaryStones

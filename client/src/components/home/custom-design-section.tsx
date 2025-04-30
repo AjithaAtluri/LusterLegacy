@@ -89,8 +89,11 @@ export default function CustomDesignSection() {
     
     // Save form data to session storage before submitting
     try {
+      // Create form data structure that matches the one expected by design-form.tsx
       let formData: any = {
         ...data,
+        phone: "", // Add missing fields required by design-form.tsx
+        country: "us", // Default to US
         imageInfo: uploadedImage ? {
           name: uploadedImage.name,
           type: uploadedImage.type,
@@ -99,8 +102,20 @@ export default function CustomDesignSection() {
         } : null
       };
       
+      // Log form data for debugging
+      console.log("Home form data being saved:", {
+        formData,
+        primaryStones: formData.primaryStones,
+        metalType: formData.metalType
+      });
+      
       // Make sure primaryStones is properly saved as an array
       formData.primaryStones = Array.isArray(data.primaryStones) ? data.primaryStones : [];
+      
+      // Set primaryStone field for backward compatibility
+      if (formData.primaryStones.length > 0) {
+        formData.primaryStone = formData.primaryStones[0];
+      }
       
       // Update selectedStones state to match form data
       setSelectedStones(formData.primaryStones);
