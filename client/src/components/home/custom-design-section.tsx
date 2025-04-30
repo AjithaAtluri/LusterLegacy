@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import { Upload, X, CheckCircle, Image as ImageIcon } from "lucide-react";
+import { Upload, X, CheckCircle, Image as ImageIcon, Check } from "lucide-react";
 import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS } from "@/lib/constants";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -21,6 +21,8 @@ const designFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   metalType: z.string().min(1, "Metal type is required"),
   primaryStones: z.array(z.string()).min(1, "Select at least one stone"),
+  // Add primaryStone for backward compatibility
+  primaryStone: z.string().optional(),
   notes: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms to continue"
@@ -45,6 +47,7 @@ export default function CustomDesignSection() {
       email: "",
       metalType: "",
       primaryStones: [],
+      primaryStone: "",
       notes: "",
       agreeToTerms: false
     }
