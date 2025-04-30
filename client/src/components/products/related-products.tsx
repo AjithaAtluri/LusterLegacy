@@ -98,7 +98,8 @@ export function RelatedProducts({ products, currentProductId }: RelatedProductsP
                 <a className="block relative aspect-square overflow-hidden rounded-lg transition-all duration-200 hover:shadow-lg mb-4 group">
                   <ReliableProductImage 
                     productId={product.id} 
-                    previewUrl={product.imageUrl}
+                    imageUrl={product.imageUrl}
+                    alt={product.name || "Product image"}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 </a>

@@ -695,36 +695,36 @@ export default function ProductDetail() {
       
       {/* Related products section */}
       {product && (
-        <div className="bg-stone-100 dark:bg-slate-900 py-16">
-          <div className="container mx-auto px-4 md:px-8">
-            <div className="text-center mb-10">
-              <h2 className="font-playfair text-3xl font-bold text-foreground mb-3">
-                You Might Also Like
-              </h2>
-              <div className="w-16 h-1 bg-primary mx-auto"></div>
+        <>
+          {/* Check if we have related products to show */}
+          {relatedProducts && relatedProducts.length > 0 ? (
+            <RelatedProducts 
+              products={relatedProducts} 
+              currentProductId={product.id} 
+            />
+          ) : (
+            <div className="bg-stone-100 dark:bg-slate-900 py-16">
+              <div className="container mx-auto px-4 md:px-8">
+                <div className="text-center mb-6">
+                  <h2 className="font-playfair text-3xl font-bold text-foreground mb-3">
+                    Explore Our Collection
+                  </h2>
+                  <div className="w-16 h-1 bg-primary mx-auto"></div>
+                </div>
+                
+                <div className="flex justify-center items-center mb-8">
+                  <Button
+                    variant="outline"
+                    className="font-montserrat"
+                    onClick={handleBackToCollection}
+                  >
+                    View All Collections <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-            
-            <div className="flex justify-between items-center mb-4">
-              <p className="font-montserrat text-foreground/70">
-                Discover more from our collection
-              </p>
-              <Button
-                variant="outline"
-                className="font-montserrat"
-                onClick={handleBackToCollection}
-              >
-                View All Collections <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* We'd put related products here - future feature */}
-            <div className="py-12 text-center">
-              <p className="font-cormorant text-xl text-foreground/60 italic">
-                Explore our collections to discover more exquisite pieces
-              </p>
-            </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
     </>
   );
