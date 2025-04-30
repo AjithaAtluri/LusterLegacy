@@ -192,7 +192,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check for returnTo parameter in URL
         const params = new URLSearchParams(window.location.search);
         const returnTo = params.get("returnTo");
-        const redirectPath = returnTo || "/customer-dashboard"; // Default to customer dashboard
+        
+        // If no explicit returnTo but we have saved design form data, redirect to custom design page
+        const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
+        let redirectPath = returnTo;
+        
+        if (!redirectPath) {
+          if (hasSavedDesignForm) {
+            redirectPath = "/custom-design"; // If form data exists, go to design page
+          } else {
+            redirectPath = "/"; // Otherwise go to homepage
+          }
+        }
         
         // Force a direct window location change for customers
         console.log("REDIRECTING CUSTOMER NOW: setting window.location.href directly to", window.location.origin + redirectPath);
@@ -260,7 +271,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check for returnTo parameter in URL, also for registration
       const params = new URLSearchParams(window.location.search);
       const returnTo = params.get("returnTo");
-      const redirectPath = returnTo || "/customer-dashboard"; // Default to customer dashboard
+      
+      // If no explicit returnTo but we have saved design form data, redirect to custom design page
+      const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
+      let redirectPath = returnTo;
+      
+      if (!redirectPath) {
+        if (hasSavedDesignForm) {
+          redirectPath = "/custom-design"; // If form data exists, go to design page
+        } else {
+          redirectPath = "/"; // Otherwise go to homepage
+        }
+      }
       
       // Use direct navigation for registration redirect
       console.log("REDIRECTING NEW CUSTOMER NOW: setting window.location.href directly to", window.location.origin + redirectPath);
