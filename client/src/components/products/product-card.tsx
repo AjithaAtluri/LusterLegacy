@@ -160,12 +160,14 @@ export default function ProductCard({ product }: ProductCardProps) {
     <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[520px]">
       <div className="relative h-[350px] overflow-hidden flex-shrink-0 bg-white bg-opacity-5 flex items-center justify-center p-2">
         {/* Using the reliable product image component for consistent images */}
-        <ReliableProductImage 
-          productId={product.id}
-          imageUrl={product.imageUrl}
-          alt={product.name}
-          className="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-500"
-        />
+        <Link href={`/product-detail/${product.id}`}>
+          <ReliableProductImage 
+            productId={product.id}
+            imageUrl={product.imageUrl}
+            alt={product.name}
+            className="max-w-full max-h-full object-contain group-hover:scale-105 transition duration-500 cursor-pointer"
+          />
+        </Link>
         
         {/* Gemstone sparkle effect on hover */}
         <GemSparkle />
@@ -193,9 +195,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         
         {/* Product title with simplified 5-word versions for all products */}
-        <h3 className="font-playfair text-2xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300 mb-6 text-center">
-          {getShortProductTitle(product)}
-        </h3>
+        <div className="relative mb-6 py-3">
+          {/* Decorative lines before and after title */}
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40"></div>
+          <h3 className="font-cormorant text-2xl italic font-semibold tracking-wide text-foreground group-hover:text-primary transition-colors duration-300 text-center uppercase px-2">
+            {getShortProductTitle(product)}
+          </h3>
+          <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40"></div>
+        </div>
         
         {/* Empty space to replace price section */}
         <div className="mt-auto mb-3"></div>
