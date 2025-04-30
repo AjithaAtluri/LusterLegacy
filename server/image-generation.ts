@@ -74,8 +74,8 @@ export async function generateEducationalJewelryImages(req: Request, res: Respon
 
     // Return the generated image URL
     res.json({ 
-      url: response.data[0].url,
-      revised_prompt: response.data[0].revised_prompt
+      url: response.data?.[0]?.url || "",
+      revised_prompt: response.data?.[0]?.revised_prompt || selectedPrompt
     });
   } catch (error: any) {
     console.error('Error generating educational images:', error);
