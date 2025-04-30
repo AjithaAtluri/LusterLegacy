@@ -32,7 +32,7 @@ import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
-import { getGoldPrice } from "./services/gold-price-service";
+import { getGoldPrice, fetchGoldPrice } from "./services/gold-price-service";
 
 // USD to INR conversion rate - must match the rate in price-calculator.ts
 const USD_TO_INR_RATE = 83;
@@ -3123,6 +3123,25 @@ Respond in JSON format:
       res.json(goldPriceData);
     } catch (error) {
       console.error('Error fetching gold price:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Force refresh gold price from all sources - for admin use
+  app.get('/api/gold-price/force-update', async (_req, res) => {
+    try {
+      console.log('Force refreshing gold price from all sources...');
+      // Call fetchGoldPrice directly to bypass the cache
+      const freshGoldPriceData = await fetchGoldPrice();
+      res.json({
+        ...freshGoldPriceData,
+        message: 'Gold price forcefully refreshed from all sources'
+      });
+    } catch (error) {
+      console.error('Error during forced gold price update:', error);
       res.status(500).json({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error'
