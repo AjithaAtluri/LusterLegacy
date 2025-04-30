@@ -128,7 +128,7 @@ export default function DesignForm() {
           if (parsedData.imageDataUrls && Object.keys(parsedData.imageDataUrls).length > 0) {
             try {
               // Function to convert a data URL to a File object
-              const convertDataUrlToFile = (dataUrl, imageInfo) => {
+              const convertDataUrlToFile = (dataUrl: string, imageInfo: any): Promise<File | null> => {
                 return new Promise((resolve) => {
                   const img = new Image();
                   img.onload = function() {
@@ -167,12 +167,12 @@ export default function DesignForm() {
               };
               
               // Get all the data URLs from the parsed data
-              const dataUrls = parsedData.imageDataUrls;
+              const dataUrls = parsedData.imageDataUrls as Record<string, string>;
               const imagesInfo = parsedData.allImagesInfo || [];
               
               // Convert each data URL to a File object
-              const restoredFiles = [];
-              const newPreviewUrls = [];
+              const restoredFiles: File[] = [];
+              const newPreviewUrls: Array<{index: number, previewUrl: string}> = [];
               
               // Create an array of promises for each image conversion
               const conversionPromises = Object.keys(dataUrls).map(async (key) => {
@@ -188,7 +188,10 @@ export default function DesignForm() {
                     newPreviewUrls.push({ index, previewUrl });
                     
                     // If this is the main image or we don't have a main image yet, set it as the main image
-                    if ((parsedData.mainImageInfo && imageInfo && parsedData.mainImageInfo.name === imageInfo.name) || !uploadedImage) {
+                    if ((parsedData.mainImageInfo && 
+                         imageInfo && 
+                         parsedData.mainImageInfo.name === imageInfo.name) || 
+                        !uploadedImage) {
                       setUploadedImage(restoredFile);
                       setPreviewUrl(previewUrl);
                     }
