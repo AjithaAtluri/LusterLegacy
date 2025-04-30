@@ -117,12 +117,15 @@ const baseDesignRequestSchema = createInsertSchema(designRequests).pick({
   primaryStone: true, // Keep for backward compatibility
   notes: true,
   imageUrl: true,
+  imageUrls: true, // Include imageUrls field for multiple images
 });
 
-// Extended schema with explicit array validation for primaryStones
+// Extended schema with explicit array validation for primaryStones and imageUrls
 export const insertDesignRequestSchema = baseDesignRequestSchema.extend({
   // Override primaryStones to ensure it's an array of strings
   primaryStones: z.array(z.string()).default([]),
+  // Ensure imageUrls is an array of strings
+  imageUrls: z.array(z.string()).default([]),
 });
 
 // Design request comments schema

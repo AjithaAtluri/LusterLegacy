@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, X, CheckCircle, Image as ImageIcon, Check } from "lucide-react";
 import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS } from "@/lib/constants";
 import { z } from "zod";
@@ -45,8 +45,8 @@ export default function CustomDesignSection() {
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
+      fullName: user?.username || "",
+      email: user?.email || "",
       metalType: "",
       primaryStones: [],
       primaryStone: "",
@@ -54,6 +54,14 @@ export default function CustomDesignSection() {
       agreeToTerms: false
     }
   });
+  
+  // Update the form with user data when user logs in or changes
+  useEffect(() => {
+    if (user) {
+      form.setValue("fullName", user.username);
+      form.setValue("email", user.email);
+    }
+  }, [user, form]);
   
   const onSubmit: SubmitHandler<DesignFormValues> = async (data) => {
     // Check if user is logged in
@@ -600,9 +608,13 @@ export default function CustomDesignSection() {
                             <Input 
                               {...field} 
                               placeholder="Email Address" 
-                              className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                              readOnly={user !== null}
+                              className={`p-3 border border-foreground/20 rounded font-montserrat text-sm ${user ? 'bg-accent/5' : ''}`}
                             />
                           </FormControl>
+                          {user && (
+                            <p className="text-xs text-muted-foreground mt-1">Email is auto-filled from your account</p>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
