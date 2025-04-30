@@ -67,14 +67,16 @@ export function setupAuth(app: Express): void {
   // Configure session settings
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "luster-legacy-session-secret",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Changed to true to ensure session is saved on each request
+    saveUninitialized: true, // Changed to true to save session for all requests
     store: storage.sessionStore,
+    name: 'luster-legacy.sid', // Custom name for the session cookie
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       sameSite: 'lax', // Important for cross-site requests
-      secure: process.env.NODE_ENV === 'production' // Only secure in production
+      secure: false, // Set to false during development
+      path: '/'
     }
   };
 
@@ -153,9 +155,24 @@ export function setupAuth(app: Express): void {
       // Log the user in after registration
       req.login(user, (err) => {
         if (err) return next(err);
-        // Return user without the password
-        const { password, ...userWithoutPassword } = user;
-        res.status(201).json(userWithoutPassword);
+        
+        // Force save the session to ensure it's stored
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error during registration:', saveErr);
+            return next(saveErr);
+          }
+          
+          console.log(`Registration successful - User ${user.username} (ID: ${user.id}) is now logged in with session ID: ${req.sessionID}`);
+          
+          // Return user without the password
+          const { password, ...userWithoutPassword } = user;
+          res.status(201).json({
+            ...userWithoutPassword,
+            sessionID: req.sessionID,
+            authStatus: 'success'
+          });
+        });
       });
     } catch (error) {
       console.error("Registration error:", error);
@@ -165,7 +182,7 @@ export function setupAuth(app: Express): void {
 
   // Login endpoint
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: any, user: Express.User, info: any) => {
       if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
@@ -173,9 +190,24 @@ export function setupAuth(app: Express): void {
       
       req.login(user, (err) => {
         if (err) return next(err);
-        // Return user without the password
-        const { password, ...userWithoutPassword } = user;
-        res.json(userWithoutPassword);
+        
+        // Force save the session to ensure it's stored
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error:', saveErr);
+            return next(saveErr);
+          }
+          
+          // Return user without the password
+          const { password, ...userWithoutPassword } = user;
+          
+          // Include debug information in the response for troubleshooting
+          res.json({
+            ...userWithoutPassword,
+            sessionID: req.sessionID, // Session ID
+            authStatus: 'success' // Indicate successful authentication
+          });
+        });
       });
     })(req, res, next);
   });
