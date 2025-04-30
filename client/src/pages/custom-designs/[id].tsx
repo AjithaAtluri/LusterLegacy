@@ -142,7 +142,7 @@ export default function CustomDesignDetail() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
       <Helmet>
-        <title>Design Request #{design.id} | Luster Legacy</title>
+        <title>{`Design Request #${design.id} | Luster Legacy`}</title>
         <meta name="description" content="View and manage your custom jewelry design request" />
       </Helmet>
       
