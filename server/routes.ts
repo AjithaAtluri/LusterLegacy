@@ -1166,8 +1166,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           comment = await storage.addDesignRequestComment({
             designRequestId: designId,
             content: content.trim(),
-            createdBy: req.user.username,
-            createdAt: new Date(),
+            createdBy: req.user.username || req.user.email,
+            userId: req.user.id,
             isAdmin: isAdmin
           });
         } else {
