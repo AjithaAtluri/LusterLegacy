@@ -733,7 +733,8 @@ export default function DesignForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-8">
-        <h3 className="font-playfair text-2xl font-semibold text-foreground mb-6">Submit Your Design</h3>
+        <h3 className="font-playfair text-2xl font-semibold text-foreground mb-3">Submit Your Design</h3>
+        <p className="font-montserrat text-sm text-foreground/70 mb-6">Login required. Your design details will be saved when you submit.</p>
         
         <div className="mb-6">
           <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">

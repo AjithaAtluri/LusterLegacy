@@ -474,7 +474,8 @@ export default function CustomDesignSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
           {/* Submit Your Design Section */}
           <div className="bg-background p-8 rounded-lg shadow-xl flex flex-col">
-            <h4 className="font-playfair text-2xl font-semibold text-foreground mb-6">Submit Your Design</h4>
+            <h4 className="font-playfair text-2xl font-semibold text-foreground mb-3">Submit Your Design</h4>
+            <p className="font-montserrat text-sm text-foreground/70 mb-6">Login required. Your design details will be saved when you submit.</p>
             
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -638,6 +639,14 @@ export default function CustomDesignSection() {
                   >
                     {isSubmitting ? "Submitting..." : "Submit Design Request"}
                   </Button>
+                  
+                  {!user && (
+                    <div className="mt-2 text-center">
+                      <p className="text-xs text-foreground/60">
+                        Login required. Your design details will be saved when you submit.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </form>
             </Form>
