@@ -124,9 +124,102 @@ export default function DesignForm() {
             agreeToTerms: parsedData.agreeToTerms || false
           });
           
-          // Restore image data if available
-          if (parsedData.imageDataUrl) {
-            // For images saved as data URLs, we need to convert them back to a File object
+          // Restore multiple images if available
+          if (parsedData.imageDataUrls && Object.keys(parsedData.imageDataUrls).length > 0) {
+            try {
+              // Function to convert a data URL to a File object
+              const convertDataUrlToFile = (dataUrl, imageInfo) => {
+                return new Promise((resolve) => {
+                  const img = new Image();
+                  img.onload = function() {
+                    // Create a canvas with the same dimensions as the image
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // Draw the image on the canvas
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0);
+                    
+                    // Convert the canvas to a blob
+                    canvas.toBlob((blob) => {
+                      if (blob) {
+                        // Create a new File object
+                        const restoredFile = new File(
+                          [blob],
+                          imageInfo?.name || "restored-image.jpg",
+                          {
+                            type: imageInfo?.type || "image/jpeg",
+                            lastModified: imageInfo?.lastModified || Date.now()
+                          }
+                        );
+                        resolve(restoredFile);
+                      } else {
+                        resolve(null);
+                      }
+                    }, imageInfo?.type || "image/jpeg");
+                  };
+                  
+                  img.onerror = () => resolve(null);
+                  // Start loading the image
+                  img.src = dataUrl;
+                });
+              };
+              
+              // Get all the data URLs from the parsed data
+              const dataUrls = parsedData.imageDataUrls;
+              const imagesInfo = parsedData.allImagesInfo || [];
+              
+              // Convert each data URL to a File object
+              const restoredFiles = [];
+              const newPreviewUrls = [];
+              
+              // Create an array of promises for each image conversion
+              const conversionPromises = Object.keys(dataUrls).map(async (key) => {
+                const index = parseInt(key);
+                const dataUrl = dataUrls[key];
+                const imageInfo = imagesInfo[index] || null;
+                
+                try {
+                  const restoredFile = await convertDataUrlToFile(dataUrl, imageInfo);
+                  if (restoredFile) {
+                    restoredFiles.push(restoredFile);
+                    const previewUrl = URL.createObjectURL(restoredFile);
+                    newPreviewUrls.push({ index, previewUrl });
+                    
+                    // If this is the main image or we don't have a main image yet, set it as the main image
+                    if ((parsedData.mainImageInfo && imageInfo && parsedData.mainImageInfo.name === imageInfo.name) || !uploadedImage) {
+                      setUploadedImage(restoredFile);
+                      setPreviewUrl(previewUrl);
+                    }
+                  }
+                } catch (error) {
+                  console.error('Error converting data URL to file:', error);
+                }
+              });
+              
+              // Wait for all conversions to complete
+              Promise.all(conversionPromises).then(() => {
+                if (restoredFiles.length > 0) {
+                  // Set the uploadedImages state with all restored files
+                  setUploadedImages(restoredFiles);
+                  
+                  // Set the previewUrls state with all preview URLs
+                  const sortedPreviewUrls = newPreviewUrls
+                    .sort((a, b) => a.index - b.index)
+                    .map(item => item.previewUrl);
+                  
+                  setPreviewUrls(sortedPreviewUrls);
+                  
+                  console.log(`Restored ${restoredFiles.length} images from session storage`);
+                }
+              });
+            } catch (imageError) {
+              console.error('Error restoring multiple images from data URLs:', imageError);
+            }
+          }
+          // For backwards compatibility, also handle old single image format
+          else if (parsedData.imageDataUrl) {
             try {
               // First, create an image element to get dimensions
               const img = new Image();
@@ -158,6 +251,10 @@ export default function DesignForm() {
                     
                     // Set the uploadedImage state
                     setUploadedImage(restoredFile);
+                    
+                    // Set the uploadedImages array for multiple image compatibility
+                    setUploadedImages([restoredFile]);
+                    setPreviewUrls([previewUrl]);
                   }
                 }, parsedData.imageInfo?.type || "image/jpeg");
               };
@@ -208,30 +305,89 @@ export default function DesignForm() {
       // Save the initial form data first (without image)
       sessionStorage.setItem('designFormData', JSON.stringify(formData));
       
-      // Then handle the image separately if available
-      if (uploadedImage && previewUrl && uploadedImage.size < 2 * 1024 * 1024) { // Only for images under 2MB
+      // Then handle multiple images separately if available
+      if (uploadedImages.length > 0) {
         try {
-          // Convert image to data URL synchronously to ensure it's saved
-          const reader = new FileReader();
-          reader.onload = function() {
-            const dataUrl = reader.result;
-            // Get the latest form data to update it
-            const existingData = sessionStorage.getItem('designFormData');
-            if (existingData) {
-              try {
-                const parsedData = JSON.parse(existingData);
-                parsedData.imageDataUrl = dataUrl;
-                sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
-                console.log("Image data saved to session storage");
-              } catch (parseError) {
-                console.error('Error parsing form data for image update:', parseError);
+          // First, update the form data with image metadata
+          // Get the latest form data to update it
+          const existingData = sessionStorage.getItem('designFormData');
+          if (existingData) {
+            try {
+              const parsedData = JSON.parse(existingData);
+              
+              // Save main image info first
+              if (uploadedImage) {
+                parsedData.mainImageInfo = {
+                  name: uploadedImage.name,
+                  size: uploadedImage.size,
+                  type: uploadedImage.type,
+                  lastModified: uploadedImage.lastModified
+                };
               }
+              
+              // Save info about all images
+              parsedData.allImagesInfo = uploadedImages.map(img => ({
+                name: img.name,
+                size: img.size,
+                type: img.type,
+                lastModified: img.lastModified
+              }));
+              
+              // Save updated metadata
+              sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
+              
+              // Now handle image data conversion for each image (limit to 5MB total)
+              let totalSize = 0;
+              const promises = uploadedImages.map((file, index) => {
+                return new Promise((resolve) => {
+                  // Skip excessively large files
+                  if (file.size > 2 * 1024 * 1024 || totalSize > 5 * 1024 * 1024) {
+                    resolve(null);
+                    return;
+                  }
+                  
+                  totalSize += file.size;
+                  const reader = new FileReader();
+                  reader.onload = function() {
+                    resolve({
+                      index,
+                      dataUrl: reader.result
+                    });
+                  };
+                  reader.onerror = () => resolve(null);
+                  reader.readAsDataURL(file);
+                });
+              });
+              
+              // Process all image conversions
+              Promise.all(promises).then((results: any[]) => {
+                // Filter out null results and create a map of valid data URLs
+                const imageDataUrls: Record<string, string> = {};
+                results.filter(r => r !== null).forEach(result => {
+                  if (result && typeof result.index === 'number' && result.dataUrl) {
+                    imageDataUrls[result.index.toString()] = result.dataUrl as string;
+                  }
+                });
+                
+                // Get the latest form data again to update it with image data URLs
+                const latestData = sessionStorage.getItem('designFormData');
+                if (latestData) {
+                  try {
+                    const latestParsedData = JSON.parse(latestData);
+                    latestParsedData.imageDataUrls = imageDataUrls;
+                    sessionStorage.setItem('designFormData', JSON.stringify(latestParsedData));
+                    console.log("Multiple image data saved to session storage");
+                  } catch (parseError) {
+                    console.error('Error parsing form data for multiple image update:', parseError);
+                  }
+                }
+              });
+            } catch (parseError) {
+              console.error('Error parsing form data for image metadata update:', parseError);
             }
-          };
-          // Start reading the file as a data URL
-          reader.readAsDataURL(uploadedImage);
+          }
         } catch (imageError) {
-          console.error('Error converting image to data URL:', imageError);
+          console.error('Error processing multiple images for storage:', imageError);
         }
       }
     } catch (error) {
