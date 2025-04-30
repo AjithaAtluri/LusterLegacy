@@ -3,17 +3,19 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { Upload, X, CheckCircle, Image as ImageIcon, Check } from "lucide-react";
+import { Upload, X, CheckCircle, Image as ImageIcon, Check, ChevronsUpDown } from "lucide-react";
 import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS } from "@/lib/constants";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useDropzone } from "react-dropzone";
-import { isImageFile, getFileExtension } from "@/lib/utils";
+import { isImageFile, getFileExtension, cn } from "@/lib/utils";
 import type { SubmitHandler } from "react-hook-form";
 import designProcessImage from "@/assets/amethyst-necklace-design.png";
 
@@ -533,23 +535,57 @@ export default function CustomDesignSection() {
                         <FormLabel className="font-montserrat text-sm font-medium text-foreground">
                           Stone Types* (Select one or more)
                         </FormLabel>
-                        <Select
-                          onValueChange={(value) => field.onChange([value])} 
-                          value={Array.isArray(field.value) && field.value.length > 0 ? field.value[0] : ""}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
-                              <SelectValue placeholder="Select stone type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {STONE_TYPES.map((stone) => (
-                              <SelectItem key={stone.id} value={stone.id}>
-                                {stone.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="relative">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full p-3 h-auto border border-foreground/20 rounded font-montserrat text-sm justify-between"
+                                >
+                                  {field.value && field.value.length > 0
+                                    ? field.value.length === 1
+                                      ? STONE_TYPES.find(stone => stone.id === field.value[0])?.name || "Selected stones"
+                                      : `${field.value.length} stones selected`
+                                    : "Select stone types"}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0" align="start">
+                              <Command>
+                                <CommandInput placeholder="Search stones..." />
+                                <CommandEmpty>No stone type found.</CommandEmpty>
+                                <CommandGroup>
+                                  {STONE_TYPES.map((stone) => {
+                                    const isSelected = field.value?.includes(stone.id);
+                                    return (
+                                      <CommandItem
+                                        key={stone.id}
+                                        value={stone.id}
+                                        onSelect={() => {
+                                          const updatedValue = isSelected
+                                            ? field.value.filter((value) => value !== stone.id)
+                                            : [...(field.value || []), stone.id];
+                                          field.onChange(updatedValue);
+                                        }}
+                                      >
+                                        <div className={cn(
+                                          "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                          isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
+                                        )}>
+                                          {isSelected && <Check className="h-3 w-3" />}
+                                        </div>
+                                        <span>{stone.name}</span>
+                                      </CommandItem>
+                                    );
+                                  })}
+                                </CommandGroup>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
