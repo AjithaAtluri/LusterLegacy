@@ -1185,6 +1185,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Design feedback endpoints (chat with image support)
+  app.get('/api/custom-designs/:id/feedback', async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const designId = parseInt(req.params.id);
+      if (isNaN(designId)) {
+        return res.status(400).json({ message: 'Invalid design request ID' });
+      }
+      
+      const designRequest = await storage.getDesignRequest(designId);
+      if (!designRequest) {
+        return res.status(404).json({ message: 'Design request not found' });
+      }
+      
+      // Check if user is admin or if the request belongs to the user
+      const isAdmin = req.user.role === 'admin';
+      const isOwner = req.user.email === designRequest.email;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: 'Unauthorized access to design request' });
+      }
+      
+      const feedback = await storage.getDesignFeedback(designId);
+      return res.json(feedback);
+    } catch (error) {
+      console.error('Error getting design feedback:', error);
+      return res.status(500).json({ message: 'An error occurred while retrieving design feedback' });
+    }
+  });
+  
+  app.post('/api/custom-designs/:id/feedback', upload.single('image'), async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const designId = parseInt(req.params.id);
+      if (isNaN(designId)) {
+        return res.status(400).json({ message: 'Invalid design request ID' });
+      }
+      
+      const designRequest = await storage.getDesignRequest(designId);
+      if (!designRequest) {
+        return res.status(404).json({ message: 'Design request not found' });
+      }
+      
+      // Check if user is admin or if the request belongs to the user
+      const isAdmin = req.user.role === 'admin';
+      const isOwner = req.user.email === designRequest.email;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: 'Unauthorized access to design request' });
+      }
+      
+      const { message } = req.body;
+      if (!message || typeof message !== 'string' || message.trim() === '') {
+        return res.status(400).json({ message: 'Feedback message is required' });
+      }
+      
+      // If customer is submitting feedback, check if the current status allows it
+      if (!isAdmin) {
+        // Customer can only provide feedback if the design is ready for review
+        if (designRequest.status !== 'design_ready_for_review' && 
+            designRequest.status !== 'design_in_progress') {
+          return res.status(400).json({ 
+            message: 'You can only provide feedback when the design is ready for review or in progress'
+          });
+        }
+        
+        // Check iteration count for customers
+        if (designRequest.iterationsCount >= 4) {
+          return res.status(400).json({ 
+            message: 'You have reached the maximum number of design iterations (4)'
+          });
+        }
+      }
+      
+      // Get image URL if file was uploaded
+      const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+      
+      // Add the feedback
+      const feedback = await storage.addDesignFeedback({
+        designRequestId: designId,
+        message: message.trim(),
+        imageUrl,
+        isFromAdmin: isAdmin,
+        userId: req.user.id,
+        createdAt: new Date()
+      });
+      
+      return res.status(201).json(feedback);
+    } catch (error) {
+      console.error('Error adding design feedback:', error);
+      return res.status(500).json({ message: 'An error occurred while adding your feedback' });
+    }
+  });
+  
+  // Design payment endpoints
+  app.get('/api/custom-designs/:id/payments', async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const designId = parseInt(req.params.id);
+      if (isNaN(designId)) {
+        return res.status(400).json({ message: 'Invalid design request ID' });
+      }
+      
+      const designRequest = await storage.getDesignRequest(designId);
+      if (!designRequest) {
+        return res.status(404).json({ message: 'Design request not found' });
+      }
+      
+      // Check if user is admin or if the request belongs to the user
+      const isAdmin = req.user.role === 'admin';
+      const isOwner = req.user.email === designRequest.email;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: 'Unauthorized access to design request' });
+      }
+      
+      const payments = await storage.getDesignPayments(designId);
+      return res.json(payments);
+    } catch (error) {
+      console.error('Error getting design payments:', error);
+      return res.status(500).json({ message: 'An error occurred while retrieving design payments' });
+    }
+  });
+  
+  app.post('/api/custom-designs/:id/payments', async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      const designId = parseInt(req.params.id);
+      if (isNaN(designId)) {
+        return res.status(400).json({ message: 'Invalid design request ID' });
+      }
+      
+      const designRequest = await storage.getDesignRequest(designId);
+      if (!designRequest) {
+        return res.status(404).json({ message: 'Design request not found' });
+      }
+      
+      // Check if user is admin or if the request belongs to the user
+      const isAdmin = req.user.role === 'admin';
+      const isOwner = req.user.email === designRequest.email;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: 'Unauthorized access to design request' });
+      }
+      
+      const { amount, currency, paymentMethod, paymentType, status } = req.body;
+      
+      // Validate payment data
+      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+        return res.status(400).json({ message: 'Valid amount is required' });
+      }
+      
+      if (!currency || (currency !== 'USD' && currency !== 'INR')) {
+        return res.status(400).json({ message: 'Currency must be USD or INR' });
+      }
+      
+      if (!paymentMethod) {
+        return res.status(400).json({ message: 'Payment method is required' });
+      }
+      
+      if (!paymentType || (paymentType !== 'consultation_fee' && paymentType !== 'final_payment')) {
+        return res.status(400).json({ message: 'Payment type must be consultation_fee or final_payment' });
+      }
+      
+      // Create the payment record
+      const payment = await storage.addDesignPayment({
+        designRequestId: designId,
+        amount: parseFloat(amount),
+        currency,
+        paymentMethod,
+        paymentType,
+        status: status || 'pending',
+        createdAt: new Date(),
+        userId: req.user.id
+      });
+      
+      // If this is a successful consultation fee payment, update the design request status
+      if (payment.paymentType === 'consultation_fee' && payment.status === 'completed') {
+        await storage.updateDesignRequest(designId, {
+          consultationFeePaid: true,
+          status: 'design_started'
+        });
+      }
+      
+      return res.status(201).json(payment);
+    } catch (error) {
+      console.error('Error creating design payment:', error);
+      return res.status(500).json({ message: 'An error occurred while processing payment' });
+    }
+  });
+  
+  app.patch('/api/custom-designs/:designId/payments/:paymentId', async (req, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      
+      const designId = parseInt(req.params.designId);
+      const paymentId = parseInt(req.params.paymentId);
+      
+      if (isNaN(designId) || isNaN(paymentId)) {
+        return res.status(400).json({ message: 'Invalid design or payment ID' });
+      }
+      
+      const { status } = req.body;
+      if (!status || typeof status !== 'string') {
+        return res.status(400).json({ message: 'Payment status is required' });
+      }
+      
+      const updatedPayment = await storage.updateDesignPaymentStatus(paymentId, status);
+      if (!updatedPayment) {
+        return res.status(404).json({ message: 'Payment not found' });
+      }
+      
+      return res.json(updatedPayment);
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      return res.status(500).json({ message: 'An error occurred while updating payment status' });
+    }
+  });
+
   /**
    * Cart routes
    */
