@@ -586,9 +586,9 @@ export default function DesignForm() {
       // Remove stored form data if any
       sessionStorage.removeItem("designFormData");
       
-      // Redirect to collections page after a short delay
+      // Redirect to customer dashboard after a short delay
       setTimeout(() => {
-        window.location.href = window.location.origin + "/collections";
+        window.location.href = window.location.origin + "/customer-dashboard?tab=requests";
       }, 1500); // Give the toast a moment to be seen before redirecting
     } catch (error) {
       console.error("Design form error:", error);
