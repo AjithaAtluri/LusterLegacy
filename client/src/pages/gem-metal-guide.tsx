@@ -1,10 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
+
+// Import stock jewelry images (no product images)
+import cabochonImage from "@assets/WhatsApp Image 2025-03-28 at 3.06.26 AM.jpeg";
+import facetedStoneImage from "@assets/34d7126d-d054-43db-ab4a-0ca2cd6b2417.jpg";
+import rubyImage from "@assets/22ad5224-ac43-4442-aeb0-bf2f127c3f0b.jpg";
+import emeraldImage from "@assets/63125427-839d-4ed8-8669-fad1f1b7e17f.jpg";
+import sapphireImage from "@assets/51abd131-494d-407e-9e93-c5889f0fdf9b.jpg";
+import filigreeImage from "@assets/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg";
+import enamelImage from "@assets/f26984c8-1bd6-484f-ad5e-bcb75c758435.jpeg";
+import goldImage from "@assets/5a280e63-60a0-421e-ad9c-74ac84809379.jpg";
+import onyxImage from "@assets/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg";
+import labCreatedImage from "@assets/e905bf90-f2b9-482e-a4bf-0cccd1c33a02.jpg";
+import carvedStoneImage from "@assets/78a88af0-6ca3-41ed-bc69-10427ea08d1a.jpg";
 
 export default function GemMetalGuide() {
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
   return (
     <div className="container mx-auto py-12 px-4 sm:px-6 max-w-7xl">
       <Helmet>
@@ -12,29 +28,138 @@ export default function GemMetalGuide() {
         <meta name="description" content="Educational guide about gemstones, metals, and jewelry terminology" />
       </Helmet>
 
-      <div className="text-center mb-12">
-        <h1 className="font-cormorant text-4xl md:text-6xl font-bold mb-4 tracking-tight">
-          <span className="text-foreground">Gem & Metal</span>
-          <span className="text-primary"> Guide</span>
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-          Dive into the world of fine jewelry with our comprehensive guide to gemstones, metals, 
-          and jewelry crafting techniques. Become an informed collector with our expert insights.
-        </p>
+      {/* Hero Banner */}
+      <div className="relative rounded-lg overflow-hidden mb-16">
+        <img 
+          src={sapphireImage} 
+          alt="Luxury Gemstones" 
+          className="w-full h-[300px] object-cover brightness-50"
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="font-cormorant text-5xl md:text-7xl font-bold mb-4 tracking-tight text-center"
+          >
+            Gem & Metal <span className="text-primary">Guide</span>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg max-w-3xl mx-auto text-center text-gray-200"
+          >
+            Discover the timeless artistry and science behind fine jewelry with our expert insights
+          </motion.p>
+        </div>
       </div>
 
       <Tabs defaultValue="gemstones" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-8">
-          <TabsTrigger value="gemstones" className="text-lg py-3">Gemstones</TabsTrigger>
-          <TabsTrigger value="stone-forms" className="text-lg py-3">Stone Forms</TabsTrigger>
-          <TabsTrigger value="metals" className="text-lg py-3">Precious Metals</TabsTrigger>
-          <TabsTrigger value="craftsmanship" className="text-lg py-3">Craftsmanship</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 mb-8 relative z-10">
+          <TabsTrigger value="gemstones" className="text-lg py-3 font-medium">Gemstones</TabsTrigger>
+          <TabsTrigger value="stone-forms" className="text-lg py-3 font-medium">Stone Forms</TabsTrigger>
+          <TabsTrigger value="metals" className="text-lg py-3 font-medium">Precious Metals</TabsTrigger>
+          <TabsTrigger value="craftsmanship" className="text-lg py-3 font-medium">Craftsmanship</TabsTrigger>
         </TabsList>
+        
+        {/* Lightbox for image preview */}
+        {activeImage && (
+          <div 
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            onClick={() => setActiveImage(null)}
+          >
+            <div className="relative max-w-5xl max-h-full">
+              <img 
+                src={activeImage} 
+                alt="Enlarged jewelry view" 
+                className="max-w-full max-h-[90vh] object-contain rounded-lg" 
+              />
+              <button 
+                className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2"
+                onClick={() => setActiveImage(null)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stone Forms Tab */}
         <TabsContent value="stone-forms" className="space-y-8">
+          {/* Visual introduction to stone forms */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => setActiveImage(cabochonImage)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <img 
+                  src={cabochonImage} 
+                  alt="Cabochon gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Cabochons</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => setActiveImage(facetedStoneImage)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <img 
+                  src={facetedStoneImage} 
+                  alt="Faceted gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Faceted Stones</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => setActiveImage(emeraldImage)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <img 
+                  src={emeraldImage} 
+                  alt="Rough gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Natural Crystals</h3>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-10">
+            <h3 className="font-cormorant text-3xl text-center mb-6">Understanding Stone Forms</h3>
+            <p className="text-center max-w-4xl mx-auto text-lg">
+              The way a gemstone is cut and shaped dramatically affects its appearance, value, and suitability for 
+              different jewelry designs. From smooth cabochons that showcase color to brilliantly faceted stones 
+              that maximize sparkle, each form has unique characteristics that create different visual effects.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={carvedStoneImage} 
+                  alt="Carved gemstone" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(carvedStoneImage)}
+                />
+              </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Carved Gemstones</CardTitle>
                 <CardDescription>The ancient art of stone sculptures</CardDescription>
@@ -49,7 +174,15 @@ export default function GemMetalGuide() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={cabochonImage} 
+                  alt="Cabochon gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(cabochonImage)}
+                />
+              </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Cabochons (Cabs)</CardTitle>
                 <CardDescription>Smooth, rounded gemstone forms</CardDescription>
@@ -64,7 +197,15 @@ export default function GemMetalGuide() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={facetedStoneImage} 
+                  alt="Faceted gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(facetedStoneImage)}
+                />
+              </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Faceted Stones</CardTitle>
                 <CardDescription>Precision-cut for maximum brilliance</CardDescription>
@@ -79,7 +220,15 @@ export default function GemMetalGuide() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={rubyImage} 
+                  alt="Gemstone beads" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(rubyImage)}
+                />
+              </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Beads</CardTitle>
                 <CardDescription>Versatile stone forms for stringing</CardDescription>
@@ -93,6 +242,15 @@ export default function GemMetalGuide() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+          
+          <div className="bg-gradient-to-l from-indigo-50 to-purple-50 rounded-xl p-6 mt-10 mb-10">
+            <h3 className="font-cormorant text-3xl text-center mb-6">Specialized Stone Forms</h3>
+            <p className="text-center max-w-4xl mx-auto text-lg">
+              Beyond the common cuts, jewelers employ specialized stone forms to achieve particular 
+              artistic effects or to work with challenging materials. These unique approaches 
+              open up new possibilities for jewelry design and wearable art.
+            </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -160,64 +318,175 @@ export default function GemMetalGuide() {
         
         {/* Gemstones Tab */}
         <TabsContent value="gemstones" className="space-y-8">
+          {/* Visual introduction to gemstone types */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => setActiveImage(rubyImage)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <img 
+                  src={rubyImage} 
+                  alt="Natural gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Natural Gemstones</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => setActiveImage(labCreatedImage)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <img 
+                  src={labCreatedImage} 
+                  alt="Lab-created gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Lab-Created Gems</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => setActiveImage(onyxImage)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <img 
+                  src={onyxImage} 
+                  alt="Onyx gemstone jewelry" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Onyx & Black Gems</h3>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-10">
+            <h3 className="font-cormorant text-3xl text-center mb-6">Understanding Gemstone Types</h3>
+            <p className="text-center max-w-4xl mx-auto text-lg">
+              From Earth-mined treasures to advanced laboratory creations, gemstones offer a 
+              spectrum of beauty, value, and ethical considerations. Each type brings unique 
+              characteristics to jewelry design, allowing for both traditional luxury and modern alternatives.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={rubyImage} 
+                  alt="Natural gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(rubyImage)}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Precious vs. Semi-Precious</CardTitle>
-                <CardDescription>Understanding the classification of gemstones</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Natural Gemstones</CardTitle>
+                <CardDescription>Earth's treasures formed over millions of years</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  The terms "precious" and "semi-precious" are traditional classifications that have been used for centuries, but modern gemologists recognize that this distinction is somewhat arbitrary.
+                  Natural gemstones are formed deep within the Earth through geological processes spanning millions of years. Each stone carries unique characteristics—inclusions, color zoning, and growth patterns—that gemologists use to identify its natural origin.
                 </p>
                 <p>
-                  Historically, only diamonds, rubies, sapphires, and emeralds were considered precious, while all other gemstones were deemed semi-precious. Today, factors like rarity, durability, and market demand are more important indicators of a gemstone's value.
+                  These stones are valued for their rarity, uniqueness, and the romantic notion of wearing something created by natural forces. Popular natural gemstones include diamonds, rubies, sapphires, emeralds, and semi-precious varieties like amethyst, citrine, and garnet.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={labCreatedImage} 
+                  alt="Lab-created gemstones" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(labCreatedImage)}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Understanding Carats</CardTitle>
-                <CardDescription>The weight and measurement of gemstones</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Lab-Created Gemstones</CardTitle>
+                <CardDescription>Science replicating nature's masterpieces</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Carat is a unit of weight used specifically for gemstones, equal to 200 milligrams. Don't confuse it with "karat," which measures gold purity.
+                  Lab-created (or synthetic) gemstones have identical physical, chemical, and optical properties to their natural counterparts but are grown in controlled laboratory environments in weeks rather than millions of years. Methods include flux growth, hydrothermal growth, and chemical vapor deposition.
                 </p>
                 <p>
-                  While larger gemstones (higher carat weight) are generally more valuable, factors like color, clarity, and cut can influence a stone's value more significantly than size alone.
+                  These stones offer significant advantages: they're more affordable (typically 30-60% less), environmentally sustainable with minimal ecological impact, and ethically sourced with guaranteed conflict-free origins. Their consistent quality and perfect clarity make them excellent alternatives for traditional jewelry.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={onyxImage} 
+                  alt="Onyx gemstone jewelry" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(onyxImage)}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Natural vs. Lab Created</CardTitle>
-                <CardDescription>Ethical and practical considerations</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Onyx: The Enigmatic Black Gem</CardTitle>
+                <CardDescription>Timeless elegance in black and white</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Lab-created gemstones have the same physical, chemical, and optical properties as their natural counterparts but are grown in controlled laboratory environments.
+                  Onyx is a variety of chalcedony quartz distinguished by its parallel bands of color. True gem-quality onyx traditionally features black and white bands, although the term is commonly used today for solid black chalcedony, which is actually more accurately termed "black onyx."
                 </p>
                 <p>
-                  While natural gemstones carry the allure of rarity and tradition, lab-created stones offer ethical certainty, consistent quality, and are typically more affordable.
+                  In jewelry, onyx is prized for its deep, lustrous black color that provides dramatic contrast in designs. It's typically cut as cabochons or carved into cameos, intaglios, and beads. Onyx has been used since ancient times, with the Romans particularly favoring it for seal stones. Today, it remains a sophisticated choice for men's jewelry and statement pieces.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <img 
+                  src={emeraldImage} 
+                  alt="Comparing gemstone types" 
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onClick={() => setActiveImage(emeraldImage)}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Polki & Kundan</CardTitle>
-                <CardDescription>Traditional Indian gemstone techniques</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Comparing Gemstone Origins</CardTitle>
+                <CardDescription>How to choose what's right for you</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
-                  Polki refers to uncut, natural diamonds that have been used in traditional Indian jewelry for centuries. Unlike modern cut diamonds, Polki stones retain their natural character and are set with their flat side up.
-                </p>
-                <p>
-                  Kundan is a traditional technique of setting gems in gold foil. This labor-intensive process creates a distinctive look that has adorned Indian royalty for generations.
-                </p>
+                <div className="space-y-2">
+                  <p className="mb-1 font-semibold">Natural Gemstones:</p>
+                  <ul className="list-disc pl-5 mb-3">
+                    <li>Valued for rarity, uniqueness, and investment potential</li>
+                    <li>Each stone tells a geological story with distinctive inclusions</li>
+                    <li>Highest price point due to limited supply</li>
+                  </ul>
+                  
+                  <p className="mb-1 font-semibold">Lab-Created Gemstones:</p>
+                  <ul className="list-disc pl-5 mb-3">
+                    <li>Identical physical and optical properties to natural gems</li>
+                    <li>Eco-friendly with guaranteed ethical sourcing</li>
+                    <li>More affordable with consistent quality</li>
+                  </ul>
+                  
+                  <p className="mb-1 font-semibold">Onyx and Black Gems:</p>
+                  <ul className="list-disc pl-5">
+                    <li>Dramatic appearance for statement pieces</li>
+                    <li>Versatile in both modern and vintage designs</li>
+                    <li>Relatively affordable with excellent durability</li>
+                  </ul>
+                </div>
               </CardContent>
             </Card>
           </div>
