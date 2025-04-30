@@ -104,13 +104,16 @@ export default function CustomerDesignDetail({ design }: DesignDetailProps) {
       // Invalidate query to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/custom-designs/user'] });
       
+      // Also invalidate specific design query to keep both views in sync
+      queryClient.invalidateQueries({ queryKey: [`/api/custom-designs/${design.id}`] });
+      
       // Clear comment field
       setNewComment("");
     } catch (error) {
       console.error("Error adding comment:", error);
       toast({
         title: "Comment failed",
-        description: "Failed to add comment",
+        description: "Failed to add comment. Please try again.",
         variant: "destructive"
       });
     } finally {

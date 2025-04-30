@@ -91,13 +91,16 @@ export default function CustomDesignDetail() {
       // Invalidate query to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/custom-designs/${id}`] });
       
+      // Also invalidate user designs query to keep both views in sync
+      queryClient.invalidateQueries({ queryKey: ['/api/custom-designs/user'] });
+      
       // Clear comment field
       setNewComment("");
     } catch (error) {
       console.error("Error adding comment:", error);
       toast({
         title: "Comment failed",
-        description: "Failed to add comment",
+        description: "Failed to add comment. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -199,8 +202,12 @@ export default function CustomDesignDetail() {
               </div>
               
               <div>
-                <h3 className="text-sm font-medium text-foreground/70">Primary Stone</h3>
-                <p className="font-medium">{design.primaryStone}</p>
+                <h3 className="text-sm font-medium text-foreground/70">Primary Stone{design.primaryStones?.length > 1 ? 's' : ''}</h3>
+                {design.primaryStones && design.primaryStones.length > 0 ? (
+                  <p className="font-medium">{design.primaryStones.join(', ')}</p>
+                ) : (
+                  <p className="font-medium">{design.primaryStone}</p>
+                )}
               </div>
               
               {design.notes && (
