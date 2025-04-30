@@ -5,6 +5,87 @@ import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
 
+// Helper function to generate 5-word titles for products
+function getShortProductTitle(product: any): string {
+  // For product ID 42, use our manually crafted title
+  if (product.id === 42) {
+    return "Gold Gemstone Elegance Necklace";
+  }
+  
+  // For all other products, create a 5-word title based on product name, type, and details
+  const productType = product.productType || product.category || "";
+  const productName = product.name || "";
+  
+  // Extract key terms from product name and type
+  const terms = [...productName.split(/\s+/), ...productType.split(/\s+/)];
+  const keywords = terms
+    .filter(term => term.length > 2) // Filter out short words
+    .filter(term => !["and", "the", "with", "for", "from"].includes(term.toLowerCase())) // Filter common words
+    .filter((item, index, self) => self.indexOf(item) === index); // Remove duplicates
+  
+  // Product-specific titles based on ID
+  switch(product.id) {
+    case 29: return "Ruby Polki Gold Ornate Set";
+    case 32: return "Pearl Ruby Luxe Graceful Elegance";
+    case 33: return "Amethyst Crystal Fusion Grace Collection";
+    case 39: return "Navaratan Gem Royal Opulence";
+    case 40: return "Diamond Gem Radiance Luxury Set";
+    case 43: return "Kundan Pearl Polki Heritage Collection";
+    case 44: return "Quartz Masterpiece Lavish Beaded Dreams";
+    case 45: return "Emerald Natural Exquisite Treasure Collection";
+    default: {
+      // Create dynamic title from available keywords, aiming for 5 words
+      const metalWords = ["Gold", "Silver", "Platinum", "Diamond"];
+      const gemWords = ["Ruby", "Emerald", "Sapphire", "Pearl", "Gem", "Crystal", "Stone"];
+      const qualityWords = ["Luxury", "Elegant", "Exquisite", "Regal", "Royal", "Classic"];
+      
+      // Try to include one metal word, one gem word, one quality word, and the product type
+      let title = [];
+      
+      // Try to find a metal word in the product name
+      const metalWord = keywords.find(k => metalWords.some(m => k.toLowerCase().includes(m.toLowerCase())));
+      if (metalWord) title.push(metalWord);
+      
+      // Try to find a gem word in the product name
+      const gemWord = keywords.find(k => gemWords.some(g => k.toLowerCase().includes(g.toLowerCase())));
+      if (gemWord && !title.includes(gemWord)) title.push(gemWord);
+      
+      // Add the product type if it's a single word and not already included
+      if (productType && !title.includes(productType) && !productType.includes(" ")) {
+        title.push(productType);
+      }
+      
+      // Add a quality word
+      const qualityWord = qualityWords[Math.floor(Math.random() * qualityWords.length)];
+      title.push(qualityWord);
+      
+      // Add the word "Collection" or the product type as the last word
+      title.push("Collection");
+      
+      // Ensure we have exactly 5 words
+      while (title.length > 5) {
+        title.pop();
+      }
+      
+      // If we have less than 5 words, add words from the product name
+      const remainingKeywords = keywords.filter(k => !title.includes(k));
+      while (title.length < 5 && remainingKeywords.length > 0) {
+        title.push(remainingKeywords.shift());
+      }
+      
+      // If we still have less than 5 words, pad with quality words
+      while (title.length < 5) {
+        const word = qualityWords[Math.floor(Math.random() * qualityWords.length)];
+        if (!title.includes(word)) {
+          title.push(word);
+        }
+      }
+      
+      return title.slice(0, 5).join(" ");
+    }
+  }
+}
+
 // Interface for product details stored as JSON
 interface ProductDetails {
   detailedDescription: string;
@@ -76,7 +157,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[520px]">
       <div className="relative h-[350px] overflow-hidden flex-shrink-0 bg-white bg-opacity-5 flex items-center justify-center p-2">
         {/* Using the reliable product image component for consistent images */}
         <ReliableProductImage 
@@ -102,32 +183,22 @@ export default function ProductCard({ product }: ProductCardProps) {
       
       {/* Content area with fixed layout */}
       <div className="p-4 flex flex-col flex-grow">
-        {/* Product type badge */}
+        {/* Product type badge - only showing product type, not "featured" */}
         <div className="mb-2">
           {(product.productType || product.category) && (
             <Badge variant="outline" className="capitalize text-xs">
               {product.productType || product.category}
             </Badge>
           )}
-          {product.isFeatured && (
-            <Badge variant="secondary" className="text-xs ml-1">Featured</Badge>
-          )}
         </div>
         
-        {/* Product title with simplified 5-word version for demo */}
-        <h3 className="font-playfair text-2xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300 mb-4 text-center">
-          {product.id === 42 
-            ? "Gold Gemstone Elegance Necklace" 
-            : product.name}
+        {/* Product title with simplified 5-word versions for all products */}
+        <h3 className="font-playfair text-2xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300 mb-6 text-center">
+          {getShortProductTitle(product)}
         </h3>
         
-        {/* Price section */}
-        <div className="mt-auto mb-3">
-          <p className="font-montserrat text-sm text-foreground/70">Price</p>
-          <p className="font-playfair text-xl font-semibold text-foreground group-hover:animate-gem-glow group-hover:text-amber-600 transition-colors duration-500">
-            ${calculatedPriceUSD}
-          </p>
-        </div>
+        {/* Empty space to replace price section */}
+        <div className="mt-auto mb-3"></div>
         
         {/* Button always at the bottom */}
         <div className="mt-auto">
