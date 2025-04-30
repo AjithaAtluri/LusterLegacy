@@ -105,11 +105,40 @@ export default function AuthPage() {
   
   // Submit handlers
   const onLoginSubmit = (data: LoginFormValues) => {
+    // Check if there's a saved form state in the session that we need to return to
+    const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
+    
+    // Preserve returnTo parameter if it exists, otherwise set it to /custom-design if we have saved form data
+    const params = new URLSearchParams(window.location.search);
+    const existingReturnTo = params.get("returnTo");
+    
+    // If no explicit returnTo but we have saved design form data, redirect to custom design page
+    if (!existingReturnTo && hasSavedDesignForm) {
+      console.log("Setting custom-design as returnTo for login due to saved form data");
+      params.set("returnTo", "/custom-design");
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
+    
     loginMutation.mutate(data);
   };
   
   const onRegisterSubmit = (data: RegisterFormValues) => {
     const { confirmPassword, acceptTerms, ...userData } = data;
+    
+    // Check if there's a saved form state in the session that we need to return to
+    const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
+    
+    // Preserve returnTo parameter if it exists, otherwise set it to /custom-design if we have saved form data
+    const params = new URLSearchParams(window.location.search);
+    const existingReturnTo = params.get("returnTo");
+    
+    // If no explicit returnTo but we have saved design form data, redirect to custom design page
+    if (!existingReturnTo && hasSavedDesignForm) {
+      console.log("Setting custom-design as returnTo for registration due to saved form data");
+      params.set("returnTo", "/custom-design");
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
+    
     // Set the default role to "customer"
     registerMutation.mutate({
       ...userData,
