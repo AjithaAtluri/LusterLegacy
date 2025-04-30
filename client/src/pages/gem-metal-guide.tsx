@@ -4,22 +4,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
+import AIEducationalImage from "@/components/gem-guide/ai-educational-image";
 
-// Import stock jewelry images (no product images)
-import cabochonImage from "@assets/WhatsApp Image 2025-03-28 at 3.06.26 AM.jpeg";
-import facetedStoneImage from "@assets/34d7126d-d054-43db-ab4a-0ca2cd6b2417.jpg";
-import rubyImage from "@assets/22ad5224-ac43-4442-aeb0-bf2f127c3f0b.jpg";
-import emeraldImage from "@assets/63125427-839d-4ed8-8669-fad1f1b7e17f.jpg";
-import sapphireImage from "@assets/51abd131-494d-407e-9e93-c5889f0fdf9b.jpg";
-import filigreeImage from "@assets/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg";
-import enamelImage from "@assets/f26984c8-1bd6-484f-ad5e-bcb75c758435.jpeg";
-import goldImage from "@assets/5a280e63-60a0-421e-ad9c-74ac84809379.jpg";
-import onyxImage from "@assets/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg";
-import labCreatedImage from "@assets/e905bf90-f2b9-482e-a4bf-0cccd1c33a02.jpg";
-import carvedStoneImage from "@assets/78a88af0-6ca3-41ed-bc69-10427ea08d1a.jpg";
+// This will keep track of AI-generated image URLs
+interface GeneratedImages {
+  [key: string]: string;
+}
 
 export default function GemMetalGuide() {
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [generatedImages, setGeneratedImages] = useState<GeneratedImages>({});
+
+  // Function to handle when an AI image is loaded
+  const handleImageLoaded = (topic: string, url: string) => {
+    setGeneratedImages(prev => ({
+      ...prev,
+      [topic]: url
+    }));
+  };
 
   return (
     <div className="container mx-auto py-12 px-4 sm:px-6 max-w-7xl">
@@ -30,11 +32,15 @@ export default function GemMetalGuide() {
 
       {/* Hero Banner */}
       <div className="relative rounded-lg overflow-hidden mb-16">
-        <img 
-          src={sapphireImage} 
-          alt="Luxury Gemstones" 
-          className="w-full h-[300px] object-cover brightness-50"
-        />
+        <div className="w-full h-[300px]">
+          <AIEducationalImage
+            topic="Luxury gemstone collection with sapphires, rubies, and emeralds in a dark, elegant setting"
+            altText="Luxury Gemstones"
+            className="w-full h-full object-cover brightness-50"
+            height="h-[300px]"
+            onImageLoaded={(url) => handleImageLoaded("hero", url)}
+          />
+        </div>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
@@ -91,14 +97,14 @@ export default function GemMetalGuide() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <motion.div 
               whileHover={{ y: -5 }}
-              onClick={() => setActiveImage(cabochonImage)}
+              onClick={() => generatedImages.cabochons && setActiveImage(generatedImages.cabochons)}
               className="rounded-lg overflow-hidden shadow-md cursor-pointer"
             >
               <div className="relative h-64">
-                <img 
-                  src={cabochonImage} 
-                  alt="Cabochon gemstones" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                <AIEducationalImage
+                  topic="Cabochon gemstones with smooth domed tops in various colors"
+                  altText="Cabochon gemstones"
+                  onImageLoaded={(url) => handleImageLoaded("cabochons", url)}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-white font-cormorant text-xl font-semibold">Cabochons</h3>
@@ -108,14 +114,14 @@ export default function GemMetalGuide() {
             
             <motion.div 
               whileHover={{ y: -5 }}
-              onClick={() => setActiveImage(facetedStoneImage)}
+              onClick={() => generatedImages.faceted && setActiveImage(generatedImages.faceted)}
               className="rounded-lg overflow-hidden shadow-md cursor-pointer"
             >
               <div className="relative h-64">
-                <img 
-                  src={facetedStoneImage} 
-                  alt="Faceted gemstones" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                <AIEducationalImage
+                  topic="Faceted gemstones showing multiple polished surfaces with light reflection"
+                  altText="Faceted gemstones"
+                  onImageLoaded={(url) => handleImageLoaded("faceted", url)}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-white font-cormorant text-xl font-semibold">Faceted Stones</h3>
@@ -125,14 +131,14 @@ export default function GemMetalGuide() {
             
             <motion.div 
               whileHover={{ y: -5 }}
-              onClick={() => setActiveImage(emeraldImage)}
+              onClick={() => generatedImages.crystals && setActiveImage(generatedImages.crystals)}
               className="rounded-lg overflow-hidden shadow-md cursor-pointer"
             >
               <div className="relative h-64">
-                <img 
-                  src={emeraldImage} 
-                  alt="Rough gemstones" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                <AIEducationalImage
+                  topic="Natural crystal formations of raw gemstones in their natural state"
+                  altText="Natural crystal gemstones"
+                  onImageLoaded={(url) => handleImageLoaded("crystals", url)}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-white font-cormorant text-xl font-semibold">Natural Crystals</h3>
@@ -153,11 +159,12 @@ export default function GemMetalGuide() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={carvedStoneImage} 
-                  alt="Carved gemstone" 
+                <AIEducationalImage
+                  topic="Carved gemstone with intricate relief designs showing artistry and craftsmanship"
+                  altText="Carved gemstone"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(carvedStoneImage)}
+                  onImageLoaded={(url) => handleImageLoaded("carved", url)}
+                  onClick={() => generatedImages.carved && setActiveImage(generatedImages.carved)}
                 />
               </div>
               <CardHeader>
@@ -176,11 +183,12 @@ export default function GemMetalGuide() {
 
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={cabochonImage} 
-                  alt="Cabochon gemstones" 
+                <AIEducationalImage
+                  topic="Close-up of cabochon gemstones showing their smooth domed surface and rich colors"
+                  altText="Cabochon gemstones detail"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(cabochonImage)}
+                  onImageLoaded={(url) => handleImageLoaded("cabochons-detail", url)}
+                  onClick={() => generatedImages["cabochons-detail"] && setActiveImage(generatedImages["cabochons-detail"])}
                 />
               </div>
               <CardHeader>
@@ -199,11 +207,12 @@ export default function GemMetalGuide() {
 
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={facetedStoneImage} 
-                  alt="Faceted gemstones" 
+                <AIEducationalImage
+                  topic="Close-up of faceted diamond gemstone with brilliant light reflection and sparkle"
+                  altText="Faceted gemstone detail"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(facetedStoneImage)}
+                  onImageLoaded={(url) => handleImageLoaded("faceted-detail", url)}
+                  onClick={() => generatedImages["faceted-detail"] && setActiveImage(generatedImages["faceted-detail"])}
                 />
               </div>
               <CardHeader>
@@ -222,11 +231,12 @@ export default function GemMetalGuide() {
 
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={rubyImage} 
-                  alt="Gemstone beads" 
+                <AIEducationalImage
+                  topic="Strand of colorful gemstone beads of different shapes and sizes for jewelry making"
+                  altText="Gemstone beads"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(rubyImage)}
+                  onImageLoaded={(url) => handleImageLoaded("beads", url)}
+                  onClick={() => generatedImages.beads && setActiveImage(generatedImages.beads)}
                 />
               </div>
               <CardHeader>
@@ -279,57 +289,27 @@ export default function GemMetalGuide() {
                   Rough or raw gemstones are used in their natural, uncut state, preserving their organic shape and texture. This approach celebrates the stone's natural formation and character, creating one-of-a-kind pieces that connect wearers to the earth's processes.
                 </p>
                 <p>
-                  While diamonds, emeralds, and sapphires are occasionally used in rough form for avant-garde designs, rough stones are more commonly seen with crystals like tourmaline, quartz, and tanzanite that naturally form in aesthetically pleasing shapes with vivid colors and interesting textures.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Tumbled Stones</CardTitle>
-                <CardDescription>Smooth, polished irregular shapes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Tumbled stones are rough stones that have been smoothed and polished in a tumbling machine, creating rounded, irregular shapes with a high luster. Though often used for crystal collections, larger tumbled stones are increasingly popular in contemporary jewelry designs.
-                </p>
-                <p>
-                  This finishing technique preserves the stone's natural shape while giving it a refined appearance. Tumbled stones are particularly effective for showcasing the natural patterns in stones like agate, jasper, and malachite, and they're often used in bohemian or nature-inspired jewelry designs.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Doublets and Triplets</CardTitle>
-                <CardDescription>Composite stone constructions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Doublets and triplets are composite stones created by bonding two or three layers of material together. Typically, a thin slice of precious gemstone is bonded to a backing material (doublet) or sandwiched between a clear top layer and backing material (triplet).
-                </p>
-                <p>
-                  These constructions allow for creative use of thin gem materials that would otherwise be too fragile to use alone. Opal doublets and triplets are among the most common, allowing thinner slices of precious opal to be used effectively. While not as valuable as solid stones, well-made composites can create stunning visual effects at more accessible price points.
+                  While diamonds, emeralds, and sapphires are occasionally used in rough form for avant-garde designs, rough stones are more commonly seen with crystals like tourmaline, quartz, and tanzanite that naturally form in aesthetically pleasing shapes with striking color zoning and inclusions that add character.
                 </p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-        
+
         {/* Gemstones Tab */}
         <TabsContent value="gemstones" className="space-y-8">
           {/* Visual introduction to gemstone types */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <motion.div 
               whileHover={{ y: -5 }}
-              onClick={() => setActiveImage(rubyImage)}
+              onClick={() => generatedImages.natural && setActiveImage(generatedImages.natural)}
               className="rounded-lg overflow-hidden shadow-md cursor-pointer"
             >
               <div className="relative h-64">
-                <img 
-                  src={rubyImage} 
-                  alt="Natural gemstones" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                <AIEducationalImage
+                  topic="Natural gemstones including ruby, emerald, and sapphire showing rich colors and clarity"
+                  altText="Natural gemstones"
+                  onImageLoaded={(url) => handleImageLoaded("natural", url)}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-white font-cormorant text-xl font-semibold">Natural Gemstones</h3>
@@ -339,14 +319,14 @@ export default function GemMetalGuide() {
             
             <motion.div 
               whileHover={{ y: -5 }}
-              onClick={() => setActiveImage(labCreatedImage)}
+              onClick={() => generatedImages['lab-created'] && setActiveImage(generatedImages['lab-created'])}
               className="rounded-lg overflow-hidden shadow-md cursor-pointer"
             >
               <div className="relative h-64">
-                <img 
-                  src={labCreatedImage} 
-                  alt="Lab-created gemstones" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                <AIEducationalImage
+                  topic="Laboratory created gemstones in a scientific setting showing perfect clarity"
+                  altText="Lab-created gemstones"
+                  onImageLoaded={(url) => handleImageLoaded("lab-created", url)}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-white font-cormorant text-xl font-semibold">Lab-Created Gems</h3>
@@ -356,14 +336,14 @@ export default function GemMetalGuide() {
             
             <motion.div 
               whileHover={{ y: -5 }}
-              onClick={() => setActiveImage(onyxImage)}
+              onClick={() => generatedImages.onyx && setActiveImage(generatedImages.onyx)}
               className="rounded-lg overflow-hidden shadow-md cursor-pointer"
             >
               <div className="relative h-64">
-                <img 
-                  src={onyxImage} 
-                  alt="Onyx gemstone jewelry" 
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                <AIEducationalImage
+                  topic="Onyx gemstone jewelry showing deep black color with subtle banding"
+                  altText="Onyx gemstone jewelry"
+                  onImageLoaded={(url) => handleImageLoaded("onyx", url)}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <h3 className="text-white font-cormorant text-xl font-semibold">Onyx & Black Gems</h3>
@@ -384,181 +364,96 @@ export default function GemMetalGuide() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={rubyImage} 
-                  alt="Natural gemstones" 
+                <AIEducationalImage
+                  topic="Close-up of natural ruby gemstone showing deep red color and natural inclusions"
+                  altText="Natural ruby gemstone"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(rubyImage)}
+                  onImageLoaded={(url) => handleImageLoaded("natural-detail", url)}
+                  onClick={() => generatedImages["natural-detail"] && setActiveImage(generatedImages["natural-detail"])}
                 />
               </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Natural Gemstones</CardTitle>
-                <CardDescription>Earth's treasures formed over millions of years</CardDescription>
+                <CardDescription>Earth's treasures mined from the ground</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Natural gemstones are formed deep within the Earth through geological processes spanning millions of years. Each stone carries unique characteristics—inclusions, color zoning, and growth patterns—that gemologists use to identify its natural origin.
+                  Natural gemstones are formed deep within the Earth through geological processes that span millions of years. Their value comes from their rarity, durability, and beauty, with factors like color, clarity, cut, and carat weight determining their worth.
                 </p>
                 <p>
-                  These stones are valued for their rarity, uniqueness, and the romantic notion of wearing something created by natural forces. Popular natural gemstones include diamonds, rubies, sapphires, emeralds, and semi-precious varieties like amethyst, citrine, and garnet.
+                  The "Big Four" of precious gemstones—diamond, ruby, sapphire, and emerald—have traditionally been most valued, but many semi-precious stones like amethyst, topaz, and garnet are also prized for their unique colors and optical effects. Each natural stone carries tiny inclusions and characteristics that serve as its unique fingerprint.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={labCreatedImage} 
-                  alt="Lab-created gemstones" 
+                <AIEducationalImage
+                  topic="Laboratory created sapphire gemstone in controlled scientific environment"
+                  altText="Lab-created sapphire gemstone"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(labCreatedImage)}
+                  onImageLoaded={(url) => handleImageLoaded("lab-created-detail", url)}
+                  onClick={() => generatedImages["lab-created-detail"] && setActiveImage(generatedImages["lab-created-detail"])}
                 />
               </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Lab-Created Gemstones</CardTitle>
-                <CardDescription>Science replicating nature's masterpieces</CardDescription>
+                <CardDescription>Science replicating nature's beauty</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Lab-created (or synthetic) gemstones have identical physical, chemical, and optical properties to their natural counterparts but are grown in controlled laboratory environments in weeks rather than millions of years. Methods include flux growth, hydrothermal growth, and chemical vapor deposition.
+                  Lab-created gemstones are genuine gems grown in controlled environments that replicate the natural processes of gem formation. Chemically and physically identical to their natural counterparts, they possess the same optical, physical, and chemical properties.
                 </p>
                 <p>
-                  These stones offer significant advantages: they're more affordable (typically 30-60% less), environmentally sustainable with minimal ecological impact, and ethically sourced with guaranteed conflict-free origins. Their consistent quality and perfect clarity make them excellent alternatives for traditional jewelry.
+                  Unlike simulants or imitations, lab-created stones are real gems that offer several advantages: they typically have fewer inclusions, come at a lower cost, and are ethically sourced with minimal environmental impact. Popular lab-created stones include rubies, sapphires, emeralds, and diamonds.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={onyxImage} 
-                  alt="Synthetic onyx gemstones" 
+                <AIEducationalImage
+                  topic="Black onyx gemstone jewelry piece showing lustrous polish and deep color"
+                  altText="Onyx gemstone jewelry"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(onyxImage)}
+                  onImageLoaded={(url) => handleImageLoaded("onyx-detail", url)}
+                  onClick={() => generatedImages["onyx-detail"] && setActiveImage(generatedImages["onyx-detail"])}
                 />
               </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Synthetic Onyx Imitations</CardTitle>
-                <CardDescription>Affordable alternatives to precious gems</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Onyx & Black Gemstones</CardTitle>
+                <CardDescription>Elegant darkness in jewelry</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Synthetic onyx gemstones, such as "onyx ruby" or "onyx emerald," are colored glass or ceramic materials that imitate the appearance of precious gems. Unlike true black onyx (a variety of chalcedony quartz), these synthetic stones aren't related to natural onyx geologically—they earned their name from their opaque, uniform appearance.
+                  True onyx is a variety of chalcedony quartz characterized by parallel bands of different colors. When most people refer to "onyx" in jewelry, they're typically describing black onyx—a solid black chalcedony that's been dyed to enhance its color.
                 </p>
                 <p>
-                  These synthetic alternatives are particularly popular in traditional Indian jewelry styles like Kundan work, where they're set using gold foil. They offer vibrant colors at a fraction of the cost of natural gems, making elaborate designs more accessible. While they lack the geological value and durability of genuine gemstones, they allow for traditional-style pieces that preserve cultural aesthetics at affordable price points.
+                  In luxury jewelry, black onyx creates dramatic contrast with precious metals and colorless diamonds. Other black gemstones include black diamonds (typically treated), black spinel (naturally occurring), and black jade. When evaluating black gemstones, look for even color saturation, good polish, and absence of visible fractures.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden">
               <div className="h-56 overflow-hidden">
-                <img 
-                  src={emeraldImage} 
-                  alt="Comparing gemstone types" 
+                <AIEducationalImage
+                  topic="Comparison of natural, lab-grown, and synthetic black onyx gemstones side by side"
+                  altText="Natural vs synthetic gemstone comparison"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setActiveImage(emeraldImage)}
+                  onImageLoaded={(url) => handleImageLoaded("synthetic-comparison", url)}
+                  onClick={() => generatedImages["synthetic-comparison"] && setActiveImage(generatedImages["synthetic-comparison"])}
                 />
               </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Comparing Gemstone Origins</CardTitle>
-                <CardDescription>How to choose what's right for you</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="mb-1 font-semibold">Natural Gemstones:</p>
-                  <ul className="list-disc pl-5 mb-3">
-                    <li>Valued for rarity, uniqueness, and investment potential</li>
-                    <li>Each stone tells a geological story with distinctive inclusions</li>
-                    <li>Highest price point due to limited supply</li>
-                    <li>Maximum durability and time-tested beauty</li>
-                  </ul>
-                  
-                  <p className="mb-1 font-semibold">Lab-Created Gemstones:</p>
-                  <ul className="list-disc pl-5 mb-3">
-                    <li>Identical physical and optical properties to natural gems</li>
-                    <li>Eco-friendly with guaranteed ethical sourcing</li>
-                    <li>More affordable with consistent quality</li>
-                    <li>Perfect for precision designs requiring exact specifications</li>
-                  </ul>
-                  
-                  <p className="mb-1 font-semibold">Synthetic Onyx Alternatives:</p>
-                  <ul className="list-disc pl-5">
-                    <li>Extremely cost-effective for traditional designs</li>
-                    <li>Available in vibrant colors matching traditional aesthetics</li>
-                    <li>Perfect for elaborate Kundan and Polki-style settings</li>
-                    <li>Cultural significance in traditional Indian jewelry designs</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <h3 className="font-cormorant text-3xl text-center my-10">Global Gemstone Sources</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Famous Gemstone Origins</CardTitle>
-                <CardDescription>Where the world's finest gems are found</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-2">
-                  <span className="font-semibold">Diamonds:</span> Notable sources include Botswana, Russia, Canada, and Australia. Historically, India was the world's only diamond source until the 18th century.
-                </p>
-                <p className="mb-2">
-                  <span className="font-semibold">Rubies:</span> The finest rubies traditionally come from Myanmar (Burma), particularly the Mogok Valley. Other significant sources include Thailand, Cambodia, and Mozambique.
-                </p>
-                <p className="mb-2">
-                  <span className="font-semibold">Sapphires:</span> Kashmir, Burma, and Sri Lanka produce the most coveted blue sapphires, while Madagascar and Australia are important modern sources.
-                </p>
-                <p>
-                  <span className="font-semibold">Emeralds:</span> Colombia is renowned for producing the world's finest emeralds, particularly from the Muzo, Chivor, and Coscuez mines. Zambia and Brazil are also significant producers.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Origin and Value</CardTitle>
-                <CardDescription>How a gem's birthplace affects its worth</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Natural vs. Synthetic</CardTitle>
+                <CardDescription>Understanding distinctions in stone origins</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  The origin of a gemstone can significantly impact its value, as certain mines are known for producing stones with exceptional color, clarity, or other desirable characteristics. For example, rubies from Myanmar (Burma) typically command premium prices due to their intense "pigeon's blood" red color.
+                  Natural, lab-created, and synthetic stones represent different points on the spectrum of authenticity. Natural gems form through geological processes, while lab-created stones are chemically identical to natural ones but grown in controlled environments.
                 </p>
                 <p>
-                  Modern gemological laboratories can often determine a gem's geographic origin through sophisticated testing methods that analyze trace elements and inclusions. These origin determinations are increasingly important in the luxury gem market, where provenance adds to a stone's story and value.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Ethical Sourcing</CardTitle>
-                <CardDescription>Responsible practices in the gem trade</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  The gemstone industry has made significant strides in addressing ethical concerns around mining practices, working conditions, and environmental impact. 
-                </p>
-                <p>
-                  Organizations like the Responsible Jewellery Council certify companies that adhere to responsible practices. Fair Trade gemstones ensure miners receive fair compensation and work in safe conditions. When purchasing fine jewelry, inquire about the origin of stones and the jeweler's commitment to ethical sourcing.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">India's Gem Legacy</CardTitle>
-                <CardDescription>Ancient traditions and modern excellence</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  India has been a major player in the global gem trade for millennia, once the world's only source of diamonds and still a center for cutting and polishing. Today, India processes over 90% of the world's diamonds by volume.
-                </p>
-                <p>
-                  Beyond diamonds, India has rich deposits of many colored stones including star rubies, sapphires, and a wide variety of semi-precious gems. The country's long history of gemstone expertise is reflected in its traditional jewelry styles that showcase intricate gemstone setting techniques like Kundan and Meenakari.
+                  Synthetic imitations like cubic zirconia, moissanite, and glass merely resemble natural stones visually but have different chemical compositions. With onyx specifically, natural specimens show subtle banding and occasional translucency, while dyed black agate (often sold as onyx) shows more uniform coloration, and synthetic onyx imitations typically have perfect uniformity without the subtle variations found in natural materials.
                 </p>
               </CardContent>
             </Card>
@@ -567,63 +462,161 @@ export default function GemMetalGuide() {
 
         {/* Metals Tab */}
         <TabsContent value="metals" className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => generatedImages.gold && setActiveImage(generatedImages.gold)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <AIEducationalImage
+                  topic="Various gold jewelry pieces showing different colors of gold - yellow, white, and rose"
+                  altText="Gold jewelry in different colors"
+                  onImageLoaded={(url) => handleImageLoaded("gold", url)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Gold Varieties</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => generatedImages.platinum && setActiveImage(generatedImages.platinum)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <AIEducationalImage
+                  topic="Platinum jewelry pieces with elegant designs showing the metal's bright white luster"
+                  altText="Platinum jewelry"
+                  onImageLoaded={(url) => handleImageLoaded("platinum", url)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Platinum & Silver</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => generatedImages.alloys && setActiveImage(generatedImages.alloys)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <AIEducationalImage
+                  topic="Comparison of different metal alloys used in jewelry making showing color and finish differences"
+                  altText="Jewelry metal alloys"
+                  onImageLoaded={(url) => handleImageLoaded("alloys", url)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Metal Alloys</h3>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-10">
+            <h3 className="font-cormorant text-3xl text-center mb-6">Understanding Precious Metals</h3>
+            <p className="text-center max-w-4xl mx-auto text-lg">
+              The metal chosen for a piece of jewelry defines its character, durability, and value. 
+              From the warmth of gold to the modern sleekness of platinum, each metal brings its own 
+              qualities and considerations to jewelry design.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="Close-up of 24K, 18K, and 14K gold jewelry showing color differences"
+                  altText="Gold karat comparison"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("gold-karats", url)}
+                  onClick={() => generatedImages["gold-karats"] && setActiveImage(generatedImages["gold-karats"])}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Gold Purity: Understanding Karats</CardTitle>
-                <CardDescription>What those numbers really mean</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Gold & Its Karats</CardTitle>
+                <CardDescription>The timeless precious metal</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  The karat system measures the purity of gold in 24 parts. 24K gold is pure (99.9%), while 22K, 18K, and 14K contain 22, 18, and 14 parts gold, respectively, mixed with other metals.
+                  Gold's purity is measured in karats (K), with 24K representing pure gold (99.9%). Since pure gold is too soft for most jewelry, it's alloyed with other metals to increase durability: 18K gold contains 75% gold, 14K contains 58.3%, and 10K contains 41.7%.
                 </p>
                 <p>
-                  Higher karat gold (22K-24K) is more valuable but softer, while lower karat gold is more durable for everyday wear. Different jewelry pieces benefit from different karat levels based on their intended use.
+                  Different gold colors are created through specific alloy combinations: yellow gold typically contains silver and copper; white gold contains nickel, palladium, or silver; and rose gold contains a higher proportion of copper. Each karat level offers a different balance between purity, price, and durability, with higher karat gold being more pure but also softer.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="Platinum jewelry piece with diamonds showcasing the metal's durability and white luster"
+                  altText="Platinum jewelry with diamonds"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("platinum-detail", url)}
+                  onClick={() => generatedImages["platinum-detail"] && setActiveImage(generatedImages["platinum-detail"])}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Gold Colors Explained</CardTitle>
-                <CardDescription>Beyond the traditional yellow</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Platinum</CardTitle>
+                <CardDescription>The king of white metals</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Yellow gold is the natural color of pure gold alloyed with silver and copper. White gold contains white metals like palladium or silver, plus usually a rhodium plating. Rose gold incorporates a higher percentage of copper for its distinctive pink hue.
+                  Platinum is a naturally white, dense precious metal that's significantly rarer than gold. Jewelry-grade platinum is typically 95% pure (950 platinum) and alloyed with other metals like iridium, ruthenium, or cobalt to improve workability and durability.
                 </p>
                 <p>
-                  Each gold color has unique properties and aesthetic qualities that suit different skin tones and design styles.
+                  Prized for its durability, platinum doesn't tarnish and develops a distinctive patina over time that many connoisseurs appreciate. Its natural white color never fades or yellows. Platinum's density makes it more secure for setting gemstones, but this same quality makes it heavier and more expensive than gold alternatives.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="Sterling silver jewelry with ornate filigree work showing the metal's bright white color"
+                  altText="Sterling silver filigree jewelry"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("silver", url)}
+                  onClick={() => generatedImages.silver && setActiveImage(generatedImages.silver)}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Metal Allergies: Facts & Solutions</CardTitle>
-                <CardDescription>Finding jewelry that works for sensitive skin</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Silver</CardTitle>
+                <CardDescription>Affordable luxury with timeless appeal</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Metal allergies are most commonly reactions to nickel, which can be present in white gold and other alloys. Pure metals like 24K gold or platinum rarely cause allergic reactions.
+                  Sterling silver, composed of 92.5% silver and 7.5% other metals (typically copper), is the most common silver alloy used in fine jewelry. This composition balances silver's natural beauty with improved durability and workability.
                 </p>
                 <p>
-                  For sensitive skin, consider platinum, palladium, titanium, or higher karat gold pieces that contain minimal alloys.
+                  Silver's affordability makes it popular for intricate designs like filigree and detailed patterns that would be prohibitively expensive in gold or platinum. However, silver tarnishes over time through exposure to air and requires regular cleaning. Many high-end silver pieces are rhodium-plated to prevent tarnishing and enhance the white appearance.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="Comparison of titanium, stainless steel, and palladium jewelry showing different finishes"
+                  altText="Alternative jewelry metals"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("alternative-metals", url)}
+                  onClick={() => generatedImages["alternative-metals"] && setActiveImage(generatedImages["alternative-metals"])}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Metal Weight in Jewelry</CardTitle>
-                <CardDescription>Why it matters for quality and longevity</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Alternative Metals</CardTitle>
+                <CardDescription>Modern options with unique properties</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  The weight of precious metals in a piece reflects its durability and investment value. Heavier pieces typically contain more precious metal and will withstand daily wear better.
+                  Beyond traditional precious metals, contemporary jewelry embraces alternatives like titanium, stainless steel, and palladium. Titanium is exceptionally lightweight yet strong, hypoallergenic, and can be colored through anodization to create stunning visual effects.
                 </p>
                 <p>
-                  However, modern jewelry techniques can create strong yet lightweight pieces that are comfortable to wear while maintaining durability.
+                  Palladium, a member of the platinum family, offers a natural white color and durability at a lower price point than platinum. Stainless steel provides remarkable durability and scratch resistance at an affordable price, making it popular for modern, minimalist designs and men's jewelry. Each alternative metal brings unique properties that expand the possibilities in contemporary jewelry design.
                 </p>
               </CardContent>
             </Card>
@@ -632,204 +625,167 @@ export default function GemMetalGuide() {
 
         {/* Craftsmanship Tab */}
         <TabsContent value="craftsmanship" className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Setting Techniques</CardTitle>
-                <CardDescription>How gems are secured in jewelry</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Prong settings elevate gems for maximum light exposure but offer less protection. Bezel settings encircle stones completely, offering more security but potentially less brilliance.
-                </p>
-                <p>
-                  Pavé, channel, and invisible settings are techniques used to create surfaces of continuous sparkle with multiple smaller stones set closely together.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Handcrafted vs. Machine-Made</CardTitle>
-                <CardDescription>The value of artisan craftsmanship</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Handcrafted jewelry carries the unique signature of its creator, with subtle variations that make each piece one-of-a-kind. These pieces often feature more complex designs and attention to detail.
-                </p>
-                <p>
-                  Machine-made jewelry offers consistency and precision but may lack the character and personal touch of handcrafted pieces. The best jewelry often combines both approaches.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Jewelry Finishing Techniques</CardTitle>
-                <CardDescription>Surface treatments that enhance beauty</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Polishing creates mirror-like surfaces that maximize sparkle and shine. Hammering or texturing adds visual interest and can disguise minor scratches over time.
-                </p>
-                <p>
-                  Techniques like engraving, filigree, and milgrain (tiny beads along edges) add intricate details that elevate a piece from ordinary to extraordinary.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Caring for Fine Jewelry</CardTitle>
-                <CardDescription>Preserving beauty for generations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Different gems and metals require specific care. Diamonds are durable but can chip if struck at the right angle. Pearls are delicate and should avoid contact with perfumes and cosmetics.
-                </p>
-                <p>
-                  Regular professional cleaning and maintenance can extend the life of your jewelry. Store pieces separately to prevent scratching, and remove jewelry before swimming, exercising, or using household chemicals.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => generatedImages.filigree && setActiveImage(generatedImages.filigree)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <AIEducationalImage
+                  topic="Intricate gold filigree jewelry work showing delicate wirework and craftsmanship"
+                  altText="Filigree jewelry work"
+                  onImageLoaded={(url) => handleImageLoaded("filigree", url)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Filigree</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => generatedImages.setting && setActiveImage(generatedImages.setting)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <AIEducationalImage
+                  topic="Different gemstone setting techniques in jewelry - prong, bezel, and pavé"
+                  altText="Jewelry setting techniques"
+                  onImageLoaded={(url) => handleImageLoaded("setting", url)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Stone Setting</h3>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              whileHover={{ y: -5 }}
+              onClick={() => generatedImages.enamel && setActiveImage(generatedImages.enamel)}
+              className="rounded-lg overflow-hidden shadow-md cursor-pointer"
+            >
+              <div className="relative h-64">
+                <AIEducationalImage
+                  topic="Vibrant enamel work on jewelry showing colorful designs and techniques"
+                  altText="Enamel jewelry work"
+                  onImageLoaded={(url) => handleImageLoaded("enamel", url)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                  <h3 className="text-white font-cormorant text-xl font-semibold">Enameling</h3>
+                </div>
+              </div>
+            </motion.div>
           </div>
           
-          <h3 className="font-cormorant text-3xl text-center my-10">Traditional Craftsmanship Techniques</h3>
-          
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-10">
+            <h3 className="font-cormorant text-3xl text-center mb-6">The Art of Jewelry Making</h3>
+            <p className="text-center max-w-4xl mx-auto text-lg">
+              Beyond beautiful materials, fine jewelry is defined by exceptional craftsmanship. 
+              These specialized techniques transform metals and gemstones into wearable art, 
+              often requiring years of training to master.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="Detailed gold filigree jewelry work showing intricate wirework patterns"
+                  altText="Detailed filigree jewelry"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("filigree-detail", url)}
+                  onClick={() => generatedImages["filigree-detail"] && setActiveImage(generatedImages["filigree-detail"])}
+                />
+              </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Filigree</CardTitle>
-                <CardDescription>Delicate metalwork artistry</CardDescription>
+                <CardDescription>Delicate metalwork of extraordinary detail</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Filigree is an ancient technique involving delicate metalwork where thin threads of gold or silver are twisted and soldered together to create intricate, lace-like patterns. This labor-intensive craft dates back thousands of years and is still practiced in regions like India, Italy, and the Middle East.
+                  Filigree is a delicate form of jewelry metalwork that uses thin threads of gold or silver twisted and soldered into intricate patterns. Dating back to ancient Mesopotamia, this technique creates lace-like designs that appear impossibly delicate.
                 </p>
                 <p>
-                  Modern filigree often incorporates both traditional hand techniques and advanced technology like laser welding. The result is incredibly detailed and lightweight jewelry that showcases the artisan's skill and patience.
+                  True filigree requires exceptional patience and skill, with artisans manipulating wire as thin as human hair. While historically created entirely by hand, modern filigree sometimes incorporates machine assistance for consistency, though the finest examples remain completely handcrafted. This technique is particularly popular in Indian, Middle Eastern, and Southern European jewelry traditions.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="Comparison of different gemstone setting techniques - prong, bezel, channel, and pavé"
+                  altText="Gemstone setting techniques"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("setting-techniques", url)}
+                  onClick={() => generatedImages["setting-techniques"] && setActiveImage(generatedImages["setting-techniques"])}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Granulation</CardTitle>
-                <CardDescription>Ancient technique of fused metal beads</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Stone Setting</CardTitle>
+                <CardDescription>The art of securing gemstones in metal</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Granulation is a decorative technique where tiny spheres of metal are arranged in patterns and fused to a metal surface without solder. Dating back to 3000 BCE, this technique reached its peak with the Etruscans, who created astonishingly detailed designs that modern jewelers still struggle to replicate.
+                  Stone setting is the technique of securing gemstones in metal. Different setting styles serve both functional and aesthetic purposes, with each highlighting different aspects of the stones and creating distinct visual effects.
                 </p>
                 <p>
-                  The secret of granulation was lost for centuries before being rediscovered in the early 20th century. Today, it's prized for its rich texture and the way it catches and plays with light from multiple angles.
+                  Common setting techniques include prong (which maximizes light exposure using metal claws), bezel (which encircles the stone with metal for protection), channel (which aligns stones between two metal walls), and pavé (which creates a surface "paved" with small stones). The choice of setting affects not only the appearance but also the security and wearability of the piece.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Repoussé and Chasing</CardTitle>
-                <CardDescription>Three-dimensional metal forming</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Repoussé involves hammering metal from the reverse side to create a raised design, while chasing refers to indenting the metal from the front to add details and definition. Together, these complementary techniques create dramatic three-dimensional relief in metal.
-                </p>
-                <p>
-                  This versatile method has been used to create everything from ancient Greek armor to the Statue of Liberty's copper skin. In jewelry, it creates bold, sculptural pieces with depth and character that cannot be achieved through casting alone.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="Vibrantly colored enamel jewelry showing cloisonné technique with fine metal wire partitions"
+                  altText="Cloisonné enamel jewelry"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("cloisonne", url)}
+                  onClick={() => generatedImages.cloisonne && setActiveImage(generatedImages.cloisonne)}
+                />
+              </div>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Enameling</CardTitle>
-                <CardDescription>Fusing glass onto metal</CardDescription>
+                <CardDescription>Adding color through fused glass</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Enameling involves fusing powdered glass to metal through high-temperature firing. Different techniques include cloisonné (using wire cells to separate colors), champlevé (filling recessed areas with enamel), and plique-à-jour (creating translucent, stained-glass effects).
+                  Enameling is the art of fusing powdered glass to metal using high heat, creating vibrant, durable colors. This ancient technique dates back to the Mycenaeans and has been practiced across numerous cultures, each developing distinctive styles.
                 </p>
                 <p>
-                  Indian Meenakari is a celebrated form of enameling, particularly associated with Jaipur. This technique adds vibrant colors to gold jewelry and is often found on the reverse side of traditional pieces, creating a hidden world of beauty known only to the wearer.
+                  Notable enameling techniques include cloisonné (using wire to create partitions filled with enamel), champlevé (filling recessed areas with enamel), plique-à-jour (creating translucent, window-like effects), and guilloché (applying enamel over an engine-turned pattern). Modern enameling continues to evolve with contemporary color palettes and designs while maintaining the timeless appeal of this challenging art form.
                 </p>
               </CardContent>
             </Card>
-          </div>
-          
-          <div className="mt-10">
-            <Card>
+
+            <Card className="overflow-hidden">
+              <div className="h-56 overflow-hidden">
+                <AIEducationalImage
+                  topic="CAD/CAM jewelry design and 3D printing for jewelry manufacturing"
+                  altText="Modern jewelry making technology"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                  onImageLoaded={(url) => handleImageLoaded("modern-techniques", url)}
+                  onClick={() => generatedImages["modern-techniques"] && setActiveImage(generatedImages["modern-techniques"])}
+                />
+              </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl text-center">Comparing Traditional and Modern Jewelry Making</CardTitle>
+                <CardTitle className="font-cormorant text-2xl">Modern Techniques</CardTitle>
+                <CardDescription>Technology meets traditional craftsmanship</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 font-semibold">Aspect</th>
-                        <th className="text-left py-3 px-4 font-semibold">Traditional Craftsmanship</th>
-                        <th className="text-left py-3 px-4 font-semibold">Modern Technology</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-border">
-                        <td className="py-3 px-4 font-medium">Design Development</td>
-                        <td className="py-3 px-4">Hand sketches and wax carving</td>
-                        <td className="py-3 px-4">Computer-aided design (CAD) and 3D modeling</td>
-                      </tr>
-                      <tr className="border-b border-border">
-                        <td className="py-3 px-4 font-medium">Production Method</td>
-                        <td className="py-3 px-4">Hand fabrication with files, hammers, and torches</td>
-                        <td className="py-3 px-4">3D printing, laser cutting, and automated casting</td>
-                      </tr>
-                      <tr className="border-b border-border">
-                        <td className="py-3 px-4 font-medium">Time Investment</td>
-                        <td className="py-3 px-4">Days to months for a single piece</td>
-                        <td className="py-3 px-4">Hours to days for production</td>
-                      </tr>
-                      <tr className="border-b border-border">
-                        <td className="py-3 px-4 font-medium">Reproducibility</td>
-                        <td className="py-3 px-4">Each piece slightly unique due to hand work</td>
-                        <td className="py-3 px-4">Perfect consistency across multiple pieces</td>
-                      </tr>
-                      <tr className="border-b border-border">
-                        <td className="py-3 px-4 font-medium">Signature Qualities</td>
-                        <td className="py-3 px-4">Tool marks, subtle asymmetry, artist's touch</td>
-                        <td className="py-3 px-4">Precision, complex geometry, perfect symmetry</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 px-4 font-medium">Best For</td>
-                        <td className="py-3 px-4">One-of-a-kind pieces, cultural techniques, artistic expression</td>
-                        <td className="py-3 px-4">Complex designs, precision settings, consistency</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <p className="mt-6 text-center text-muted-foreground">
-                  The finest contemporary jewelry often combines both traditional handcrafting and modern technology, 
-                  taking advantage of the precision of machines while preserving the soul and character of hand finishing.
+                <p className="mb-4">
+                  Modern jewelry making blends traditional handiwork with cutting-edge technology. Computer-Aided Design (CAD) allows for precise 3D modeling of jewelry before creation, while Computer-Aided Manufacturing (CAM) enables the production of wax models through 3D printing or CNC milling.
+                </p>
+                <p>
+                  Laser welding provides extremely precise joins without the heat spread of traditional soldering, making it ideal for repair work near heat-sensitive gemstones. Modern casting techniques create consistent production pieces, while advanced finishing methods like Physical Vapor Deposition (PVD) create durable, vibrant colored metal finishes. Despite these technological advances, the finest jewelry still requires the skilled hand of an experienced jeweler.
                 </p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
-
-      <div className="mt-20 text-center">
-        <h2 className="font-cormorant text-3xl font-semibold mb-6">Have More Questions?</h2>
-        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Our jewelry experts are ready to assist you with any questions about gemstones, 
-          metals, or jewelry care. Reach out to us for personalized guidance.
-        </p>
-        <a 
-          href="/contact" 
-          className="inline-block bg-primary text-white px-8 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
-        >
-          Contact Our Experts
-        </a>
-      </div>
     </div>
   );
 }
