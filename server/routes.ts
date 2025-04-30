@@ -31,7 +31,6 @@ import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal
 import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
-import { generateImage, generateEducationalJewelryImages } from "./image-generation";
 import { generateProductContent } from "./generate-product-content";
 import { getGoldPrice, fetchGoldPrice } from "./services/gold-price-service";
 
@@ -5609,58 +5608,6 @@ Respond in JSON format:
         success: false, 
         error: "Failed to fetch exchange rate",
         fallbackRate: 83 
-      });
-    }
-  });
-
-  // AI Image Generation endpoint
-  app.post("/api/ai/generate-image", async (req, res) => {
-    try {
-      console.log("AI image generation endpoint called");
-      
-      // Check for OpenAI API key
-      if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({
-          success: false,
-          message: "OpenAI API key is not configured"
-        });
-      }
-      
-      // Call the image generation service
-      await generateImage(req, res);
-      
-    } catch (error: any) {
-      console.error("Error generating image:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error generating image",
-        details: error.message || "Unknown error"
-      });
-    }
-  });
-  
-  // Educational jewelry image generation endpoint
-  app.post("/api/ai/generate-educational-images", async (req, res) => {
-    try {
-      console.log("Educational jewelry image generation endpoint called");
-      
-      // Check for OpenAI API key
-      if (!process.env.OPENAI_API_KEY) {
-        return res.status(500).json({
-          success: false,
-          message: "OpenAI API key is not configured"
-        });
-      }
-      
-      // Call the educational image generation service
-      await generateEducationalJewelryImages(req, res);
-      
-    } catch (error: any) {
-      console.error("Error generating educational jewelry images:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error generating educational jewelry images",
-        details: error.message || "Unknown error"
       });
     }
   });

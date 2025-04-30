@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { motion } from "framer-motion";
 
 export default function GemMetalGuide() {
   return (
@@ -13,290 +12,233 @@ export default function GemMetalGuide() {
         <meta name="description" content="Educational guide about gemstones, metals, and jewelry terminology" />
       </Helmet>
 
-      {/* Hero Banner */}
-      <div className="relative rounded-lg overflow-hidden mb-16">
-        <div className="w-full h-[300px] bg-gradient-to-r from-purple-900 to-indigo-900"></div>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="font-cormorant text-5xl md:text-7xl font-bold mb-4 tracking-tight text-center"
-          >
-            Gem & Metal <span className="text-primary">Guide</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg max-w-3xl mx-auto text-center text-gray-200"
-          >
-            Discover the timeless artistry and science behind fine jewelry with our expert insights
-          </motion.p>
-        </div>
+      <div className="text-center mb-12">
+        <h1 className="font-cormorant text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+          <span className="text-foreground">Gem & Metal</span>
+          <span className="text-primary"> Guide</span>
+        </h1>
+        <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+          Dive into the world of fine jewelry with our comprehensive guide to gemstones, metals, 
+          and jewelry crafting techniques. Become an informed collector with our expert insights.
+        </p>
       </div>
 
       <Tabs defaultValue="gemstones" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-8 relative z-10">
-          <TabsTrigger value="gemstones" className="text-lg py-3 font-medium">Gemstones</TabsTrigger>
-          <TabsTrigger value="stone-forms" className="text-lg py-3 font-medium">Stone Forms</TabsTrigger>
-          <TabsTrigger value="metals" className="text-lg py-3 font-medium">Precious Metals</TabsTrigger>
-          <TabsTrigger value="craftsmanship" className="text-lg py-3 font-medium">Craftsmanship</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsTrigger value="gemstones" className="text-lg py-3">Gemstones</TabsTrigger>
+          <TabsTrigger value="metals" className="text-lg py-3">Precious Metals</TabsTrigger>
+          <TabsTrigger value="craftsmanship" className="text-lg py-3">Craftsmanship</TabsTrigger>
         </TabsList>
-        
+
         {/* Gemstones Tab */}
         <TabsContent value="gemstones" className="space-y-8">
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-10">
-            <h3 className="font-cormorant text-3xl text-center mb-6">Understanding Gemstones</h3>
-            <p className="text-center max-w-4xl mx-auto text-lg">
-              Gemstones have captivated humanity for millennia with their beauty, rarity, and symbolism. 
-              From the fire of a diamond to the deep blue of a sapphire, each gem has its own unique character 
-              and properties that make it precious and special.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <motion.div whileHover={{ y: -5 }} className="rounded-lg overflow-hidden shadow-md">
-              <div className="relative h-64 bg-gradient-to-br from-blue-400 to-blue-700"></div>
-              <div className="p-4 bg-white">
-                <h3 className="font-cormorant text-xl font-semibold">Natural Gemstones</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  Formed over millions of years through natural geological processes, these gems capture Earth's beauty.
-                </p>
-              </div>
-            </motion.div>
-            
-            <motion.div whileHover={{ y: -5 }} className="rounded-lg overflow-hidden shadow-md">
-              <div className="relative h-64 bg-gradient-to-br from-pink-400 to-purple-700"></div>
-              <div className="p-4 bg-white">
-                <h3 className="font-cormorant text-xl font-semibold">Lab-Created Gems</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  With identical physical properties to natural gems, lab-created stones offer ethical and sustainable options.
-                </p>
-              </div>
-            </motion.div>
-            
-            <motion.div whileHover={{ y: -5 }} className="rounded-lg overflow-hidden shadow-md">
-              <div className="relative h-64 bg-gradient-to-br from-gray-700 to-black"></div>
-              <div className="p-4 bg-white">
-                <h3 className="font-cormorant text-xl font-semibold">Onyx & Rare Stones</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  Striking and unique, these stones add drama and mystery to jewelry designs and collections.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card>
-              <div className="h-56 bg-gradient-to-r from-red-400 to-red-700"></div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Rubies</CardTitle>
-                <CardDescription>The king of gemstones</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Precious vs. Semi-Precious</CardTitle>
+                <CardDescription>Understanding the classification of gemstones</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Rubies are a variety of the mineral corundum and get their red color from chromium. The most valuable rubies have a pure, vibrant red to slightly purplish-red color, often described as "pigeon blood red." 
+                  The terms "precious" and "semi-precious" are traditional classifications that have been used for centuries, but modern gemologists recognize that this distinction is somewhat arbitrary.
                 </p>
                 <p>
-                  The finest rubies come from Myanmar (Burma), though quality stones also come from Thailand, Sri Lanka, and Africa. A ruby's value is determined by color, clarity, cut, and carat weight, with color being the most important factor.
+                  Historically, only diamonds, rubies, sapphires, and emeralds were considered precious, while all other gemstones were deemed semi-precious. Today, factors like rarity, durability, and market demand are more important indicators of a gemstone's value.
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card>
-              <div className="h-56 bg-gradient-to-r from-blue-400 to-blue-700"></div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Sapphires</CardTitle>
-                <CardDescription>Blue beauty with royal heritage</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Understanding Carats</CardTitle>
+                <CardDescription>The weight and measurement of gemstones</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Sapphires are also a variety of corundum, and while most people associate them with a deep blue color, they actually come in nearly every color except red (which would be a ruby). The most prized sapphires have a medium to medium-dark blue color with strong saturation.
+                  Carat is a unit of weight used specifically for gemstones, equal to 200 milligrams. Don't confuse it with "karat," which measures gold purity.
                 </p>
                 <p>
-                  Classic blue sapphires come primarily from Kashmir, Myanmar, and Sri Lanka. "Fancy sapphires" in colors like pink, yellow, and green are increasingly popular for unique jewelry pieces.
+                  While larger gemstones (higher carat weight) are generally more valuable, factors like color, clarity, and cut can influence a stone's value more significantly than size alone.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-cormorant text-2xl">Natural vs. Lab Created</CardTitle>
+                <CardDescription>Ethical and practical considerations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Lab-created gemstones have the same physical, chemical, and optical properties as their natural counterparts but are grown in controlled laboratory environments.
+                </p>
+                <p>
+                  While natural gemstones carry the allure of rarity and tradition, lab-created stones offer ethical certainty, consistent quality, and are typically more affordable.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-cormorant text-2xl">Polki & Kundan</CardTitle>
+                <CardDescription>Traditional Indian gemstone techniques</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Polki refers to uncut, natural diamonds that have been used in traditional Indian jewelry for centuries. Unlike modern cut diamonds, Polki stones retain their natural character and are set with their flat side up.
+                </p>
+                <p>
+                  Kundan is a traditional technique of setting gems in gold foil. This labor-intensive process creates a distinctive look that has adorned Indian royalty for generations.
                 </p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-        
-        {/* Stone Forms Tab */}
-        <TabsContent value="stone-forms" className="space-y-8">
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-10">
-            <h3 className="font-cormorant text-3xl text-center mb-6">Understanding Stone Forms</h3>
-            <p className="text-center max-w-4xl mx-auto text-lg">
-              The way a gemstone is cut and shaped dramatically affects its appearance, value, and suitability for 
-              different jewelry designs. From smooth cabochons that showcase color to brilliantly faceted stones 
-              that maximize sparkle, each form has unique characteristics.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <motion.div whileHover={{ y: -5 }} className="rounded-lg overflow-hidden shadow-md">
-              <div className="relative h-64 bg-gradient-to-br from-pink-400 to-purple-700">
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <h3 className="text-white font-cormorant text-xl font-semibold">Cabochons</h3>
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div whileHover={{ y: -5 }} className="rounded-lg overflow-hidden shadow-md">
-              <div className="relative h-64 bg-gradient-to-br from-blue-400 to-blue-700">
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <h3 className="text-white font-cormorant text-xl font-semibold">Faceted Stones</h3>
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div whileHover={{ y: -5 }} className="rounded-lg overflow-hidden shadow-md">
-              <div className="relative h-64 bg-gradient-to-br from-amber-400 to-amber-700">
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                  <h3 className="text-white font-cormorant text-xl font-semibold">Natural Crystals</h3>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="overflow-hidden">
-              <div className="h-56 bg-gradient-to-r from-green-400 to-green-700"></div>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Carved Gemstones</CardTitle>
-                <CardDescription>The ancient art of stone sculptures</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Carved gemstones, also known as glyptics, involve shaping stones into intricate designs, reliefs, or figures. This ancient art form dates back thousands of years, with some of the earliest examples found in Mesopotamia.
-                </p>
-                <p>
-                  Different types include intaglios (designs carved into the stone's surface), cameos (designs raised above the background), and figurines (three-dimensional sculptures). The most commonly carved stones include jade, malachite, lapis lazuli, and various quartzes.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="overflow-hidden">
-              <div className="h-56 bg-gradient-to-r from-purple-400 to-purple-700"></div>
-              <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Cabochons (Cabs)</CardTitle>
-                <CardDescription>Smooth, rounded gemstone forms</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">
-                  Cabochons are gemstones that are shaped and polished rather than faceted. They typically have a flat bottom and a domed top, creating a smooth, rounded appearance that showcases the stone's color, patterns, and optical effects.
-                </p>
-                <p>
-                  Cabochons are ideal for stones with phenomenal effects like asterism (star sapphires), chatoyancy (cat's eye stones), or color play (opals). They're also perfect for displaying the patterns in stones like malachite, turquoise, and lapis lazuli.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
+
         {/* Metals Tab */}
         <TabsContent value="metals" className="space-y-8">
-          <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-6 mb-10">
-            <h3 className="font-cormorant text-3xl text-center mb-6">Precious Metals in Jewelry</h3>
-            <p className="text-center max-w-4xl mx-auto text-lg">
-              The metal chosen for jewelry provides the foundation for gemstones and determines much of a piece's character.
-              From the warm glow of gold to the cool brilliance of platinum, each metal offers distinct advantages and aesthetic qualities.
-            </p>
-          </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="overflow-hidden">
-              <div className="h-56 bg-gradient-to-r from-yellow-300 to-yellow-500"></div>
+            <Card>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Gold</CardTitle>
-                <CardDescription>The timeless standard of luxury</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Gold Purity: Understanding Karats</CardTitle>
+                <CardDescription>What those numbers really mean</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Pure gold (24 karat) is too soft for everyday wear, so it's typically alloyed with other metals for durability. Common gold alloys include:
+                  The karat system measures the purity of gold in 24 parts. 24K gold is pure (99.9%), while 22K, 18K, and 14K contain 22, 18, and 14 parts gold, respectively, mixed with other metals.
                 </p>
-                <ul className="list-disc pl-5 space-y-2 mb-4">
-                  <li><span className="font-semibold">Yellow Gold</span>: Traditional alloy with silver and copper that maintains gold's warm color</li>
-                  <li><span className="font-semibold">White Gold</span>: Alloy with white metals like nickel, silver or palladium and typically rhodium-plated</li>
-                  <li><span className="font-semibold">Rose Gold</span>: Alloy with higher copper content, creating a romantic pink hue</li>
-                </ul>
                 <p>
-                  Karat indicates gold purity: 24K (99.9% pure), 18K (75% pure), 14K (58.3% pure), and 10K (41.7% pure).
+                  Higher karat gold (22K-24K) is more valuable but softer, while lower karat gold is more durable for everyday wear. Different jewelry pieces benefit from different karat levels based on their intended use.
                 </p>
               </CardContent>
             </Card>
-            
-            <Card className="overflow-hidden">
-              <div className="h-56 bg-gradient-to-r from-gray-300 to-gray-400"></div>
+
+            <Card>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Platinum</CardTitle>
-                <CardDescription>The premium white metal</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Gold Colors Explained</CardTitle>
+                <CardDescription>Beyond the traditional yellow</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Platinum is a naturally white precious metal that's significantly rarer than gold. Its density and weight give platinum jewelry a substantial feel, and its natural white color never fades or tarnishes.
-                </p>
-                <p className="mb-4">
-                  When platinum scratches, it doesn't lose metal but merely displaces it, creating a patina over time rather than wearing away. This makes it ideal for securing precious gemstones and creating intricate details.
+                  Yellow gold is the natural color of pure gold alloyed with silver and copper. White gold contains white metals like palladium or silver, plus usually a rhodium plating. Rose gold incorporates a higher percentage of copper for its distinctive pink hue.
                 </p>
                 <p>
-                  Platinum jewelry is typically 95% pure (stamped "PT950" or "PLAT"), making it hypoallergenic and perfect for those with sensitive skin.
+                  Each gold color has unique properties and aesthetic qualities that suit different skin tones and design styles.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-cormorant text-2xl">Metal Allergies: Facts & Solutions</CardTitle>
+                <CardDescription>Finding jewelry that works for sensitive skin</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Metal allergies are most commonly reactions to nickel, which can be present in white gold and other alloys. Pure metals like 24K gold or platinum rarely cause allergic reactions.
+                </p>
+                <p>
+                  For sensitive skin, consider platinum, palladium, titanium, or higher karat gold pieces that contain minimal alloys.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-cormorant text-2xl">Metal Weight in Jewelry</CardTitle>
+                <CardDescription>Why it matters for quality and longevity</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  The weight of precious metals in a piece reflects its durability and investment value. Heavier pieces typically contain more precious metal and will withstand daily wear better.
+                </p>
+                <p>
+                  However, modern jewelry techniques can create strong yet lightweight pieces that are comfortable to wear while maintaining durability.
                 </p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
-        
+
         {/* Craftsmanship Tab */}
         <TabsContent value="craftsmanship" className="space-y-8">
-          <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 mb-10">
-            <h3 className="font-cormorant text-3xl text-center mb-6">The Art of Jewelry Making</h3>
-            <p className="text-center max-w-4xl mx-auto text-lg">
-              Behind every exceptional piece of jewelry lies the hand and eye of a skilled artisan.
-              Jewelry craftsmanship combines traditional techniques passed down through generations with
-              modern technology to create wearable works of art.
-            </p>
-          </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="overflow-hidden">
-              <div className="h-56 bg-gradient-to-r from-amber-400 to-amber-600"></div>
+            <Card>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Filigree</CardTitle>
-                <CardDescription>Delicate metalwork with ancient roots</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Setting Techniques</CardTitle>
+                <CardDescription>How gems are secured in jewelry</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Filigree is a delicate form of metalwork that uses fine threads and beads of precious metals to create intricate patterns. The word comes from the Latin "filum" (thread) and "granum" (grain).
+                  Prong settings elevate gems for maximum light exposure but offer less protection. Bezel settings encircle stones completely, offering more security but potentially less brilliance.
                 </p>
                 <p>
-                  This ancient technique creates airy, lace-like designs that can stand alone or form backgrounds for gemstones. While labor-intensive, filigree adds incredible detail and dimension to jewelry, making each piece a unique work of art.
+                  Pavé, channel, and invisible settings are techniques used to create surfaces of continuous sparkle with multiple smaller stones set closely together.
                 </p>
               </CardContent>
             </Card>
-            
-            <Card className="overflow-hidden">
-              <div className="h-56 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+
+            <Card>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Stone Setting</CardTitle>
-                <CardDescription>Secure mounting for precious gems</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Handcrafted vs. Machine-Made</CardTitle>
+                <CardDescription>The value of artisan craftsmanship</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Stone setting is the art of securing gemstones in metal. Different setting styles include:
+                  Handcrafted jewelry carries the unique signature of its creator, with subtle variations that make each piece one-of-a-kind. These pieces often feature more complex designs and attention to detail.
                 </p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li><span className="font-semibold">Prong Setting</span>: Metal claws that hold a stone while allowing maximum light exposure</li>
-                  <li><span className="font-semibold">Bezel Setting</span>: Metal rim that encircles a gemstone, offering maximum protection</li>
-                  <li><span className="font-semibold">Pavé Setting</span>: Small stones set close together with tiny prongs, creating a continuous sparkle</li>
-                  <li><span className="font-semibold">Channel Setting</span>: Stones set in a channel between two strips of metal, with no prongs</li>
-                  <li><span className="font-semibold">Tension Setting</span>: Stone held by pressure from the metal band, appearing to float</li>
-                </ul>
+                <p>
+                  Machine-made jewelry offers consistency and precision but may lack the character and personal touch of handcrafted pieces. The best jewelry often combines both approaches.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-cormorant text-2xl">Jewelry Finishing Techniques</CardTitle>
+                <CardDescription>Surface treatments that enhance beauty</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Polishing creates mirror-like surfaces that maximize sparkle and shine. Hammering or texturing adds visual interest and can disguise minor scratches over time.
+                </p>
+                <p>
+                  Techniques like engraving, filigree, and milgrain (tiny beads along edges) add intricate details that elevate a piece from ordinary to extraordinary.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-cormorant text-2xl">Caring for Fine Jewelry</CardTitle>
+                <CardDescription>Preserving beauty for generations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-4">
+                  Different gems and metals require specific care. Diamonds are durable but can chip if struck at the right angle. Pearls are delicate and should avoid contact with perfumes and cosmetics.
+                </p>
+                <p>
+                  Regular professional cleaning and maintenance can extend the life of your jewelry. Store pieces separately to prevent scratching, and remove jewelry before swimming, exercising, or using household chemicals.
+                </p>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
+
+      <div className="mt-20 text-center">
+        <h2 className="font-cormorant text-3xl font-semibold mb-6">Have More Questions?</h2>
+        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+          Our jewelry experts are ready to assist you with any questions about gemstones, 
+          metals, or jewelry care. Reach out to us for personalized guidance.
+        </p>
+        <a 
+          href="/contact" 
+          className="inline-block bg-primary text-white px-8 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+        >
+          Contact Our Experts
+        </a>
+      </div>
     </div>
   );
 }
