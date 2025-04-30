@@ -1,8 +1,14 @@
 import { useGoldPrice } from "@/hooks/use-gold-price";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 export function GoldPriceDisplay() {
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+  
   const { 
     goldPrice, 
     location, 
@@ -10,6 +16,12 @@ export function GoldPriceDisplay() {
     isLoading, 
     error 
   } = useGoldPrice();
+  
+  const handleRefresh = async () => {
+    setIsManualRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ['/api/gold-price'] });
+    setTimeout(() => setIsManualRefreshing(false), 1000);
+  };
   
   if (isLoading) {
     return (
@@ -30,9 +42,20 @@ export function GoldPriceDisplay() {
   
   return (
     <div className="bg-amber-50 border border-amber-200 p-3 rounded-md">
-      <div className="flex items-center gap-2">
-        <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse" />
-        <h3 className="font-semibold text-amber-900">Current Gold Price</h3>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-amber-400 rounded-full animate-pulse" />
+          <h3 className="font-semibold text-amber-900">Current Gold Price</h3>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 text-amber-700 hover:text-amber-900 hover:bg-amber-100"
+          onClick={handleRefresh}
+          disabled={isManualRefreshing}
+        >
+          <RefreshCw className={`h-3 w-3 ${isManualRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
       </div>
       
       <div className="mt-2 flex flex-col">

@@ -19,10 +19,10 @@ export function useGoldPrice() {
     error
   } = useQuery<GoldPriceResponse>({
     queryKey: ['/api/gold-price'],
-    // Refresh every hour
-    refetchInterval: 60 * 60 * 1000,
-    // Keep data valid for 2 hours
-    staleTime: 2 * 60 * 60 * 1000
+    // Refresh every 5 minutes
+    refetchInterval: 5 * 60 * 1000,
+    // Keep data valid for 10 minutes
+    staleTime: 10 * 60 * 1000
   });
   
   return {

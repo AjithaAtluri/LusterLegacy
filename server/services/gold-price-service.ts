@@ -176,9 +176,9 @@ export async function fetchGoldPrice(): Promise<GoldPriceResponse> {
 }
 
 export async function getGoldPrice(): Promise<GoldPriceResponse> {
-  // If cache is less than 1 hour old, return cached value
+  // If cache is less than 15 minutes old, return cached value
   const cacheAge = Date.now() - cachedTimestamp;
-  if (cachedGoldPrice && cacheAge < 60 * 60 * 1000) {
+  if (cachedGoldPrice && cacheAge < 15 * 60 * 1000) {
     return {
       success: true,
       price: cachedGoldPrice,
