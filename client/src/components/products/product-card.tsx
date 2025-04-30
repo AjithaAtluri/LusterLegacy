@@ -76,8 +76,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group h-[700px] flex flex-col">
-      <div className="relative h-[400px] overflow-hidden flex-shrink-0 bg-white bg-opacity-5 flex items-center justify-center p-2">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col">
+      <div className="relative h-[350px] overflow-hidden flex-shrink-0 bg-white bg-opacity-5 flex items-center justify-center p-2">
         {/* Using the reliable product image component for consistent images */}
         <ReliableProductImage 
           productId={product.id}
@@ -114,20 +114,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
         
-        {/* Product title with fixed height */}
-        <h3 className="font-playfair text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300 line-clamp-1">{product.name}</h3>
-        
-        {/* Tagline with fixed height */}
-        <div className="h-6">
-          {tagline && (
-            <p className="font-cormorant text-sm italic text-primary truncate">{tagline}</p>
-          )}
-        </div>
-        
-        {/* Description with fixed height and ellipsis */}
-        <p className="font-cormorant text-sm text-foreground/70 line-clamp-3 mb-3 h-[60px]">
-          {product.description}
-        </p>
+        {/* Product title with simplified 5-word version for demo */}
+        <h3 className="font-playfair text-2xl font-semibold text-foreground group-hover:text-primary transition-colors duration-300 mb-4 text-center">
+          {product.id === 42 
+            ? "Gold Gemstone Elegance Necklace" 
+            : product.name}
+        </h3>
         
         {/* Price section */}
         <div className="mt-auto mb-3">
