@@ -383,21 +383,7 @@ export default function ProductDetail() {
                 {tagline}
               </p>
             )}
-            <div className="flex gap-3">
-              <Button
-                className="font-montserrat bg-primary text-background hover:bg-accent"
-                onClick={handleCustomizationRequest}
-              >
-                <Package className="mr-2 h-4 w-4" />
-                Request Customization
-              </Button>
-              <Button
-                variant="outline"
-                className="font-montserrat border-primary text-pearl hover:bg-primary/20"
-                onClick={handlePlaceOrder}
-              >
-                <ShoppingBag className="mr-2 h-4 w-4" />
-                Place Order
+            {/* Hero section without CTA buttons as requested */}
               </Button>
             </div>
           </div>
