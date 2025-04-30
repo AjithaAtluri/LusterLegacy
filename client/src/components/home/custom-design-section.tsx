@@ -73,8 +73,26 @@ export default function CustomDesignSection() {
         description: "Your design details have been saved. Please log in or create an account to continue."
       });
       
-      // Redirect to auth page with return URL - send to custom design page after login
-      window.location.href = `/auth?returnTo=${encodeURIComponent('/custom-design')}`;
+      // Create a more detailed returnTo URL with design details as query parameters
+      const redirectParams = new URLSearchParams();
+      
+      // Add design details to query parameters
+      if (data.metalType) redirectParams.append('metalType', data.metalType);
+      
+      // Handle primaryStones array - convert to comma-separated list
+      if (Array.isArray(data.primaryStones) && data.primaryStones.length > 0) {
+        redirectParams.append('primaryStones', data.primaryStones.join(','));
+      }
+      
+      // Add notes if available
+      if (data.notes) redirectParams.append('notes', data.notes);
+      
+      // Get the full redirect URL with parameters
+      const customDesignUrl = `/custom-design?${redirectParams.toString()}`;
+      console.log("Redirecting to custom design with params:", customDesignUrl);
+      
+      // Redirect to auth page with detailed return URL
+      window.location.href = `/auth?returnTo=${encodeURIComponent(customDesignUrl)}`;
       return;
     }
     
@@ -255,8 +273,26 @@ export default function CustomDesignSection() {
           description: "Your design details have been saved. Please log in or create an account to continue."
         });
         
-        // Redirect to auth page with return URL - send to custom design page after login
-        window.location.href = `/auth?returnTo=${encodeURIComponent('/custom-design')}`;
+        // Create a more detailed returnTo URL with design details as query parameters
+        const redirectParams = new URLSearchParams();
+        
+        // Add design details to query parameters
+        if (data.metalType) redirectParams.append('metalType', data.metalType);
+        
+        // Handle primaryStones array - convert to comma-separated list
+        if (Array.isArray(data.primaryStones) && data.primaryStones.length > 0) {
+          redirectParams.append('primaryStones', data.primaryStones.join(','));
+        }
+        
+        // Add notes if available
+        if (data.notes) redirectParams.append('notes', data.notes);
+        
+        // Get the full redirect URL with parameters
+        const customDesignUrl = `/custom-design?${redirectParams.toString()}`;
+        console.log("Redirecting to custom design with params:", customDesignUrl);
+        
+        // Redirect to auth page with detailed return URL
+        window.location.href = `/auth?returnTo=${encodeURIComponent(customDesignUrl)}`;
         return; // Exit early
       }
       

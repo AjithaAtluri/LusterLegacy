@@ -72,13 +72,62 @@ export default function DesignForm() {
     }
   });
   
+  // Function to parse URL query parameters
+  const getQueryParams = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const params: Record<string, any> = {};
+    
+    // Get metalType from query param
+    if (searchParams.has('metalType')) {
+      params.metalType = searchParams.get('metalType');
+    }
+    
+    // Get primaryStones from query param (as comma-separated list)
+    if (searchParams.has('primaryStones')) {
+      const stonesParam = searchParams.get('primaryStones');
+      params.primaryStones = stonesParam ? stonesParam.split(',') : [];
+    }
+    
+    // Get notes from query param
+    if (searchParams.has('notes')) {
+      params.notes = searchParams.get('notes');
+    }
+    
+    console.log("DesignForm - URL query parameters:", params);
+    return params;
+  };
+  
   // Update the form with user data when user loads
   useEffect(() => {
     if (user) {
       form.setValue("fullName", user.username);
       form.setValue("email", user.email);
       
-      // Try to restore saved form data from session storage
+      // First check for URL query parameters and apply them
+      const queryParams = getQueryParams();
+      if (Object.keys(queryParams).length > 0) {
+        console.log("DesignForm - Applying query parameters to form");
+        
+        // Apply each parameter to the form
+        if (queryParams.metalType) {
+          form.setValue("metalType", queryParams.metalType);
+        }
+        
+        if (queryParams.primaryStones && queryParams.primaryStones.length > 0) {
+          form.setValue("primaryStones", queryParams.primaryStones);
+          setSelectedStones(queryParams.primaryStones);
+        }
+        
+        if (queryParams.notes) {
+          form.setValue("notes", queryParams.notes);
+        }
+        
+        // Clean URL after applying parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return; // Skip checking session storage if we applied URL parameters
+      }
+      
+      // If no URL params, try to restore saved form data from session storage
       try {
         console.log("DesignForm - Checking for saved form data in sessionStorage...");
         const savedFormData = sessionStorage.getItem('designFormData');
