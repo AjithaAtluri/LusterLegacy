@@ -11,6 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { useDropzone } from "react-dropzone";
 import { isImageFile, getFileExtension } from "@/lib/utils";
 import type { SubmitHandler } from "react-hook-form";
@@ -39,6 +40,7 @@ export default function CustomDesignSection() {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]); // Array to store multiple image previews
   const [selectedStones, setSelectedStones] = useState<string[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
@@ -54,6 +56,18 @@ export default function CustomDesignSection() {
   });
   
   const onSubmit: SubmitHandler<DesignFormValues> = async (data) => {
+    // Check if user is logged in
+    if (!user) {
+      toast({
+        title: "Login required",
+        description: "Your design details have been saved. Please log in or create an account to continue."
+      });
+      
+      // Redirect to auth page with return URL
+      window.location.href = `/auth?returnTo=${encodeURIComponent('/')}`;
+      return;
+    }
+    
     if (uploadedImages.length === 0) {
       toast({
         title: "Image required",
@@ -416,26 +430,26 @@ export default function CustomDesignSection() {
           </div>
         )}
         
-        {/* Upload area */}
+        {/* Upload more images button/area */}
         {uploadedImages.length < 5 && (
           <div
             {...getRootProps()}
             className={`border-2 border-dashed ${
               isDragActive ? 'border-primary' : 'border-foreground/30'
-            } rounded-lg p-6 text-center cursor-pointer hover:border-primary transition duration-300`}
+            } rounded-lg p-8 text-center cursor-pointer hover:border-primary transition duration-300`}
           >
             <input {...getInputProps()} />
             <Upload className="h-10 w-10 text-foreground/50 mx-auto mb-3" />
             <p className="font-montserrat text-foreground/70">
               {isDragActive
-                ? "Drop your files here..."
+                ? "Drop your images here..."
                 : uploadedImages.length > 0 
                   ? `Add more images (${uploadedImages.length}/5 uploaded)`
                   : "Drag and drop your images here, or click to browse"
               }
             </p>
             <p className="font-montserrat text-xs text-foreground/50 mt-2">
-              Accepts JPG, PNG, PDF (Max size: 5MB)
+              Upload up to 5 images • Accepts JPG, PNG, PDF (Max size: 5MB each)
             </p>
           </div>
         )}
@@ -508,7 +522,7 @@ export default function CustomDesignSection() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                          Primary Stones*
+                          Stone Types* (Select one or more)
                         </FormLabel>
                         <Select
                           onValueChange={(value) => field.onChange([value])} 
