@@ -17,6 +17,7 @@ const Contact = lazy(() => import("@/pages/contact"));
 const Product = lazy(() => import("@/pages/product"));
 const ProductDetail = lazy(() => import("@/pages/product-detail"));
 const Checkout = lazy(() => import("@/pages/checkout"));
+const GemMetalGuide = lazy(() => import("@/pages/gem-metal-guide"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard"));
 const AuthPage = lazy(() => import("@/pages/auth-page"));
@@ -75,6 +76,7 @@ function App() {
             <Route path="/product/:id" component={Product} />
             <Route path="/product-detail/:id" component={ProductDetail} />
             <Route path="/checkout" component={Checkout} />
+            <Route path="/gem-metal-guide" component={GemMetalGuide} />
             <Route path="/inspiration" component={InspirationGallery} />
             <ProtectedRoute path="/customer-dashboard" component={CustomerDashboard} />
             <ProtectedRoute path="/place-order/:id" component={PlaceOrder} />

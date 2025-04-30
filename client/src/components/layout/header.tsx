@@ -65,7 +65,7 @@ export default function Header() {
   const navItems = [
     { label: "Collections", path: "/collections" },
     { label: "Custom Design", path: "/custom-design" },
-    { label: "Inspiration", path: "/inspiration" },
+    { label: "Gem & Metal Guide", path: "/gem-metal-guide" },
     { label: "Founder's Story", path: "/about" },
     { label: "Contact", path: "/contact" }
   ];
