@@ -469,6 +469,12 @@ export type InsertDesignRequest = z.infer<typeof insertDesignRequestSchema>;
 export type DesignRequestComment = typeof designRequestComments.$inferSelect;
 export type InsertDesignRequestComment = z.infer<typeof insertDesignRequestCommentSchema>;
 
+export type DesignFeedback = typeof designFeedback.$inferSelect;
+export type InsertDesignFeedback = z.infer<typeof insertDesignFeedbackSchema>;
+
+export type DesignPayment = typeof designPayments.$inferSelect;
+export type InsertDesignPayment = z.infer<typeof insertDesignPaymentSchema>;
+
 export type CartItem = typeof cartItems.$inferSelect;
 export type InsertCartItem = z.infer<typeof insertCartItemSchema>;
 
