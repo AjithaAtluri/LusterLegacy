@@ -44,10 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false, // Don't retry on 401 (not authenticated)
+    retry: 1, // Try once more to handle potential session rehydration
     refetchOnWindowFocus: true, // Allow refetching when focus returns to window
     refetchOnMount: true,
-    staleTime: 1000 * 60 * 5, // Consider data stale after 5 minutes
+    refetchInterval: 10000, // Refetch every 10 seconds (helpful for debugging sessions)
+    staleTime: 0, // Always refetch to ensure latest authentication state
   });
   
   console.log("Auth Context - User data:", user);
@@ -192,6 +193,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check for returnTo parameter in URL
         const params = new URLSearchParams(window.location.search);
         const returnTo = params.get("returnTo");
+        
+        // If we came from the home page custom form, log that info
+        console.log("Form context path check:", {
+          fromHomePage: window.location.pathname === "/auth" && window.location.search.includes("returnTo=%2Fcustom-design"),
+          fromPath: document.referrer,
+          formDataExists: sessionStorage.getItem('designFormData') !== null
+        });
         
         // If no explicit returnTo but we have saved design form data, redirect to custom design page
         const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
