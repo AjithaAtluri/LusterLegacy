@@ -13,13 +13,19 @@ let cachedGoldPrice: number = 9800; // Default value - current market estimate f
 let cachedTimestamp: number = Date.now();
 
 /**
- * Fetch current gold price in Hyderabad, India from GoodReturns website
+ * Fetch current gold price in Hyderabad, India
  * Returns price per gram in INR for 24K gold
+ * 
+ * Uses multiple sources to improve reliability
  */
+
+// Define type for price fetch function
+type PriceFetchFunction = () => Promise<GoldPriceResponse>;
+
 export async function fetchGoldPrice(): Promise<GoldPriceResponse> {
   try {
     // Try multiple gold price sources
-    const sources = [
+    const sources: PriceFetchFunction[] = [
       fetchGoldPriceFromGoodReturns,
       fetchGoldPriceFromIBJA,
       fetchGoldPriceFromMMTC
@@ -27,16 +33,16 @@ export async function fetchGoldPrice(): Promise<GoldPriceResponse> {
     
     for (const source of sources) {
       try {
-        console.log(`Attempting to fetch price from source: ${source.name}`);
+        console.log(`Attempting to fetch price from source: ${source.name || 'unknown'}`);
         const result = await source();
-        if (result.success) {
+        if (result.success && result.price !== undefined) {
           // Successfully fetched from this source
           cachedGoldPrice = result.price;
           cachedTimestamp = Date.now();
           return result;
         }
       } catch (sourceError) {
-        console.error(`Error with source ${source.name}:`, sourceError);
+        console.error(`Error with source:`, sourceError);
       }
     }
     
