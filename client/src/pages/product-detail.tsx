@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
+import { RelatedProducts } from "@/components/products/related-products";
 
 // Extended product details interface
 interface ProductDetails {
@@ -68,6 +69,15 @@ export default function ProductDetail() {
   const [otherStoneWeight, setOtherStoneWeight] = useState<number>(0);
   // dimensions state removed as requested
   const [userDescription, setUserDescription] = useState<string>("");
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  
+  // Update related products state when data is fetched
+  useEffect(() => {
+    if (relatedProductsData && relatedProductsData.length > 0) {
+      console.log("Related products data received:", relatedProductsData);
+      setRelatedProducts(relatedProductsData);
+    }
+  }, [relatedProductsData]);
   
   // Defining the product interface
   interface Product {
@@ -93,6 +103,12 @@ export default function ProductDetail() {
   // Fetch product data
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: [`/api/products/${id}`]
+  });
+  
+  // Fetch related products data (will only run when product.id is available)
+  const { data: relatedProductsData } = useQuery<Product[]>({
+    queryKey: [`/api/products/${id}/related`],
+    enabled: !!id, // Only fetch when id is available
   });
   
   // Log product data for debugging

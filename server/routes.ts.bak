@@ -701,7 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get product by ID with simplified error handling
+  // Get product by ID
   app.get('/api/products/:id', async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
@@ -714,38 +714,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Product not found' });
       }
 
-      // Log the structure for debugging
+      // Log the structure and image URLs for debugging
       console.log(`Product ${productId} found:`, {
         id: product.id,
-        name: product.name
+        name: product.name,
+        imageUrl: product.imageUrl,
+        keys: Object.keys(product)
       });
 
-      // Try to calculate accurate price based on product information
       try {
-        // Extract AI inputs if available
-        let aiInputs = null;
-        if (product.aiInputs) {
-          aiInputs = typeof product.aiInputs === 'string' 
-            ? JSON.parse(product.aiInputs) 
-            : product.aiInputs;
-        } else if (product.details) {
-          // Try to extract from nested details
-          const parsedDetails = typeof product.details === 'string' 
-            ? JSON.parse(product.details) 
-            : product.details;
-          
-          if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
-            aiInputs = parsedDetails.additionalData.aiInputs;
+        // Try to get AI inputs from product.aiInputs first
+        let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+        
+        // If aiInputs is null, try to extract from the nested details JSON
+        if (!aiInputs && product.details) {
+          try {
+            const parsedDetails = JSON.parse(product.details as string);
+            if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+              aiInputs = parsedDetails.additionalData.aiInputs;
+              console.log(`Found AI inputs in details for product ${product.id}`);
+            }
+          } catch (err) {
+            console.error(`Failed to parse details JSON for product ${product.id}:`, err);
           }
         }
-
+        
+        // Debug logging for product data
+        console.log(`Detail Product ${product.id} - ${product.name} - AI Inputs:`, 
+          aiInputs ? JSON.stringify(aiInputs).substring(0, 150) + '...' : 'No AI inputs');
+        
         if (aiInputs) {
-          // Create parameters for price calculator
+          // Extract parameters for the price calculator
           const params = {
             productType: aiInputs.productType || "",
             metalType: aiInputs.metalType || "",
             metalWeight: parseFloat(aiInputs.metalWeight) || 0,
-            primaryGems: [],
+            primaryGems: [], // We'll manually add all gems below
             otherStone: aiInputs.otherStoneType ? {
               stoneTypeId: aiInputs.otherStoneType,
               caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
@@ -768,14 +772,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
           
-          // Calculate price
-          const result = await calculateJewelryPrice(params);
+          console.log(`Detail Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
           
-          // Add calculated prices to product
+          const result = await calculateJewelryPrice(params);
+          console.log(`Detail Product ${product.id} - Calculated prices: USD: ${result.priceUSD}, INR: ${result.priceINR}`);
+          
+          // Add the accurate prices to the product
           product.calculatedPriceUSD = result.priceUSD;
           product.calculatedPriceINR = result.priceINR;
         } else {
-          // Fallback to base price conversion
+          // If AI inputs are not available, use the base price
+          console.log(`Detail Product ${product.id} - No AI inputs, using base price: ${product.basePrice}`);
           product.calculatedPriceUSD = Math.round(product.basePrice / USD_TO_INR_RATE);
           product.calculatedPriceINR = product.basePrice;
         }
@@ -807,80 +814,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get related products using the algorithm in storage
       const relatedProducts = await storage.getRelatedProducts(productId, limit);
       
-      // Calculate accurate prices for each product
+      // Calculate accurate prices for each product using the price calculator
       const productsWithAccuratePrices = await Promise.all(relatedProducts.map(async product => {
         try {
-          // Extract AI inputs if available
-          let aiInputs = null;
+          // Try to get AI inputs from product.aiInputs first
+          let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
           
-          if (product.aiInputs) {
-            aiInputs = typeof product.aiInputs === 'string' 
-              ? JSON.parse(product.aiInputs) 
-              : product.aiInputs;
-          } else if (product.details) {
-            // Try to extract from nested details
-            const parsedDetails = typeof product.details === 'string' 
-              ? JSON.parse(product.details) 
-              : product.details;
-            
-            if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
-              aiInputs = parsedDetails.additionalData.aiInputs;
+          // If aiInputs is null, try to extract from the nested details JSON
+          if (!aiInputs && product.details) {
+            try {
+              const parsedDetails = JSON.parse(product.details as string);
+              if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+                aiInputs = parsedDetails.additionalData.aiInputs;
+                console.log(`Found AI inputs in details for product ${product.id}`);
+              }
+            } catch (err) {
+              console.error(`Failed to parse details JSON for product ${product.id}:`, err);
             }
           }
           
           if (aiInputs) {
-            // Create parameters for price calculator
+            // Extract parameters for the price calculator
             const params = {
               productType: aiInputs.productType || "",
               metalType: aiInputs.metalType || "",
               metalWeight: parseFloat(aiInputs.metalWeight) || 0,
               primaryGems: [],
-              otherStone: aiInputs.otherStoneType ? {
-                stoneTypeId: aiInputs.otherStoneType,
-                caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
-              } : undefined
+              otherStone: { stoneTypeId: "none", caratWeight: 0 }
             };
             
             // Add main stone if available
             if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
               params.primaryGems.push({
                 name: aiInputs.mainStoneType,
-                carats: parseFloat(aiInputs.mainStoneWeight) || 0
+                carats: parseFloat(aiInputs.mainStoneWeight)
               });
             }
             
             // Add secondary stone if available
-            if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
+            if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneType !== "none_selected" && aiInputs.secondaryStoneWeight) {
               params.primaryGems.push({
                 name: aiInputs.secondaryStoneType,
-                carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
+                carats: parseFloat(aiInputs.secondaryStoneWeight)
               });
             }
             
-            // Calculate price using the standard calculator function
-            const result = await calculateJewelryPrice(params);
+            // Add other stone if available
+            if (aiInputs.otherStoneType && aiInputs.otherStoneType !== "none_selected" && aiInputs.otherStoneWeight) {
+              params.otherStone = {
+                stoneTypeId: aiInputs.otherStoneType,
+                caratWeight: parseFloat(aiInputs.otherStoneWeight)
+              };
+            }
             
-            return {
-              ...product,
-              calculatedPriceUSD: result.priceUSD,
-              calculatedPriceINR: result.priceINR
-            };
+            // Call the price calculator to get accurate prices
+            console.log(`Related Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
+            
+            try {
+              const { calculateJewelryPriceUSD, calculateJewelryPriceINR } = await import("./utils/price-calculator");
+              const priceUSD = await calculateJewelryPriceUSD(params);
+              const priceINR = await calculateJewelryPriceINR(params);
+              
+              return {
+                ...product,
+                calculatedPriceUSD: priceUSD,
+                calculatedPriceINR: priceINR
+              };
+            } catch (error) {
+              console.error(`Error calculating price for product ${product.id}:`, error);
+              return product;
+            }
           } else {
-            // Fallback to base price conversion
-            return {
-              ...product,
-              calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-              calculatedPriceINR: product.basePrice
-            };
+            return product;
           }
         } catch (error) {
-          console.error(`Error processing product ${product.id} for pricing:`, error);
-          // Fallback to base price
-          return {
-            ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
-          };
+          console.error(`Error processing product ${product.id} for accurate pricing:`, error);
+          return product;
         }
       }));
       
@@ -888,6 +897,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching related products:', error);
       res.status(500).json({ message: 'Failed to fetch related products' });
+    }
+  });
+
+      try {
+        // Try to get AI inputs from product.aiInputs first
+        let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+        
+        // If aiInputs is null, try to extract from the nested details JSON
+        if (!aiInputs && product.details) {
+          try {
+            const parsedDetails = JSON.parse(product.details as string);
+            if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+              aiInputs = parsedDetails.additionalData.aiInputs;
+              console.log(`Found AI inputs in details for product ${product.id}`);
+            }
+          } catch (err) {
+            console.error(`Failed to parse details JSON for product ${product.id}:`, err);
+          }
+        }
+        
+        // Debug logging for product data
+        console.log(`Detail Product ${product.id} - ${product.name} - AI Inputs:`, 
+          aiInputs ? JSON.stringify(aiInputs).substring(0, 150) + '...' : 'No AI inputs');
+        
+        if (aiInputs) {
+          // Extract parameters for the price calculator
+          const params = {
+            productType: aiInputs.productType || "",
+            metalType: aiInputs.metalType || "",
+            metalWeight: parseFloat(aiInputs.metalWeight) || 0,
+            primaryGems: [], // We'll manually add all gems below
+            otherStone: aiInputs.otherStoneType ? {
+              stoneTypeId: aiInputs.otherStoneType,
+              caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
+            } : undefined
+          };
+          
+          // Add main stone if available
+          if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
+            params.primaryGems.push({
+              name: aiInputs.mainStoneType,
+              carats: parseFloat(aiInputs.mainStoneWeight) || 0
+            });
+          }
+          
+          // Add secondary stone if available
+          if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
+            params.primaryGems.push({
+              name: aiInputs.secondaryStoneType,
+              carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
+            });
+          }
+          
+          console.log(`Detail Product ${product.id} - Price calculation parameters:`, JSON.stringify(params));
+          
+          const result = await calculateJewelryPrice(params);
+          console.log(`Detail Product ${product.id} - Calculated prices: USD: ${result.priceUSD}, INR: ${result.priceINR}`);
+          
+          // Add the accurate prices to the product
+          product.calculatedPriceUSD = result.priceUSD;
+          product.calculatedPriceINR = result.priceINR;
+        } else {
+          // If AI inputs are not available, use the base price
+          console.log(`Detail Product ${product.id} - No AI inputs, using base price: ${product.basePrice}`);
+          product.calculatedPriceUSD = Math.round(product.basePrice / USD_TO_INR_RATE);
+          product.calculatedPriceINR = product.basePrice;
+        }
+      } catch (calcError) {
+        console.error(`Error calculating price for product ${product.id}:`, calcError);
+        // Fallback to base price conversion
+        product.calculatedPriceUSD = Math.round(product.basePrice / USD_TO_INR_RATE);
+        product.calculatedPriceINR = product.basePrice;
+      }
+
+      res.json(product);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      res.status(500).json({ message: 'Error fetching product' });
     }
   });
 

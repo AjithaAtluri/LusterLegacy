@@ -2012,6 +2012,169 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  /**
+   * Find related products based on product type, metal type, and stone types
+   * Uses both keyword matching and category/material similarity
+   */
+  async getRelatedProducts(productId: number, limit: number = 4): Promise<any[]> {
+    try {
+      // First get the current product to extract keywords and properties
+      const currentProduct = await this.getProduct(productId);
+      if (!currentProduct) {
+        return [];
+      }
+
+      // Extract the product details to find matching attributes
+      let productType = "";
+      let metalType = "";
+      let mainStoneType = "";
+      let secondaryStoneType = "";
+      let productCategory = currentProduct.category || "";
+      let aiInputs = null;
+      let similarityScore = new Map<number, number>();
+      
+      // Try to extract AI inputs for more accurate matching
+      try {
+        if (currentProduct.aiInputs) {
+          aiInputs = typeof currentProduct.aiInputs === 'string' 
+            ? JSON.parse(currentProduct.aiInputs) 
+            : currentProduct.aiInputs;
+            
+          if (aiInputs) {
+            productType = aiInputs.productType || "";
+            metalType = aiInputs.metalType || "";
+            mainStoneType = aiInputs.mainStoneType || "";
+            secondaryStoneType = aiInputs.secondaryStoneType || "";
+          }
+        } else if (currentProduct.details) {
+          const details = JSON.parse(currentProduct.details);
+          if (details.additionalData) {
+            const additionalData = details.additionalData;
+            productType = additionalData.productType || "";
+            metalType = additionalData.metalType || "";
+            mainStoneType = additionalData.mainStoneType || "";
+            secondaryStoneType = additionalData.secondaryStoneType || "";
+            
+            // If we have aiInputs inside additionalData, use those instead
+            if (additionalData.aiInputs) {
+              productType = additionalData.aiInputs.productType || productType;
+              metalType = additionalData.aiInputs.metalType || metalType;
+              mainStoneType = additionalData.aiInputs.mainStoneType || mainStoneType;
+              secondaryStoneType = additionalData.aiInputs.secondaryStoneType || secondaryStoneType;
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error parsing product details for product ${productId}:`, error);
+      }
+      
+      // Get all products except the current one
+      const allProducts = await db
+        .select()
+        .from(products)
+        .where(and(
+          ne(products.id, productId),
+          isNotNull(products.imageUrl)
+        ));
+      
+      // Calculate similarity score for each product
+      for (const product of allProducts) {
+        let score = 0;
+        let productAiInputs = null;
+        let otherProductType = "";
+        let otherMetalType = "";
+        let otherMainStoneType = "";
+        let otherSecondaryStoneType = "";
+        
+        // Try to extract AI inputs for comparison
+        try {
+          if (product.aiInputs) {
+            productAiInputs = typeof product.aiInputs === 'string' 
+              ? JSON.parse(product.aiInputs) 
+              : product.aiInputs;
+              
+            if (productAiInputs) {
+              otherProductType = productAiInputs.productType || "";
+              otherMetalType = productAiInputs.metalType || "";
+              otherMainStoneType = productAiInputs.mainStoneType || "";
+              otherSecondaryStoneType = productAiInputs.secondaryStoneType || "";
+            }
+          } else if (product.details) {
+            const details = JSON.parse(product.details);
+            if (details.additionalData) {
+              const additionalData = details.additionalData;
+              otherProductType = additionalData.productType || "";
+              otherMetalType = additionalData.metalType || "";
+              otherMainStoneType = additionalData.mainStoneType || "";
+              otherSecondaryStoneType = additionalData.secondaryStoneType || "";
+              
+              // If we have aiInputs inside additionalData, use those instead
+              if (additionalData.aiInputs) {
+                otherProductType = additionalData.aiInputs.productType || otherProductType;
+                otherMetalType = additionalData.aiInputs.metalType || otherMetalType;
+                otherMainStoneType = additionalData.aiInputs.mainStoneType || otherMainStoneType;
+                otherSecondaryStoneType = additionalData.aiInputs.secondaryStoneType || otherSecondaryStoneType;
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error parsing product details for product ${product.id}:`, error);
+        }
+        
+        // Match by product type/category (highest weight)
+        if (otherProductType && productType && otherProductType.toLowerCase() === productType.toLowerCase()) {
+          score += 5;
+        } else if (product.category && productCategory && product.category.toLowerCase() === productCategory.toLowerCase()) {
+          score += 4;
+        }
+        
+        // Match by metal type (medium weight)
+        if (otherMetalType && metalType && otherMetalType.toLowerCase() === metalType.toLowerCase()) {
+          score += 3;
+        }
+        
+        // Match by main stone type (medium weight)
+        if (otherMainStoneType && mainStoneType && otherMainStoneType.toLowerCase().includes(mainStoneType.toLowerCase())) {
+          score += 3;
+        }
+        
+        // Match by secondary stone type (lower weight)
+        if (otherSecondaryStoneType && secondaryStoneType && 
+            otherSecondaryStoneType.toLowerCase().includes(secondaryStoneType.toLowerCase())) {
+          score += 2;
+        }
+        
+        // Name-based keyword matching (lower weight but still important)
+        if (product.name && currentProduct.name) {
+          const productWords = product.name.toLowerCase().split(/\s+/);
+          const currentProductWords = currentProduct.name.toLowerCase().split(/\s+/);
+          
+          // Count how many words match between the two products
+          const matchingWords = productWords.filter(word => 
+            currentProductWords.includes(word) && word.length > 3); // Only count words longer than 3 chars
+          
+          score += matchingWords.length;
+        }
+        
+        // Store the score for this product
+        similarityScore.set(product.id, score);
+      }
+      
+      // Sort the products by their similarity score (descending)
+      const sortedProducts = allProducts.sort((a, b) => {
+        const scoreA = similarityScore.get(a.id) || 0;
+        const scoreB = similarityScore.get(b.id) || 0;
+        return scoreB - scoreA;
+      });
+      
+      // Return the top N most similar products
+      return sortedProducts.slice(0, limit);
+    } catch (error) {
+      console.error("Error finding related products:", error);
+      return [];
+    }
+  }
 }
 
 // Use database storage implementation
