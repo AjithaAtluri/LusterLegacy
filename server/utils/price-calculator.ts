@@ -29,7 +29,7 @@ interface PriceCalculationParams {
 }
 
 // Fallback price of 24k gold per gram in INR (2025 rates) - will be replaced with real value
-const DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR = 7500; // Consistent with gold-price-service.ts fallback
+const DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR = 9800; // Consistent with gold-price-service.ts fallback
 
 export async function calculateJewelryPrice(params: PriceCalculationParams): Promise<{
   priceUSD: number;

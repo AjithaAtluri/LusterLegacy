@@ -9,7 +9,7 @@ interface GoldPriceResponse {
 }
 
 // Cache for gold price (to avoid frequent API calls)
-let cachedGoldPrice: number = 7500; // Default value - current market estimate for 24K gold per gram
+let cachedGoldPrice: number = 9800; // Default value - current market estimate for 24K gold per gram
 let cachedTimestamp: number = Date.now();
 
 /**
@@ -18,140 +18,31 @@ let cachedTimestamp: number = Date.now();
  */
 export async function fetchGoldPrice(): Promise<GoldPriceResponse> {
   try {
-    // Try to fetch from GoodReturns website
-    try {
-      console.log('Fetching gold price from GoodReturns.in...');
-      
-      // Fetch the main gold price page for Hyderabad
-      const response = await axios.get('https://www.goodreturns.in/gold-rates/hyderabad.html', {
-        timeout: 10000, // 10 second timeout
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    // Try multiple gold price sources
+    const sources = [
+      fetchGoldPriceFromGoodReturns,
+      fetchGoldPriceFromIBJA,
+      fetchGoldPriceFromMMTC
+    ];
+    
+    for (const source of sources) {
+      try {
+        console.log(`Attempting to fetch price from source: ${source.name}`);
+        const result = await source();
+        if (result.success) {
+          // Successfully fetched from this source
+          cachedGoldPrice = result.price;
+          cachedTimestamp = Date.now();
+          return result;
         }
-      });
-      
-      if (response.data) {
-        const html = response.data;
-        console.log('Received HTML response, analyzing content...');
-        
-        // This extracts prices from the table where 24 Carat gold rates are listed
-        // Looking for patterns like "₹ 7,250" in the 24K gold column
-        // First try the most precise regex for the standard table format
-        const priceRegex = /24 Carat Gold Rate[\s\S]*?<td[^>]*>₹\s*([\d,]+)/i;
-        const match = html.match(priceRegex);
-        
-        if (match && match[1]) {
-          // Remove commas and convert to number
-          const pricePerGram = parseInt(match[1].replace(/,/g, ''), 10);
-          
-          if (!isNaN(pricePerGram) && pricePerGram > 0) {
-            // Update cache
-            cachedGoldPrice = pricePerGram;
-            cachedTimestamp = Date.now();
-            
-            console.log(`Successfully fetched 24K gold price from GoodReturns: ₹${pricePerGram}/gram`);
-            
-            return {
-              success: true,
-              price: pricePerGram,
-              timestamp: cachedTimestamp,
-              location: 'Hyderabad, India'
-            };
-          }
-        } else {
-          console.log('Primary gold price pattern not found, trying alternative patterns...');
-          
-          // First make the HTML single line to help with regex matching
-          const singleLineHtml = html.replace(/\n/g, ' ');
-          
-          // Try several alternative patterns to find the 24K gold price
-          const patterns = [
-            // Pattern for "Today 24 Carat Gold Rate" section
-            /Today 24 Carat Gold Rate[^₹]*₹\s*([\d,]+)/i,
-            
-            // Pattern for price table cells
-            /24k gold.*?₹\s*([\d,]+)/i,
-            
-            // Broader pattern to catch various formats
-            /24[k\s]+.*?gold[^₹]*₹\s*([\d,]+)/i,
-            
-            // Most generic pattern - look for any price in a context that mentions 24K 
-            /24[k\s].*?(\d{1,2},\d{3})/i
-          ];
-          
-          for (const pattern of patterns) {
-            const altMatch = singleLineHtml.match(pattern);
-            if (altMatch && altMatch[1]) {
-              const pricePerGram = parseInt(altMatch[1].replace(/,/g, ''), 10);
-              
-              if (!isNaN(pricePerGram) && pricePerGram > 0) {
-                // Validate the price is in a reasonable range (₹5,000 - ₹10,000 per gram)
-                if (pricePerGram >= 5000 && pricePerGram <= 10000) {
-                  // Update cache
-                  cachedGoldPrice = pricePerGram;
-                  cachedTimestamp = Date.now();
-                  
-                  console.log(`Successfully fetched 24K gold price (alt pattern): ₹${pricePerGram}/gram`);
-                  
-                  return {
-                    success: true,
-                    price: pricePerGram,
-                    timestamp: cachedTimestamp,
-                    location: 'Hyderabad, India'
-                  };
-                } else {
-                  console.log(`Found potential price ₹${pricePerGram}, but it's outside reasonable range`);
-                }
-              }
-            }
-          }
-          
-          // If still no match, try one last fallback: fetch the JSON API that the website might use
-          try {
-            const apiResponse = await axios.get('https://www.goodreturns.in/gold-rates/hyderabad.html?_data=routes%2Fgold-rates.$city', {
-              timeout: 5000,
-              headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-              }
-            });
-            
-            if (apiResponse.data && typeof apiResponse.data === 'object') {
-              console.log('Attempting to parse gold price from API response...');
-              // Extract from JSON if available
-              const jsonData = JSON.stringify(apiResponse.data);
-              const jsonMatch = jsonData.match(/"24K"[^}]*"rate"[^}]*"oneGram"[^:]*:(\d+)/i);
-              
-              if (jsonMatch && jsonMatch[1]) {
-                const pricePerGram = parseInt(jsonMatch[1], 10);
-                if (!isNaN(pricePerGram) && pricePerGram > 0) {
-                  cachedGoldPrice = pricePerGram;
-                  cachedTimestamp = Date.now();
-                  
-                  console.log(`Successfully fetched 24K gold price from API: ₹${pricePerGram}/gram`);
-                  
-                  return {
-                    success: true,
-                    price: pricePerGram,
-                    timestamp: cachedTimestamp,
-                    location: 'Hyderabad, India'
-                  };
-                }
-              }
-            }
-          } catch (apiError) {
-            console.log('API fallback attempt failed:', apiError.message);
-          }
-        }
+      } catch (sourceError) {
+        console.error(`Error with source ${source.name}:`, sourceError);
       }
-    } catch (webError) {
-      console.error('Error fetching from GoodReturns website:', webError);
     }
     
-    // If web scraping fails, fall back to a reasonable estimate
-    // This ensures the application remains functional even if scraping is unavailable
-    console.log('Web scraping failed, using fallback price estimate');
-    const basePrice = 7500; // Current market estimate around ₹7,500/gram
+    // All sources failed, use fallback
+    console.log('All web scraping sources failed, using fallback price estimate');
+    const basePrice = 9800; // Current market estimate around ₹9,800/gram
     const fluctuation = Math.random() * 200 - 100; // +/- 100 INR
     const currentPrice = Math.round(basePrice + fluctuation);
     
@@ -197,4 +88,221 @@ export async function getGoldPrice(): Promise<GoldPriceResponse> {
  */
 export function getCachedGoldPrice(): number {
   return cachedGoldPrice;
+}
+
+/**
+ * Source 1: Fetch from GoodReturns.in
+ */
+async function fetchGoldPriceFromGoodReturns(): Promise<GoldPriceResponse> {
+  console.log('Fetching gold price from GoodReturns.in...');
+  
+  // Fetch the main gold price page for Hyderabad
+  const response = await axios.get('https://www.goodreturns.in/gold-rates/hyderabad.html', {
+    timeout: 10000, // 10 second timeout
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+  });
+  
+  if (response.data) {
+    const html = response.data;
+    console.log('Received HTML response from GoodReturns, analyzing content...');
+    
+    // Try several patterns to extract the gold price
+    const patterns = [
+      // Standard table format
+      /24 Carat Gold Rate[\s\S]*?<td[^>]*>₹\s*([\d,]+)/i,
+      // "Today 24 Carat Gold Rate" section
+      /Today 24 Carat Gold Rate[^₹]*₹\s*([\d,]+)/i,
+      // Price table cells
+      /24k gold.*?₹\s*([\d,]+)/i,
+      // Broader pattern
+      /24[k\s]+.*?gold[^₹]*₹\s*([\d,]+)/i,
+      // Most generic pattern
+      /24[k\s].*?(\d{1,2},\d{3})/i
+    ];
+    
+    // Make HTML single line to help with regex
+    const singleLineHtml = html.replace(/\n/g, ' ');
+    
+    for (const pattern of patterns) {
+      const match = pattern === patterns[0] 
+        ? html.match(pattern)  // First pattern works better with multi-line
+        : singleLineHtml.match(pattern);
+        
+      if (match && match[1]) {
+        // Remove commas and convert to number
+        const pricePerGram = parseInt(match[1].replace(/,/g, ''), 10);
+        
+        if (!isNaN(pricePerGram) && pricePerGram > 0) {
+          // Validate price is in reasonable range
+          if (pricePerGram >= 7000 && pricePerGram <= 12000) {
+            console.log(`Successfully fetched 24K gold price from GoodReturns: ₹${pricePerGram}/gram`);
+            
+            return {
+              success: true,
+              price: pricePerGram,
+              timestamp: Date.now(),
+              location: 'Hyderabad, India (GoodReturns)'
+            };
+          }
+        }
+      }
+    }
+    
+    // Try to parse from JSON API
+    try {
+      const apiResponse = await axios.get('https://www.goodreturns.in/gold-rates/hyderabad.html?_data=routes%2Fgold-rates.$city', {
+        timeout: 5000,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      
+      if (apiResponse.data && typeof apiResponse.data === 'object') {
+        const jsonData = JSON.stringify(apiResponse.data);
+        const jsonMatch = jsonData.match(/"24K"[^}]*"rate"[^}]*"oneGram"[^:]*:(\d+)/i);
+        
+        if (jsonMatch && jsonMatch[1]) {
+          const pricePerGram = parseInt(jsonMatch[1], 10);
+          if (!isNaN(pricePerGram) && pricePerGram > 0) {
+            console.log(`Successfully fetched 24K gold price from GoodReturns API: ₹${pricePerGram}/gram`);
+            
+            return {
+              success: true,
+              price: pricePerGram,
+              timestamp: Date.now(),
+              location: 'Hyderabad, India (GoodReturns API)'
+            };
+          }
+        }
+      }
+    } catch (apiError) {
+      console.log('GoodReturns API fallback attempt failed');
+    }
+  }
+  
+  console.log('Failed to fetch gold price from GoodReturns');
+  return { success: false, error: 'Could not extract price from GoodReturns' };
+}
+
+/**
+ * Source 2: Fetch from India Bullion and Jewellers Association
+ */
+async function fetchGoldPriceFromIBJA(): Promise<GoldPriceResponse> {
+  console.log('Fetching gold price from IBJA...');
+  
+  try {
+    const response = await axios.get('https://ibja.co', {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
+    if (response.data) {
+      const html = response.data;
+      console.log('Received HTML response from IBJA, analyzing content...');
+      
+      // IBJA typically shows gold price per 10 grams
+      // We need to extract and divide by 10 to get per gram price
+      
+      // Try multiple patterns to extract the price
+      const patterns = [
+        // Look for Gold 999 (24K) price table cells
+        /Gold\s+999\s*<\/td>\s*<td[^>]*>([\d,.]+)/i,
+        // Alternative format
+        /999\s+Gold[^<]*<[^>]*>([\d,.]+)/i,
+        // General table with 999 gold
+        /<td[^>]*>\s*999\s*<\/td>.*?<td[^>]*>([\d,.]+)/i
+      ];
+      
+      for (const pattern of patterns) {
+        const match = html.match(pattern);
+        if (match && match[1]) {
+          // IBJA typically quotes per 10 gram
+          // Remove non-numeric characters and convert to number
+          const pricePerTenGrams = parseFloat(match[1].replace(/[^\d.]/g, ''));
+          if (!isNaN(pricePerTenGrams) && pricePerTenGrams > 0) {
+            // Convert to price per gram
+            const pricePerGram = Math.round(pricePerTenGrams / 10);
+            
+            // Validate price is in reasonable range
+            if (pricePerGram >= 7000 && pricePerGram <= 12000) {
+              console.log(`Successfully fetched 24K gold price from IBJA: ₹${pricePerGram}/gram`);
+              
+              return {
+                success: true,
+                price: pricePerGram,
+                timestamp: Date.now(),
+                location: 'India (IBJA)'
+              };
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.log('IBJA fetch failed');
+  }
+  
+  return { success: false, error: 'Could not extract price from IBJA' };
+}
+
+/**
+ * Source 3: Fetch from MMTC-PAMP
+ */
+async function fetchGoldPriceFromMMTC(): Promise<GoldPriceResponse> {
+  console.log('Fetching gold price from MMTC-PAMP...');
+  
+  try {
+    const response = await axios.get('https://www.mmtcpamp.com/gold-silver-rate-today', {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+      }
+    });
+    
+    if (response.data) {
+      const html = response.data;
+      console.log('Received HTML response from MMTC-PAMP, analyzing content...');
+      
+      // MMTC-PAMP usually quotes in per gram for 24K
+      const patterns = [
+        // Direct 24K gold price pattern
+        /24[k\s]*\s*[Gg]old[^₹]*₹\s*([\d,]+)/i,
+        // Alternative format
+        /[Gg]old\s*24[k\s]*[^₹]*₹\s*([\d,]+)/i,
+        // Price inside specific div
+        /data-gold-rate[^>]*>([\d,]+)/i
+      ];
+      
+      const singleLineHtml = html.replace(/\n/g, ' ');
+      
+      for (const pattern of patterns) {
+        const match = singleLineHtml.match(pattern);
+        if (match && match[1]) {
+          const pricePerGram = parseInt(match[1].replace(/,/g, ''), 10);
+          if (!isNaN(pricePerGram) && pricePerGram > 0) {
+            // Validate price is in reasonable range
+            if (pricePerGram >= 7000 && pricePerGram <= 12000) {
+              console.log(`Successfully fetched 24K gold price from MMTC-PAMP: ₹${pricePerGram}/gram`);
+              
+              return {
+                success: true,
+                price: pricePerGram,
+                timestamp: Date.now(),
+                location: 'India (MMTC-PAMP)'
+              };
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.log('MMTC-PAMP fetch failed');
+  }
+  
+  return { success: false, error: 'Could not extract price from MMTC-PAMP' };
 }
