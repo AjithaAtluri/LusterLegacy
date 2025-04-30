@@ -91,9 +91,13 @@ export const designRequests = pgTable("design_requests", {
   notes: text("notes"),
   imageUrl: text("image_url").notNull(), // Main image (for backward compatibility)
   imageUrls: text("image_urls").array().notNull().default([]), // Array of additional images
-  status: text("status").notNull().default("pending"), // "pending", "quoted", "approved", "rejected", "completed"
-  estimatedPrice: integer("estimated_price"),
-  cadImageUrl: text("cad_image_url"),
+  status: text("status").notNull().default("pending_acceptance"), // New workflow states
+  consultationFeePaid: boolean("consultation_fee_paid").notNull().default(false),
+  initialEstimate: integer("initial_estimate"), // Initial estimate before payment
+  finalEstimate: integer("final_estimate"), // Final estimate after design approval
+  iterationsCount: integer("iterations_count").notNull().default(0), // Track number of design iterations
+  estimatedPrice: integer("estimated_price"), // Keep for backward compatibility
+  cadImageUrl: text("cad_image_url"), // Keep for backward compatibility
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -150,6 +154,70 @@ export const insertDesignRequestCommentSchema = createInsertSchema(designRequest
   content: true,
   createdBy: true,
   isAdmin: true,
+});
+
+// Design feedback schema (for advanced chat functionality)
+export const designFeedback = pgTable("design_feedback", {
+  id: serial("id").primaryKey(),
+  designRequestId: integer("design_request_id").notNull().references(() => designRequests.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  content: text("content").notNull(),
+  isFromAdmin: boolean("is_from_admin").notNull().default(false),
+  imageUrls: text("image_urls").array().default([]),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const designFeedbackRelations = relations(designFeedback, ({ one }) => ({
+  designRequest: one(designRequests, {
+    fields: [designFeedback.designRequestId],
+    references: [designRequests.id]
+  }),
+  user: one(users, {
+    fields: [designFeedback.userId],
+    references: [users.id]
+  })
+}));
+
+export const insertDesignFeedbackSchema = createInsertSchema(designFeedback).pick({
+  designRequestId: true,
+  userId: true,
+  content: true,
+  isFromAdmin: true,
+  imageUrls: true,
+});
+
+// Design payments schema
+export const designPayments = pgTable("design_payments", {
+  id: serial("id").primaryKey(),
+  designRequestId: integer("design_request_id").notNull().references(() => designRequests.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  amount: integer("amount").notNull(),
+  paymentType: text("payment_type").notNull(), // 'consultation_fee', 'deposit', 'final_payment'
+  paymentMethod: text("payment_method").notNull(), // 'paypal', 'credit_card', etc.
+  transactionId: text("transaction_id"),
+  status: text("status").notNull().default("pending"), // 'pending', 'completed', 'failed'
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const designPaymentsRelations = relations(designPayments, ({ one }) => ({
+  designRequest: one(designRequests, {
+    fields: [designPayments.designRequestId],
+    references: [designRequests.id]
+  }),
+  user: one(users, {
+    fields: [designPayments.userId],
+    references: [users.id]
+  })
+}));
+
+export const insertDesignPaymentSchema = createInsertSchema(designPayments).pick({
+  designRequestId: true,
+  userId: true,
+  amount: true,
+  paymentType: true,
+  paymentMethod: true,
+  transactionId: true,
+  status: true,
 });
 
 // Cart items schema
