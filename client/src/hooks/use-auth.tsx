@@ -379,6 +379,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       
+      // Clear design form data from session storage
+      try {
+        console.log("Clearing design form data from session storage");
+        sessionStorage.removeItem('designFormData');
+      } catch (error) {
+        console.error("Error clearing session storage:", error);
+      }
+      
       // Force refetch to confirm logout state from server
       refetchUser();
       
