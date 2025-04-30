@@ -489,51 +489,54 @@ export default function DesignForm() {
         {/* Display all uploaded images */}
         {uploadedImages.length > 0 && (
           <div className="mb-4">
-            <div className="grid grid-cols-1 gap-2">
+            <h4 className="text-sm font-medium mb-2 font-montserrat">Uploaded Images ({uploadedImages.length}/5)</h4>
+            
+            {/* Horizontal gallery layout */}
+            <div className="flex flex-wrap gap-3">
               {uploadedImages.map((file, index) => (
                 <div 
                   key={index} 
-                  className="flex items-center p-4 border border-foreground/20 rounded-lg bg-background/50"
+                  className="relative flex flex-col items-center border border-foreground/20 rounded-lg bg-background/50 p-2 w-[120px]"
                 >
+                  {/* Image preview */}
                   {previewUrls[index] ? (
-                    <div className="relative w-20 h-20 mr-4">
+                    <div className="relative w-full h-[80px] mb-2">
                       <img 
                         src={previewUrls[index]} 
                         alt={`Design preview ${index + 1}`}
                         className="w-full h-full object-cover rounded-md"
                       />
                       {file === uploadedImage && (
-                        <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-                          1
+                        <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">
+                          <Check className="h-3 w-3" />
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="w-20 h-20 flex items-center justify-center bg-accent/10 rounded-md mr-4">
-                      <ImageIcon className="h-10 w-10 text-accent" />
+                    <div className="w-full h-[80px] flex items-center justify-center bg-accent/10 rounded-md mb-2">
+                      <ImageIcon className="h-8 w-8 text-accent" />
                     </div>
                   )}
                   
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                      <p className="font-montserrat text-sm font-medium text-foreground">
-                        {file.name}
-                      </p>
-                    </div>
-                    <p className="font-montserrat text-xs text-foreground/60 mt-1">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB • {getFileExtension(file.name).toUpperCase()}
+                  {/* File info */}
+                  <div className="w-full text-center">
+                    <p className="font-montserrat text-xs font-medium text-foreground truncate max-w-full px-1">
+                      {file.name.length > 10 ? file.name.substring(0, 10) + '...' : file.name}
+                    </p>
+                    <p className="font-montserrat text-xs text-foreground/60">
+                      {(file.size / 1024 / 1024).toFixed(1)} MB
                     </p>
                   </div>
                   
+                  {/* Remove button */}
                   <Button 
                     type="button" 
                     variant="ghost" 
                     size="icon" 
-                    className="ml-2" 
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full" 
                     onClick={() => removeUploadedFile(index)}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </Button>
                 </div>
               ))}
