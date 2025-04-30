@@ -401,7 +401,7 @@ export default function CustomerDashboard() {
                                   </Button>
                                 ) : (
                                   <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/custom-design?view=${request.id}`}>
+                                    <Link href={`/custom-designs/${request.id}`}>
                                       <ExternalLink className="h-3 w-3 mr-1" />
                                       View Details
                                     </Link>

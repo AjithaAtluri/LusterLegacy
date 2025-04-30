@@ -79,6 +79,7 @@ function App() {
             <ProtectedRoute path="/customer-dashboard" component={CustomerDashboard} />
             <ProtectedRoute path="/place-order/:id" component={PlaceOrder} />
             <ProtectedRoute path="/customize-request/:id" component={CustomizeRequest} />
+            <ProtectedRoute path="/custom-designs/:id" component={lazy(() => import("@/pages/custom-designs/[id]"))} />
             <Route path="/auth" component={AuthPage} />
             
             {/* Tools */}
