@@ -3,7 +3,32 @@ import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { GemIcon, Gem, Sparkles, Sigma, Settings, Clock3, History, Palette, Wrench, Crown, Swords, Medal, HeartHandshake, BookOpenText } from "lucide-react";
+import { 
+  GemIcon, 
+  Gem, 
+  Sparkles, 
+  Sigma, 
+  Settings, 
+  Clock3, 
+  History, 
+  Palette, 
+  Wrench, 
+  Crown, 
+  Swords, 
+  Medal, 
+  HeartHandshake, 
+  BookOpenText,
+  Users,
+  Trophy,
+  Hammer,
+  Brush,
+  PenTool,
+  Check,
+  X,
+  DollarSign,
+  BookOpen,
+  Scale
+} from "lucide-react";
 
 export default function GemMetalGuide() {
   return (
