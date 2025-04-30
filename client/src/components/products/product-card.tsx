@@ -157,8 +157,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[520px]">
-      <div className="relative h-[350px] overflow-hidden flex-shrink-0 bg-white bg-opacity-5 flex items-center justify-center p-2">
+    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[500px]">
+      <div className="relative h-[320px] overflow-hidden flex-shrink-0 bg-white bg-opacity-5 flex items-center justify-center p-2">
         {/* Using the reliable product image component for consistent images */}
         <Link href={`/product-detail/${product.id}`}>
           <ReliableProductImage 
@@ -184,7 +184,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
       
       {/* Content area with fixed layout */}
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="p-4 flex flex-col justify-between h-[180px]">
         {/* Product type badge - only showing product type, not "featured" */}
         <div className="mb-2">
           {(product.productType || product.category) && (
@@ -195,20 +195,20 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
         
         {/* Product title with simplified 5-word versions for all products */}
-        <div className="relative mb-6 py-3">
+        <div className="relative mb-4 py-2">
           {/* Decorative lines before and after title */}
           <div className="absolute left-1/2 top-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40"></div>
-          <h3 className="font-cormorant text-2xl italic font-semibold tracking-wide text-foreground group-hover:text-primary transition-colors duration-300 text-center uppercase px-2">
+          <h3 className="font-cormorant text-xl italic font-semibold tracking-wide text-foreground group-hover:text-primary transition-colors duration-300 text-center uppercase px-2 leading-tight">
             {getShortProductTitle(product)}
           </h3>
           <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40"></div>
         </div>
         
-        {/* Empty space to replace price section */}
-        <div className="mt-auto mb-3"></div>
+        {/* Flex spacer to push button to bottom */}
+        <div className="flex-grow"></div>
         
         {/* Button always at the bottom */}
-        <div className="mt-auto">
+        <div>
           <Button 
             asChild
             className="font-montserrat bg-accent hover:bg-accent/90 text-white w-full py-2 rounded transition duration-300"
