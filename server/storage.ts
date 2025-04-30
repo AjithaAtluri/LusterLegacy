@@ -91,6 +91,15 @@ export interface IStorage {
   // Design Request Comment methods
   getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]>;
   addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment>;
+  
+  // Design Feedback methods (new chat functionality)
+  getDesignFeedback(designRequestId: number): Promise<DesignFeedback[]>;
+  addDesignFeedback(feedback: InsertDesignFeedback): Promise<DesignFeedback>;
+  
+  // Design Payment methods
+  getDesignPayments(designRequestId: number): Promise<DesignPayment[]>;
+  addDesignPayment(payment: InsertDesignPayment): Promise<DesignPayment>;
+  updateDesignPaymentStatus(id: number, status: string): Promise<DesignPayment | undefined>;
 
   // Cart methods
   getCartItem(id: number): Promise<CartItem | undefined>;
@@ -1072,6 +1081,127 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error adding design request comment:", error);
       throw error;
+    }
+  }
+  
+  // Implement design feedback methods for chat with images support
+  async getDesignFeedback(designRequestId: number): Promise<DesignFeedback[]> {
+    try {
+      return await db
+        .select()
+        .from(designFeedback)
+        .where(eq(designFeedback.designRequestId, designRequestId))
+        .orderBy(asc(designFeedback.createdAt));
+    } catch (error) {
+      console.error("Error getting design feedback:", error);
+      return [];
+    }
+  }
+
+  async addDesignFeedback(feedback: InsertDesignFeedback): Promise<DesignFeedback> {
+    try {
+      const [newFeedback] = await db
+        .insert(designFeedback)
+        .values(feedback)
+        .returning();
+      
+      // If this is an admin response, increment iteration count
+      if (feedback.isFromAdmin) {
+        const designRequest = await this.getDesignRequest(feedback.designRequestId);
+        if (designRequest) {
+          // Check if we need to update the design request status
+          const currentStatus = designRequest.status;
+          let newStatus = currentStatus;
+          
+          // If current status is 'design_in_progress', change to 'design_ready_for_review'
+          if (currentStatus === 'design_in_progress') {
+            newStatus = 'design_ready_for_review';
+          }
+          
+          // Update iteration count
+          await this.updateDesignRequest(feedback.designRequestId, {
+            iterationsCount: (designRequest.iterationsCount || 0) + 1,
+            status: newStatus
+          });
+        }
+      } else {
+        // If this is a customer response, check if we need to update status
+        const designRequest = await this.getDesignRequest(feedback.designRequestId);
+        if (designRequest) {
+          // If current status is 'design_ready_for_review', change to 'design_in_progress'
+          if (designRequest.status === 'design_ready_for_review') {
+            await this.updateDesignRequest(feedback.designRequestId, {
+              status: 'design_in_progress'
+            });
+          }
+        }
+      }
+      
+      return newFeedback;
+    } catch (error) {
+      console.error("Error adding design feedback:", error);
+      throw error;
+    }
+  }
+  
+  // Implement design payment methods
+  async getDesignPayments(designRequestId: number): Promise<DesignPayment[]> {
+    try {
+      return await db
+        .select()
+        .from(designPayments)
+        .where(eq(designPayments.designRequestId, designRequestId))
+        .orderBy(asc(designPayments.createdAt));
+    } catch (error) {
+      console.error("Error getting design payments:", error);
+      return [];
+    }
+  }
+
+  async addDesignPayment(payment: InsertDesignPayment): Promise<DesignPayment> {
+    try {
+      const [newPayment] = await db
+        .insert(designPayments)
+        .values(payment)
+        .returning();
+      
+      // If payment is successful consultation fee, update design request status
+      if (payment.paymentType === 'consultation_fee' && payment.status === 'completed') {
+        await this.updateDesignRequest(payment.designRequestId, {
+          consultationFeePaid: true,
+          // Update status based on current status
+          status: 'design_started'
+        });
+      }
+      
+      return newPayment;
+    } catch (error) {
+      console.error("Error adding design payment:", error);
+      throw error;
+    }
+  }
+
+  async updateDesignPaymentStatus(id: number, status: string): Promise<DesignPayment | undefined> {
+    try {
+      const [payment] = await db
+        .update(designPayments)
+        .set({ status })
+        .where(eq(designPayments.id, id))
+        .returning();
+      
+      // If payment status changed to completed and it's a consultation fee,
+      // update the design request as paid
+      if (payment && payment.status === 'completed' && payment.paymentType === 'consultation_fee') {
+        await this.updateDesignRequest(payment.designRequestId, {
+          consultationFeePaid: true,
+          status: 'design_started'
+        });
+      }
+      
+      return payment;
+    } catch (error) {
+      console.error("Error updating design payment status:", error);
+      return undefined;
     }
   }
 
