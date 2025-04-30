@@ -407,6 +407,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       
+      // Clear design form data from session storage even if logout fails
+      try {
+        console.log("Clearing design form data from session storage after failed logout");
+        sessionStorage.removeItem('designFormData');
+      } catch (error) {
+        console.error("Error clearing session storage:", error);
+      }
+      
       toast({
         title: "Logout issue",
         description: "Your session may still be active on the server. Please refresh the page.",
