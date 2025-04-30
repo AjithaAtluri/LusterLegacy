@@ -146,30 +146,28 @@ export default function AuthPage() {
     });
   };
   
-  // Redirect if user is already logged in
-  if (user) {
-    // If admin, redirect to admin dashboard
-    if (user.role === "admin") {
-      console.log("Admin user detected, redirecting to admin direct dashboard");
-      
-      // For admin users, use direct navigation since wouter Redirect sometimes fails
-      setTimeout(() => {
-        window.location.href = window.location.origin + "/admin/direct-dashboard";
-      }, 100);
-      
-      // Still return the Redirect component for immediate visual feedback
-      return <Redirect to="/admin/direct-dashboard" />;
+  // We'll handle redirects in a separate useEffect to avoid the "rendered fewer hooks" error
+  useEffect(() => {
+    if (user) {
+      // If admin, redirect to admin dashboard
+      if (user.role === "admin") {
+        console.log("Admin user detected, redirecting to admin direct dashboard");
+        
+        // For admin users, use direct navigation since wouter Redirect sometimes fails
+        setTimeout(() => {
+          window.location.href = window.location.origin + "/admin/direct-dashboard";
+        }, 100);
+      } else {
+        // Otherwise go to return path or home
+        console.log("Customer user detected, redirecting to:", returnPath);
+        
+        // For customer users, also use direct navigation to be consistent
+        setTimeout(() => {
+          window.location.href = window.location.origin + returnPath;
+        }, 100);
+      }
     }
-    // Otherwise go to return path or home
-    console.log("Customer user detected, redirecting to:", returnPath);
-    
-    // For customer users, also use direct navigation to be consistent
-    setTimeout(() => {
-      window.location.href = window.location.origin + returnPath;
-    }, 100);
-    
-    return <Redirect to={returnPath} />;
-  }
+  }, [user, returnPath]);
   
   // Debug utility functions
   const [debugUsername, setDebugUsername] = useState<string>("");
