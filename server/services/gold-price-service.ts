@@ -9,7 +9,7 @@ interface GoldPriceResponse {
 }
 
 // Cache for gold price (to avoid frequent API calls)
-let cachedGoldPrice: number = 9800; // Default value - current market estimate
+let cachedGoldPrice: number = 7500; // Default value - current market estimate for 24K gold per gram
 let cachedTimestamp: number = Date.now();
 
 /**
@@ -151,7 +151,7 @@ export async function fetchGoldPrice(): Promise<GoldPriceResponse> {
     // If web scraping fails, fall back to a reasonable estimate
     // This ensures the application remains functional even if scraping is unavailable
     console.log('Web scraping failed, using fallback price estimate');
-    const basePrice = 9800; // Current market estimate around ₹9,800/gram
+    const basePrice = 7500; // Current market estimate around ₹7,500/gram
     const fluctuation = Math.random() * 200 - 100; // +/- 100 INR
     const currentPrice = Math.round(basePrice + fluctuation);
     
