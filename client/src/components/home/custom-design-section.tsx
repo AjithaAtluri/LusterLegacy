@@ -31,8 +31,11 @@ type DesignFormValues = z.infer<typeof designFormSchema>;
 
 export default function CustomDesignSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null); // Main image (for backward compatibility)
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]); // Array to store multiple images
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // Main image preview
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]); // Array to store multiple image previews
+  const [selectedStones, setSelectedStones] = useState<string[]>([]);
   const { toast } = useToast();
   
   const form = useForm<DesignFormValues>({
@@ -48,13 +51,118 @@ export default function CustomDesignSection() {
   });
   
   const onSubmit: SubmitHandler<DesignFormValues> = async (data) => {
-    if (!uploadedImage) {
+    if (uploadedImages.length === 0) {
       toast({
         title: "Image required",
-        description: "Please upload a reference image for your design.",
+        description: "Please upload at least one reference image for your design.",
         variant: "destructive"
       });
       return;
+    }
+    
+    // Save form data to session storage before submitting
+    try {
+      let formData: any = {
+        ...data,
+        imageInfo: uploadedImage ? {
+          name: uploadedImage.name,
+          type: uploadedImage.type,
+          size: uploadedImage.size,
+          lastModified: uploadedImage.lastModified
+        } : null
+      };
+      
+      // Make sure primaryStones is properly saved as an array
+      formData.primaryStones = Array.isArray(data.primaryStones) ? data.primaryStones : [];
+      
+      // Update selectedStones state to match form data
+      setSelectedStones(formData.primaryStones);
+      
+      // Save the initial form data first (without images)
+      sessionStorage.setItem('designFormData', JSON.stringify(formData));
+      
+      // Then handle multiple images if available
+      if (uploadedImages.length > 0) {
+        try {
+          // Get the latest form data to update it
+          const existingData = sessionStorage.getItem('designFormData');
+          if (existingData) {
+            const parsedData = JSON.parse(existingData);
+            
+            // Save main image info first
+            if (uploadedImage) {
+              parsedData.mainImageInfo = {
+                name: uploadedImage.name,
+                size: uploadedImage.size,
+                type: uploadedImage.type,
+                lastModified: uploadedImage.lastModified
+              };
+            }
+            
+            // Save info about all images
+            parsedData.allImagesInfo = uploadedImages.map(img => ({
+              name: img.name,
+              size: img.size,
+              type: img.type,
+              lastModified: img.lastModified
+            }));
+            
+            // Save updated metadata
+            sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
+            
+            // Now handle image data conversion for each image (limit to 5MB total)
+            let totalSize = 0;
+            const promises = uploadedImages.map((file, index) => {
+              return new Promise((resolve) => {
+                // Skip excessively large files
+                if (file.size > 2 * 1024 * 1024 || totalSize > 5 * 1024 * 1024) {
+                  resolve(null);
+                  return;
+                }
+                
+                totalSize += file.size;
+                const reader = new FileReader();
+                reader.onload = function() {
+                  resolve({
+                    index,
+                    dataUrl: reader.result
+                  });
+                };
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(file);
+              });
+            });
+            
+            // Process all image conversions
+            Promise.all(promises).then((results: any[]) => {
+              // Filter out null results and create a map of valid data URLs
+              const imageDataUrls: Record<string, string> = {};
+              results.filter(r => r !== null).forEach(result => {
+                if (result && typeof result.index === 'number' && result.dataUrl) {
+                  imageDataUrls[result.index.toString()] = result.dataUrl as string;
+                }
+              });
+              
+              // Get the latest form data again to update it with image data URLs
+              const latestData = sessionStorage.getItem('designFormData');
+              if (latestData) {
+                try {
+                  const latestParsedData = JSON.parse(latestData);
+                  latestParsedData.imageDataUrls = imageDataUrls;
+                  sessionStorage.setItem('designFormData', JSON.stringify(latestParsedData));
+                  console.log("Multiple image data saved to session storage");
+                } catch (parseError) {
+                  console.error('Error parsing form data for multiple image update:', parseError);
+                }
+              }
+            });
+          }
+        } catch (imageError) {
+          console.error('Error processing multiple images for storage:', imageError);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving form data to session storage', error);
     }
     
     setIsSubmitting(true);
@@ -62,8 +170,34 @@ export default function CustomDesignSection() {
     try {
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append("designImage", uploadedImage);
-      formData.append("data", JSON.stringify(data));
+      
+      // For backward compatibility, include the main image as designImage
+      if (uploadedImage) {
+        formData.append("designImage", uploadedImage);
+      }
+      
+      // Append all images with a different field name for multiple image support
+      uploadedImages.forEach((file) => {
+        formData.append("designImages", file);
+      });
+      
+      // Convert complex fields to strings to avoid issues
+      const dataToSend = {
+        ...data,
+        // Ensure primaryStones is a simple string array
+        primaryStones: Array.isArray(data.primaryStones) ? data.primaryStones : []
+      };
+      
+      // Set primaryStone field for backward compatibility if not already set
+      if (!dataToSend.primaryStone && dataToSend.primaryStones.length > 0) {
+        dataToSend.primaryStone = dataToSend.primaryStones[0];
+      }
+      
+      // Convert the entire object to a JSON string
+      const jsonData = JSON.stringify(dataToSend);
+      
+      // Append as a simple string field
+      formData.append("data", jsonData);
       
       // Send form data to server
       const response = await fetch("/api/custom-design", {
@@ -71,6 +205,18 @@ export default function CustomDesignSection() {
         body: formData,
         credentials: "include"
       });
+      
+      if (response.status === 401) {
+        // Show toast notification
+        toast({
+          title: "Login required",
+          description: "Your design details have been saved. Please log in or create an account to continue."
+        });
+        
+        // Redirect to auth page with return URL
+        window.location.href = `/auth?returnTo=${encodeURIComponent('/')}`;
+        return; // Exit early
+      }
       
       if (!response.ok) {
         throw new Error("Failed to submit design request");
@@ -81,10 +227,24 @@ export default function CustomDesignSection() {
         description: "We'll review your request and get back to you soon.",
       });
       
-      // Reset form and uploaded image
+      // Reset form and uploaded images
       form.reset();
       setUploadedImage(null);
+      setUploadedImages([]);
       setPreviewUrl(null);
+      setPreviewUrls([]);
+      
+      // Clean up all image preview URLs to prevent memory leaks
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      
+      previewUrls.forEach(url => {
+        if (url) URL.revokeObjectURL(url);
+      });
+      
+      // Remove stored form data if any
+      sessionStorage.removeItem("designFormData");
     } catch (error) {
       console.error("Design form error:", error);
       toast({
@@ -97,27 +257,41 @@ export default function CustomDesignSection() {
     }
   };
   
-  // File upload handling
+  // File upload handling for multiple files
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif'],
       'application/pdf': ['.pdf']
     },
     maxSize: 5 * 1024 * 1024, // 5MB
-    maxFiles: 1,
+    maxFiles: 5, // Allow up to 5 files
     onDrop: (acceptedFiles) => {
       if (acceptedFiles.length > 0) {
-        const file = acceptedFiles[0];
-        setUploadedImage(file);
+        // Store all the files in the uploadedImages array
+        setUploadedImages([...uploadedImages, ...acceptedFiles]);
         
-        // Create preview URL for images
-        if (isImageFile(file)) {
-          const previewUrl = URL.createObjectURL(file);
-          setPreviewUrl(previewUrl);
-        } else {
-          // For PDFs, just show icon
-          setPreviewUrl(null);
+        // For backward compatibility, set the first image as the main image if it's not already set
+        if (!uploadedImage && acceptedFiles.length > 0) {
+          const mainFile = acceptedFiles[0];
+          setUploadedImage(mainFile);
+          
+          // Create preview URL for the main image
+          if (isImageFile(mainFile)) {
+            const mainPreviewUrl = URL.createObjectURL(mainFile);
+            setPreviewUrl(mainPreviewUrl);
+          }
         }
+        
+        // Create preview URLs for all the new images
+        const newPreviewUrls = acceptedFiles.map(file => {
+          if (isImageFile(file)) {
+            return URL.createObjectURL(file);
+          }
+          return ''; // Empty string for non-image files
+        }).filter(url => url !== ''); // Remove empty strings
+        
+        // Update the previewUrls array with the new URLs
+        setPreviewUrls([...previewUrls, ...newPreviewUrls]);
       }
     },
     onDropRejected: (fileRejections) => {
@@ -128,6 +302,8 @@ export default function CustomDesignSection() {
         message = "File is too large. Maximum size is 5MB.";
       } else if (error?.code === "file-invalid-type") {
         message = "Invalid file type. Please upload an image or PDF.";
+      } else if (error?.code === "too-many-files") {
+        message = "Too many files. Maximum is 5 files.";
       }
       
       toast({
@@ -138,77 +314,128 @@ export default function CustomDesignSection() {
     }
   });
   
-  const removeUploadedFile = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+  const removeUploadedFile = (index: number) => {
+    // Get the file we're removing
+    const fileToRemove = uploadedImages[index];
+    
+    // Special handling for main image
+    if (uploadedImage && fileToRemove === uploadedImage) {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      
+      // If we have other images, set the next one as main
+      if (uploadedImages.length > 1) {
+        const newMainIndex = index === 0 ? 1 : 0; // If removing first image, use second; otherwise use first
+        setUploadedImage(uploadedImages[newMainIndex]);
+        setPreviewUrl(previewUrls[newMainIndex]);
+      } else {
+        // No other images, clear main image
+        setUploadedImage(null);
+        setPreviewUrl(null);
+      }
     }
-    setUploadedImage(null);
-    setPreviewUrl(null);
+    
+    // Remove the file from uploadedImages
+    const newUploadedImages = [...uploadedImages];
+    newUploadedImages.splice(index, 1);
+    setUploadedImages(newUploadedImages);
+    
+    // Revoke the URL to prevent memory leaks
+    if (previewUrls[index]) {
+      URL.revokeObjectURL(previewUrls[index]);
+    }
+    
+    // Remove the preview URL
+    const newPreviewUrls = [...previewUrls];
+    newPreviewUrls.splice(index, 1);
+    setPreviewUrls(newPreviewUrls);
   };
   
   const renderUploadArea = () => {
-    if (uploadedImage) {
-      return (
-        <div className="mt-2 relative">
-          <div className="flex items-center p-4 border border-foreground/20 rounded-lg bg-background/50">
-            {previewUrl ? (
-              <div className="relative w-20 h-20 mr-4">
-                <img 
-                  src={previewUrl} 
-                  alt="Design preview" 
-                  className="w-full h-full object-cover rounded-md"
-                />
-              </div>
-            ) : (
-              <div className="w-20 h-20 flex items-center justify-center bg-accent/10 rounded-md mr-4">
-                <ImageIcon className="h-10 w-10 text-accent" />
-              </div>
-            )}
-            
-            <div className="flex-1">
-              <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                <p className="font-montserrat text-sm font-medium text-foreground">
-                  {uploadedImage.name}
-                </p>
-              </div>
-              <p className="font-montserrat text-xs text-foreground/60 mt-1">
-                {(uploadedImage.size / 1024 / 1024).toFixed(2)} MB • {getFileExtension(uploadedImage.name).toUpperCase()}
-              </p>
-            </div>
-            
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="icon" 
-              className="ml-2" 
-              onClick={removeUploadedFile}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      );
-    }
-    
     return (
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed ${
-          isDragActive ? 'border-primary' : 'border-foreground/30'
-        } rounded-lg p-6 text-center cursor-pointer hover:border-primary transition duration-300 mt-2`}
-      >
-        <input {...getInputProps()} />
-        <Upload className="h-10 w-10 text-foreground/50 mx-auto mb-3" />
-        <p className="font-montserrat text-foreground/70">
-          {isDragActive
-            ? "Drop your image here..."
-            : "Drag and drop your image here, or click to browse"
-          }
-        </p>
-        <p className="font-montserrat text-xs text-foreground/50 mt-2">
-          Accepts JPG, PNG, PDF (Max size: 5MB)
-        </p>
+      <div className="mt-2 relative">
+        {/* Display all uploaded images */}
+        {uploadedImages.length > 0 && (
+          <div className="mb-4">
+            <h4 className="text-sm font-medium mb-2 font-montserrat">Uploaded Images ({uploadedImages.length}/5)</h4>
+            
+            {/* Horizontal gallery layout */}
+            <div className="flex flex-wrap gap-3">
+              {uploadedImages.map((file, index) => (
+                <div 
+                  key={index} 
+                  className="relative flex flex-col items-center border border-foreground/20 rounded-lg bg-background/50 p-2 w-[120px]"
+                >
+                  {/* Image preview */}
+                  {previewUrls[index] ? (
+                    <div className="relative w-full h-[80px] mb-2">
+                      <img 
+                        src={previewUrls[index]} 
+                        alt={`Design preview ${index + 1}`}
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                      {file === uploadedImage && (
+                        <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-[80px] flex items-center justify-center bg-accent/10 rounded-md mb-2">
+                      <ImageIcon className="h-8 w-8 text-accent" />
+                    </div>
+                  )}
+                  
+                  {/* File info */}
+                  <div className="w-full">
+                    <p className="text-xs font-medium truncate text-foreground">
+                      {file.name.length > 12 ? file.name.substring(0, 10) + "..." : file.name}
+                    </p>
+                    <p className="text-xs text-foreground/60">
+                      {(file.size / 1024 / 1024).toFixed(1)} MB
+                    </p>
+                  </div>
+                  
+                  {/* Remove button */}
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute -top-2 -left-2 h-6 w-6 bg-background shadow-sm rounded-full border border-foreground/20 hover:bg-destructive hover:text-white" 
+                    onClick={() => removeUploadedFile(index)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Upload area */}
+        {uploadedImages.length < 5 && (
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed ${
+              isDragActive ? 'border-primary' : 'border-foreground/30'
+            } rounded-lg p-6 text-center cursor-pointer hover:border-primary transition duration-300`}
+          >
+            <input {...getInputProps()} />
+            <Upload className="h-10 w-10 text-foreground/50 mx-auto mb-3" />
+            <p className="font-montserrat text-foreground/70">
+              {isDragActive
+                ? "Drop your files here..."
+                : uploadedImages.length > 0 
+                  ? `Add more images (${uploadedImages.length}/5 uploaded)`
+                  : "Drag and drop your images here, or click to browse"
+              }
+            </p>
+            <p className="font-montserrat text-xs text-foreground/50 mt-2">
+              Accepts JPG, PNG, PDF (Max size: 5MB)
+            </p>
+          </div>
+        )}
       </div>
     );
   };
