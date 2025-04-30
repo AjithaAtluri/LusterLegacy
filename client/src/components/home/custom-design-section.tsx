@@ -71,8 +71,8 @@ export default function CustomDesignSection() {
         description: "Your design details have been saved. Please log in or create an account to continue."
       });
       
-      // Redirect to auth page with return URL
-      window.location.href = `/auth?returnTo=${encodeURIComponent('/')}`;
+      // Redirect to auth page with return URL - send to custom design page after login
+      window.location.href = `/auth?returnTo=${encodeURIComponent('/custom-design')}`;
       return;
     }
     
@@ -238,8 +238,8 @@ export default function CustomDesignSection() {
           description: "Your design details have been saved. Please log in or create an account to continue."
         });
         
-        // Redirect to auth page with return URL
-        window.location.href = `/auth?returnTo=${encodeURIComponent('/')}`;
+        // Redirect to auth page with return URL - send to custom design page after login
+        window.location.href = `/auth?returnTo=${encodeURIComponent('/custom-design')}`;
         return; // Exit early
       }
       
