@@ -432,21 +432,21 @@ export default function GemMetalGuide() {
               <div className="h-56 overflow-hidden">
                 <img 
                   src={onyxImage} 
-                  alt="Onyx gemstone jewelry" 
+                  alt="Synthetic onyx gemstones" 
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
                   onClick={() => setActiveImage(onyxImage)}
                 />
               </div>
               <CardHeader>
-                <CardTitle className="font-cormorant text-2xl">Onyx: The Enigmatic Black Gem</CardTitle>
-                <CardDescription>Timeless elegance in black and white</CardDescription>
+                <CardTitle className="font-cormorant text-2xl">Synthetic Onyx Imitations</CardTitle>
+                <CardDescription>Affordable alternatives to precious gems</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="mb-4">
-                  Onyx is a variety of chalcedony quartz distinguished by its parallel bands of color. True gem-quality onyx traditionally features black and white bands, although the term is commonly used today for solid black chalcedony, which is actually more accurately termed "black onyx."
+                  Synthetic onyx gemstones, such as "onyx ruby" or "onyx emerald," are colored glass or ceramic materials that imitate the appearance of precious gems. Unlike true black onyx (a variety of chalcedony quartz), these synthetic stones aren't related to natural onyx geologically—they earned their name from their opaque, uniform appearance.
                 </p>
                 <p>
-                  In jewelry, onyx is prized for its deep, lustrous black color that provides dramatic contrast in designs. It's typically cut as cabochons or carved into cameos, intaglios, and beads. Onyx has been used since ancient times, with the Romans particularly favoring it for seal stones. Today, it remains a sophisticated choice for men's jewelry and statement pieces.
+                  These synthetic alternatives are particularly popular in traditional Indian jewelry styles like Kundan work, where they're set using gold foil. They offer vibrant colors at a fraction of the cost of natural gems, making elaborate designs more accessible. While they lack the geological value and durability of genuine gemstones, they allow for traditional-style pieces that preserve cultural aesthetics at affordable price points.
                 </p>
               </CardContent>
             </Card>
@@ -471,6 +471,7 @@ export default function GemMetalGuide() {
                     <li>Valued for rarity, uniqueness, and investment potential</li>
                     <li>Each stone tells a geological story with distinctive inclusions</li>
                     <li>Highest price point due to limited supply</li>
+                    <li>Maximum durability and time-tested beauty</li>
                   </ul>
                   
                   <p className="mb-1 font-semibold">Lab-Created Gemstones:</p>
@@ -478,13 +479,15 @@ export default function GemMetalGuide() {
                     <li>Identical physical and optical properties to natural gems</li>
                     <li>Eco-friendly with guaranteed ethical sourcing</li>
                     <li>More affordable with consistent quality</li>
+                    <li>Perfect for precision designs requiring exact specifications</li>
                   </ul>
                   
-                  <p className="mb-1 font-semibold">Onyx and Black Gems:</p>
+                  <p className="mb-1 font-semibold">Synthetic Onyx Alternatives:</p>
                   <ul className="list-disc pl-5">
-                    <li>Dramatic appearance for statement pieces</li>
-                    <li>Versatile in both modern and vintage designs</li>
-                    <li>Relatively affordable with excellent durability</li>
+                    <li>Extremely cost-effective for traditional designs</li>
+                    <li>Available in vibrant colors matching traditional aesthetics</li>
+                    <li>Perfect for elaborate Kundan and Polki-style settings</li>
+                    <li>Cultural significance in traditional Indian jewelry designs</li>
                   </ul>
                 </div>
               </CardContent>
