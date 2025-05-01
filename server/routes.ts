@@ -1792,13 +1792,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date(),
       });
       
-      // Create order item
+      // We already have the product object from above, no need to fetch it again
+      
+      // Get default metal and stone types if they exist
+      const defaultMetalType = "14K Yellow Gold"; // Default fallback
+      const defaultStoneType = "None"; // Default fallback
+      
+      // Create order item with required metal and stone type IDs
       await storage.createOrderItem({
         orderId: order.id,
         productId: Number(productId),
-        quantity: 1,
         price: price,
-        currency: currency,
+        metalTypeId: product.metalType || defaultMetalType,
+        stoneTypeId: product.stoneType || defaultStoneType,
+        isCustomDesign: false
       });
       
       res.status(201).json({ 
