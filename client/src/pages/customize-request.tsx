@@ -311,7 +311,7 @@ export default function CustomizeRequest() {
                           <SelectValue placeholder="Select secondary stone" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none_selected">None</SelectItem>
                           {isLoadingStoneTypes ? (
                             <div className="flex items-center justify-center p-2">Loading...</div>
                           ) : !stoneTypes || stoneTypes.length === 0 ? (
