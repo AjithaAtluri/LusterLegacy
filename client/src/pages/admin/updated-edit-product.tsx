@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, Save, Upload, X, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Save, Upload, X, AlertTriangle, Filter } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import AIContentGenerator from "@/components/admin/ai-content-generator";
+import StoneTypeFilter from "@/components/admin/stone-type-filter";
 import { useToast } from "@/hooks/use-toast";
 import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
@@ -105,6 +106,18 @@ export default function EditProduct() {
     queryKey: ['/api/admin/stone-types'],
     refetchOnWindowFocus: false,
   });
+  
+  // State for filtered stone types
+  const [filteredMainStoneTypes, setFilteredMainStoneTypes] = useState<StoneType[]>([]);
+  const [filteredSecondaryStoneTypes, setFilteredSecondaryStoneTypes] = useState<StoneType[]>([]);
+  
+  // Initialize with full list of stone types when data is loaded
+  useEffect(() => {
+    if (stoneTypes) {
+      setFilteredMainStoneTypes(stoneTypes);
+      setFilteredSecondaryStoneTypes(stoneTypes);
+    }
+  }, [stoneTypes]);
   
   // Fetch product details
   const { data: productData, isLoading: isLoadingProduct, error: productError } = useQuery<ProductDetails>({
@@ -266,11 +279,10 @@ export default function EditProduct() {
   // Update product mutation
   const updateProductMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await apiRequest("PATCH", `/api/admin/products/${productId}`, formData, {
-        headers: {
-          // Don't set Content-Type, browser will set it with the correct boundary for FormData
-        },
-        rawResponse: true, // We'll handle the response manually
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: "PATCH",
+        body: formData,
+        // Don't set Content-Type, browser will set it with the correct boundary for FormData
       });
       
       if (!response.ok) {
@@ -1005,6 +1017,15 @@ export default function EditProduct() {
                     </div>
                     
                     <div className="space-y-4">
+                      {/* Main Stone Type Filter */}
+                      <div className="border rounded-md p-3 bg-muted/30">
+                        <StoneTypeFilter 
+                          stoneTypes={stoneTypes || []} 
+                          isLoading={isLoadingStoneTypes}
+                          onFilter={setFilteredMainStoneTypes}
+                        />
+                      </div>
+                      
                       {/* 7. Main Stone Type */}
                       <div className="space-y-2">
                         <FormLabel htmlFor="mainStoneType">7. Main Stone Type</FormLabel>
@@ -1021,19 +1042,16 @@ export default function EditProduct() {
                               <div className="flex items-center justify-center p-2">
                                 <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
                               </div>
-                            ) : stoneTypes?.length ? (
-                              stoneTypes.map(stone => (
+                            ) : filteredMainStoneTypes?.length ? (
+                              filteredMainStoneTypes.map(stone => (
                                 <SelectItem key={stone.id} value={stone.name}>
                                   {stone.name}
                                 </SelectItem>
                               ))
                             ) : (
-                              <>
-                                <SelectItem value="Diamond">Diamond</SelectItem>
-                                <SelectItem value="Ruby">Ruby</SelectItem>
-                                <SelectItem value="Sapphire">Sapphire</SelectItem>
-                                <SelectItem value="Emerald">Emerald</SelectItem>
-                              </>
+                              <div className="p-2 text-center text-muted-foreground">
+                                No matching stone types. Try changing filters.
+                              </div>
                             )}
                           </SelectContent>
                         </Select>
@@ -1076,16 +1094,26 @@ export default function EditProduct() {
                     </div>
                     
                     {/* 9. Secondary Stones */}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <FormLabel>9. Secondary Stones</FormLabel>
+                      
+                      {/* Secondary Stone Type Filter */}
+                      <div className="border rounded-md p-3 bg-muted/30">
+                        <StoneTypeFilter 
+                          stoneTypes={stoneTypes?.filter(stone => stone.name !== mainStoneType) || []} 
+                          isLoading={isLoadingStoneTypes}
+                          onFilter={setFilteredSecondaryStoneTypes}
+                        />
+                      </div>
+                      
                       <div className="border rounded-md p-3 h-[220px] overflow-y-auto">
                         <div className="grid grid-cols-1 gap-2">
                           {isLoadingStoneTypes ? (
                             <div className="flex items-center justify-center p-4 h-full">
                               <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
                             </div>
-                          ) : stoneTypes?.length ? (
-                            stoneTypes.map(stone => (
+                          ) : filteredSecondaryStoneTypes?.length ? (
+                            filteredSecondaryStoneTypes.map(stone => (
                               stone.name !== mainStoneType && (
                                 <div key={stone.id} className="flex items-center space-x-2">
                                   <Checkbox
@@ -1109,29 +1137,9 @@ export default function EditProduct() {
                               )
                             ))
                           ) : (
-                            ["Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", "Aquamarine"].map(stone => (
-                              stone !== mainStoneType && (
-                                <div key={stone} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`stone-${stone}`}
-                                    checked={selectedStoneTypes.includes(stone)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setSelectedStoneTypes(prev => [...prev, stone]);
-                                      } else {
-                                        setSelectedStoneTypes(prev => prev.filter(s => s !== stone));
-                                      }
-                                    }}
-                                  />
-                                  <label
-                                    htmlFor={`stone-${stone}`}
-                                    className="text-sm cursor-pointer"
-                                  >
-                                    {stone}
-                                  </label>
-                                </div>
-                              )
-                            ))
+                            <div className="p-2 text-center text-muted-foreground">
+                              No matching stone types. Try changing filters.
+                            </div>
                           )}
                         </div>
                       </div>
