@@ -176,7 +176,7 @@ export default function CustomizeRequest() {
         let priceEstimate = product.calculatedPriceUSD || product.basePrice;
         console.log("Starting price estimate:", priceEstimate);
         
-        // Only modify the price if user selected different options
+        // 1. For metals: Calculate the difference between original and selected metal
         if (metalTypeId && metalTypes) {
           const selectedMetal = metalTypes.find((metal: any) => String(metal.id) === metalTypeId);
           console.log("Selected metal:", selectedMetal?.name);
@@ -188,7 +188,6 @@ export default function CustomizeRequest() {
           
           if (selectedMetal && originalMetalObj && selectedMetal.id !== originalMetalObj.id) {
             // Remove the original metal's price contribution and add the new one
-            // For metal, we use a multiplier on the calculated price based on its quality (14k, 18k, etc.)
             const originalMetalMultiplier = 1 + (originalMetalObj.priceModifier / 100);
             const newMetalMultiplier = 1 + (selectedMetal.priceModifier / 100);
             
@@ -202,33 +201,84 @@ export default function CustomizeRequest() {
           }
         }
         
+        // 2. For stones: Calculate the price based on weight × stone price per carat
+        // Find in the database what stone types and prices were used in the original calculation
+        const originalPrimaryStoneObj = stoneTypes?.find((stone: any) => 
+          stone.name.toLowerCase() === originalMainStoneType.toLowerCase());
+        
+        // Calculate a rough estimate of how much the original stones contributed to the price
+        let originalStoneContribution = 0;
+        if (originalPrimaryStoneObj && mainStoneWeight > 0) {
+          // Assuming priceModifier is stored as price per carat in this case
+          const pricePerCarat = originalPrimaryStoneObj.priceModifier || 0;
+          originalStoneContribution += mainStoneWeight * pricePerCarat;
+          console.log(`Original primary stone (${originalMainStoneType}) contribution: ${mainStoneWeight} carats × $${pricePerCarat}/carat = $${mainStoneWeight * pricePerCarat}`);
+        }
+        
+        const originalSecondaryStoneObj = stoneTypes?.find((stone: any) => 
+          stone.name.toLowerCase() === originalSecondaryStoneType.toLowerCase());
+        
+        if (originalSecondaryStoneObj && secondaryStoneWeight > 0) {
+          const pricePerCarat = originalSecondaryStoneObj.priceModifier || 0;
+          originalStoneContribution += secondaryStoneWeight * pricePerCarat;
+          console.log(`Original secondary stone (${originalSecondaryStoneType}) contribution: ${secondaryStoneWeight} carats × $${pricePerCarat}/carat = $${secondaryStoneWeight * pricePerCarat}`);
+        }
+        
+        // Now if the user selected different stones, calculate their contribution
+        let newStoneContribution = 0;
+        
+        if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes && mainStoneWeight > 0) {
+          const selectedStone = stoneTypes.find((stone: any) => String(stone.id) === primaryStoneId);
+          if (selectedStone) {
+            // Use the selected stone's price per carat
+            const pricePerCarat = selectedStone.priceModifier || 0;
+            newStoneContribution += mainStoneWeight * pricePerCarat;
+            console.log(`New primary stone (${selectedStone.name}) contribution: ${mainStoneWeight} carats × $${pricePerCarat}/carat = $${mainStoneWeight * pricePerCarat}`);
+          }
+        } else if (originalPrimaryStoneObj && mainStoneWeight > 0) {
+          // If no new stone selected, use the original
+          newStoneContribution += mainStoneWeight * (originalPrimaryStoneObj.priceModifier || 0);
+        }
+        
+        if (secondaryStoneId && secondaryStoneId !== "none_selected" && stoneTypes && secondaryStoneWeight > 0) {
+          const selectedSecondaryStone = stoneTypes.find((stone: any) => String(stone.id) === secondaryStoneId);
+          if (selectedSecondaryStone) {
+            // Use the selected stone's price per carat
+            const pricePerCarat = selectedSecondaryStone.priceModifier || 0;
+            newStoneContribution += secondaryStoneWeight * pricePerCarat;
+            console.log(`New secondary stone (${selectedSecondaryStone.name}) contribution: ${secondaryStoneWeight} carats × $${pricePerCarat}/carat = $${secondaryStoneWeight * pricePerCarat}`);
+          }
+        } else if (originalSecondaryStoneObj && secondaryStoneWeight > 0) {
+          // If no new stone selected, use the original
+          newStoneContribution += secondaryStoneWeight * (originalSecondaryStoneObj.priceModifier || 0);
+        }
+        
+        // Adjust the price by removing the original stone contribution and adding the new one
+        if (originalStoneContribution > 0 || newStoneContribution > 0) {
+          // Remove the estimated original stone contribution from price (if we could calculate it)
+          if (originalStoneContribution > 0) {
+            priceEstimate = priceEstimate - originalStoneContribution;
+          }
+          
+          // Add the new stone contribution
+          priceEstimate = priceEstimate + newStoneContribution;
+          
+          console.log(`Price adjustment for stone change: Original $${originalStoneContribution} -> New $${newStoneContribution}`);
+          console.log(`Price after stone adjustment: ${priceEstimate}`);
+        }
+        
         // Apply currency conversion if needed
         if (currency === "INR" && product.calculatedPriceINR) {
           // Use product's calculated INR price if available
           priceEstimate = product.calculatedPriceINR;
           console.log("Switched to INR pricing:", priceEstimate);
           
-          // Re-apply metal adjustments for INR price
-          if (metalTypeId && metalTypes) {
-            const selectedMetal = metalTypes.find((metal: any) => String(metal.id) === metalTypeId);
-            
-            // Find the original metal's price modifier in our list of metals
-            const originalMetalObj = metalTypes.find((metal: any) => 
-              metal.name.toLowerCase() === originalMetalType.toLowerCase());
-            
-            if (selectedMetal && originalMetalObj && selectedMetal.id !== originalMetalObj.id) {
-              // Remove the original metal's price contribution and add the new one
-              const originalMetalMultiplier = 1 + (originalMetalObj.priceModifier / 100);
-              const newMetalMultiplier = 1 + (selectedMetal.priceModifier / 100);
-              
-              // Adjust the price: first remove original metal effect, then apply new metal effect
-              const priceWithoutMetal = priceEstimate / originalMetalMultiplier;
-              priceEstimate = priceWithoutMetal * newMetalMultiplier;
-              
-              console.log(`Adjusting INR price for metal change: ${originalMetalObj.name} -> ${selectedMetal.name}`);
-              console.log(`Metal price adjustment for INR: ${priceEstimate}`);
-            }
-          }
+          // Re-apply all adjustments for INR price
+          // Since the logic is complex and would need to be duplicated, a simpler approach 
+          // is to apply a conversion ratio from the USD adjustments
+          const usdAdjustmentRatio = priceEstimate / (product.calculatedPriceUSD || product.basePrice);
+          priceEstimate = product.calculatedPriceINR * usdAdjustmentRatio;
+          console.log(`Applied USD adjustment ratio to INR price: ${usdAdjustmentRatio}, new price: ${priceEstimate}`);
         }
         
         // Round to nearest whole number
