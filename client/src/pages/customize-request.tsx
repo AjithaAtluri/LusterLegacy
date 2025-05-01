@@ -356,6 +356,21 @@ export default function CustomizeRequest() {
           newStoneContribution += secondaryStoneWeight * (originalSecondaryStoneObj.priceModifier || 0);
         }
         
+        // Handle the other stone contribution
+        if (otherStoneId && otherStoneId !== "none_selected" && stoneTypes && otherStoneWeight > 0) {
+          const selectedOtherStone = stoneTypes.find((stone: any) => String(stone.id) === otherStoneId);
+          if (selectedOtherStone) {
+            // Use the selected stone's price per carat
+            const pricePerCarat = selectedOtherStone.priceModifier || 0;
+            newStoneContribution += otherStoneWeight * pricePerCarat;
+            console.log(`New other stone (${selectedOtherStone.name}) contribution: ${otherStoneWeight} carats × $${pricePerCarat}/carat = $${otherStoneWeight * pricePerCarat}`);
+          }
+        } else if (originalOtherStoneObj && otherStoneWeight > 0) {
+          // If no new stone selected, use the original
+          newStoneContribution += otherStoneWeight * (originalOtherStoneObj.priceModifier || 0);
+          console.log(`Using original other stone (no new selection): ${otherStoneWeight} carats × $${originalOtherStoneObj.priceModifier}/carat = $${otherStoneWeight * originalOtherStoneObj.priceModifier}`);
+        }
+        
         // Adjust the price by removing the original stone contribution and adding the new one
         if (originalStoneContribution > 0 || newStoneContribution > 0) {
           // Remove the estimated original stone contribution from price (if we could calculate it)
@@ -394,7 +409,7 @@ export default function CustomizeRequest() {
         setEstimatedPrice(Math.round(product.calculatedPriceUSD || product.basePrice));
       }
     }
-  }, [product, metalTypeId, primaryStoneId, secondaryStoneId, metalTypes, stoneTypes, currency]);
+  }, [product, metalTypeId, primaryStoneId, secondaryStoneId, otherStoneId, metalTypes, stoneTypes, currency]);
   
   // Extract stone types from product details to create customization suggestions
   useEffect(() => {
