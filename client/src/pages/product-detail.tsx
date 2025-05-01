@@ -419,6 +419,41 @@ export default function ProductDetail() {
                 />
               </div>
               
+              {/* Product Details Quick Specs Below Image */}
+              <div className="mb-6 p-4 bg-card rounded-xl border border-border">
+                <h3 className="font-playfair text-lg font-semibold mb-4 text-center">Product Specifications</h3>
+                
+                {/* Metal Type and Weight */}
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                  <span className="font-montserrat text-sm text-foreground/80">Metal Type:</span>
+                  <span className="font-cormorant text-base font-medium">{productMetalType || "Not specified"}</span>
+                </div>
+                
+                {/* Metal Weight */}
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                  <span className="font-montserrat text-sm text-foreground/80">Metal Weight:</span>
+                  <span className="font-cormorant text-base font-medium">{productMetalWeight > 0 ? `${productMetalWeight}g` : "Not specified"}</span>
+                </div>
+                
+                {/* Primary Stone */}
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                  <span className="font-montserrat text-sm text-foreground/80">Primary Stone:</span>
+                  <span className="font-cormorant text-base font-medium">{mainStoneType || "Not specified"}</span>
+                </div>
+                
+                {/* Stone Weight */}
+                <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                  <span className="font-montserrat text-sm text-foreground/80">Stone Weight:</span>
+                  <span className="font-cormorant text-base font-medium">{mainStoneWeight > 0 ? `${mainStoneWeight} carats` : "Not specified"}</span>
+                </div>
+                
+                {/* Estimated Price */}
+                <div className="flex justify-between items-center">
+                  <span className="font-montserrat text-sm font-semibold text-foreground/80">Estimated Price:</span>
+                  <span className="font-cormorant text-lg font-semibold text-accent">{formatCurrency(currentPrice)}</span>
+                </div>
+              </div>
+              
               {/* Additional Images */}
               {allImages.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
