@@ -35,7 +35,11 @@ export default function CustomizeRequest() {
   const [preferredBudget, setPreferredBudget] = useState("");
   const [timeline, setTimeline] = useState("");
   const [metalTypeId, setMetalTypeId] = useState("");
+  const [primaryStoneId, setPrimaryStoneId] = useState("");
   const [secondaryStoneId, setSecondaryStoneId] = useState("");
+  
+  // State for related stones based on the product's original stones
+  const [suggestedStones, setSuggestedStones] = useState<any[]>([]);
   
   // Fetch product data to display in the form
   const { data: product, isLoading, error } = useQuery({
@@ -116,6 +120,7 @@ export default function CustomizeRequest() {
       preferredBudget,
       timeline,
       metalTypeId,
+      primaryStoneId,
       secondaryStoneId,
     });
   };
@@ -128,6 +133,44 @@ export default function CustomizeRequest() {
       setEmail(user.email || "");
     }
   }, [user]);
+  
+  // Extract stone types from product details to create customization suggestions
+  useEffect(() => {
+    if (product && product.details && stoneTypes) {
+      try {
+        // Parse product details to extract stone information
+        const parsedDetails = typeof product.details === 'string' 
+          ? JSON.parse(product.details) 
+          : product.details;
+        
+        // Extract stone information from product details
+        let productStoneTypes = [];
+        
+        if (parsedDetails.additionalData) {
+          // Get primary stone from the product
+          const mainStoneType = parsedDetails.additionalData.mainStoneType || "";
+          
+          // Add all similar stone types to suggested stones
+          if (mainStoneType && stoneTypes) {
+            // Find similar stones based on keywords in stone names
+            const keywords = mainStoneType.toLowerCase().split(/[,\s()]+/).filter(k => k.length > 3);
+            console.log("Main stone keywords for customization options:", keywords);
+            
+            // Filter stone types that have similar keywords
+            const similarStones = stoneTypes.filter(stone => {
+              const stoneName = stone.name.toLowerCase();
+              return keywords.some(keyword => stoneName.includes(keyword));
+            });
+            
+            console.log("Similar stones for customization:", similarStones);
+            setSuggestedStones(similarStones);
+          }
+        }
+      } catch (error) {
+        console.error("Error extracting stone types from product:", error);
+      }
+    }
+  }, [product, stoneTypes]);
 
   const handleBack = () => {
     setLocation(`/product-detail/${id}`);
@@ -303,7 +346,51 @@ export default function CustomizeRequest() {
                         </SelectContent>
                       </Select>
                     </div>
-                    {/* Primary Stone field removed as requested */}
+                    {/* Primary Stone field based on the product's original stones */}
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryStone">Primary Stone Type</Label>
+                      <Select value={primaryStoneId} onValueChange={setPrimaryStoneId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select primary stone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none_selected">None</SelectItem>
+                          
+                          {/* If we have suggested stones based on the product */}
+                          {suggestedStones && suggestedStones.length > 0 && (
+                            <>
+                              <div className="p-2 text-center text-xs font-medium text-accent">
+                                Recommended for this product:
+                              </div>
+                              {suggestedStones.map((stone) => (
+                                <SelectItem 
+                                  key={`suggested-${stone.id}`} 
+                                  value={String(stone.id)}
+                                  className="font-medium"
+                                >
+                                  {stone.name} ★
+                                </SelectItem>
+                              ))}
+                              <div className="py-1"><hr className="border-border" /></div>
+                            </>
+                          )}
+                          
+                          {/* All stone types */}
+                          {isLoadingStoneTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !stoneTypes || stoneTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                          ) : (
+                            stoneTypes.map((stone) => (
+                              <SelectItem key={stone.id} value={String(stone.id)}>
+                                {stone.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="secondaryStone">Secondary Stone Type (Optional)</Label>
                       <Select value={secondaryStoneId} onValueChange={setSecondaryStoneId}>
