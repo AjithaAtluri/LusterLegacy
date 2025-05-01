@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
+import { Helmet } from "react-helmet";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
@@ -15,297 +14,274 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { ProductSpecifications } from "@/components/products/product-specifications";
-import { 
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useGoldPrice } from "@/hooks/use-gold-price";
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Send, LogIn, Calculator, DollarSign } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { formatCurrency, calculatePrice } from "@/lib/utils";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
+import { ProductSpecifications } from "@/components/products/product-specifications";
+import { usePriceCalculator } from "@/hooks/use-price-calculator";
 
 export default function CustomizeRequest() {
-  const [, navigate] = useLocation();
-  const { productId } = useParams();
-  const { user } = useAuth();
+  const { id } = useParams();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { goldPrice } = useGoldPrice();
+  const { user, isLoading: isAuthLoading } = useAuth();
   
   // Form state
-  const [metalTypeId, setMetalTypeId] = useState<string>("");
-  const [primaryStoneId, setPrimaryStoneId] = useState<string>("");
-  const [secondaryStoneId, setSecondaryStoneId] = useState<string>("");
-  const [otherStoneId, setOtherStoneId] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
-  const [emailAddress, setEmailAddress] = useState<string>(user?.email || "");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [customizationDetails, setCustomizationDetails] = useState("");
+  const [preferredBudget, setPreferredBudget] = useState("");
+  const [timeline, setTimeline] = useState("");
+  const [metalTypeId, setMetalTypeId] = useState("");
+  const [primaryStoneId, setPrimaryStoneId] = useState("");
+  const [secondaryStoneId, setSecondaryStoneId] = useState("");
+  const [otherStoneId, setOtherStoneId] = useState("");
+  
+  // Price estimation state
   const [estimatedPrice, setEstimatedPrice] = useState<number>(0);
   const [currency, setCurrency] = useState<string>("USD");
   
   // State for related stones based on the product's original stones
   const [suggestedStones, setSuggestedStones] = useState<any[]>([]);
   
-  // Dialog state
-  const [showLoginDialog, setShowLoginDialog] = useState<boolean>(false);
-
-  // Get product details
-  const { data: product, isLoading: isLoadingProduct, error: productError } = useQuery({
-    queryKey: [`/api/products/${productId}`],
-    queryFn: async () => {
-      console.log(`Fetching product data for ID ${productId}`);
-      
-      // Validate productId is present and numeric
-      if (!productId || isNaN(Number(productId))) {
-        console.error(`Invalid product ID: ${productId}`);
-        throw new Error("Invalid product ID");
-      }
-      
-      try {
-        const response = await fetch(`/api/products/${productId}`);
-        console.log(`Product API response status: ${response.status}`);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`API error response: ${errorText}`);
-          throw new Error(`Failed to fetch product details: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log(`Product data retrieved successfully:`, {
-          id: data.id,
-          name: data.name,
-          hasData: !!data
-        });
-        return data;
-      } catch (error) {
-        console.error(`Error fetching product ${productId}:`, error);
-        throw error;
-      }
-    },
-    // Only run query if productId is valid
-    enabled: !!productId && !isNaN(Number(productId)),
-    retry: 1
+  // Fetch product data to display in the form
+  const { data: product, isLoading, error } = useQuery({
+    queryKey: [`/api/products/${id}`],
+    enabled: !!id,
+  });
+  
+  // Fetch metal types for dropdown
+  const { data: metalTypes, isLoading: isLoadingMetalTypes } = useQuery({
+    queryKey: ['/api/metal-types'],
+  });
+  
+  // Fetch stone types for dropdown
+  const { data: stoneTypes, isLoading: isLoadingStoneTypes } = useQuery({
+    queryKey: ['/api/stone-types'],
   });
 
-  // Get all metal types
-  const { data: metalTypes, isLoading: isLoadingMetals } = useQuery({
-    queryKey: ["/api/metal-types"],
-    queryFn: async () => {
-      const response = await fetch("/api/metal-types");
-      if (!response.ok) {
-        throw new Error("Failed to fetch metal types");
-      }
-      return response.json();
-    },
-  });
-
-  // Get all stone types
-  const { data: stoneTypes, isLoading: isLoadingStones } = useQuery({
-    queryKey: ["/api/stone-types"],
-    queryFn: async () => {
-      const response = await fetch("/api/stone-types");
-      if (!response.ok) {
-        throw new Error("Failed to fetch stone types");
-      }
-      return response.json();
-    },
-  });
-
-  // Mutation for submitting customization request
+  // Handle form submission
   const customizationMutation = useMutation({
-    mutationFn: async (data: any) => {
-      return await apiRequest("POST", "/api/customization-requests", data);
+    mutationFn: async (formData: {
+      productId: number;
+      name: string;
+      email: string;
+      phone: string;
+      customizationDetails: string;
+      preferredBudget: string;
+      timeline: string;
+      metalTypeId?: string;
+      primaryStoneId?: string;
+      secondaryStoneId?: string;
+      otherStoneId?: string;
+    }) => {
+      const response = await apiRequest("POST", "/api/customization-requests", formData);
+      if (!response.ok) {
+        throw new Error("Failed to submit customization request");
+      }
+      return await response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Customization Request Submitted",
-        description: "We'll contact you with a quote soon.",
+        title: "Customization Request Sent!",
+        description: "We've received your request and will contact you soon.",
+        variant: "default",
       });
-      // Redirect to dashboard or confirmation page
-      navigate(user ? "/customer-dashboard" : "/");
+      // Navigate back to product detail page after successful submission
+      setTimeout(() => {
+        setLocation(`/product-detail/${id}`);
+      }, 2000);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit customization request",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  // Pre-fill form with product details when data is loaded
-  useEffect(() => {
-    if (product && metalTypes && stoneTypes) {
-      console.log("Pre-filling form with product specifications:");
-      // Get metal and stone types from the product
-      const originalMetalType = product.metalType || "";
-      const originalMainStoneType = product.mainStoneType || "";
-      const originalSecondaryStoneType = product.secondaryStoneType || "";
-      const originalOtherStoneType = product.otherStoneType || "";
-      
-      console.log("Original metal type:", originalMetalType);
-      console.log("Original main stone type:", originalMainStoneType);
-      console.log("Original secondary stone type:", originalSecondaryStoneType);
-      console.log("Original other stone type:", originalOtherStoneType);
-
-      // Find matching metal type in the database
-      const metalTypeObj = metalTypes.find((metal: any) => 
-        metal.name.toLowerCase() === originalMetalType.toLowerCase()
-      );
-      
-      if (metalTypeObj) {
-        console.log("Found matching metal type:", metalTypeObj.name, "with ID:", metalTypeObj.id);
-        setMetalTypeId(String(metalTypeObj.id));
-      }
-      
-      // Find matching primary stone in the database
-      const primaryStoneObj = stoneTypes.find((stone: any) => 
-        stone.name.toLowerCase() === originalMainStoneType.toLowerCase()
-      );
-      
-      if (primaryStoneObj) {
-        console.log("Found matching primary stone:", primaryStoneObj.name, "with ID:", primaryStoneObj.id);
-        setPrimaryStoneId(String(primaryStoneObj.id));
-      }
-      
-      // Find matching secondary stone in the database
-      const secondaryStoneObj = stoneTypes.find((stone: any) => 
-        stone.name.toLowerCase() === originalSecondaryStoneType.toLowerCase()
-      );
-      
-      if (secondaryStoneObj) {
-        console.log("Found matching secondary stone:", secondaryStoneObj.name, "with ID:", secondaryStoneObj.id);
-        setSecondaryStoneId(String(secondaryStoneObj.id));
-      }
-      
-      // Find matching other stone in the database
-      const otherStoneObj = stoneTypes.find((stone: any) => 
-        stone.name.toLowerCase() === originalOtherStoneType.toLowerCase()
-      );
-      
-      if (otherStoneObj) {
-        console.log("Found matching other stone:", otherStoneObj.name, "with ID:", otherStoneObj.id);
-        setOtherStoneId(String(otherStoneObj.id));
-      }
-      
-      // Set the default price to the product's calculated price
-      const defaultPrice = product.calculatedPriceUSD || product.basePrice;
-      console.log("Starting price estimate:", defaultPrice);
-      setEstimatedPrice(defaultPrice);
-      
-      // Generate stone suggestions based on the primary stone
-      if (primaryStoneObj) {
-        // Extract keywords from the primary stone name
-        const keywords = primaryStoneObj.name
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((word: string) => word.length > 3);
-        
-        console.log("Main stone keywords for customization options:", keywords);
-        
-        // Find similar stones based on keywords
-        const similarStones = stoneTypes.filter((stone: any) => {
-          // Don't include the exact same stone in suggestions
-          if (stone.id === primaryStoneObj.id) return false;
-          
-          const stoneName = stone.name.toLowerCase();
-          // Check if any keyword matches
-          return keywords.some((keyword: string) => stoneName.includes(keyword));
-        });
-        
-        console.log("Similar stones for customization:", similarStones);
-        setSuggestedStones(similarStones);
-      }
-      
-      // Set email if user is logged in
-      if (user?.email) {
-        setEmailAddress(user.email);
-      }
-    }
-  }, [product, metalTypes, stoneTypes, user]);
-
-  // Calculate new price estimate based on changes
-  useEffect(() => {
-    console.log(`Price calculation triggered: Metal=${metalTypeId}, Primary=${primaryStoneId}, Secondary=${secondaryStoneId}, Other=${otherStoneId}`);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
+    // Validate form fields
+    if (!name || !email || !phone || !customizationDetails) {
+      toast({
+        title: "Required Fields Missing",
+        description: "Please fill in all required fields (name, email, phone, and customization details).",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Submit the form
+    customizationMutation.mutate({
+      productId: Number(id),
+      name,
+      email,
+      phone,
+      customizationDetails,
+      preferredBudget,
+      timeline,
+      metalTypeId,
+      primaryStoneId,
+      secondaryStoneId,
+      otherStoneId,
+    });
+  };
+
+  // Navigate back to product detail
+  // Pre-fill form with user data and product specifications if available
+  useEffect(() => {
+    // Fill user data
+    if (user) {
+      setName(user.username);
+      setEmail(user.email || "");
+    }
+    
+    // Fill product specifications if product is loaded
     if (product && metalTypes && stoneTypes) {
       try {
         // Define exchange rate constant for INR to USD conversion
         const EXCHANGE_RATE = 83.8488;
+
+        // Parse product details
+        const details = product.details ? (typeof product.details === 'string' 
+          ? JSON.parse(product.details) 
+          : product.details) : {};
+          
+        const additionalData = details.additionalData || {};
+        const aiInputs = additionalData.aiInputs || {};
         
-        // Extract stone weights from product
-        const metalWeight = parseFloat(product.metalWeight) || 0;
-        const mainStoneWeight = parseFloat(product.mainStoneWeight) || 0;
-        const secondaryStoneWeight = parseFloat(product.secondaryStoneWeight) || 0;
-        const otherStoneWeight = parseFloat(product.otherStoneWeight) || 0;
+        // Get original metal and stone types from the product
+        const originalMetalType = aiInputs.metalType || additionalData.metalType || "";
+        const originalMainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
+        const originalSecondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
+        const originalOtherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
+        
+        console.log("Pre-filling form with product specifications:");
+        console.log("Original metal type:", originalMetalType);
+        console.log("Original main stone type:", originalMainStoneType);
+        console.log("Original secondary stone type:", originalSecondaryStoneType);
+        console.log("Original other stone type:", originalOtherStoneType);
+        
+        // Find matching metal type ID
+        if (originalMetalType) {
+          const matchingMetal = metalTypes.find((metal: any) => 
+            metal.name.toLowerCase() === originalMetalType.toLowerCase());
+          
+          if (matchingMetal) {
+            console.log("Found matching metal type:", matchingMetal.name, "with ID:", matchingMetal.id);
+            setMetalTypeId(String(matchingMetal.id));
+          }
+        }
+        
+        // Find matching primary stone type ID
+        if (originalMainStoneType) {
+          const matchingPrimaryStone = stoneTypes.find((stone: any) => 
+            stone.name.toLowerCase() === originalMainStoneType.toLowerCase());
+          
+          if (matchingPrimaryStone) {
+            console.log("Found matching primary stone:", matchingPrimaryStone.name, "with ID:", matchingPrimaryStone.id);
+            setPrimaryStoneId(String(matchingPrimaryStone.id));
+          }
+        }
+        
+        // Find matching secondary stone type ID
+        if (originalSecondaryStoneType && originalSecondaryStoneType.toLowerCase() !== "none") {
+          const matchingSecondaryStone = stoneTypes.find((stone: any) => 
+            stone.name.toLowerCase() === originalSecondaryStoneType.toLowerCase());
+          
+          if (matchingSecondaryStone) {
+            console.log("Found matching secondary stone:", matchingSecondaryStone.name, "with ID:", matchingSecondaryStone.id);
+            setSecondaryStoneId(String(matchingSecondaryStone.id));
+          }
+        }
+        
+        // Find matching other stone type ID
+        if (originalOtherStoneType && originalOtherStoneType.toLowerCase() !== "none") {
+          const matchingOtherStone = stoneTypes.find((stone: any) => 
+            stone.name.toLowerCase() === originalOtherStoneType.toLowerCase());
+          
+          if (matchingOtherStone) {
+            console.log("Found matching other stone:", matchingOtherStone.name, "with ID:", matchingOtherStone.id);
+            setOtherStoneId(String(matchingOtherStone.id));
+          }
+        }
+      } catch (error) {
+        console.error("Error pre-filling form with product specifications:", error);
+      }
+    }
+  }, [user, product, metalTypes, stoneTypes]);
+  
+  // Update estimated price based on selected customization options
+  useEffect(() => {
+    if (product) {
+      try {
+        // Parse product details to get stone weights
+        const details = product.details ? (typeof product.details === 'string' 
+          ? JSON.parse(product.details) 
+          : product.details) : {};
+          
+        const additionalData = details.additionalData || {};
+        const aiInputs = additionalData.aiInputs || {};
+        
+        // Get stone weights from the product (these don't change in customization)
+        const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
+        const secondaryStoneWeight = aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
+        const otherStoneWeight = aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
+        
+        // Get metal weight (this doesn't change in customization)
+        const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
+        
+        // Get original metal and stone types from the product
+        const originalMetalType = aiInputs.metalType || additionalData.metalType || "";
+        const originalMainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
+        const originalSecondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
+        const originalOtherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
         
         console.log("Product metal weight:", metalWeight, "grams");
         console.log("Product main stone weight:", mainStoneWeight, "carats");
         console.log("Product secondary stone weight:", secondaryStoneWeight, "carats");
-        
-        // Get original metal type
-        const originalMetalType = product.metalType || "";
-        const originalMainStoneType = product.mainStoneType || "";
-        const originalSecondaryStoneType = product.secondaryStoneType || "";
-        const originalOtherStoneType = product.otherStoneType || "";
-        
         console.log("Original metal type:", originalMetalType);
         console.log("Original main stone type:", originalMainStoneType);
         
-        // Use the product's existing calculated price as the starting point
-        const originalPrice = product.calculatedPriceUSD || product.basePrice;
-        console.log("Starting price estimate:", originalPrice);
+        // Start with the product's calculated price if available, or fall back to base price
+        let priceEstimate = product.calculatedPriceUSD || product.basePrice;
+        console.log("Starting price estimate:", priceEstimate);
         
-        // Process metal type change
-        let metalPriceAdjustment = 0;
-        
+        // 1. For metals: Calculate the difference between original and selected metal
         if (metalTypeId && metalTypes) {
           const selectedMetal = metalTypes.find((metal: any) => String(metal.id) === metalTypeId);
           console.log("Selected metal:", selectedMetal?.name);
           
-          // Find the original metal from the database
+          // Find the original metal's price modifier in our list of metals
           const originalMetalObj = metalTypes.find((metal: any) => 
-            metal.name.toLowerCase() === originalMetalType.toLowerCase()
-          );
+            metal.name.toLowerCase() === originalMetalType.toLowerCase());
+          console.log("Original metal from DB:", originalMetalObj?.name, "with modifier:", originalMetalObj?.priceModifier);
           
-          if (originalMetalObj && selectedMetal && selectedMetal.id !== originalMetalObj.id) {
-            console.log("Original metal from DB:", originalMetalObj.name, "with modifier:", originalMetalObj.priceModifier);
+          if (selectedMetal && originalMetalObj && selectedMetal.id !== originalMetalObj.id) {
+            // Remove the original metal's price contribution and add the new one
+            const originalMetalMultiplier = 1 + (originalMetalObj.priceModifier / 100);
+            const newMetalMultiplier = 1 + (selectedMetal.priceModifier / 100);
             
-            // Calculate the price difference due to metal change
+            // Adjust the price: first remove original metal effect, then apply new metal effect
+            const priceWithoutMetal = priceEstimate / originalMetalMultiplier;
+            priceEstimate = priceWithoutMetal * newMetalMultiplier;
+            
             console.log(`Adjusting price for metal change: ${originalMetalObj.name} -> ${selectedMetal.name}`);
-            
-            // Calculate multipliers - converting percentage to multiplier (e.g., 58% -> 1.58)
-            const originalMultiplier = 1 + (originalMetalObj.priceModifier / 100);
-            const newMultiplier = 1 + (selectedMetal.priceModifier / 100);
-            
-            console.log(`Metal price adjustment: original multiplier ${originalMultiplier}, new multiplier ${newMultiplier}`);
-            
-            // Estimate metal contribution to price (roughly 60% of total)
-            const metalContribution = originalPrice * 0.6;
-            
-            // Calculate the adjustment
-            metalPriceAdjustment = metalContribution * ((newMultiplier / originalMultiplier) - 1);
-            
-            console.log(`Price after metal adjustment: ${originalPrice + metalPriceAdjustment}`);
+            console.log(`Metal price adjustment: original multiplier ${originalMetalMultiplier}, new multiplier ${newMetalMultiplier}`);
+            console.log(`Price after metal adjustment: ${priceEstimate}`);
           }
         }
         
-        // Calculate stone cost changes
-        // First, calculate how much the original stones contributed
-        console.log("All available stone types in database:", stoneTypes?.map((s: any) => `${s.name} - ₹${s.priceModifier}/carat`));
+        // 2. For stones: Calculate the price based on weight × stone price per carat
+        // Find in the database what stone types and prices were used in the original calculation
+        console.log("All available stone types in database:", stoneTypes?.map(s => `${s.name} - ₹${s.priceModifier}/carat`));
         
         const originalPrimaryStoneObj = stoneTypes?.find((stone: any) => 
           stone.name.toLowerCase() === originalMainStoneType.toLowerCase());
@@ -313,17 +289,18 @@ export default function CustomizeRequest() {
         console.log(`Looking for original stone type "${originalMainStoneType}" in database...`);
         console.log("Original primary stone object from DB:", originalPrimaryStoneObj);
         
-        // Calculate how much the original stones contributed to the price
+        // Calculate a rough estimate of how much the original stones contributed to the price
         let originalStoneContribution = 0;
         if (originalPrimaryStoneObj && mainStoneWeight > 0) {
-          // Stone prices are in INR, need to convert to USD
+          // Assuming priceModifier is stored as price per carat in this case
           const pricePerCaratInr = originalPrimaryStoneObj.priceModifier || 0;
           const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
           originalStoneContribution += mainStoneWeight * pricePerCaratUsd;
-          console.log(`Original primary stone (${originalMainStoneType}) contribution: ${mainStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈$${pricePerCaratUsd.toFixed(2)}/carat) = $${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+          console.log(`Original primary stone (${originalMainStoneType}) contribution: ${mainStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+        } else {
+          console.log(`Warning: Could not find original primary stone "${originalMainStoneType}" in database`);
         }
         
-        // Secondary stone contribution
         const originalSecondaryStoneObj = stoneTypes?.find((stone: any) => 
           stone.name.toLowerCase() === originalSecondaryStoneType.toLowerCase());
         
@@ -331,10 +308,12 @@ export default function CustomizeRequest() {
           const pricePerCaratInr = originalSecondaryStoneObj.priceModifier || 0;
           const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
           originalStoneContribution += secondaryStoneWeight * pricePerCaratUsd;
-          console.log(`Original secondary stone (${originalSecondaryStoneType}) contribution: ${secondaryStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈$${pricePerCaratUsd.toFixed(2)}/carat) = $${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+          console.log(`Original secondary stone (${originalSecondaryStoneType}) contribution: ${secondaryStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+        } else if (secondaryStoneWeight > 0) {
+          console.log(`Warning: Could not find original secondary stone "${originalSecondaryStoneType}" in database`);
         }
         
-        // Other stone contribution
+        // Check for original other stone contribution
         const originalOtherStoneObj = stoneTypes?.find((stone: any) => 
           stone.name.toLowerCase() === originalOtherStoneType.toLowerCase());
         
@@ -342,74 +321,96 @@ export default function CustomizeRequest() {
           const pricePerCaratInr = originalOtherStoneObj.priceModifier || 0;
           const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
           originalStoneContribution += otherStoneWeight * pricePerCaratUsd;
-          console.log(`Original other stone (${originalOtherStoneType}) contribution: ${otherStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈$${pricePerCaratUsd.toFixed(2)}/carat) = $${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+          console.log(`Original other stone (${originalOtherStoneType}) contribution: ${otherStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+        } else if (otherStoneWeight > 0) {
+          console.log(`Warning: Could not find original other stone "${originalOtherStoneType}" in database`);
         }
         
-        // Now calculate the new stone contribution based on selected stones
+        // Now if the user selected different stones, calculate their contribution
         let newStoneContribution = 0;
         
-        // Primary stone
+        console.log(`Selected primary stone ID: ${primaryStoneId}`);
+        
         if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes && mainStoneWeight > 0) {
           const selectedStone = stoneTypes.find((stone: any) => String(stone.id) === primaryStoneId);
           console.log("Selected primary stone object from DB:", selectedStone);
           
           if (selectedStone) {
+            // Use the selected stone's price per carat
             const pricePerCaratInr = selectedStone.priceModifier || 0;
             const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
             newStoneContribution += mainStoneWeight * pricePerCaratUsd;
-            console.log(`New primary stone (${selectedStone.name}) contribution: ${mainStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈$${pricePerCaratUsd.toFixed(2)}/carat) = $${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+            console.log(`New primary stone (${selectedStone.name}) contribution: ${mainStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+          } else {
+            console.log(`Warning: Could not find selected primary stone with ID ${primaryStoneId} in database`);
           }
         } else if (originalPrimaryStoneObj && mainStoneWeight > 0) {
-          // If no primary stone selected, use original
-          const pricePerCaratInr = originalPrimaryStoneObj.priceModifier || 0;
-          const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
-          newStoneContribution += mainStoneWeight * pricePerCaratUsd;
+          // If no new stone selected, use the original
+          newStoneContribution += mainStoneWeight * (originalPrimaryStoneObj.priceModifier || 0);
+          console.log(`Using original primary stone (no new selection): ${mainStoneWeight} carats × $${originalPrimaryStoneObj.priceModifier}/carat = $${mainStoneWeight * originalPrimaryStoneObj.priceModifier}`);
         }
         
-        // Secondary stone
         if (secondaryStoneId && secondaryStoneId !== "none_selected" && stoneTypes && secondaryStoneWeight > 0) {
           const selectedSecondaryStone = stoneTypes.find((stone: any) => String(stone.id) === secondaryStoneId);
-          
           if (selectedSecondaryStone) {
+            // Use the selected stone's price per carat
             const pricePerCaratInr = selectedSecondaryStone.priceModifier || 0;
             const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
             newStoneContribution += secondaryStoneWeight * pricePerCaratUsd;
-            console.log(`New secondary stone (${selectedSecondaryStone.name}) contribution: ${secondaryStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈$${pricePerCaratUsd.toFixed(2)}/carat) = $${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+            console.log(`New secondary stone (${selectedSecondaryStone.name}) contribution: ${secondaryStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
           }
         } else if (originalSecondaryStoneObj && secondaryStoneWeight > 0) {
-          // If no secondary stone selected, use original
-          const pricePerCaratInr = originalSecondaryStoneObj.priceModifier || 0;
-          const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
-          newStoneContribution += secondaryStoneWeight * pricePerCaratUsd;
+          // If no new stone selected, use the original
+          newStoneContribution += secondaryStoneWeight * (originalSecondaryStoneObj.priceModifier || 0);
         }
         
-        // Other stone
+        // Handle the other stone contribution
         if (otherStoneId && otherStoneId !== "none_selected" && stoneTypes && otherStoneWeight > 0) {
           const selectedOtherStone = stoneTypes.find((stone: any) => String(stone.id) === otherStoneId);
-          
           if (selectedOtherStone) {
+            // Use the selected stone's price per carat
             const pricePerCaratInr = selectedOtherStone.priceModifier || 0;
             const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
             newStoneContribution += otherStoneWeight * pricePerCaratUsd;
-            console.log(`New other stone (${selectedOtherStone.name}) contribution: ${otherStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈$${pricePerCaratUsd.toFixed(2)}/carat) = $${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+            console.log(`New other stone (${selectedOtherStone.name}) contribution: ${otherStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
           }
         } else if (originalOtherStoneObj && otherStoneWeight > 0) {
-          // If no other stone selected, use original
-          const pricePerCaratInr = originalOtherStoneObj.priceModifier || 0;
-          const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
-          newStoneContribution += otherStoneWeight * pricePerCaratUsd;
+          // If no new stone selected, use the original
+          newStoneContribution += otherStoneWeight * (originalOtherStoneObj.priceModifier || 0);
+          console.log(`Using original other stone (no new selection): ${otherStoneWeight} carats × $${originalOtherStoneObj.priceModifier}/carat = $${otherStoneWeight * originalOtherStoneObj.priceModifier}`);
         }
         
-        // Calculate the final price
-        console.log(`Final price calculation: starting price ${originalPrice} + metal adjustment ${metalPriceAdjustment.toFixed(2)} + stone difference ${(newStoneContribution - originalStoneContribution).toFixed(2)}`);
+        // Adjust the price by removing the original stone contribution and adding the new one
+        if (originalStoneContribution > 0 || newStoneContribution > 0) {
+          // Remove the estimated original stone contribution from price (if we could calculate it)
+          if (originalStoneContribution > 0) {
+            priceEstimate = priceEstimate - originalStoneContribution;
+          }
+          
+          // Add the new stone contribution
+          priceEstimate = priceEstimate + newStoneContribution;
+          
+          console.log(`Price adjustment for stone change: Original $${originalStoneContribution} -> New $${newStoneContribution}`);
+          console.log(`Price after stone adjustment: ${priceEstimate}`);
+        }
         
-        const finalPrice = Math.round(
-          originalPrice + 
-          metalPriceAdjustment + 
-          (newStoneContribution - originalStoneContribution)
-        );
+        // Apply currency conversion if needed
+        if (currency === "INR" && product.calculatedPriceINR) {
+          // Use product's calculated INR price if available
+          priceEstimate = product.calculatedPriceINR;
+          console.log("Switched to INR pricing:", priceEstimate);
+          
+          // Re-apply all adjustments for INR price
+          // Since the logic is complex and would need to be duplicated, a simpler approach 
+          // is to apply a conversion ratio from the USD adjustments
+          const usdAdjustmentRatio = priceEstimate / (product.calculatedPriceUSD || product.basePrice);
+          priceEstimate = product.calculatedPriceINR * usdAdjustmentRatio;
+          console.log(`Applied USD adjustment ratio to INR price: ${usdAdjustmentRatio}, new price: ${priceEstimate}`);
+        }
         
-        console.log(`Setting final price to: $${finalPrice.toFixed(2)}`);
+        // Round to nearest whole number
+        const finalPrice = Math.round(priceEstimate);
+        console.log("Final estimated price:", finalPrice);
         setEstimatedPrice(finalPrice);
       } catch (error) {
         console.error("Error calculating price:", error);
@@ -418,377 +419,432 @@ export default function CustomizeRequest() {
       }
     }
   }, [product, metalTypeId, primaryStoneId, secondaryStoneId, otherStoneId, metalTypes, stoneTypes, currency]);
+  
+  // Extract stone types from product details to create customization suggestions
+  useEffect(() => {
+    if (product && product.details && stoneTypes) {
+      try {
+        // Parse product details to extract stone information
+        const parsedDetails = typeof product.details === 'string' 
+          ? JSON.parse(product.details) 
+          : product.details;
+        
+        // Extract stone information from product details
+        let productStoneTypes = [];
+        
+        if (parsedDetails.additionalData) {
+          // Get primary stone from the product
+          const mainStoneType = parsedDetails.additionalData.mainStoneType || "";
+          
+          // Add all similar stone types to suggested stones
+          if (mainStoneType && stoneTypes) {
+            // Find similar stones based on keywords in stone names
+            const keywords = mainStoneType.toLowerCase().split(/[,\s()]+/).filter(k => k.length > 3);
+            console.log("Main stone keywords for customization options:", keywords);
+            
+            // Filter stone types that have similar keywords
+            const similarStones = stoneTypes.filter(stone => {
+              const stoneName = stone.name.toLowerCase();
+              return keywords.some(keyword => stoneName.includes(keyword));
+            });
+            
+            console.log("Similar stones for customization:", similarStones);
+            setSuggestedStones(similarStones);
+          }
+        }
+      } catch (error) {
+        console.error("Error extracting stone types from product:", error);
+      }
+    }
+  }, [product, stoneTypes]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Check if user is logged in
-    if (!user) {
-      setShowLoginDialog(true);
-      return;
-    }
-    
-    // Prepare data for submission
-    // Validate productId is present and valid
-    const validProductId = productId && !isNaN(Number(productId));
-    if (!validProductId) {
-      toast({
-        title: "Error",
-        description: "Missing or invalid product ID",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const data = {
-      productId: parseInt(productId),
-      metalTypeId: parseInt(metalTypeId),
-      primaryStoneId: primaryStoneId !== "none_selected" ? parseInt(primaryStoneId) : null,
-      secondaryStoneId: secondaryStoneId !== "none_selected" ? parseInt(secondaryStoneId) : null,
-      otherStoneId: otherStoneId !== "none_selected" ? parseInt(otherStoneId) : null,
-      notes,
-      emailAddress,
-      estimatedPrice,
-      currency,
-    };
-    
-    customizationMutation.mutate(data);
+  const handleBack = () => {
+    setLocation(`/product-detail/${id}`);
   };
 
-  // Show loading state while data is being fetched
-  if (isLoadingProduct || isLoadingMetals || isLoadingStones) {
+  // Redirect to login if not authenticated
+  const handleLoginRedirect = () => {
+    // Store the current URL to redirect back after login
+    localStorage.setItem('redirectAfterLogin', `/customize-request/${id}`);
+    setLocation('/auth');
+  };
+
+  if (isAuthLoading || isLoading) {
     return (
-      <div className="container py-10 flex justify-center items-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold">Loading product details...</h2>
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // If not authenticated, show login prompt
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="font-playfair text-2xl font-bold mb-4">Authentication Required</h1>
+        <p className="mb-6">You need to be logged in to request customization for our products.</p>
+        <p className="mb-6 text-sm text-foreground/70">
+          Creating an account allows you to track your customization requests in your dashboard.
+        </p>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <Button onClick={handleLoginRedirect} className="bg-primary">
+            <LogIn className="mr-2 h-4 w-4" />
+            Login or Create Account
+          </Button>
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Product
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Show error state if product not found or there was an error fetching it
-  if (!isLoadingProduct && (!product || productError)) {
+  if (error || !product) {
     return (
-      <div className="container py-10">
-        <h1 className="text-3xl font-bold mb-6">Product Not Found</h1>
-        <p>Sorry, we couldn't find the product you're looking for.</p>
-        {productError && (
-          <p className="text-destructive mt-2">
-            Error details: {productError instanceof Error ? productError.message : 'Unknown error'}
-          </p>
-        )}
-        <div className="flex gap-4 mt-6">
-          <Button 
-            onClick={() => navigate("/")}
-          >
-            Return to Home
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => navigate("/products")}
-          >
-            Browse Products
-          </Button>
-        </div>
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+        <p className="mb-6">We couldn't find the product you're looking for.</p>
+        <Button onClick={() => setLocation("/collections")}>
+          Back to Collections
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="container py-10">
-      <h1 className="text-3xl font-bold mb-2">Customize this Piece</h1>
-      <p className="text-muted-foreground mb-6">
-        Modify this design to suit your preferences and get a price estimate.
-      </p>
+    <>
+      <Helmet>
+        <title>Customize {product.name} | Luster Legacy</title>
+      </Helmet>
       
-      <div className="grid md:grid-cols-2 gap-10">
-        {/* Product preview section */}
-        <div>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>{product.name}</CardTitle>
-              <CardDescription>Original Design</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="aspect-square w-full rounded-md overflow-hidden mb-4">
-                <ReliableProductImage 
-                  productId={product.id}
-                  imageUrl={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-              
-              <ProductSpecifications 
-                productMetalType={product.metalType}
-                productMetalWeight={parseFloat(product.metalWeight) || 0}
-                mainStoneType={product.mainStoneType}
-                mainStoneWeight={parseFloat(product.mainStoneWeight) || 0}
-                secondaryStoneType={product.secondaryStoneType}
-                secondaryStoneWeight={parseFloat(product.secondaryStoneWeight) || 0}
-                otherStoneType={product.otherStoneType}
-                otherStoneWeight={parseFloat(product.otherStoneWeight) || 0}
-                currentPrice={product.calculatedPriceUSD || product.basePrice}
-                formatCurrency={(value) => `$${value.toLocaleString()}`}
-                className="mt-4"
-              />
-            </CardContent>
-          </Card>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={handleBack} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Product
+          </Button>
+          <h1 className="font-playfair text-3xl font-bold mb-2">Request Customization</h1>
+          <p className="text-foreground/70 mb-6">
+            Fill out the form below to request customization for {product.name}
+          </p>
         </div>
         
-        {/* Customization form */}
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Customization Options</CardTitle>
-              <CardDescription>
-                Select your preferred materials and we'll provide a price estimate. 
-                Your final price may vary based on market fluctuations and detailed specifications.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Metal selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="metal-type">Preferred Metal Type</Label>
-                  <Select 
-                    value={metalTypeId} 
-                    onValueChange={(value) => {
-                      console.log(`Metal changed to: ${value}`);
-                      setMetalTypeId(value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select metal type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {metalTypes && 
-                        metalTypes.map((metal: any) => (
-                          <SelectItem key={`metal-${metal.id}`} value={String(metal.id)}>
-                            {metal.name}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Primary stone selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="primary-stone">Preferred Primary Stone</Label>
-                  <Select 
-                    value={primaryStoneId} 
-                    onValueChange={(value) => {
-                      console.log(`Primary stone changed to: ${value}`);
-                      setPrimaryStoneId(value);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select primary stone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none_selected" key="none-primary">None</SelectItem>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Product Summary Card */}
+          <Card className="md:col-span-1 h-fit">
+            <CardContent className="p-6">
+              <h2 className="font-playfair text-xl font-semibold mb-4">Product Summary</h2>
+              <div className="mb-4 rounded-md overflow-hidden">
+                <ReliableProductImage
+                  productId={product.id}
+                  alt={product.name}
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+              <h3 className="font-playfair text-lg font-semibold">{product.name}</h3>
+              <p className="text-foreground/70 text-sm my-2">{product.description}</p>
+              
+              {/* Product Specifications Component */}
+              {product.details && (
+                <>
+                  {(() => {
+                    try {
+                      const details = JSON.parse(product.details);
+                      const additionalData = details.additionalData || {};
+                      const aiInputs = additionalData.aiInputs || {};
                       
-                      {/* If we have suggested stones based on the product */}
-                      {suggestedStones && suggestedStones.length > 0 && (
-                        <>
-                          <div className="p-2 text-center text-xs font-medium text-accent">
-                            Recommended for this product:
-                          </div>
-                          {suggestedStones.map((stone: any) => (
-                            <SelectItem 
-                              key={`primary-suggested-${stone.id}`} 
-                              value={String(stone.id)}
-                            >
-                              {stone.name} 
-                            </SelectItem>
-                          ))}
-                          <Separator className="my-1" />
-                        </>
-                      )}
+                      const metalType = aiInputs.metalType || additionalData.metalType || "";
+                      const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
+                      const mainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
+                      const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
+                      const secondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
+                      const secondaryStoneWeight = aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
+                      const otherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
+                      const otherStoneWeight = aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
                       
-                      {/* All stone types */}
-                      <div className="p-2 text-center text-xs font-medium text-accent">
-                        All Stones
-                      </div>
-                      {stoneTypes && 
-                        stoneTypes.map((stone: any) => (
-                          <SelectItem key={`primary-${stone.id}`} value={String(stone.id)}>
-                            {stone.name}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Secondary stone selection (if the product has a secondary stone) */}
-                {product.secondaryStoneType && product.secondaryStoneType !== "None" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="secondary-stone">Preferred Secondary Stone</Label>
-                    <Select 
-                      value={secondaryStoneId} 
-                      onValueChange={(value) => {
-                        console.log(`Secondary stone changed to: ${value}`);
-                        setSecondaryStoneId(value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select secondary stone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none_selected" key="none-secondary">None</SelectItem>
-                        {stoneTypes && 
-                          stoneTypes.map((stone: any) => (
-                            <SelectItem key={`secondary-${stone.id}`} value={String(stone.id)}>
-                              {stone.name}
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                {/* Other stone selection (if the product has another stone) */}
-                {product.otherStoneType && product.otherStoneType !== "None" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="other-stone">Preferred Other Stone</Label>
-                    <Select 
-                      value={otherStoneId} 
-                      onValueChange={(value) => {
-                        console.log(`Other stone changed to: ${value}`);
-                        setOtherStoneId(value);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select other stone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none_selected" key="none-other">None</SelectItem>
-                        {stoneTypes && 
-                          stoneTypes.map((stone: any) => (
-                            <SelectItem key={`other-${stone.id}`} value={String(stone.id)}>
-                              {stone.name}
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                {/* Special requests / notes */}
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Special Requests or Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Tell us about any other customizations you'd like..."
-                    rows={4}
-                  />
-                </div>
-                
-                {/* Email address */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                    readOnly={!!user}
-                    className={user ? "bg-muted" : ""}
-                  />
-                  {user && (
-                    <p className="text-xs text-muted-foreground">
-                      Using email from your account.
-                    </p>
-                  )}
-                </div>
-                
-                {/* Price estimate */}
-                <div className="rounded-lg border p-4 mb-4">
-                  <h3 className="font-medium mb-1">Projected Estimated Price</h3>
-                  <p className="text-2xl font-semibold">${estimatedPrice.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    This is an initial estimate. Final pricing will be confirmed upon review.
-                  </p>
-                </div>
-                
-                {/* Submit button */}
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={customizationMutation.isPending}
-                >
-                  {customizationMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Request Customized Quote"
-                  )}
-                </Button>
-              </form>
+                      return (
+                        <ProductSpecifications
+                          productMetalType={metalType}
+                          productMetalWeight={metalWeight}
+                          mainStoneType={mainStoneType}
+                          mainStoneWeight={mainStoneWeight}
+                          secondaryStoneType={secondaryStoneType}
+                          secondaryStoneWeight={secondaryStoneWeight}
+                          otherStoneType={otherStoneType}
+                          otherStoneWeight={otherStoneWeight}
+                          // Use calculated price if available, fall back to base price
+                          currentPrice={product.calculatedPriceUSD || product.basePrice}
+                          formatCurrency={formatCurrency}
+                          className="mt-4"
+                        />
+                      );
+                    } catch (e) {
+                      console.error("Error parsing product details:", e);
+                      return null;
+                    }
+                  })()}
+                </>
+              )}
+              
+              <p className="mt-4 text-sm text-foreground/60">
+                * Final price may vary based on customization requests
+              </p>
             </CardContent>
           </Card>
+          
+          {/* Customization Request Form */}
+          <div className="md:col-span-2">
+            <Card>
+              <CardContent className="p-6">
+                <form onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Your Name*</Label>
+                      <Input
+                        id="name"
+                        placeholder="Enter your full name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address*</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number*</Label>
+                      <Input
+                        id="phone"
+                        placeholder="Your contact number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="budget">Preferred Budget (Optional)</Label>
+                      <Input
+                        id="budget"
+                        placeholder="Your budget range"
+                        value={preferredBudget}
+                        onChange={(e) => setPreferredBudget(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="timeline">Preferred Timeline (Optional)</Label>
+                      <Input
+                        id="timeline"
+                        placeholder="When do you need this by?"
+                        value={timeline}
+                        onChange={(e) => setTimeline(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="metalType">Preferred Metal Type</Label>
+                      <Select value={metalTypeId} onValueChange={setMetalTypeId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select metal type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingMetalTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !metalTypes || metalTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No metal types available</div>
+                          ) : (
+                            metalTypes.map((metal) => (
+                              <SelectItem key={metal.id} value={String(metal.id)}>
+                                {metal.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Primary Stone field based on the product's original stones */}
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryStone">Preferred Primary Stone Type</Label>
+                      <Select value={primaryStoneId} onValueChange={setPrimaryStoneId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select primary stone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none_selected">None</SelectItem>
+                          
+                          {/* If we have suggested stones based on the product */}
+                          {suggestedStones && suggestedStones.length > 0 && (
+                            <>
+                              <div className="p-2 text-center text-xs font-medium text-accent">
+                                Recommended for this product:
+                              </div>
+                              {suggestedStones.map((stone) => (
+                                <SelectItem 
+                                  key={`suggested-${stone.id}`} 
+                                  value={String(stone.id)}
+                                  className="font-medium"
+                                >
+                                  {stone.name} ★
+                                </SelectItem>
+                              ))}
+                              <div className="py-1"><hr className="border-border" /></div>
+                            </>
+                          )}
+                          
+                          {/* All stone types */}
+                          {isLoadingStoneTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !stoneTypes || stoneTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                          ) : (
+                            stoneTypes.map((stone) => (
+                              <SelectItem key={`primary-${stone.id}`} value={String(stone.id)}>
+                                {stone.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="secondaryStone">Preferred Secondary Stone Type (Optional)</Label>
+                      <Select value={secondaryStoneId} onValueChange={setSecondaryStoneId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select secondary stone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none_selected">None</SelectItem>
+                          {isLoadingStoneTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !stoneTypes || stoneTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                          ) : (
+                            stoneTypes.map((stone) => (
+                              <SelectItem key={`secondary-${stone.id}`} value={String(stone.id)}>
+                                {stone.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="otherStone">Preferred Other Stone Type (Optional)</Label>
+                      <Select value={otherStoneId} onValueChange={setOtherStoneId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select other stone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none_selected">None</SelectItem>
+                          {isLoadingStoneTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !stoneTypes || stoneTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                          ) : (
+                            stoneTypes.map((stone) => (
+                              <SelectItem key={`other-${stone.id}`} value={String(stone.id)}>
+                                {stone.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="customizationDetails">Customization Details*</Label>
+                      <Textarea
+                        id="customizationDetails"
+                        placeholder="Describe your customization requirements in detail..."
+                        className="min-h-[150px]"
+                        value={customizationDetails}
+                        onChange={(e) => setCustomizationDetails(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Estimated Price Card */}
+                  {estimatedPrice > 0 && (
+                    <div className="mt-6 mb-6 p-4 border border-border rounded-lg bg-accent/5">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <Calculator className="h-5 w-5 mr-2 text-accent" />
+                          <h3 className="text-lg font-semibold">Projected Estimated Price</h3>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-muted-foreground">Currency:</span>
+                          <Select 
+                            value={currency} 
+                            onValueChange={setCurrency}
+                          >
+                            <SelectTrigger className="w-[100px] h-8">
+                              <SelectValue placeholder="Currency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="INR">INR</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-3 rounded-md bg-background">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Based on your customization choices</p>
+                          <p className="text-xs text-muted-foreground mt-1">This is an estimate only. Final price may vary.</p>
+                        </div>
+                        <div className="text-xl font-bold text-accent">
+                          {formatCurrency(estimatedPrice, currency)}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        <ul className="list-disc pl-4 space-y-1">
+                          <li>Price includes material costs and craftsmanship</li>
+                          <li>You'll receive an exact quote after review by our design team</li>
+                          <li>Gold price will be locked on the day of 50% advance payment</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      type="submit" 
+                      className="bg-primary hover:bg-primary/90"
+                      disabled={customizationMutation.isPending}
+                    >
+                      {customizationMutation.isPending ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting...
+                        </span>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Submit Request
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-      
-      {/* Login dialog */}
-      <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Login Required</AlertDialogTitle>
-            <AlertDialogDescription>
-              You need to log in to submit a customization request. Would you like to continue as a guest or log in first?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => navigate("/auth")}>
-              Log In
-            </AlertDialogAction>
-            <Button 
-              variant="default" 
-              onClick={() => {
-                setShowLoginDialog(false);
-                // Submit as guest (will use email provided in form)
-                // Check for valid product ID before submission
-                const validProductId = productId && !isNaN(Number(productId));
-                if (!validProductId) {
-                  toast({
-                    title: "Error",
-                    description: "Missing or invalid product ID",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                
-                customizationMutation.mutate({
-                  productId: parseInt(productId),
-                  metalTypeId: parseInt(metalTypeId),
-                  primaryStoneId: primaryStoneId !== "none_selected" ? parseInt(primaryStoneId) : null,
-                  secondaryStoneId: secondaryStoneId !== "none_selected" ? parseInt(secondaryStoneId) : null,
-                  otherStoneId: otherStoneId !== "none_selected" ? parseInt(otherStoneId) : null,
-                  notes,
-                  emailAddress,
-                  estimatedPrice,
-                  currency,
-                });
-              }}
-            >
-              Continue as Guest
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    </>
   );
 }
