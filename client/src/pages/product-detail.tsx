@@ -561,23 +561,10 @@ export default function ProductDetail() {
                     </div>
                   </div>
 
-                  {/* Specifications Section */}
+                  {/* Product Category Section */}
                   <div className="p-6 bg-card rounded-lg shadow-sm">
-                    <h3 className="font-playfair text-lg font-semibold mb-4">Material Specifications</h3>
+                    <h3 className="font-playfair text-lg font-semibold mb-4">Product Category</h3>
                     <div className="space-y-4">
-                      {/* Metal Information in a card-like format */}
-                      <div className="bg-background border border-border rounded-md p-4">
-                        <div className="flex items-center justify-between">
-                          <span className="font-montserrat font-semibold text-sm text-foreground/80">Metal Type</span>
-                          {productMetalWeight > 0 && (
-                            <Badge variant="secondary" className="text-xs">{productMetalWeight}g</Badge>
-                          )}
-                        </div>
-                        <div className="font-cormorant text-xl mt-1">
-                          {productMetalType || "Not specified"}
-                        </div>
-                      </div>
-                      
                       {/* Product Category */}
                       {(product.productType || product.category) && (
                         <div className="bg-background border border-border rounded-md p-4">
@@ -587,107 +574,32 @@ export default function ProductDetail() {
                           <div className="font-cormorant text-xl mt-1 capitalize">{product.productType || product.category || "Not specified"}</div>
                         </div>
                       )}
-                      
-
                     </div>
-                    
-                    {/* Stone Information Section */}
-                    <div className="mt-6">
-                      <h3 className="font-playfair text-lg font-semibold mb-4">Stone Details</h3>
-                      <div className="space-y-4">
-                        {/* Main Stone */}
-                        <div className="bg-background border border-border rounded-md p-4">
-                          <div className="flex items-center justify-between">
-                            <span className="font-montserrat font-semibold text-sm text-foreground/80">Main Stone</span>
-                            {mainStoneWeight > 0 && (
-                              <Badge variant="secondary" className="text-xs">{mainStoneWeight} carats</Badge>
-                            )}
-                          </div>
-                          <div className="font-cormorant text-xl mt-1">
-                            {mainStoneType || "Not specified"}
-                          </div>
-                        </div>
-                        
-                        {/* Secondary Stone */}
-                        {((secondaryStoneType && secondaryStoneType !== "none_selected") || secondaryStoneWeight > 0) && (
-                          <div className="bg-background border border-border rounded-md p-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Secondary Stone</span>
-                              {secondaryStoneWeight > 0 && (
-                                <Badge variant="secondary" className="text-xs">{secondaryStoneWeight} carats</Badge>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              {secondaryStoneType && secondaryStoneType !== "none_selected" ? (
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                  <span className="font-cormorant text-lg">{secondaryStoneType}</span>
-                                </div>
-                              ) : Array.isArray(secondaryStoneTypes) && secondaryStoneTypes.length > 0 ? (
-                                // Fallback for backward compatibility with old data format
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                  <span className="font-cormorant text-lg">{secondaryStoneTypes[0]}</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                  <span className="font-cormorant text-lg">None</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Other Stone */}
-                        {((otherStoneType && otherStoneType !== "none_selected") || otherStoneWeight > 0) && (
-                          <div className="bg-background border border-border rounded-md p-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-montserrat font-semibold text-sm text-foreground/80">Other Stone</span>
-                              {otherStoneWeight > 0 && (
-                                <Badge variant="secondary" className="text-xs">{otherStoneWeight} carats</Badge>
-                              )}
-                            </div>
-                            <div className="space-y-2">
-                              {otherStoneType && otherStoneType !== "none_selected" ? (
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                  <span className="font-cormorant text-lg">{otherStoneType}</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 rounded-full bg-primary"></div>
-                                  <span className="font-cormorant text-lg">None</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* All Stones Collection */}
+                  </div>
+                  
+                  {/* All Stones Collection */}
+                  <div className="p-6 bg-card rounded-lg shadow-sm">
                     {Array.isArray(productStones) && productStones.length > 0 && (
-                      <div className="mt-6 border-t border-border pt-4">
-                        <span className="font-montserrat font-semibold block text-sm text-foreground/60 mb-2">All Stones & Gems</span>
+                      <>
+                        <h3 className="font-playfair text-lg font-semibold mb-4">All Stones & Gems</h3>
                         <div className="flex flex-wrap gap-2">
                           {productStones.map((stone, index) => (
                             <Badge key={index} variant="outline">{stone}</Badge>
                           ))}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Design Inspiration Section - Show AI generator input fields */}
-                    {userDescription && (
-                      <div className="mt-8 border-t border-border pt-4">
-                        <h3 className="font-playfair text-lg font-semibold mb-4">Design Inspiration</h3>
-                        <div className="bg-background/50 p-4 rounded-md border border-primary/10">
-                          <p className="font-cormorant text-base italic">{userDescription}</p>
-                        </div>
-                      </div>
+                      </>
                     )}
                   </div>
+
+                  {/* Design Inspiration Section */}
+                  {userDescription && (
+                    <div className="p-6 bg-card rounded-lg shadow-sm">
+                      <h3 className="font-playfair text-lg font-semibold mb-4">Design Inspiration</h3>
+                      <div className="bg-background/50 p-4 rounded-md border border-primary/10">
+                        <p className="font-cormorant text-base italic">{userDescription}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

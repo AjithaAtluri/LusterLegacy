@@ -385,7 +385,7 @@ export default function CustomizeRequest() {
                     </div>
                     {/* Primary Stone field based on the product's original stones */}
                     <div className="space-y-2">
-                      <Label htmlFor="primaryStone">Primary Stone Type</Label>
+                      <Label htmlFor="primaryStone">Preferred Primary Stone Type</Label>
                       <Select value={primaryStoneId} onValueChange={setPrimaryStoneId}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select primary stone" />
@@ -429,7 +429,7 @@ export default function CustomizeRequest() {
                     </div>
                     
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="secondaryStone">Secondary Stone Type (Optional)</Label>
+                      <Label htmlFor="secondaryStone">Preferred Secondary Stone Type (Optional)</Label>
                       <Select value={secondaryStoneId} onValueChange={setSecondaryStoneId}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select secondary stone" />
