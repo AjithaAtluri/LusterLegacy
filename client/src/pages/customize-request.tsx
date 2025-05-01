@@ -40,6 +40,10 @@ export default function CustomizeRequest() {
   const [primaryStoneId, setPrimaryStoneId] = useState("");
   const [secondaryStoneId, setSecondaryStoneId] = useState("");
   
+  // Price estimation state
+  const [estimatedPrice, setEstimatedPrice] = useState<number>(0);
+  const [currency, setCurrency] = useState<string>("USD");
+  
   // State for related stones based on the product's original stones
   const [suggestedStones, setSuggestedStones] = useState<any[]>([]);
   
@@ -135,6 +139,43 @@ export default function CustomizeRequest() {
       setEmail(user.email || "");
     }
   }, [user]);
+  
+  // Update estimated price based on selected customization options
+  useEffect(() => {
+    if (product && product.basePrice) {
+      let basePrice = product.basePrice;
+      
+      // If metal type is selected, apply metal price modifier
+      if (metalTypeId && metalTypes) {
+        const selectedMetal = metalTypes.find((metal: any) => metal.id === metalTypeId);
+        if (selectedMetal && selectedMetal.priceModifier) {
+          basePrice = basePrice * (selectedMetal.priceModifier / 1000); // Convert from per-gram modifier
+        }
+      }
+      
+      // If primary stone is selected, apply stone price modifier
+      if (primaryStoneId && stoneTypes) {
+        const selectedStone = stoneTypes.find((stone: any) => stone.id === primaryStoneId);
+        if (selectedStone && selectedStone.priceModifier) {
+          basePrice = basePrice + selectedStone.priceModifier; // Add stone price
+        }
+      }
+      
+      // If secondary stone is selected, apply stone price modifier
+      if (secondaryStoneId && stoneTypes) {
+        const selectedSecondaryStone = stoneTypes.find((stone: any) => stone.id === secondaryStoneId);
+        if (selectedSecondaryStone && selectedSecondaryStone.priceModifier) {
+          basePrice = basePrice + (selectedSecondaryStone.priceModifier * 0.5); // Add half the stone price for secondary stone
+        }
+      }
+      
+      // Apply 25% overhead for customization
+      basePrice = basePrice * 1.25;
+      
+      // Round to nearest whole number
+      setEstimatedPrice(Math.round(basePrice));
+    }
+  }, [product, metalTypeId, primaryStoneId, secondaryStoneId, metalTypes, stoneTypes]);
   
   // Extract stone types from product details to create customization suggestions
   useEffect(() => {
@@ -463,6 +504,52 @@ export default function CustomizeRequest() {
                       />
                     </div>
                   </div>
+                  
+                  {/* Estimated Price Card */}
+                  {estimatedPrice > 0 && (
+                    <div className="mt-6 mb-6 p-4 border border-border rounded-lg bg-accent/5">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <Calculator className="h-5 w-5 mr-2 text-accent" />
+                          <h3 className="text-lg font-semibold">Estimated Price</h3>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-muted-foreground">Currency:</span>
+                          <Select 
+                            value={currency} 
+                            onValueChange={setCurrency}
+                          >
+                            <SelectTrigger className="w-[100px] h-8">
+                              <SelectValue placeholder="Currency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="INR">INR</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-3 rounded-md bg-background">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Based on your customization choices</p>
+                          <p className="text-xs text-muted-foreground mt-1">This is an estimate only. Final price may vary.</p>
+                        </div>
+                        <div className="text-xl font-bold text-accent">
+                          {formatCurrency(estimatedPrice, currency)}
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        <ul className="list-disc pl-4 space-y-1">
+                          <li>Price includes material costs, craftsmanship, and a 25% customization fee</li>
+                          <li>You'll receive an exact quote after review by our design team</li>
+                          <li>Gold price will be locked on the day of 50% advance payment</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-end">
                     <Button 
                       type="submit" 
