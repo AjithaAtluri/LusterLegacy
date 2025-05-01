@@ -39,7 +39,8 @@ export default function CustomerDashboard() {
     staleTime: 60000 // 1 minute cache
   });
   
-  // Fetch both types of customization requests (from both endpoints)
+  // Fetch all types of requests
+  // 1. Customization requests (for existing products)
   const { data: customizationRequests, isLoading: isLoadingRequests } = useQuery({
     queryKey: ['/api/customization-requests'],
     enabled: activeTab === "requests" && !!user,
@@ -51,13 +52,13 @@ export default function CustomerDashboard() {
       console.error("Error fetching customization requests");
       toast({
         title: "Error",
-        description: "Failed to load your custom design requests",
+        description: "Failed to load your customization requests",
         variant: "destructive",
       });
     }
   });
   
-  // Also fetch custom designs from the other endpoint
+  // 2. Custom design requests 
   const { data: customDesigns, isLoading: isLoadingCustomDesigns } = useQuery({
     queryKey: ['/api/custom-designs/user'],
     enabled: activeTab === "requests" && !!user,
@@ -70,17 +71,33 @@ export default function CustomerDashboard() {
     }
   });
   
-  // Use only customizationRequests to avoid duplicates
-  // Since both endpoints return the same data, just use one of them
-  const allDesignRequests = useMemo(() => {
-    // Only use the data from customizationRequests to avoid duplicates
-    const requests = [...(customizationRequests || [])];
+  // 3. Quote requests for existing products
+  const { data: quoteRequests, isLoading: isLoadingQuoteRequests } = useQuery({
+    queryKey: ['/api/quote-requests'],
+    enabled: activeTab === "requests" && !!user,
+    staleTime: 60000,
+    onSuccess: (data) => {
+      console.log("Successfully fetched quote requests:", data);
+    },
+    onError: () => {
+      console.error("Error fetching quote requests");
+    }
+  });
+  
+  // Combine all design and customization requests
+  const allRequests = useMemo(() => {
+    // Combine the data from all request types
+    const requests = [
+      ...(customizationRequests || []),
+      ...(customDesigns || []),
+      ...(quoteRequests || [])
+    ];
     
     // Sort by date
     return requests.sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-  }, [customizationRequests]);
+  }, [customizationRequests, customDesigns, quoteRequests]);
   
   // Fetch orders
   const { data: orders, isLoading: isLoadingOrders } = useQuery({
@@ -361,31 +378,38 @@ export default function CustomerDashboard() {
             <TabsContent value="requests">
               <Card>
                 <CardHeader>
-                  <CardTitle>Custom Design Requests</CardTitle>
-                  <CardDescription>View and track your custom jewelry requests</CardDescription>
+                  <CardTitle>All Requests</CardTitle>
+                  <CardDescription>View and track all your jewelry requests</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isLoadingRequests || isLoadingCustomDesigns ? (
+                  {isLoadingRequests || isLoadingCustomDesigns || isLoadingQuoteRequests ? (
                     <div className="p-8 text-center">
                       <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                      <p>Loading your design requests...</p>
+                      <p>Loading your requests...</p>
                     </div>
-                  ) : !allDesignRequests || allDesignRequests.length === 0 ? (
+                  ) : !allRequests || allRequests.length === 0 ? (
                     <div className="text-center py-10">
                       <PenTool className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
-                      <h3 className="font-playfair text-xl font-medium mb-2">No custom design requests</h3>
+                      <h3 className="font-playfair text-xl font-medium mb-2">No requests yet</h3>
                       <p className="font-montserrat text-foreground/60 mb-6">
-                        You haven't submitted any customization requests yet.
+                        You haven't submitted any customization or quote requests yet.
                       </p>
-                      <Button asChild>
-                        <Link href="/custom-design">
-                          Create Custom Design <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <div className="flex flex-col sm:flex-row justify-center gap-4">
+                        <Button asChild>
+                          <Link href="/custom-design">
+                            Request Custom Design <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                          <Link href="/collections">
+                            Browse Collections
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {allDesignRequests.map((request) => (
+                      {allRequests.map((request) => (
                         <Card key={request.id} className="overflow-hidden">
                           <CardHeader className="bg-background/50 pb-2">
                             <div className="flex justify-between items-center">

@@ -171,28 +171,68 @@ export default function CustomDesignDetail() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        {/* Left Column - Design Image */}
+        {/* Left Column - Design Image or Product Image */}
         <Card className="overflow-hidden">
           <CardHeader className="pb-2">
-            <CardTitle>Reference Image</CardTitle>
-            <CardDescription>Your uploaded design inspiration</CardDescription>
+            <CardTitle>
+              {design.product ? "Product Reference" : "Reference Image"}
+            </CardTitle>
+            <CardDescription>
+              {design.product 
+                ? "The product you're requesting to customize" 
+                : "Your uploaded design inspiration"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="aspect-square w-full rounded-md overflow-hidden">
-              <img 
-                src={design.imageUrl} 
-                alt="Design Reference" 
-                className="w-full h-full object-contain"
-              />
+              {design.product?.imageUrl ? (
+                <img 
+                  src={design.product.imageUrl} 
+                  alt={design.product.name} 
+                  className="w-full h-full object-contain"
+                />
+              ) : design.imageUrl ? (
+                <img 
+                  src={design.imageUrl} 
+                  alt="Design Reference" 
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-foreground/5">
+                  <PenTool className="h-16 w-16 text-foreground/20" />
+                </div>
+              )}
             </div>
+            
+            {/* Show product name and details if it's a customization request */}
+            {design.product && (
+              <div className="mt-4 space-y-2">
+                <h3 className="font-medium">{design.product.name}</h3>
+                <p className="text-sm text-foreground/70">{design.product.description}</p>
+                
+                {design.product.id && (
+                  <Button variant="outline" size="sm" className="mt-2" asChild>
+                    <Link href={`/products/${design.product.id}`}>
+                      View Original Product
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
         
         {/* Right Column - Design Details */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle>Design Specifications</CardTitle>
-            <CardDescription>Your custom design requirements</CardDescription>
+            <CardTitle>
+              {design.product ? "Customization Specifications" : "Design Specifications"}
+            </CardTitle>
+            <CardDescription>
+              {design.product 
+                ? "Your requested customization details" 
+                : "Your custom design requirements"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -212,7 +252,9 @@ export default function CustomDesignDetail() {
               
               {design.notes && (
                 <div>
-                  <h3 className="text-sm font-medium text-foreground/70">Design Notes</h3>
+                  <h3 className="text-sm font-medium text-foreground/70">
+                    {design.product ? "Customization Notes" : "Design Notes"}
+                  </h3>
                   <p className="whitespace-pre-wrap">{design.notes}</p>
                 </div>
               )}
