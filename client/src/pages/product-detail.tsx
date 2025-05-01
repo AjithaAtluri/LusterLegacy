@@ -479,16 +479,7 @@ export default function ProductDetail() {
                 
                 {/* Call-To-Action Buttons */}
                 <div className="flex flex-col space-y-3 mb-8 w-full">
-                  {/* Primary button - full width */}
-                  <Button 
-                    className="font-montserrat bg-primary text-background hover:bg-primary/90 w-full"
-                    onClick={handlePlaceOrder}
-                  >
-                    <ShoppingBag className="mr-2 h-4 w-4" />
-                    Reserve This Piece
-                  </Button>
-                  
-                  {/* Secondary and tertiary buttons - side by side */}
+                  {/* Two main buttons - side by side */}
                   <div className="flex gap-3 w-full">
                     <Button 
                       variant="outline" 
@@ -499,8 +490,8 @@ export default function ProductDetail() {
                       Request Quote
                     </Button>
                     <Button 
-                      variant="secondary" 
-                      className="font-montserrat flex-1"
+                      variant="default" 
+                      className="font-montserrat flex-1 bg-primary text-background hover:bg-primary/90"
                       onClick={handleCustomizationRequest}
                     >
                       <Package className="mr-2 h-4 w-4" />
