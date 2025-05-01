@@ -10,6 +10,41 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X, Upload } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Define the stone categories, types, qualities, and sizes
+const STONE_CATEGORIES = [
+  "Earth Mined Precious",
+  "Semi-Precious",
+  "Rare",
+  "Popular",
+  "Precious Lab Grown",
+  "Quartz",
+  "Onyx",
+  "Commercial"
+];
+
+const STONE_FORMS = [
+  "Beads",
+  "Stones",
+  "Cabs",
+  "Carved",
+  "Pota"
+];
+
+const STONE_QUALITIES = [
+  "Low",
+  "Medium",
+  "High"
+];
+
+const STONE_SIZES = [
+  "Very Small",
+  "Small",
+  "Medium",
+  "Large",
+  "Very Large"
+];
 
 // Define the form schema
 const stoneTypeFormSchema = z.object({
@@ -27,6 +62,10 @@ const stoneTypeFormSchema = z.object({
     (val) => val === null || val === undefined ? "" : val,
     z.string().max(20, "Color code must be 20 characters or less")
   ),
+  category: z.string().optional(),
+  stoneForm: z.string().optional(),
+  quality: z.string().optional(),
+  size: z.string().optional(),
 });
 
 type StoneTypeFormValues = z.infer<typeof stoneTypeFormSchema>;
@@ -50,6 +89,10 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
     priceModifier: 0,
     imageUrl: "",
     color: "",
+    category: "",
+    stoneForm: "",
+    quality: "",
+    size: "",
     ...initialData
   };
   
@@ -109,6 +152,12 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
       // Always include optional fields, even if empty
       formData.append("description", data.description || "");
       formData.append("color", data.color || "");
+      
+      // Include new stone parameters
+      formData.append("category", data.category || "");
+      formData.append("stoneForm", data.stoneForm || "");
+      formData.append("quality", data.quality || "");
+      formData.append("size", data.size || "");
       
       // Add image if present
       if (uploadedImage) {
@@ -249,6 +298,68 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stone Category</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {STONE_CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the category this stone belongs to
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="stoneForm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stone Form</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a form" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {STONE_FORMS.map((form) => (
+                        <SelectItem key={form} value={form}>
+                          {form}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Select the physical form of this stone
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
@@ -297,6 +408,70 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="quality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stone Quality</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select quality" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {STONE_QUALITIES.map((quality) => (
+                          <SelectItem key={quality} value={quality}>
+                            {quality}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Quality grade
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="size"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stone Size</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select size" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {STONE_SIZES.map((size) => (
+                          <SelectItem key={size} value={size}>
+                            {size}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Typical size
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <FormItem>
               <FormLabel>Stone Image (Optional)</FormLabel>

@@ -10,12 +10,13 @@ import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Search, Pencil, Trash2, Gem, FileImage } from "lucide-react";
+import { StoneType } from "@shared/schema";
 
 export default function AdminStoneTypes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedStoneType, setSelectedStoneType] = useState<any>(null);
+  const [selectedStoneType, setSelectedStoneType] = useState<StoneType | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -241,6 +242,29 @@ export default function AdminStoneTypes() {
                     {stoneType.description}
                   </p>
                 )}
+
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 mb-3">
+                  {stoneType.category && (
+                    <div className="text-xs">
+                      <span className="font-medium">Category:</span> {stoneType.category}
+                    </div>
+                  )}
+                  {stoneType.stoneForm && (
+                    <div className="text-xs">
+                      <span className="font-medium">Form:</span> {stoneType.stoneForm}
+                    </div>
+                  )}
+                  {stoneType.quality && (
+                    <div className="text-xs">
+                      <span className="font-medium">Quality:</span> {stoneType.quality}
+                    </div>
+                  )}
+                  {stoneType.size && (
+                    <div className="text-xs">
+                      <span className="font-medium">Size:</span> {stoneType.size}
+                    </div>
+                  )}
+                </div>
                 
                 <div className="flex items-center gap-2 mt-3">
                   <Button 
@@ -344,6 +368,10 @@ export default function AdminStoneTypes() {
               <div>
                 <h3 className="font-medium">{selectedStoneType.name}</h3>
                 <p className="text-sm text-muted-foreground">Price per Carat: ₹{selectedStoneType.priceModifier}</p>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {selectedStoneType.category && <span className="mr-2">Category: {selectedStoneType.category}</span>}
+                  {selectedStoneType.stoneForm && <span>Form: {selectedStoneType.stoneForm}</span>}
+                </div>
               </div>
             </div>
           )}
