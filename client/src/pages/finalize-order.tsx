@@ -314,7 +314,7 @@ export default function FinalizeOrder() {
               <CardFooter className="flex flex-col p-6 pt-0 space-y-4">
                 <Separator />
                 <div className="flex justify-between items-center w-full">
-                  <span className="font-medium">Price:</span>
+                  <span className="font-medium">Estimated Price:</span>
                   <span className="font-semibold text-lg">
                     {formatCurrency(getProductPrice(), currency)}
                   </span>
@@ -325,7 +325,7 @@ export default function FinalizeOrder() {
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center w-full">
-                  <span className="font-semibold">Total:</span>
+                  <span className="font-semibold">Estimated Total:</span>
                   <span className="font-bold text-xl text-primary">
                     {formatCurrency(getProductPrice(), currency)}
                   </span>
