@@ -309,6 +309,7 @@ export const orderItems = pgTable("order_items", {
   metalTypeId: text("metal_type_id").notNull(),
   stoneTypeId: text("stone_type_id").notNull(),
   price: integer("price").notNull(),
+  currency: text("currency").default("USD"),
   isCustomDesign: boolean("is_custom_design").default(false),
   designRequestId: integer("design_request_id").references(() => designRequests.id, { onDelete: 'set null' })
 });
@@ -334,6 +335,7 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).pick({
   metalTypeId: true,
   stoneTypeId: true,
   price: true,
+  currency: true,
   isCustomDesign: true,
   designRequestId: true,
 });

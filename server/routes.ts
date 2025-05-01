@@ -1775,14 +1775,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orderStatus = "new";
       const paymentStatus = action === "make_payment" ? "advance_pending" : "pending";
       
+      // Create order without the currency field which isn't in the schema
       const order = await storage.createOrder({
         userId: req.user.id,
         customerName: name,
         customerEmail: email,
         customerPhone: phone,
         shippingAddress: fullAddress,
-        currency: currency,
-        paymentMethod: paymentMethod,
+        // currency is handled separately in the order items
         totalAmount: totalAmount,
         advanceAmount: advanceAmount,
         balanceAmount: balanceAmount,
@@ -1792,19 +1792,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date(),
       });
       
-      // We already have the product object from above, no need to fetch it again
+      // Extract product details from JSON string if necessary
+      let metalType = "14K Yellow Gold"; // Default fallback
+      let stoneType = "None"; // Default fallback
       
-      // Get default metal and stone types if they exist
-      const defaultMetalType = "14K Yellow Gold"; // Default fallback
-      const defaultStoneType = "None"; // Default fallback
+      // Parse product details from JSON if available
+      if (product.details) {
+        try {
+          const details = JSON.parse(product.details);
+          if (details.additionalData && details.additionalData.metalType) {
+            metalType = details.additionalData.metalType;
+          }
+          if (details.additionalData && details.additionalData.primaryStone) {
+            stoneType = details.additionalData.primaryStone;
+          }
+        } catch (e) {
+          console.log("Could not parse product details:", e);
+        }
+      }
       
-      // Create order item with required metal and stone type IDs
+      // Create order item with required metal and stone type IDs and currency
       await storage.createOrderItem({
         orderId: order.id,
         productId: Number(productId),
         price: price,
-        metalTypeId: product.metalType || defaultMetalType,
-        stoneTypeId: product.stoneType || defaultStoneType,
+        metalTypeId: metalType,
+        stoneTypeId: stoneType,
+        currency: currency, // Add the currency
         isCustomDesign: false
       });
       
@@ -1940,6 +1954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           metalTypeId: item.metalTypeId,
           stoneTypeId: item.stoneTypeId,
           price: item.price,
+          currency: item.currency || "USD", // Add currency with USD default
           isCustomDesign: false
         });
 
