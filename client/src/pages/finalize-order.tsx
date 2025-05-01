@@ -316,21 +316,8 @@ export default function FinalizeOrder() {
               <CardFooter className="flex flex-col p-6 pt-0 space-y-4">
                 <Separator />
                 <div className="flex justify-between items-center w-full">
-                  <span className="font-medium">Estimated Price:</span>
-                  <span className="font-semibold text-lg">
-                    {formatCurrency(getProductPrice(), currency)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center w-full">
                   <span className="font-medium">Shipping:</span>
                   <span className="font-semibold">Free</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center w-full">
-                  <span className="font-semibold">Estimated Total:</span>
-                  <span className="font-bold text-xl text-primary">
-                    {formatCurrency(getProductPrice(), currency)}
-                  </span>
                 </div>
               </CardFooter>
             </Card>
