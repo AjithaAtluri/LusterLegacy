@@ -410,6 +410,10 @@ export const stoneTypes = pgTable("stone_types", {
   isActive: boolean("is_active").notNull().default(true),
   color: text("color"), // hex color code for UI display
   imageUrl: text("image_url"), // optional image of the stone
+  category: text("category"), // Earth Mined Precious, Semi-Precious, Rare, Popular, Precious Lab Grown, Quartz, Onyx, Commercial
+  stoneForm: text("stone_form"), // Beads, Stones, Cabs, Carved, Pota
+  quality: text("quality"), // low, medium, high
+  size: text("size"), // very small, small, medium, large, very large
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -421,6 +425,10 @@ export const insertStoneTypeSchema = createInsertSchema(stoneTypes).pick({
   isActive: true,
   color: true,
   imageUrl: true,
+  category: true,
+  stoneForm: true,
+  quality: true,
+  size: true,
 });
 
 // Product stones (many-to-many relationship between products and stone types)
