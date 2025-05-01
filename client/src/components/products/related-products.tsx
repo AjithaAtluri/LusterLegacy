@@ -94,16 +94,14 @@ export function RelatedProducts({ products, currentProductId }: RelatedProductsP
               key={product.id}
               className="min-w-[250px] md:min-w-[280px] flex flex-col relative"
             >
-              <Link href={`/product/${product.id}`}>
-                <a className="block relative aspect-square overflow-hidden rounded-lg transition-all duration-200 hover:shadow-lg mb-4 group">
-                  <ReliableProductImage 
-                    productId={product.id} 
-                    imageUrl={product.imageUrl}
-                    alt={product.name || "Product image"}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </a>
-              </Link>
+              <div className="block relative aspect-square overflow-hidden rounded-lg transition-all duration-200 hover:shadow-lg mb-4 group cursor-pointer" onClick={() => window.location.href = `/product/${product.id}`}>
+                <ReliableProductImage 
+                  productId={product.id} 
+                  imageUrl={product.imageUrl}
+                  alt={product.name || "Product image"}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              </div>
               
               <div className="flex flex-col justify-between h-auto text-center">
                 {/* Product Name with Luxury Styling */}
@@ -118,16 +116,13 @@ export function RelatedProducts({ products, currentProductId }: RelatedProductsP
                   <div className="h-px w-8 bg-accent/50 absolute top-1/2 right-1/2 translate-x-[125%] -translate-y-1/2" />
                 </div>
                 
-                <Link href={`/product/${product.id}`}>
-                  <a>
-                    <Button 
-                      variant="outline" 
-                      className="w-full border-accent text-accent hover:bg-accent hover:text-white"
-                    >
-                      View Details
-                    </Button>
-                  </a>
-                </Link>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-accent text-accent hover:bg-accent hover:text-white"
+                  onClick={() => window.location.href = `/product/${product.id}`}
+                >
+                  View Details
+                </Button>
               </div>
             </div>
           ))}
