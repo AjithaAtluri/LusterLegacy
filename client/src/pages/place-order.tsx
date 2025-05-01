@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
 import { ProductSpecifications } from "@/components/products/product-specifications";
 
-export default function PlaceOrder() {
+export default function RequestFinalizeOrder() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -76,23 +76,35 @@ export default function PlaceOrder() {
       additionalNotes: string;
       paymentMethod: string;
       currency: string;
+      action: string; // request_quote or make_payment
     }) => {
       const response = await apiRequest("POST", "/api/orders", formData);
       if (!response.ok) {
-        throw new Error("Failed to submit order");
+        throw new Error("Failed to submit order request");
       }
-      return await response.json();
+      return { data: await response.json(), action: formData.action };
     },
-    onSuccess: () => {
-      toast({
-        title: "Order Placed Successfully!",
-        description: "We've received your order and will contact you soon with payment details.",
-        variant: "default",
-      });
+    onSuccess: (result) => {
+      const { action } = result;
+      
+      if (action === "request_quote") {
+        toast({
+          title: "Quote Request Submitted!",
+          description: "We've received your request for a final quote and will contact you shortly with details.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Order Request Successful!",
+          description: "We've received your order request. Please proceed to make the 50% advance payment to begin crafting your piece.",
+          variant: "default",
+        });
+      }
+      
       // Navigate back to product detail page after successful submission
       setTimeout(() => {
         setLocation(`/product-detail/${id}`);
-      }, 2000);
+      }, 2500);
     },
     onError: (error) => {
       toast({
@@ -103,8 +115,13 @@ export default function PlaceOrder() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Get the form element to extract which button was clicked
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const action = formData.get('action')?.toString() || 'request_quote';
     
     // Validate form fields
     if (!name || !email || !address || !city || !state || !postalCode || !country) {
@@ -141,6 +158,7 @@ export default function PlaceOrder() {
       additionalNotes,
       paymentMethod,
       currency,
+      action, // Add the action parameter
     });
   };
 
@@ -162,7 +180,7 @@ export default function PlaceOrder() {
   // Redirect to login if not authenticated
   const handleLoginRedirect = () => {
     // Store the current URL to redirect back after login
-    localStorage.setItem('redirectAfterLogin', `/place-order/${id}`);
+    localStorage.setItem('redirectAfterLogin', `/request-finalize-order/${id}`);
     setLocation('/auth');
   };
 
@@ -212,7 +230,7 @@ export default function PlaceOrder() {
   return (
     <>
       <Helmet>
-        <title>Order {product.name} | Luster Legacy</title>
+        <title>Finalize Order for {product.name} | Luster Legacy</title>
       </Helmet>
       
       <div className="container mx-auto px-4 py-8">
@@ -221,10 +239,19 @@ export default function PlaceOrder() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Product
           </Button>
-          <h1 className="font-playfair text-3xl font-bold mb-2">Place Order</h1>
-          <p className="text-foreground/70 mb-6">
-            Fill out the form below to place an order for {product.name}
+          <h1 className="font-playfair text-3xl font-bold mb-2">Request Finalize Order</h1>
+          <p className="text-foreground/70 mb-3">
+            Complete your information below to request final quotation for {product.name}
           </p>
+          <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 mb-6">
+            <h3 className="font-playfair text-lg font-semibold mb-2">Our Order Process</h3>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>Request a final quotation or proceed with 50% advance payment</li>
+              <li>Your order will be crafted to perfection over 3-4 weeks</li>
+              <li>The item will be shipped after the remaining 50% payment is made</li>
+              <li>All custom pieces are handcrafted to order with the finest materials</li>
+            </ul>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -471,24 +498,59 @@ export default function PlaceOrder() {
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end">
-                    <Button 
-                      type="submit" 
-                      className="bg-primary hover:bg-primary/90"
-                      disabled={orderMutation.isPending}
-                    >
-                      {orderMutation.isPending ? (
-                        <span className="flex items-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Processing...
-                        </span>
-                      ) : (
-                        <>Place Order</>
-                      )}
-                    </Button>
+                  <div className="space-y-6 mt-6">
+                    <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4">
+                      <h3 className="font-playfair text-base font-semibold mb-2">Payment & Shipping Terms</h3>
+                      <ul className="list-disc list-inside space-y-1 text-sm">
+                        <li>50% advance payment secures your order and initiates crafting</li>
+                        <li>Your piece will be handcrafted over 3-4 weeks</li>
+                        <li>Remaining 50% payment is due before shipping</li>
+                        <li>Free shipping with insurance and tracking</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4 justify-end">
+                      <Button 
+                        type="submit" 
+                        variant="outline"
+                        name="action"
+                        value="request_quote"
+                        disabled={orderMutation.isPending}
+                        className="border-primary text-primary hover:bg-primary/5"
+                      >
+                        {orderMutation.isPending ? (
+                          <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing...
+                          </span>
+                        ) : (
+                          <>Request Final Quote</>
+                        )}
+                      </Button>
+                      
+                      <Button 
+                        type="submit" 
+                        name="action"
+                        value="make_payment"
+                        className="bg-primary hover:bg-primary/90"
+                        disabled={orderMutation.isPending}
+                      >
+                        {orderMutation.isPending ? (
+                          <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing...
+                          </span>
+                        ) : (
+                          <>Make 50% Payment</>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </CardContent>
