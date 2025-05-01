@@ -48,6 +48,10 @@ export default function CustomizeRequest() {
   // State for related stones based on the product's original stones
   const [suggestedStones, setSuggestedStones] = useState<any[]>([]);
   
+  // State to track which stone types exist in the original product
+  const [hasSecondaryStone, setHasSecondaryStone] = useState<boolean>(false);
+  const [hasOtherStone, setHasOtherStone] = useState<boolean>(false);
+  
   // Fetch product data to display in the form
   const { data: product, isLoading, error } = useQuery({
     queryKey: [`/api/products/${id}`],
@@ -163,11 +167,24 @@ export default function CustomizeRequest() {
         const originalSecondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
         const originalOtherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
         
+        // Determine if the product has secondary and other stones
+        const hasSecondaryStoneValue = !!(originalSecondaryStoneType && 
+          originalSecondaryStoneType.toLowerCase() !== "none" && 
+          originalSecondaryStoneType.trim() !== "");
+        
+        const hasOtherStoneValue = !!(originalOtherStoneType && 
+          originalOtherStoneType.toLowerCase() !== "none" && 
+          originalOtherStoneType.trim() !== "");
+          
+        // Update state variables to control display of stone fields
+        setHasSecondaryStone(hasSecondaryStoneValue);
+        setHasOtherStone(hasOtherStoneValue);
+        
         console.log("Pre-filling form with product specifications:");
         console.log("Original metal type:", originalMetalType);
         console.log("Original main stone type:", originalMainStoneType);
-        console.log("Original secondary stone type:", originalSecondaryStoneType);
-        console.log("Original other stone type:", originalOtherStoneType);
+        console.log("Original secondary stone type:", originalSecondaryStoneType, "- Will display:", hasSecondaryStoneValue);
+        console.log("Original other stone type:", originalOtherStoneType, "- Will display:", hasOtherStoneValue);
         
         // Find matching metal type ID
         if (originalMetalType) {
@@ -714,51 +731,57 @@ export default function CustomizeRequest() {
                       </Select>
                     </div>
                     
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="secondaryStone">Preferred Secondary Stone Type (Optional)</Label>
-                      <Select value={secondaryStoneId} onValueChange={setSecondaryStoneId}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select secondary stone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none_selected">None</SelectItem>
-                          {isLoadingStoneTypes ? (
-                            <div className="flex items-center justify-center p-2">Loading...</div>
-                          ) : !stoneTypes || stoneTypes.length === 0 ? (
-                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
-                          ) : (
-                            stoneTypes.map((stone) => (
-                              <SelectItem key={`secondary-${stone.id}`} value={String(stone.id)}>
-                                {stone.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {/* Only show Secondary Stone field if the product actually has one */}
+                    {hasSecondaryStone && (
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="secondaryStone">Preferred Secondary Stone Type</Label>
+                        <Select value={secondaryStoneId} onValueChange={setSecondaryStoneId}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select secondary stone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none_selected">None</SelectItem>
+                            {isLoadingStoneTypes ? (
+                              <div className="flex items-center justify-center p-2">Loading...</div>
+                            ) : !stoneTypes || stoneTypes.length === 0 ? (
+                              <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                            ) : (
+                              stoneTypes.map((stone) => (
+                                <SelectItem key={`secondary-${stone.id}`} value={String(stone.id)}>
+                                  {stone.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="otherStone">Preferred Other Stone Type (Optional)</Label>
-                      <Select value={otherStoneId} onValueChange={setOtherStoneId}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select other stone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none_selected">None</SelectItem>
-                          {isLoadingStoneTypes ? (
-                            <div className="flex items-center justify-center p-2">Loading...</div>
-                          ) : !stoneTypes || stoneTypes.length === 0 ? (
-                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
-                          ) : (
-                            stoneTypes.map((stone) => (
-                              <SelectItem key={`other-${stone.id}`} value={String(stone.id)}>
-                                {stone.name}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    {/* Only show Other Stone field if the product actually has one */}
+                    {hasOtherStone && (
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="otherStone">Preferred Other Stone Type</Label>
+                        <Select value={otherStoneId} onValueChange={setOtherStoneId}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select other stone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none_selected">None</SelectItem>
+                            {isLoadingStoneTypes ? (
+                              <div className="flex items-center justify-center p-2">Loading...</div>
+                            ) : !stoneTypes || stoneTypes.length === 0 ? (
+                              <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                            ) : (
+                              stoneTypes.map((stone) => (
+                                <SelectItem key={`other-${stone.id}`} value={String(stone.id)}>
+                                  {stone.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="customizationDetails">Customization Details*</Label>
                       <Textarea
