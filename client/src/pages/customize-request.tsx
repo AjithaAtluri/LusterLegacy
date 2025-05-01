@@ -302,7 +302,11 @@ export default function CustomizeRequest() {
         
         // 2. For stones: Calculate the price based on weight × stone price per carat
         // Find in the database what stone types and prices were used in the original calculation
-        console.log("All available stone types in database:", stoneTypes?.map(s => `${s.name} - ₹${s.priceModifier}/carat`));
+        console.log("All available stone types in database:", stoneTypes?.map(s => {
+          // Convert price from INR to USD for display (stone prices are stored in INR in database)
+          const usdPrice = (s.priceModifier / EXCHANGE_RATE).toFixed(2);
+          return `${s.name} - $${usdPrice}/carat`;
+        }));
         
         const originalPrimaryStoneObj = stoneTypes?.find((stone: any) => 
           stone.name.toLowerCase() === originalMainStoneType.toLowerCase());
@@ -317,7 +321,7 @@ export default function CustomizeRequest() {
           const pricePerCaratInr = originalPrimaryStoneObj.priceModifier || 0;
           const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
           originalStoneContribution += mainStoneWeight * pricePerCaratUsd;
-          console.log(`Original primary stone (${originalMainStoneType}) contribution: ${mainStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+          console.log(`Original primary stone (${originalMainStoneType}) contribution: ${mainStoneWeight} carats × $${pricePerCaratUsd.toFixed(2)}/carat = $${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
         } else {
           console.log(`Warning: Could not find original primary stone "${originalMainStoneType}" in database`);
         }
@@ -329,7 +333,7 @@ export default function CustomizeRequest() {
           const pricePerCaratInr = originalSecondaryStoneObj.priceModifier || 0;
           const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
           originalStoneContribution += secondaryStoneWeight * pricePerCaratUsd;
-          console.log(`Original secondary stone (${originalSecondaryStoneType}) contribution: ${secondaryStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+          console.log(`Original secondary stone (${originalSecondaryStoneType}) contribution: ${secondaryStoneWeight} carats × $${pricePerCaratUsd.toFixed(2)}/carat = $${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
         } else if (secondaryStoneWeight > 0) {
           console.log(`Warning: Could not find original secondary stone "${originalSecondaryStoneType}" in database`);
         }
@@ -342,7 +346,7 @@ export default function CustomizeRequest() {
           const pricePerCaratInr = originalOtherStoneObj.priceModifier || 0;
           const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
           originalStoneContribution += otherStoneWeight * pricePerCaratUsd;
-          console.log(`Original other stone (${originalOtherStoneType}) contribution: ${otherStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+          console.log(`Original other stone (${originalOtherStoneType}) contribution: ${otherStoneWeight} carats × $${pricePerCaratUsd.toFixed(2)}/carat = $${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
         } else if (otherStoneWeight > 0) {
           console.log(`Warning: Could not find original other stone "${originalOtherStoneType}" in database`);
         }
@@ -361,7 +365,7 @@ export default function CustomizeRequest() {
             const pricePerCaratInr = selectedStone.priceModifier || 0;
             const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
             newStoneContribution += mainStoneWeight * pricePerCaratUsd;
-            console.log(`New primary stone (${selectedStone.name}) contribution: ${mainStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+            console.log(`New primary stone (${selectedStone.name}) contribution: ${mainStoneWeight} carats × $${pricePerCaratUsd.toFixed(2)}/carat = $${(mainStoneWeight * pricePerCaratUsd).toFixed(2)}`);
           } else {
             console.log(`Warning: Could not find selected primary stone with ID ${primaryStoneId} in database`);
           }
@@ -415,19 +419,8 @@ export default function CustomizeRequest() {
           console.log(`Price after stone adjustment: ${priceEstimate}`);
         }
         
-        // Apply currency conversion if needed
-        if (currency === "INR" && product.calculatedPriceINR) {
-          // Use product's calculated INR price if available
-          priceEstimate = product.calculatedPriceINR;
-          console.log("Switched to INR pricing:", priceEstimate);
-          
-          // Re-apply all adjustments for INR price
-          // Since the logic is complex and would need to be duplicated, a simpler approach 
-          // is to apply a conversion ratio from the USD adjustments
-          const usdAdjustmentRatio = priceEstimate / (product.calculatedPriceUSD || product.basePrice);
-          priceEstimate = product.calculatedPriceINR * usdAdjustmentRatio;
-          console.log(`Applied USD adjustment ratio to INR price: ${usdAdjustmentRatio}, new price: ${priceEstimate}`);
-        }
+        // Always use USD as the currency
+        // No currency conversion needed
         
         // Round to nearest whole number
         const finalPrice = Math.round(priceEstimate);
