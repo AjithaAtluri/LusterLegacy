@@ -179,7 +179,7 @@ export default function ProductDetail() {
       setLocation('/auth');
       return;
     }
-    setLocation(`/place-order/${product?.id}`);
+    setLocation(`/finalize-order/${product?.id}`);
   };
   
   useEffect(() => {
