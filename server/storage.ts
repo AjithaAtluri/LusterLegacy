@@ -1777,6 +1777,30 @@ export class DatabaseStorage implements IStorage {
   // Customization request methods
   async createCustomizationRequest(request: any): Promise<any> {
     try {
+      // Update the primary stones array with the selected stones
+      const primaryStones = [];
+      if (request.primaryStoneId && request.primaryStoneId !== "none_selected") {
+        primaryStones.push(request.primaryStoneId);
+      }
+      if (request.secondaryStoneId && request.secondaryStoneId !== "none_selected") {
+        primaryStones.push(request.secondaryStoneId);
+      }
+      if (request.otherStoneId && request.otherStoneId !== "none_selected") {
+        primaryStones.push(request.otherStoneId);
+      }
+      
+      // Store selected metal and stone types in a JSON details object
+      const details = {
+        metalTypeId: request.metalTypeId || null,
+        primaryStoneId: request.primaryStoneId || null,
+        secondaryStoneId: request.secondaryStoneId || null,
+        otherStoneId: request.otherStoneId || null,
+        requestType: "customization",
+        productId: request.productId || null,
+        preferredBudget: request.preferredBudget || "",
+        timeline: request.timeline || ""
+      };
+      
       const [newRequest] = await db
         .insert(designRequests)
         .values({
@@ -1787,8 +1811,10 @@ export class DatabaseStorage implements IStorage {
           country: request.country || null,
           metalType: request.metalTypeId || "Not specified",
           primaryStone: request.primaryStoneId || "Not specified",
+          primaryStones: primaryStones,
           notes: request.customizationDetails,
           imageUrl: request.imageUrl || "/uploads/placeholder.jpg",
+          details: JSON.stringify(details),
         })
         .returning();
       return newRequest;

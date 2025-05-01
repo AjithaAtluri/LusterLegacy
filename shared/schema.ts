@@ -98,6 +98,7 @@ export const designRequests = pgTable("design_requests", {
   iterationsCount: integer("iterations_count").notNull().default(0), // Track number of design iterations
   estimatedPrice: integer("estimated_price"), // Keep for backward compatibility
   cadImageUrl: text("cad_image_url"), // Keep for backward compatibility
+  details: text("details"), // JSON string with additional details (for metalTypeId, stoneTypeId etc.)
   createdAt: timestamp("created_at").defaultNow()
 });
 
