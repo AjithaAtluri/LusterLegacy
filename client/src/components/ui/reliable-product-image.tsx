@@ -60,7 +60,7 @@ export default function ReliableProductImage({
   const fetchProductImage = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/product/${productId}`);
+      const response = await fetch(`/api/products/${productId}`);
       if (response.ok) {
         const product = await response.json();
         const productImageUrl = product.imageUrl || product.image_url;
