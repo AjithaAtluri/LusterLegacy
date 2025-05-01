@@ -411,6 +411,17 @@ export default function CustomizeRequest() {
     }
     
     // Prepare data for submission
+    // Validate productId is present and valid
+    const validProductId = productId && !isNaN(Number(productId));
+    if (!validProductId) {
+      toast({
+        title: "Error",
+        description: "Missing or invalid product ID",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const data = {
       productId: parseInt(productId),
       metalTypeId: parseInt(metalTypeId),
@@ -555,7 +566,7 @@ export default function CustomizeRequest() {
                           <div className="p-2 text-center text-xs font-medium text-accent">
                             Recommended for this product:
                           </div>
-                          {suggestedStones.map((stone) => (
+                          {suggestedStones.map((stone: any) => (
                             <SelectItem 
                               key={`primary-suggested-${stone.id}`} 
                               value={String(stone.id)}
@@ -627,7 +638,7 @@ export default function CustomizeRequest() {
                       <SelectContent>
                         <SelectItem value="none_selected" key="none-other">None</SelectItem>
                         {stoneTypes && 
-                          stoneTypes.map((stone) => (
+                          stoneTypes.map((stone: any) => (
                             <SelectItem key={`other-${stone.id}`} value={String(stone.id)}>
                               {stone.name}
                             </SelectItem>
@@ -719,6 +730,17 @@ export default function CustomizeRequest() {
               onClick={() => {
                 setShowLoginDialog(false);
                 // Submit as guest (will use email provided in form)
+                // Check for valid product ID before submission
+                const validProductId = productId && !isNaN(Number(productId));
+                if (!validProductId) {
+                  toast({
+                    title: "Error",
+                    description: "Missing or invalid product ID",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                
                 customizationMutation.mutate({
                   productId: parseInt(productId),
                   metalTypeId: parseInt(metalTypeId),
