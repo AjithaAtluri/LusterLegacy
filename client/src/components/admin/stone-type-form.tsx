@@ -317,7 +317,7 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
                       {...field} 
                       type="number" 
                       min={0}
-                      step={100}
+                      step={50}
                       placeholder="10000" 
                     />
                   </FormControl>
