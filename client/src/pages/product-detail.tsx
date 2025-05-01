@@ -49,6 +49,27 @@ interface ProductDetails {
   };
 }
 
+// Defining the product interface
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  basePrice: number;
+  imageUrl?: string;
+  additionalImages?: string[];
+  details?: string;
+  // dimensions field removed as requested
+  category?: string;
+  productType?: string;
+  productTypeId?: number;
+  isNew?: boolean;
+  isBestseller?: boolean;
+  isFeatured?: boolean;
+  // Server-calculated prices
+  calculatedPriceUSD?: number;
+  calculatedPriceINR?: number;
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
@@ -71,35 +92,6 @@ export default function ProductDetail() {
   const [userDescription, setUserDescription] = useState<string>("");
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   
-  // Update related products state when data is fetched
-  useEffect(() => {
-    if (relatedProductsData && relatedProductsData.length > 0) {
-      console.log("Related products data received:", relatedProductsData);
-      setRelatedProducts(relatedProductsData);
-    }
-  }, [relatedProductsData]);
-  
-  // Defining the product interface
-  interface Product {
-    id: number;
-    name: string;
-    description: string;
-    basePrice: number;
-    imageUrl?: string;
-    additionalImages?: string[];
-    details?: string;
-    // dimensions field removed as requested
-    category?: string;
-    productType?: string;
-    productTypeId?: number;
-    isNew?: boolean;
-    isBestseller?: boolean;
-    isFeatured?: boolean;
-    // Server-calculated prices
-    calculatedPriceUSD?: number;
-    calculatedPriceINR?: number;
-  }
-
   // Fetch product data
   const { data: product, isLoading, error } = useQuery<Product>({
     queryKey: [`/api/products/${id}`]
@@ -110,6 +102,14 @@ export default function ProductDetail() {
     queryKey: [`/api/products/${id}/related`],
     enabled: !!id, // Only fetch when id is available
   });
+  
+  // Update related products state when data is fetched
+  useEffect(() => {
+    if (relatedProductsData && relatedProductsData.length > 0) {
+      console.log("Related products data received:", relatedProductsData);
+      setRelatedProducts(relatedProductsData);
+    }
+  }, [relatedProductsData]);
   
   // Log product data for debugging
   useEffect(() => {

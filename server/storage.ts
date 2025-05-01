@@ -2022,17 +2022,32 @@ export class DatabaseStorage implements IStorage {
       // First get the current product to extract keywords and properties
       const currentProduct = await this.getProduct(productId);
       if (!currentProduct) {
+        console.log(`No product found with ID ${productId}`);
         return [];
       }
+
+      console.log(`Finding related products for: ${currentProduct.name} (ID: ${productId})`);
 
       // Extract the product details to find matching attributes
       let productType = "";
       let metalType = "";
       let mainStoneType = "";
       let secondaryStoneType = "";
+      let otherStoneType = "";
       let productCategory = currentProduct.category || "";
+      let gemKeywords: string[] = [];
       let aiInputs = null;
       let similarityScore = new Map<number, number>();
+      
+      // Common gemstone types for keyword matching
+      const gemstoneTypes = [
+        "diamond", "emerald", "ruby", "sapphire", "pearl", "tanzanite", "topaz", 
+        "amethyst", "aquamarine", "citrine", "garnet", "jade", "opal", "peridot", 
+        "quartz", "turquoise", "morganite", "moonstone", "kundan", "polki", "gemstone",
+        "keshi", "moissanite", "swarovski", "cubic zirconia", "cz", "beads", "navratna",
+        "navaratan", "coral", "pota", "freshwater", "precious", "semi-precious",
+        "carved", "lab-grown", "natural", "stone", "crystal"
+      ];
       
       // Try to extract AI inputs for more accurate matching
       try {
@@ -2046,6 +2061,12 @@ export class DatabaseStorage implements IStorage {
             metalType = aiInputs.metalType || "";
             mainStoneType = aiInputs.mainStoneType || "";
             secondaryStoneType = aiInputs.secondaryStoneType || "";
+            otherStoneType = aiInputs.otherStoneType || "";
+            
+            // Add gemstone keywords from all stone types
+            if (mainStoneType) gemKeywords.push(...this.extractGemKeywords(mainStoneType));
+            if (secondaryStoneType) gemKeywords.push(...this.extractGemKeywords(secondaryStoneType));
+            if (otherStoneType) gemKeywords.push(...this.extractGemKeywords(otherStoneType));
           }
         } else if (currentProduct.details) {
           const details = JSON.parse(currentProduct.details);
@@ -2055,6 +2076,7 @@ export class DatabaseStorage implements IStorage {
             metalType = additionalData.metalType || "";
             mainStoneType = additionalData.mainStoneType || "";
             secondaryStoneType = additionalData.secondaryStoneType || "";
+            otherStoneType = additionalData.otherStoneType || "";
             
             // If we have aiInputs inside additionalData, use those instead
             if (additionalData.aiInputs) {
@@ -2062,9 +2084,29 @@ export class DatabaseStorage implements IStorage {
               metalType = additionalData.aiInputs.metalType || metalType;
               mainStoneType = additionalData.aiInputs.mainStoneType || mainStoneType;
               secondaryStoneType = additionalData.aiInputs.secondaryStoneType || secondaryStoneType;
+              otherStoneType = additionalData.aiInputs.otherStoneType || otherStoneType;
             }
+            
+            // Add gemstone keywords from all stone types
+            if (mainStoneType) gemKeywords.push(...this.extractGemKeywords(mainStoneType));
+            if (secondaryStoneType) gemKeywords.push(...this.extractGemKeywords(secondaryStoneType));
+            if (otherStoneType) gemKeywords.push(...this.extractGemKeywords(otherStoneType));
           }
         }
+        
+        // Extract gem keywords from product name and description
+        if (currentProduct.name) {
+          gemKeywords.push(...this.extractGemKeywords(currentProduct.name));
+        }
+        
+        if (currentProduct.description) {
+          gemKeywords.push(...this.extractGemKeywords(currentProduct.description));
+        }
+        
+        // Remove duplicates and empty entries
+        gemKeywords = [...new Set(gemKeywords)].filter(Boolean);
+        console.log(`Extracted gem keywords: ${gemKeywords.join(", ")}`);
+        
       } catch (error) {
         console.error(`Error parsing product details for product ${productId}:`, error);
       }
@@ -2073,10 +2115,11 @@ export class DatabaseStorage implements IStorage {
       const allProducts = await db
         .select()
         .from(products)
-        .where(and(
-          ne(products.id, productId),
-          isNotNull(products.imageUrl)
-        ));
+        .where(
+          sql`${products.id} != ${productId} AND ${products.imageUrl} IS NOT NULL`
+        );
+        
+      console.log(`Found ${allProducts.length} other products to compare against`);
       
       // Calculate similarity score for each product
       for (const product of allProducts) {
@@ -2086,6 +2129,8 @@ export class DatabaseStorage implements IStorage {
         let otherMetalType = "";
         let otherMainStoneType = "";
         let otherSecondaryStoneType = "";
+        let otherOtherStoneType = "";
+        let otherGemKeywords: string[] = [];
         
         // Try to extract AI inputs for comparison
         try {
@@ -2099,6 +2144,12 @@ export class DatabaseStorage implements IStorage {
               otherMetalType = productAiInputs.metalType || "";
               otherMainStoneType = productAiInputs.mainStoneType || "";
               otherSecondaryStoneType = productAiInputs.secondaryStoneType || "";
+              otherOtherStoneType = productAiInputs.otherStoneType || "";
+              
+              // Add gemstone keywords from all stone types
+              if (otherMainStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherMainStoneType));
+              if (otherSecondaryStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherSecondaryStoneType));
+              if (otherOtherStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherOtherStoneType));
             }
           } else if (product.details) {
             const details = JSON.parse(product.details);
@@ -2108,6 +2159,7 @@ export class DatabaseStorage implements IStorage {
               otherMetalType = additionalData.metalType || "";
               otherMainStoneType = additionalData.mainStoneType || "";
               otherSecondaryStoneType = additionalData.secondaryStoneType || "";
+              otherOtherStoneType = additionalData.otherStoneType || "";
               
               // If we have aiInputs inside additionalData, use those instead
               if (additionalData.aiInputs) {
@@ -2115,9 +2167,28 @@ export class DatabaseStorage implements IStorage {
                 otherMetalType = additionalData.aiInputs.metalType || otherMetalType;
                 otherMainStoneType = additionalData.aiInputs.mainStoneType || otherMainStoneType;
                 otherSecondaryStoneType = additionalData.aiInputs.secondaryStoneType || otherSecondaryStoneType;
+                otherOtherStoneType = additionalData.aiInputs.otherStoneType || otherOtherStoneType;
               }
+              
+              // Add gemstone keywords from all stone types
+              if (otherMainStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherMainStoneType));
+              if (otherSecondaryStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherSecondaryStoneType));
+              if (otherOtherStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherOtherStoneType));
             }
           }
+          
+          // Extract gem keywords from product name and description
+          if (product.name) {
+            otherGemKeywords.push(...this.extractGemKeywords(product.name));
+          }
+          
+          if (product.description) {
+            otherGemKeywords.push(...this.extractGemKeywords(product.description));
+          }
+          
+          // Remove duplicates and empty entries
+          otherGemKeywords = [...new Set(otherGemKeywords)].filter(Boolean);
+          
         } catch (error) {
           console.error(`Error parsing product details for product ${product.id}:`, error);
         }
@@ -2145,7 +2216,25 @@ export class DatabaseStorage implements IStorage {
           score += 2;
         }
         
-        // Name-based keyword matching (lower weight but still important)
+        // Match by other stone type
+        if (otherOtherStoneType && otherStoneType && 
+            otherOtherStoneType.toLowerCase().includes(otherStoneType.toLowerCase())) {
+          score += 2;
+        }
+        
+        // Enhanced gemstone keyword matching (high weight for gemstone matches)
+        if (gemKeywords.length > 0 && otherGemKeywords.length > 0) {
+          const matchingGemKeywords = gemKeywords.filter(keyword => 
+            otherGemKeywords.some(otherKeyword => 
+              otherKeyword.includes(keyword) || keyword.includes(otherKeyword)
+            )
+          );
+          
+          // Gemstone matches are highly valued
+          score += matchingGemKeywords.length * 4;
+        }
+        
+        // Name-based keyword matching (still important)
         if (product.name && currentProduct.name) {
           const productWords = product.name.toLowerCase().split(/\s+/);
           const currentProductWords = currentProduct.name.toLowerCase().split(/\s+/);
@@ -2154,7 +2243,7 @@ export class DatabaseStorage implements IStorage {
           const matchingWords = productWords.filter(word => 
             currentProductWords.includes(word) && word.length > 3); // Only count words longer than 3 chars
           
-          score += matchingWords.length;
+          score += matchingWords.length * 2;
         }
         
         // Store the score for this product
@@ -2168,12 +2257,47 @@ export class DatabaseStorage implements IStorage {
         return scoreB - scoreA;
       });
       
+      // Log the top products and their scores for debugging
+      const topProducts = sortedProducts.slice(0, limit);
+      console.log(`Top ${topProducts.length} related products for ${productId}:`);
+      topProducts.forEach(product => {
+        console.log(`- ID ${product.id}: "${product.name}" (Score: ${similarityScore.get(product.id)})`);
+      });
+      
       // Return the top N most similar products
-      return sortedProducts.slice(0, limit);
+      return topProducts;
     } catch (error) {
       console.error("Error finding related products:", error);
       return [];
     }
+  }
+  
+  // Helper method to extract gemstone keywords from text
+  private extractGemKeywords(text: string): string[] {
+    if (!text) return [];
+    
+    const normalizedText = text.toLowerCase();
+    
+    // Common gemstone types for keyword matching
+    const gemstoneTypes = [
+      "diamond", "emerald", "ruby", "sapphire", "pearl", "tanzanite", "topaz", 
+      "amethyst", "aquamarine", "citrine", "garnet", "jade", "opal", "peridot", 
+      "quartz", "turquoise", "morganite", "moonstone", "kundan", "polki", "gemstone",
+      "keshi", "moissanite", "swarovski", "cubic zirconia", "cz", "beads", "navratna",
+      "navaratan", "coral", "pota", "freshwater", "precious", "semi-precious",
+      "carved", "lab-grown", "natural", "stone", "crystal"
+    ];
+    
+    // Add prefixes and variations
+    const gemVariations = [
+      "rose quartz", "lavender quartz", "smoky quartz", "rock crystal",
+      "multi-colored", "multi colored", "multicolored", "multi-gemstone", "multi gemstone"
+    ];
+    
+    const allGemTerms = [...gemstoneTypes, ...gemVariations];
+    
+    // Extract keywords that are found in the text
+    return allGemTerms.filter(term => normalizedText.includes(term));
   }
 }
 
