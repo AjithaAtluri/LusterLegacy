@@ -62,24 +62,42 @@ export default function CustomizeRequest() {
   const [showLoginDialog, setShowLoginDialog] = useState<boolean>(false);
 
   // Get product details
-  const { data: product, isLoading: isLoadingProduct } = useQuery({
+  const { data: product, isLoading: isLoadingProduct, error: productError } = useQuery({
     queryKey: [`/api/products/${productId}`],
     queryFn: async () => {
       console.log(`Fetching product data for ID ${productId}`);
       
       // Validate productId is present and numeric
       if (!productId || isNaN(Number(productId))) {
+        console.error(`Invalid product ID: ${productId}`);
         throw new Error("Invalid product ID");
       }
       
-      const response = await fetch(`/api/products/${productId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch product details");
+      try {
+        const response = await fetch(`/api/products/${productId}`);
+        console.log(`Product API response status: ${response.status}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API error response: ${errorText}`);
+          throw new Error(`Failed to fetch product details: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Product data retrieved successfully:`, {
+          id: data.id,
+          name: data.name,
+          hasData: !!data
+        });
+        return data;
+      } catch (error) {
+        console.error(`Error fetching product ${productId}:`, error);
+        throw error;
       }
-      return response.json();
     },
     // Only run query if productId is valid
-    enabled: !!productId && !isNaN(Number(productId))
+    enabled: !!productId && !isNaN(Number(productId)),
+    retry: 1
   });
 
   // Get all metal types
@@ -449,18 +467,30 @@ export default function CustomizeRequest() {
     );
   }
 
-  // Show error state if product not found
-  if (!product) {
+  // Show error state if product not found or there was an error fetching it
+  if (!isLoadingProduct && (!product || productError)) {
     return (
       <div className="container py-10">
         <h1 className="text-3xl font-bold mb-6">Product Not Found</h1>
         <p>Sorry, we couldn't find the product you're looking for.</p>
-        <Button 
-          className="mt-4" 
-          onClick={() => navigate("/")}
-        >
-          Return to Home
-        </Button>
+        {productError && (
+          <p className="text-destructive mt-2">
+            Error details: {productError instanceof Error ? productError.message : 'Unknown error'}
+          </p>
+        )}
+        <div className="flex gap-4 mt-6">
+          <Button 
+            onClick={() => navigate("/")}
+          >
+            Return to Home
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => navigate("/products")}
+          >
+            Browse Products
+          </Button>
+        </div>
       </div>
     );
   }
