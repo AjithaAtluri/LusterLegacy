@@ -382,7 +382,7 @@ export default function CustomizeRequest() {
             const pricePerCaratInr = selectedSecondaryStone.priceModifier || 0;
             const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
             newStoneContribution += secondaryStoneWeight * pricePerCaratUsd;
-            console.log(`New secondary stone (${selectedSecondaryStone.name}) contribution: ${secondaryStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+            console.log(`New secondary stone (${selectedSecondaryStone.name}) contribution: ${secondaryStoneWeight} carats × $${pricePerCaratUsd.toFixed(2)}/carat = $${(secondaryStoneWeight * pricePerCaratUsd).toFixed(2)}`);
           }
         } else if (originalSecondaryStoneObj && secondaryStoneWeight > 0) {
           // If no new stone selected, use the original
@@ -397,7 +397,7 @@ export default function CustomizeRequest() {
             const pricePerCaratInr = selectedOtherStone.priceModifier || 0;
             const pricePerCaratUsd = pricePerCaratInr / EXCHANGE_RATE;
             newStoneContribution += otherStoneWeight * pricePerCaratUsd;
-            console.log(`New other stone (${selectedOtherStone.name}) contribution: ${otherStoneWeight} carats × ₹${pricePerCaratInr}/carat (≈${pricePerCaratUsd.toFixed(2)}/carat) = ${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
+            console.log(`New other stone (${selectedOtherStone.name}) contribution: ${otherStoneWeight} carats × $${pricePerCaratUsd.toFixed(2)}/carat = $${(otherStoneWeight * pricePerCaratUsd).toFixed(2)}`);
           }
         } else if (originalOtherStoneObj && otherStoneWeight > 0) {
           // If no new stone selected, use the original
