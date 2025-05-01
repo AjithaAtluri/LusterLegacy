@@ -16,6 +16,7 @@ import { formatCurrency } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
+import { ProductSpecifications } from "@/components/products/product-specifications";
 
 export default function PlaceOrder() {
   const { id } = useParams();
