@@ -239,6 +239,9 @@ export default function CustomizeRequest() {
   useEffect(() => {
     if (product) {
       try {
+        // Define exchange rate constant for INR to USD conversion
+        const EXCHANGE_RATE = 83.8488;
+        
         // Parse product details to get stone weights
         const details = product.details ? (typeof product.details === 'string' 
           ? JSON.parse(product.details) 
