@@ -1654,7 +1654,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const { productId, name, email, phone, customizationDetails, preferredBudget, timeline } = req.body;
+      const { 
+        productId, 
+        name, 
+        email, 
+        phone, 
+        customizationDetails, 
+        preferredBudget, 
+        timeline,
+        metalTypeId,
+        primaryStoneId,
+        secondaryStoneId,
+        otherStoneId
+      } = req.body;
       
       // Ensure the product exists
       const product = await storage.getProduct(Number(productId));
@@ -1671,6 +1683,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customizationDetails,
         preferredBudget,
         timeline,
+        metalTypeId: metalTypeId || null,
+        primaryStoneId: primaryStoneId || null,
+        secondaryStoneId: secondaryStoneId || null,
+        otherStoneId: otherStoneId || null,
         status: "new", // Default status
         createdAt: new Date(),
       });

@@ -39,6 +39,7 @@ export default function CustomizeRequest() {
   const [metalTypeId, setMetalTypeId] = useState("");
   const [primaryStoneId, setPrimaryStoneId] = useState("");
   const [secondaryStoneId, setSecondaryStoneId] = useState("");
+  const [otherStoneId, setOtherStoneId] = useState("");
   
   // Price estimation state
   const [estimatedPrice, setEstimatedPrice] = useState<number>(0);
@@ -76,6 +77,7 @@ export default function CustomizeRequest() {
       metalTypeId?: string;
       primaryStoneId?: string;
       secondaryStoneId?: string;
+      otherStoneId?: string;
     }) => {
       const response = await apiRequest("POST", "/api/customization-requests", formData);
       if (!response.ok) {
@@ -128,17 +130,90 @@ export default function CustomizeRequest() {
       metalTypeId,
       primaryStoneId,
       secondaryStoneId,
+      otherStoneId,
     });
   };
 
   // Navigate back to product detail
-  // Pre-fill form with user data if available
+  // Pre-fill form with user data and product specifications if available
   useEffect(() => {
+    // Fill user data
     if (user) {
       setName(user.username);
       setEmail(user.email || "");
     }
-  }, [user]);
+    
+    // Fill product specifications if product is loaded
+    if (product && metalTypes && stoneTypes) {
+      try {
+        // Parse product details
+        const details = product.details ? (typeof product.details === 'string' 
+          ? JSON.parse(product.details) 
+          : product.details) : {};
+          
+        const additionalData = details.additionalData || {};
+        const aiInputs = additionalData.aiInputs || {};
+        
+        // Get original metal and stone types from the product
+        const originalMetalType = aiInputs.metalType || additionalData.metalType || "";
+        const originalMainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
+        const originalSecondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
+        const originalOtherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
+        
+        console.log("Pre-filling form with product specifications:");
+        console.log("Original metal type:", originalMetalType);
+        console.log("Original main stone type:", originalMainStoneType);
+        console.log("Original secondary stone type:", originalSecondaryStoneType);
+        console.log("Original other stone type:", originalOtherStoneType);
+        
+        // Find matching metal type ID
+        if (originalMetalType) {
+          const matchingMetal = metalTypes.find((metal: any) => 
+            metal.name.toLowerCase() === originalMetalType.toLowerCase());
+          
+          if (matchingMetal) {
+            console.log("Found matching metal type:", matchingMetal.name, "with ID:", matchingMetal.id);
+            setMetalTypeId(String(matchingMetal.id));
+          }
+        }
+        
+        // Find matching primary stone type ID
+        if (originalMainStoneType) {
+          const matchingPrimaryStone = stoneTypes.find((stone: any) => 
+            stone.name.toLowerCase() === originalMainStoneType.toLowerCase());
+          
+          if (matchingPrimaryStone) {
+            console.log("Found matching primary stone:", matchingPrimaryStone.name, "with ID:", matchingPrimaryStone.id);
+            setPrimaryStoneId(String(matchingPrimaryStone.id));
+          }
+        }
+        
+        // Find matching secondary stone type ID
+        if (originalSecondaryStoneType && originalSecondaryStoneType.toLowerCase() !== "none") {
+          const matchingSecondaryStone = stoneTypes.find((stone: any) => 
+            stone.name.toLowerCase() === originalSecondaryStoneType.toLowerCase());
+          
+          if (matchingSecondaryStone) {
+            console.log("Found matching secondary stone:", matchingSecondaryStone.name, "with ID:", matchingSecondaryStone.id);
+            setSecondaryStoneId(String(matchingSecondaryStone.id));
+          }
+        }
+        
+        // Find matching other stone type ID
+        if (originalOtherStoneType && originalOtherStoneType.toLowerCase() !== "none") {
+          const matchingOtherStone = stoneTypes.find((stone: any) => 
+            stone.name.toLowerCase() === originalOtherStoneType.toLowerCase());
+          
+          if (matchingOtherStone) {
+            console.log("Found matching other stone:", matchingOtherStone.name, "with ID:", matchingOtherStone.id);
+            setOtherStoneId(String(matchingOtherStone.id));
+          }
+        }
+      } catch (error) {
+        console.error("Error pre-filling form with product specifications:", error);
+      }
+    }
+  }, [user, product, metalTypes, stoneTypes]);
   
   // Update estimated price based on selected customization options
   useEffect(() => {
@@ -618,6 +693,29 @@ export default function CustomizeRequest() {
                           ) : (
                             stoneTypes.map((stone) => (
                               <SelectItem key={stone.id} value={String(stone.id)}>
+                                {stone.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="otherStone">Preferred Other Stone Type (Optional)</Label>
+                      <Select value={otherStoneId} onValueChange={setOtherStoneId}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select other stone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none_selected">None</SelectItem>
+                          {isLoadingStoneTypes ? (
+                            <div className="flex items-center justify-center p-2">Loading...</div>
+                          ) : !stoneTypes || stoneTypes.length === 0 ? (
+                            <div className="p-2 text-center text-muted-foreground">No stone types available</div>
+                          ) : (
+                            stoneTypes.map((stone) => (
+                              <SelectItem key={`other-${stone.id}`} value={String(stone.id)}>
                                 {stone.name}
                               </SelectItem>
                             ))
