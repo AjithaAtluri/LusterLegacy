@@ -329,7 +329,7 @@ export default function AdminStoneTypes() {
           
           {selectedStoneType && (
             <StoneTypeForm 
-              initialData={selectedStoneType} 
+              initialData={selectedStoneType as any} 
               stoneTypeId={selectedStoneType.id} 
               onSuccess={handleFormClose} 
             />

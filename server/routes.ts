@@ -3969,9 +3969,10 @@ Respond in JSON format:
         
         const insertSQL = `
           INSERT INTO stone_types 
-          (name, description, price_modifier, display_order, is_active, color, image_url) 
+          (name, description, price_modifier, display_order, is_active, color, image_url,
+           category, stone_form, quality, size) 
           VALUES 
-          ($1, $2, $3, $4, $5, $6, $7) 
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
           RETURNING *
         `;
         
@@ -3982,7 +3983,12 @@ Respond in JSON format:
           parseInt(req.body.displayOrder || "0"),
           req.body.isActive === 'true' || req.body.isActive === true,
           req.body.color || "",
-          req.file ? `/uploads/${req.file.filename}` : (req.body.imageUrl || null)
+          req.file ? `/uploads/${req.file.filename}` : (req.body.imageUrl || null),
+          // Add the new parameters as optional
+          req.body.category || null,
+          req.body.stoneForm || null,
+          req.body.quality || null,
+          req.body.size || null
         ];
         
         console.log("SQL Parameters:", params);
@@ -4127,8 +4133,12 @@ Respond in JSON format:
             description = COALESCE($2, description),
             price_modifier = COALESCE($3, price_modifier),
             color = COALESCE($4, color),
-            image_url = COALESCE($5, image_url)
-          WHERE id = $6
+            image_url = COALESCE($5, image_url),
+            category = COALESCE($6, category),
+            stone_form = COALESCE($7, stone_form),
+            quality = COALESCE($8, quality),
+            size = COALESCE($9, size)
+          WHERE id = $10
           RETURNING *
         `;
         
@@ -4138,6 +4148,10 @@ Respond in JSON format:
           updateData.priceModifier || null,
           updateData.color || null,
           updateData.imageUrl || null,
+          updateData.category || null,
+          updateData.stoneForm || null,
+          updateData.quality || null,
+          updateData.size || null,
           id
         ];
         

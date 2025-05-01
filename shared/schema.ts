@@ -410,6 +410,7 @@ export const stoneTypes = pgTable("stone_types", {
   isActive: boolean("is_active").notNull().default(true),
   color: text("color"), // hex color code for UI display
   imageUrl: text("image_url"), // optional image of the stone
+  // All new parameters are added as nullable/optional
   category: text("category"), // Earth Mined Precious, Semi-Precious, Rare, Popular, Precious Lab Grown, Quartz, Onyx, Commercial
   stoneForm: text("stone_form"), // Beads, Stones, Cabs, Carved, Pota
   quality: text("quality"), // low, medium, high
