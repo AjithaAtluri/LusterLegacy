@@ -43,7 +43,8 @@ export default function CustomizeRequest() {
   
   // Price estimation state
   const [estimatedPrice, setEstimatedPrice] = useState<number>(0);
-  const [currency, setCurrency] = useState<string>("USD");
+  // Always use USD for consistency
+  const currency = "USD";
   
   // State for related stones based on the product's original stones
   const [suggestedStones, setSuggestedStones] = useState<any[]>([]);
@@ -808,18 +809,7 @@ export default function CustomizeRequest() {
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-sm text-muted-foreground">Currency:</span>
-                          <Select 
-                            value={currency} 
-                            onValueChange={setCurrency}
-                          >
-                            <SelectTrigger className="w-[100px] h-8">
-                              <SelectValue placeholder="Currency" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="USD">USD</SelectItem>
-                              <SelectItem value="INR">INR</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="text-sm font-medium">USD</div>
                         </div>
                       </div>
                       
