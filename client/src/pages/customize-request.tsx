@@ -542,7 +542,7 @@ export default function CustomizeRequest() {
                       
                       <div className="mt-3 text-xs text-muted-foreground">
                         <ul className="list-disc pl-4 space-y-1">
-                          <li>Price includes material costs, craftsmanship, and a 25% customization fee</li>
+                          <li>Price includes material costs and craftsmanship</li>
                           <li>You'll receive an exact quote after review by our design team</li>
                           <li>Gold price will be locked on the day of 50% advance payment</li>
                         </ul>
