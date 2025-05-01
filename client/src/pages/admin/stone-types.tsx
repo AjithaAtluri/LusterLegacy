@@ -69,7 +69,7 @@ export default function AdminStoneTypes() {
   });
   
   // Filter stone types by search query
-  const filteredStoneTypes = stoneTypes?.filter(stoneType => {
+  const filteredStoneTypes = stoneTypes?.filter((stoneType: StoneType) => {
     if (!searchQuery) return true;
     
     const query = searchQuery.toLowerCase();
@@ -85,13 +85,13 @@ export default function AdminStoneTypes() {
   };
   
   // Handle edit stone type
-  const handleEditStoneType = (stoneType: any) => {
+  const handleEditStoneType = (stoneType: StoneType) => {
     setSelectedStoneType(stoneType);
     setIsEditing(true);
   };
   
   // Handle delete stone type
-  const handleDeleteClick = (stoneType: any) => {
+  const handleDeleteClick = (stoneType: StoneType) => {
     setSelectedStoneType(stoneType);
     setIsDeleteDialogOpen(true);
   };
@@ -206,7 +206,7 @@ export default function AdminStoneTypes() {
         </div>
       ) : filteredStoneTypes && filteredStoneTypes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStoneTypes.map(stoneType => (
+          {filteredStoneTypes.map((stoneType: StoneType) => (
             <Card key={stoneType.id} className="overflow-hidden">
               <div className="aspect-video w-full overflow-hidden bg-muted">
                 {stoneType.imageUrl ? (

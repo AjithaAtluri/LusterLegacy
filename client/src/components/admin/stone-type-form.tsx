@@ -70,8 +70,25 @@ const stoneTypeFormSchema = z.object({
 
 type StoneTypeFormValues = z.infer<typeof stoneTypeFormSchema>;
 
+// Create a more permissive type for initialData that allows null values from database
+interface DatabaseStoneType {
+  id?: number;
+  name: string;
+  description: string | null;
+  priceModifier: number;
+  displayOrder?: number;
+  isActive?: boolean;
+  color: string | null;
+  imageUrl: string | null;
+  category: string | null;
+  stoneForm: string | null;
+  quality: string | null;
+  size: string | null;
+  createdAt?: Date | null;
+}
+
 interface StoneTypeFormProps {
-  initialData?: Partial<StoneTypeFormValues>;
+  initialData?: Partial<DatabaseStoneType>;
   stoneTypeId?: number;
   onSuccess?: () => void;
 }
@@ -83,6 +100,19 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  // Convert database null values to empty strings or appropriate defaults for the form
+  const processedInitialData = initialData ? {
+    name: initialData.name || "",
+    description: initialData.description !== null ? initialData.description : "",
+    priceModifier: initialData.priceModifier || 0,
+    imageUrl: initialData.imageUrl !== null ? initialData.imageUrl : "",
+    color: initialData.color !== null ? initialData.color : "",
+    category: initialData.category !== null ? initialData.category : "",
+    stoneForm: initialData.stoneForm !== null ? initialData.stoneForm : "",
+    quality: initialData.quality !== null ? initialData.quality : "",
+    size: initialData.size !== null ? initialData.size : ""
+  } : {};
+
   const defaultValues: Partial<StoneTypeFormValues> = {
     name: "",
     description: "",
@@ -93,7 +123,7 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
     stoneForm: "",
     quality: "",
     size: "",
-    ...initialData
+    ...processedInitialData
   };
   
   const form = useForm<StoneTypeFormValues>({
