@@ -435,17 +435,41 @@ export default function ProductDetail() {
                   <span className="font-cormorant text-base font-medium">{productMetalWeight > 0 ? `${productMetalWeight}g` : "Not specified"}</span>
                 </div>
                 
-                {/* Primary Stone */}
-                <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
-                  <span className="font-montserrat text-sm text-foreground/80">Primary Stone:</span>
-                  <span className="font-cormorant text-base font-medium">{mainStoneType || "Not specified"}</span>
-                </div>
+                {/* Primary Stone - only show if stone is not "none" or "none_selected" */}
+                {(mainStoneType && mainStoneType !== "none" && mainStoneType !== "none_selected") && (
+                  <>
+                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                      <span className="font-montserrat text-sm text-foreground/80">Primary Stone:</span>
+                      <span className="font-cormorant text-base font-medium">{mainStoneType}</span>
+                    </div>
+                    
+                    {/* Primary Stone Weight */}
+                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                      <span className="font-montserrat text-sm text-foreground/80">Primary Stone Weight:</span>
+                      <span className="font-cormorant text-base font-medium">{mainStoneWeight > 0 ? `${mainStoneWeight} carats` : "Not specified"}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* Secondary Stone - only show if stone is not "none" or "none_selected" */}
+                {(secondaryStoneType && secondaryStoneType !== "none" && secondaryStoneType !== "none_selected") && (
+                  <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                    <span className="font-montserrat text-sm text-foreground/80">Secondary Stone:</span>
+                    <span className="font-cormorant text-base font-medium">
+                      {secondaryStoneType} {secondaryStoneWeight > 0 ? `(${secondaryStoneWeight} carats)` : ""}
+                    </span>
+                  </div>
+                )}
                 
-                {/* Stone Weight */}
-                <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
-                  <span className="font-montserrat text-sm text-foreground/80">Stone Weight:</span>
-                  <span className="font-cormorant text-base font-medium">{mainStoneWeight > 0 ? `${mainStoneWeight} carats` : "Not specified"}</span>
-                </div>
+                {/* Other Stone - only show if stone is not "none" or "none_selected" or empty */}
+                {(otherStoneType && otherStoneType !== "none" && otherStoneType !== "none_selected" && otherStoneType !== "") && (
+                  <div className="flex justify-between items-center mb-3 pb-2 border-b border-border">
+                    <span className="font-montserrat text-sm text-foreground/80">Other Stone:</span>
+                    <span className="font-cormorant text-base font-medium">
+                      {otherStoneType} {otherStoneWeight > 0 ? `(${otherStoneWeight} carats)` : ""}
+                    </span>
+                  </div>
+                )}
                 
                 {/* Estimated Price */}
                 <div className="flex justify-between items-center">
