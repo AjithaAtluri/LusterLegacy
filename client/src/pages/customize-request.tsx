@@ -143,39 +143,49 @@ export default function CustomizeRequest() {
   // Update estimated price based on selected customization options
   useEffect(() => {
     if (product && product.basePrice) {
-      let basePrice = product.basePrice;
+      // Start with the product's original base price
+      let priceEstimate = product.basePrice;
       
-      // If metal type is selected, apply metal price modifier
+      // Apply metal type modifier (multiply by a percentage)
       if (metalTypeId && metalTypes) {
         const selectedMetal = metalTypes.find((metal: any) => metal.id === metalTypeId);
         if (selectedMetal && selectedMetal.priceModifier) {
-          basePrice = basePrice * (selectedMetal.priceModifier / 1000); // Convert from per-gram modifier
+          // Convert priceModifier to appropriate multiplier (if it's stored as percentage points)
+          const metalMultiplier = 1 + (selectedMetal.priceModifier / 100);
+          priceEstimate = priceEstimate * metalMultiplier;
         }
       }
       
-      // If primary stone is selected, apply stone price modifier
-      if (primaryStoneId && stoneTypes) {
+      // Apply primary stone modifier (multiply by a percentage)
+      if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes) {
         const selectedStone = stoneTypes.find((stone: any) => stone.id === primaryStoneId);
         if (selectedStone && selectedStone.priceModifier) {
-          basePrice = basePrice + selectedStone.priceModifier; // Add stone price
+          // Add a percentage of the base price for the stone upgrade
+          const stoneUpcharge = (selectedStone.priceModifier / 100) * product.basePrice;
+          priceEstimate = priceEstimate + stoneUpcharge;
         }
       }
       
-      // If secondary stone is selected, apply stone price modifier
-      if (secondaryStoneId && stoneTypes) {
+      // Apply secondary stone modifier (smaller impact than primary stone)
+      if (secondaryStoneId && secondaryStoneId !== "none_selected" && stoneTypes) {
         const selectedSecondaryStone = stoneTypes.find((stone: any) => stone.id === secondaryStoneId);
         if (selectedSecondaryStone && selectedSecondaryStone.priceModifier) {
-          basePrice = basePrice + (selectedSecondaryStone.priceModifier * 0.5); // Add half the stone price for secondary stone
+          // Add a smaller percentage for secondary stone
+          const secondaryStoneUpcharge = (selectedSecondaryStone.priceModifier / 200) * product.basePrice;
+          priceEstimate = priceEstimate + secondaryStoneUpcharge;
         }
       }
       
-      // Apply 25% overhead for customization
-      basePrice = basePrice * 1.25;
+      // Apply currency conversion if needed
+      if (currency === "INR") {
+        // Approximate INR conversion (this will be refined with actual API)
+        priceEstimate = priceEstimate * 84;
+      }
       
       // Round to nearest whole number
-      setEstimatedPrice(Math.round(basePrice));
+      setEstimatedPrice(Math.round(priceEstimate));
     }
-  }, [product, metalTypeId, primaryStoneId, secondaryStoneId, metalTypes, stoneTypes]);
+  }, [product, metalTypeId, primaryStoneId, secondaryStoneId, metalTypes, stoneTypes, currency]);
   
   // Extract stone types from product details to create customization suggestions
   useEffect(() => {
