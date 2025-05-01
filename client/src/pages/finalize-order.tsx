@@ -351,34 +351,7 @@ export default function FinalizeOrder() {
               </CardFooter>
             </Card>
             
-            <Card className="h-fit">
-              <CardContent className="p-6">
-                <h2 className="font-playfair text-xl font-semibold mb-4">Payment Method</h2>
-                <RadioGroup 
-                  defaultValue={paymentMethod} 
-                  onValueChange={setPaymentMethod}
-                  className="space-y-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="paypal" id="paypal" />
-                    <Label htmlFor="paypal" className="flex items-center">
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      PayPal / Credit Card
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="bank_transfer" id="bank_transfer" />
-                    <Label htmlFor="bank_transfer" className="flex items-center">
-                      <DollarSign className="mr-2 h-4 w-4" />
-                      Bank Transfer
-                    </Label>
-                  </div>
-                </RadioGroup>
-                <p className="text-sm text-foreground/60 mt-4">
-                  * Payment instructions will be sent after your order is confirmed
-                </p>
-              </CardContent>
-            </Card>
+{/* Payment Method Card removed and moved into the shipping form */}
           </div>
           
           {/* Order Form */}
@@ -499,6 +472,34 @@ export default function FinalizeOrder() {
                       onChange={(e) => setAdditionalNotes(e.target.value)}
                       className="h-32"
                     />
+                  </div>
+                  
+                  {/* Payment Method section (moved from sidebar) */}
+                  <div className="mb-6 border border-slate-200 dark:border-slate-800 rounded-md p-6">
+                    <h2 className="font-playfair text-xl font-semibold mb-4">Payment Method</h2>
+                    <RadioGroup 
+                      defaultValue={paymentMethod} 
+                      onValueChange={setPaymentMethod}
+                      className="space-y-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="paypal" id="paypal" />
+                        <Label htmlFor="paypal" className="flex items-center">
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          PayPal / Credit Card
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                        <Label htmlFor="bank_transfer" className="flex items-center">
+                          <DollarSign className="mr-2 h-4 w-4" />
+                          Bank Transfer
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                    <p className="text-sm text-foreground/60 mt-4">
+                      * Payment instructions will be sent after your order is confirmed
+                    </p>
                   </div>
                   
                   <div className="space-y-6 mt-6">
