@@ -14,13 +14,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { ArrowLeft, Send, LogIn } from "lucide-react";
+import { ArrowLeft, Send, LogIn, Calculator, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, calculatePrice } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
 import { ProductSpecifications } from "@/components/products/product-specifications";
+import { usePriceCalculator } from "@/hooks/use-price-calculator";
 
 export default function CustomizeRequest() {
   const { id } = useParams();
