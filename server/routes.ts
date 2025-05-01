@@ -704,20 +704,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get product by ID with simplified error handling
   app.get('/api/products/:id', async (req, res) => {
     try {
+      console.log(`API Request: GET /api/products/${req.params.id}`);
       const productId = parseInt(req.params.id);
       if (isNaN(productId)) {
+        console.log(`Invalid product ID format: ${req.params.id}`);
         return res.status(400).json({ message: 'Invalid product ID' });
       }
 
+      console.log(`Fetching product with ID: ${productId} from database`);
       const product = await storage.getProduct(productId);
+      
       if (!product) {
+        console.log(`Product ID ${productId} not found in database`);
         return res.status(404).json({ message: 'Product not found' });
       }
 
       // Log the structure for debugging
       console.log(`Product ${productId} found:`, {
         id: product.id,
-        name: product.name
+        name: product.name,
+        basePrice: product.basePrice,
+        imgUrl: product.imageUrl?.substring(0, 30) + '...',
+        metalType: product.metalType,
+        mainStoneType: product.mainStoneType
       });
 
       // Try to calculate accurate price based on product information
