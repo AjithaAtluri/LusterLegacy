@@ -203,8 +203,13 @@ export default function CustomizeRequest() {
         
         // 2. For stones: Calculate the price based on weight × stone price per carat
         // Find in the database what stone types and prices were used in the original calculation
+        console.log("All available stone types in database:", stoneTypes?.map(s => `${s.name} - $${s.priceModifier}/carat`));
+        
         const originalPrimaryStoneObj = stoneTypes?.find((stone: any) => 
           stone.name.toLowerCase() === originalMainStoneType.toLowerCase());
+        
+        console.log(`Looking for original stone type "${originalMainStoneType}" in database...`);
+        console.log("Original primary stone object from DB:", originalPrimaryStoneObj);
         
         // Calculate a rough estimate of how much the original stones contributed to the price
         let originalStoneContribution = 0;
@@ -213,6 +218,8 @@ export default function CustomizeRequest() {
           const pricePerCarat = originalPrimaryStoneObj.priceModifier || 0;
           originalStoneContribution += mainStoneWeight * pricePerCarat;
           console.log(`Original primary stone (${originalMainStoneType}) contribution: ${mainStoneWeight} carats × $${pricePerCarat}/carat = $${mainStoneWeight * pricePerCarat}`);
+        } else {
+          console.log(`Warning: Could not find original primary stone "${originalMainStoneType}" in database`);
         }
         
         const originalSecondaryStoneObj = stoneTypes?.find((stone: any) => 
@@ -222,22 +229,31 @@ export default function CustomizeRequest() {
           const pricePerCarat = originalSecondaryStoneObj.priceModifier || 0;
           originalStoneContribution += secondaryStoneWeight * pricePerCarat;
           console.log(`Original secondary stone (${originalSecondaryStoneType}) contribution: ${secondaryStoneWeight} carats × $${pricePerCarat}/carat = $${secondaryStoneWeight * pricePerCarat}`);
+        } else if (secondaryStoneWeight > 0) {
+          console.log(`Warning: Could not find original secondary stone "${originalSecondaryStoneType}" in database`);
         }
         
         // Now if the user selected different stones, calculate their contribution
         let newStoneContribution = 0;
         
+        console.log(`Selected primary stone ID: ${primaryStoneId}`);
+        
         if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes && mainStoneWeight > 0) {
           const selectedStone = stoneTypes.find((stone: any) => String(stone.id) === primaryStoneId);
+          console.log("Selected primary stone object from DB:", selectedStone);
+          
           if (selectedStone) {
             // Use the selected stone's price per carat
             const pricePerCarat = selectedStone.priceModifier || 0;
             newStoneContribution += mainStoneWeight * pricePerCarat;
             console.log(`New primary stone (${selectedStone.name}) contribution: ${mainStoneWeight} carats × $${pricePerCarat}/carat = $${mainStoneWeight * pricePerCarat}`);
+          } else {
+            console.log(`Warning: Could not find selected primary stone with ID ${primaryStoneId} in database`);
           }
         } else if (originalPrimaryStoneObj && mainStoneWeight > 0) {
           // If no new stone selected, use the original
           newStoneContribution += mainStoneWeight * (originalPrimaryStoneObj.priceModifier || 0);
+          console.log(`Using original primary stone (no new selection): ${mainStoneWeight} carats × $${originalPrimaryStoneObj.priceModifier}/carat = $${mainStoneWeight * originalPrimaryStoneObj.priceModifier}`);
         }
         
         if (secondaryStoneId && secondaryStoneId !== "none_selected" && stoneTypes && secondaryStoneWeight > 0) {
