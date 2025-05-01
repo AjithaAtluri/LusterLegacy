@@ -48,7 +48,7 @@ import {
   productTypes
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, SQL, sql } from "drizzle-orm";
+import { sql, and, eq, ne, isNotNull, desc, asc, SQL } from "drizzle-orm";
 
 // Storage interface definition
 import session from "express-session";
