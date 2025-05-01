@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import AdminLayout from "@/components/admin/admin-layout";
+import StoneTypeFilter from "@/components/admin/stone-type-filter";
 
 // Define the generated content interface
 interface AIGeneratedContent {
@@ -56,8 +57,18 @@ interface AIGeneratedContent {
 interface StoneType {
   id: number;
   name: string;
-  pricePerCarat: number; 
+  pricePerCarat?: number; 
+  priceModifier?: number;
   description?: string;
+  color?: string | null;
+  size?: string | null;
+  displayOrder?: number;
+  isActive?: boolean;
+  imageUrl?: string | null;
+  category?: string | null;
+  stoneForm?: string | null;
+  quality?: string | null;
+  createdAt?: Date | null;
 }
 
 interface MetalType {
@@ -205,6 +216,11 @@ export default function AIContentGeneratorPage() {
     otherStoneWeight: 0.2,
     additionalDetails: "",
   });
+  
+  // Stone filter states
+  const [filteredMainStoneTypes, setFilteredMainStoneTypes] = useState<StoneType[]>([]);
+  const [filteredSecondaryStoneTypes, setFilteredSecondaryStoneTypes] = useState<StoneType[]>([]);
+  const [filteredOtherStoneTypes, setFilteredOtherStoneTypes] = useState<StoneType[]>([]);
   
   // Error tracking
   const [error, setError] = useState<string | null>(null);
@@ -590,136 +606,183 @@ export default function AIContentGeneratorPage() {
               <h3 className="text-base font-medium">Stone Information</h3>
               
               {/* Main Stone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border p-3 rounded-md">
-                <div className="space-y-1">
+              <div className="space-y-3 border p-3 rounded-md">
+                <div className="flex flex-col gap-1">
                   <Label htmlFor="mainStoneType">Main Stone Type <span className="text-destructive">*</span></Label>
-                  <Select 
-                    value={formData.mainStoneType} 
-                    onValueChange={(value) => handleSelectChange("mainStoneType", value)}
-                  >
-                    <SelectTrigger id="mainStoneType" className={isLoadingStoneTypes ? "opacity-70" : ""}>
-                      <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select main stone type"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stoneTypesError ? (
-                        <SelectItem value="error" disabled>Error loading stone types</SelectItem>
-                      ) : isLoadingStoneTypes ? (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
-                      ) : stoneTypes && stoneTypes.length > 0 ? (
-                        stoneTypes.map((stoneType) => (
-                          <SelectItem key={stoneType.id} value={stoneType.name}>
-                            {stoneType.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_types" disabled>No stone types available</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mainStoneWeight">Main Stone Weight (carats) <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="mainStoneWeight"
-                    name="mainStoneWeight"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="1"
-                    value={formData.mainStoneWeight}
-                    onChange={handleInputChange}
-                    required
-                  />
+                  
+                  {/* Stone Type Filter */}
+                  <div className="border rounded-md p-3 mb-3 bg-muted/30">
+                    <StoneTypeFilter 
+                      stoneTypes={stoneTypes || []} 
+                      isLoading={isLoadingStoneTypes}
+                      onFilter={setFilteredMainStoneTypes}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Select 
+                        value={formData.mainStoneType} 
+                        onValueChange={(value) => handleSelectChange("mainStoneType", value)}
+                      >
+                        <SelectTrigger id="mainStoneType" className={isLoadingStoneTypes ? "opacity-70" : ""}>
+                          <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select main stone type"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stoneTypesError ? (
+                            <SelectItem value="error" disabled>Error loading stone types</SelectItem>
+                          ) : isLoadingStoneTypes ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : filteredMainStoneTypes && filteredMainStoneTypes.length > 0 ? (
+                            filteredMainStoneTypes.map((stoneType) => (
+                              <SelectItem key={stoneType.id} value={stoneType.name}>
+                                {stoneType.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_types" disabled>No stone types match your filters</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="mainStoneWeight">Stone Weight (carats) <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="mainStoneWeight"
+                        name="mainStoneWeight"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="1"
+                        value={formData.mainStoneWeight}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               
               {/* Secondary Stone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border p-3 rounded-md">
-                <div className="space-y-1">
+              <div className="space-y-3 border p-3 rounded-md">
+                <div className="flex flex-col gap-1">
                   <Label htmlFor="secondaryStoneType">Secondary Stone Type (Optional)</Label>
-                  <Select 
-                    value={formData.secondaryStoneType} 
-                    onValueChange={(value) => handleSelectChange("secondaryStoneType", value)}
-                  >
-                    <SelectTrigger id="secondaryStoneType" className={isLoadingStoneTypes ? "opacity-70" : ""}>
-                      <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select secondary stone"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {stoneTypesError ? (
-                        <SelectItem value="error" disabled>Error loading stone types</SelectItem>
-                      ) : isLoadingStoneTypes ? (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
-                      ) : stoneTypes && stoneTypes.length > 0 ? (
-                        stoneTypes.map((stoneType) => (
-                          <SelectItem key={stoneType.id} value={stoneType.name}>
-                            {stoneType.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_types" disabled>No stone types available</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="secondaryStoneWeight">Secondary Stone Weight (carats)</Label>
-                  <Input
-                    id="secondaryStoneWeight"
-                    name="secondaryStoneWeight"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0.5"
-                    value={formData.secondaryStoneWeight}
-                    onChange={handleInputChange}
-                    disabled={!formData.secondaryStoneType || formData.secondaryStoneType === 'none'}
-                  />
+                  
+                  {/* Stone Type Filter */}
+                  <div className="border rounded-md p-3 mb-3 bg-muted/30">
+                    <StoneTypeFilter 
+                      stoneTypes={stoneTypes?.filter(stone => stone.name !== formData.mainStoneType) || []} 
+                      isLoading={isLoadingStoneTypes}
+                      onFilter={setFilteredSecondaryStoneTypes}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Select 
+                        value={formData.secondaryStoneType} 
+                        onValueChange={(value) => handleSelectChange("secondaryStoneType", value)}
+                      >
+                        <SelectTrigger id="secondaryStoneType" className={isLoadingStoneTypes ? "opacity-70" : ""}>
+                          <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select secondary stone"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {stoneTypesError ? (
+                            <SelectItem value="error" disabled>Error loading stone types</SelectItem>
+                          ) : isLoadingStoneTypes ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : filteredSecondaryStoneTypes && filteredSecondaryStoneTypes.length > 0 ? (
+                            filteredSecondaryStoneTypes.map((stoneType) => (
+                              <SelectItem key={stoneType.id} value={stoneType.name}>
+                                {stoneType.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_types" disabled>No stone types match your filters</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="secondaryStoneWeight">Stone Weight (carats)</Label>
+                      <Input
+                        id="secondaryStoneWeight"
+                        name="secondaryStoneWeight"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="0.5"
+                        value={formData.secondaryStoneWeight}
+                        onChange={handleInputChange}
+                        disabled={!formData.secondaryStoneType || formData.secondaryStoneType === 'none'}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               
               {/* Other Stone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border p-3 rounded-md">
-                <div className="space-y-1">
+              <div className="space-y-3 border p-3 rounded-md">
+                <div className="flex flex-col gap-1">
                   <Label htmlFor="otherStoneType">Other Stone Type (Optional)</Label>
-                  <Select 
-                    value={formData.otherStoneType} 
-                    onValueChange={(value) => handleSelectChange("otherStoneType", value)}
-                  >
-                    <SelectTrigger id="otherStoneType" className={isLoadingStoneTypes ? "opacity-70" : ""}>
-                      <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select other stone"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {stoneTypesError ? (
-                        <SelectItem value="error" disabled>Error loading stone types</SelectItem>
-                      ) : isLoadingStoneTypes ? (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
-                      ) : stoneTypes && stoneTypes.length > 0 ? (
-                        stoneTypes.map((stoneType) => (
-                          <SelectItem key={stoneType.id} value={stoneType.name}>
-                            {stoneType.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no_types" disabled>No stone types available</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="otherStoneWeight">Other Stone Weight (carats)</Label>
-                  <Input
-                    id="otherStoneWeight"
-                    name="otherStoneWeight"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="0.2"
-                    value={formData.otherStoneWeight}
-                    onChange={handleInputChange}
-                    disabled={!formData.otherStoneType || formData.otherStoneType === 'none'}
-                  />
+                  
+                  {/* Stone Type Filter */}
+                  <div className="border rounded-md p-3 mb-3 bg-muted/30">
+                    <StoneTypeFilter 
+                      stoneTypes={stoneTypes?.filter(stone => 
+                        stone.name !== formData.mainStoneType && 
+                        stone.name !== formData.secondaryStoneType) || []} 
+                      isLoading={isLoadingStoneTypes}
+                      onFilter={setFilteredOtherStoneTypes}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Select 
+                        value={formData.otherStoneType} 
+                        onValueChange={(value) => handleSelectChange("otherStoneType", value)}
+                      >
+                        <SelectTrigger id="otherStoneType" className={isLoadingStoneTypes ? "opacity-70" : ""}>
+                          <SelectValue placeholder={isLoadingStoneTypes ? "Loading stone types..." : "Select other stone"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {stoneTypesError ? (
+                            <SelectItem value="error" disabled>Error loading stone types</SelectItem>
+                          ) : isLoadingStoneTypes ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : filteredOtherStoneTypes && filteredOtherStoneTypes.length > 0 ? (
+                            filteredOtherStoneTypes.map((stoneType) => (
+                              <SelectItem key={stoneType.id} value={stoneType.name}>
+                                {stoneType.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no_types" disabled>No stone types match your filters</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label htmlFor="otherStoneWeight">Stone Weight (carats)</Label>
+                      <Input
+                        id="otherStoneWeight"
+                        name="otherStoneWeight"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="0.2"
+                        value={formData.otherStoneWeight}
+                        onChange={handleInputChange}
+                        disabled={!formData.otherStoneType || formData.otherStoneType === 'none'}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
