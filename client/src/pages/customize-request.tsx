@@ -308,6 +308,18 @@ export default function CustomizeRequest() {
           console.log(`Warning: Could not find original secondary stone "${originalSecondaryStoneType}" in database`);
         }
         
+        // Check for original other stone contribution
+        const originalOtherStoneObj = stoneTypes?.find((stone: any) => 
+          stone.name.toLowerCase() === originalOtherStoneType.toLowerCase());
+        
+        if (originalOtherStoneObj && otherStoneWeight > 0) {
+          const pricePerCarat = originalOtherStoneObj.priceModifier || 0;
+          originalStoneContribution += otherStoneWeight * pricePerCarat;
+          console.log(`Original other stone (${originalOtherStoneType}) contribution: ${otherStoneWeight} carats × $${pricePerCarat}/carat = $${otherStoneWeight * pricePerCarat}`);
+        } else if (otherStoneWeight > 0) {
+          console.log(`Warning: Could not find original other stone "${originalOtherStoneType}" in database`);
+        }
+        
         // Now if the user selected different stones, calculate their contribution
         let newStoneContribution = 0;
         
