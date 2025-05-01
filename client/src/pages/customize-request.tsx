@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useGoldPrice } from "@/hooks/use-gold-price";
 import { Loader2 } from "lucide-react";
-import { ReliableProductImage } from "@/components/ui/reliable-product-image";
+import ReliableProductImage from "@/components/ui/reliable-product-image";
 
 export default function CustomizeRequest() {
   const [, navigate] = useLocation();
@@ -462,17 +462,26 @@ export default function CustomizeRequest() {
               <CardDescription>Original Design</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="aspect-square w-full relative rounded-md overflow-hidden mb-4">
+              <div className="aspect-square w-full rounded-md overflow-hidden mb-4">
                 <ReliableProductImage 
-                  product={product} 
-                  className="object-contain"
-                  fill
+                  productId={product.id}
+                  imageUrl={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-auto object-contain"
                 />
               </div>
               
               <ProductSpecifications 
-                product={product}
-                showPrice={true}
+                productMetalType={product.metalType}
+                productMetalWeight={parseFloat(product.metalWeight) || 0}
+                mainStoneType={product.mainStoneType}
+                mainStoneWeight={parseFloat(product.mainStoneWeight) || 0}
+                secondaryStoneType={product.secondaryStoneType}
+                secondaryStoneWeight={parseFloat(product.secondaryStoneWeight) || 0}
+                otherStoneType={product.otherStoneType}
+                otherStoneWeight={parseFloat(product.otherStoneWeight) || 0}
+                currentPrice={product.calculatedPriceUSD || product.basePrice}
+                formatCurrency={(value) => `$${value.toLocaleString()}`}
                 className="mt-4"
               />
             </CardContent>
