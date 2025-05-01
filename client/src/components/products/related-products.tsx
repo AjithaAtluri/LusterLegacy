@@ -92,9 +92,9 @@ export function RelatedProducts({ products, currentProductId }: RelatedProductsP
           {filteredProducts.map((product) => (
             <div 
               key={product.id}
-              className="min-w-[250px] md:min-w-[280px] flex flex-col relative"
+              className="min-w-[280px] max-w-[280px] flex flex-col relative h-[420px]"
             >
-              <div className="block relative aspect-square overflow-hidden rounded-lg transition-all duration-200 hover:shadow-lg mb-4 group cursor-pointer" onClick={() => window.location.href = `/product/${product.id}`}>
+              <div className="block relative h-[280px] overflow-hidden rounded-lg transition-all duration-200 hover:shadow-lg mb-4 group cursor-pointer" onClick={() => window.location.href = `/product-detail/${product.id}`}>
                 <ReliableProductImage 
                   productId={product.id} 
                   imageUrl={product.imageUrl}
@@ -103,23 +103,23 @@ export function RelatedProducts({ products, currentProductId }: RelatedProductsP
                 />
               </div>
               
-              <div className="flex flex-col justify-between h-auto text-center">
+              <div className="flex flex-col justify-between flex-grow text-center">
                 {/* Product Name with Luxury Styling */}
-                <div className="relative mb-4">
-                  <div className="h-px w-8 bg-accent/50 absolute top-1/2 left-1/2 -translate-x-[125%] -translate-y-1/2" />
+                <div className="relative mb-4 flex items-center justify-center h-16">
+                  <div className="h-px w-10 bg-accent/50 absolute top-1/2 left-0 ml-3 -translate-y-1/2" />
                   <h3 className={cn(
                     "font-cormorant font-medium italic tracking-wide uppercase",
-                    "text-lg leading-tight px-4"
+                    "text-lg leading-tight px-4 mx-auto max-w-[220px]"
                   )}>
                     {getShortTitle(product.name)}
                   </h3>
-                  <div className="h-px w-8 bg-accent/50 absolute top-1/2 right-1/2 translate-x-[125%] -translate-y-1/2" />
+                  <div className="h-px w-10 bg-accent/50 absolute top-1/2 right-0 mr-3 -translate-y-1/2" />
                 </div>
                 
                 <Button 
                   variant="outline" 
-                  className="w-full border-accent text-accent hover:bg-accent hover:text-white"
-                  onClick={() => window.location.href = `/product/${product.id}`}
+                  className="w-full border-accent text-accent hover:bg-accent hover:text-white mt-auto"
+                  onClick={() => window.location.href = `/product-detail/${product.id}`}
                 >
                   View Details
                 </Button>

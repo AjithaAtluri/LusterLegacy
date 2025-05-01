@@ -467,14 +467,8 @@ export default function ProductDetail() {
                   )}
                 </div>
                 
-                {/* Price and Badges */}
+                {/* Badges */}
                 <div className="mb-6">
-                  <div className="flex flex-wrap items-center gap-4 mb-4">
-                    <span className="font-playfair text-3xl font-semibold text-foreground">
-                      {formatCurrency(currentPrice)}
-                    </span>
-                  </div>
-                  
                   <div className="flex flex-wrap gap-2 mb-6">
                     {product.isNew && (
                       <Badge variant="default" className="bg-green-600">New Arrival</Badge>
