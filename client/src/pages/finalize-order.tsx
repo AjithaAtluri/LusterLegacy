@@ -244,12 +244,14 @@ export default function FinalizeOrder() {
             Complete your information below to request final quotation for {product.name}
           </p>
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 mb-6">
-            <h3 className="font-playfair text-lg font-semibold mb-2">Our Order Process</h3>
+            <h3 className="font-playfair text-lg font-semibold mb-2">Important Order Information</h3>
             <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Request a final quotation or proceed with 50% advance payment</li>
-              <li>Your order will be crafted to perfection over 3-4 weeks</li>
-              <li>The item will be shipped after the remaining 50% payment is made</li>
-              <li>All custom pieces are handcrafted to order with the finest materials</li>
+              <li>Each piece is custom-made; exact weights and colors may vary slightly based on stone sizes</li>
+              <li>Gold price will be locked on the day your 50% advance payment is received</li>
+              <li>Payment details will be sent to you after your order request is processed</li>
+              <li>Your order will be crafted over 3-4 weeks after advance payment</li>
+              <li>Final shipping occurs after the remaining 50% payment is completed</li>
+              <li>Note: Selecting PayPal or Bank Transfer here only indicates your preferred payment method</li>
             </ul>
           </div>
         </div>
@@ -458,11 +460,14 @@ export default function FinalizeOrder() {
                   
                   {/* Payment Method section (moved from sidebar) */}
                   <div className="mb-6 border border-slate-200 dark:border-slate-800 rounded-md p-6">
-                    <h2 className="font-playfair text-xl font-semibold mb-4">Payment Method</h2>
+                    <h2 className="font-playfair text-xl font-semibold mb-4">Payment Preferences</h2>
+                    <p className="text-sm text-foreground/70 mb-4">
+                      Please indicate your preferred currency and payment method. Our team will send detailed payment instructions after reviewing your order.
+                    </p>
                     
                     {/* Currency selection - moved from sidebar */}
                     <div className="mb-6">
-                      <Label htmlFor="currency" className="mb-2 block">Currency</Label>
+                      <Label htmlFor="currency" className="mb-2 block">Preferred Currency</Label>
                       <Select 
                         value={currency} 
                         onValueChange={(value) => setCurrency(value)}
@@ -480,39 +485,47 @@ export default function FinalizeOrder() {
                       </p>
                     </div>
                     
-                    <RadioGroup 
-                      defaultValue={paymentMethod} 
-                      onValueChange={setPaymentMethod}
-                      className="space-y-4"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="paypal" id="paypal" />
-                        <Label htmlFor="paypal" className="flex items-center">
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          PayPal / Credit Card
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="bank_transfer" id="bank_transfer" />
-                        <Label htmlFor="bank_transfer" className="flex items-center">
-                          <DollarSign className="mr-2 h-4 w-4" />
-                          Bank Transfer
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                    <p className="text-sm text-foreground/60 mt-4">
-                      * Payment instructions will be sent after your order is confirmed
-                    </p>
+                    <div className="mb-4">
+                      <Label htmlFor="paymentMethod" className="mb-2 block">Preferred Payment Method</Label>
+                      <RadioGroup 
+                        defaultValue={paymentMethod} 
+                        onValueChange={setPaymentMethod}
+                        className="space-y-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="paypal" id="paypal" />
+                          <Label htmlFor="paypal" className="flex items-center">
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            PayPal / Credit Card
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+                          <Label htmlFor="bank_transfer" className="flex items-center">
+                            <DollarSign className="mr-2 h-4 w-4" />
+                            Bank Transfer
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-3 mt-4">
+                      <p className="text-sm text-foreground/80">
+                        <strong>Important:</strong> Selecting a payment method here only indicates your preference. No payment is processed at this stage. We will send detailed payment instructions after confirming your order.
+                      </p>
+                    </div>
                   </div>
                   
                   <div className="space-y-6 mt-6">
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4">
-                      <h3 className="font-playfair text-base font-semibold mb-2">Payment & Shipping Terms</h3>
+                      <h3 className="font-playfair text-base font-semibold mb-2">Custom Creation Process</h3>
                       <ul className="list-disc list-inside space-y-1 text-sm">
-                        <li>50% advance payment secures your order and initiates crafting</li>
-                        <li>Your piece will be handcrafted over 3-4 weeks</li>
-                        <li>Remaining 50% payment is due before shipping</li>
+                        <li>Each piece is custom-made with weights and colors that may vary based on stone sizes</li>
+                        <li>50% advance payment locks the gold price on the day payment is received</li>
+                        <li>Your piece will be handcrafted by skilled artisans over 3-4 weeks</li>
+                        <li>Remaining 50% payment is required before shipping</li>
                         <li>Free shipping with insurance and tracking</li>
+                        <li>Final prices may vary slightly from estimates due to customization</li>
                       </ul>
                     </div>
                     
@@ -554,7 +567,7 @@ export default function FinalizeOrder() {
                             Processing...
                           </span>
                         ) : (
-                          <>Make 50% Payment</>
+                          <>Request Payment Details</>
                         )}
                       </Button>
                     </div>
