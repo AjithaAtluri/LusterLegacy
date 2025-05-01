@@ -143,96 +143,103 @@ export default function CustomizeRequest() {
   // Update estimated price based on selected customization options
   useEffect(() => {
     if (product) {
-      // Start with the product's calculated price if available, or fall back to base price
-      let priceEstimate = product.calculatedPriceUSD || product.basePrice;
-      
-      console.log("Starting price estimate:", priceEstimate);
-      console.log("Selected metalTypeId:", metalTypeId);
-      console.log("Selected primaryStoneId:", primaryStoneId);
-      console.log("Selected secondaryStoneId:", secondaryStoneId);
-      
-      // Apply metal type modifier (multiply by a percentage)
-      if (metalTypeId && metalTypes) {
-        const selectedMetal = metalTypes.find((metal: any) => String(metal.id) === metalTypeId);
-        console.log("Selected metal:", selectedMetal);
-        if (selectedMetal && selectedMetal.priceModifier) {
-          // Convert priceModifier to appropriate multiplier (if it's stored as percentage points)
-          const metalMultiplier = 1 + (selectedMetal.priceModifier / 100);
-          const oldPrice = priceEstimate;
-          priceEstimate = priceEstimate * metalMultiplier;
-          console.log(`Applying metal modifier ${selectedMetal.priceModifier}%: ${oldPrice} -> ${priceEstimate}`);
-        }
-      }
-      
-      // Apply primary stone modifier (multiply by a percentage)
-      if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes) {
-        const selectedStone = stoneTypes.find((stone: any) => String(stone.id) === primaryStoneId);
-        console.log("Selected primary stone:", selectedStone);
-        if (selectedStone && selectedStone.priceModifier) {
-          // Add a percentage of the calculated price for the stone upgrade
-          const stoneUpcharge = (selectedStone.priceModifier / 100) * priceEstimate;
-          const oldPrice = priceEstimate;
-          priceEstimate = priceEstimate + stoneUpcharge;
-          console.log(`Applying primary stone modifier ${selectedStone.priceModifier}%: ${oldPrice} -> ${priceEstimate}`);
-        }
-      }
-      
-      // Apply secondary stone modifier (smaller impact than primary stone)
-      if (secondaryStoneId && secondaryStoneId !== "none_selected" && stoneTypes) {
-        const selectedSecondaryStone = stoneTypes.find((stone: any) => String(stone.id) === secondaryStoneId);
-        console.log("Selected secondary stone:", selectedSecondaryStone);
-        if (selectedSecondaryStone && selectedSecondaryStone.priceModifier) {
-          // Add a smaller percentage for secondary stone
-          const secondaryStoneUpcharge = (selectedSecondaryStone.priceModifier / 200) * priceEstimate;
-          const oldPrice = priceEstimate;
-          priceEstimate = priceEstimate + secondaryStoneUpcharge;
-          console.log(`Applying secondary stone modifier ${selectedSecondaryStone.priceModifier/2}%: ${oldPrice} -> ${priceEstimate}`);
-        }
-      }
-      
-      // Apply currency conversion if needed
-      if (currency === "INR" && product.calculatedPriceINR) {
-        // For simplicity in INR mode, start with base INR price and apply modifiers
-        priceEstimate = product.calculatedPriceINR;
-        console.log("Switched to INR pricing:", priceEstimate);
+      try {
+        // Parse product details to get stone weights
+        const details = product.details ? (typeof product.details === 'string' 
+          ? JSON.parse(product.details) 
+          : product.details) : {};
+          
+        const additionalData = details.additionalData || {};
+        const aiInputs = additionalData.aiInputs || {};
         
-        // Apply the same modifiers as above but for INR price
+        // Get stone weights from the product (these don't change in customization)
+        const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
+        const secondaryStoneWeight = aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
+        const otherStoneWeight = aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
+        
+        // Get metal weight (this doesn't change in customization)
+        const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
+        
+        // Get original metal and stone types from the product
+        const originalMetalType = aiInputs.metalType || additionalData.metalType || "";
+        const originalMainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
+        const originalSecondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
+        const originalOtherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
+        
+        console.log("Product metal weight:", metalWeight, "grams");
+        console.log("Product main stone weight:", mainStoneWeight, "carats");
+        console.log("Product secondary stone weight:", secondaryStoneWeight, "carats");
+        console.log("Original metal type:", originalMetalType);
+        console.log("Original main stone type:", originalMainStoneType);
+        
+        // Start with the product's calculated price if available, or fall back to base price
+        let priceEstimate = product.calculatedPriceUSD || product.basePrice;
+        console.log("Starting price estimate:", priceEstimate);
+        
+        // Only modify the price if user selected different options
         if (metalTypeId && metalTypes) {
           const selectedMetal = metalTypes.find((metal: any) => String(metal.id) === metalTypeId);
-          if (selectedMetal && selectedMetal.priceModifier) {
-            const metalMultiplier = 1 + (selectedMetal.priceModifier / 100);
-            const oldPrice = priceEstimate;
-            priceEstimate = priceEstimate * metalMultiplier;
-            console.log(`Applying metal modifier for INR ${selectedMetal.priceModifier}%: ${oldPrice} -> ${priceEstimate}`);
+          console.log("Selected metal:", selectedMetal?.name);
+          
+          // Find the original metal's price modifier in our list of metals
+          const originalMetalObj = metalTypes.find((metal: any) => 
+            metal.name.toLowerCase() === originalMetalType.toLowerCase());
+          console.log("Original metal from DB:", originalMetalObj?.name, "with modifier:", originalMetalObj?.priceModifier);
+          
+          if (selectedMetal && originalMetalObj && selectedMetal.id !== originalMetalObj.id) {
+            // Remove the original metal's price contribution and add the new one
+            // For metal, we use a multiplier on the calculated price based on its quality (14k, 18k, etc.)
+            const originalMetalMultiplier = 1 + (originalMetalObj.priceModifier / 100);
+            const newMetalMultiplier = 1 + (selectedMetal.priceModifier / 100);
+            
+            // Adjust the price: first remove original metal effect, then apply new metal effect
+            const priceWithoutMetal = priceEstimate / originalMetalMultiplier;
+            priceEstimate = priceWithoutMetal * newMetalMultiplier;
+            
+            console.log(`Adjusting price for metal change: ${originalMetalObj.name} -> ${selectedMetal.name}`);
+            console.log(`Metal price adjustment: original multiplier ${originalMetalMultiplier}, new multiplier ${newMetalMultiplier}`);
+            console.log(`Price after metal adjustment: ${priceEstimate}`);
           }
         }
         
-        // Re-apply stone modifiers for INR
-        if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes) {
-          const selectedStone = stoneTypes.find((stone: any) => String(stone.id) === primaryStoneId);
-          if (selectedStone && selectedStone.priceModifier) {
-            const stoneUpcharge = (selectedStone.priceModifier / 100) * priceEstimate;
-            const oldPrice = priceEstimate;
-            priceEstimate = priceEstimate + stoneUpcharge;
-            console.log(`Applying primary stone modifier for INR ${selectedStone.priceModifier}%: ${oldPrice} -> ${priceEstimate}`);
+        // Apply currency conversion if needed
+        if (currency === "INR" && product.calculatedPriceINR) {
+          // Use product's calculated INR price if available
+          priceEstimate = product.calculatedPriceINR;
+          console.log("Switched to INR pricing:", priceEstimate);
+          
+          // Re-apply metal adjustments for INR price
+          if (metalTypeId && metalTypes) {
+            const selectedMetal = metalTypes.find((metal: any) => String(metal.id) === metalTypeId);
+            
+            // Find the original metal's price modifier in our list of metals
+            const originalMetalObj = metalTypes.find((metal: any) => 
+              metal.name.toLowerCase() === originalMetalType.toLowerCase());
+            
+            if (selectedMetal && originalMetalObj && selectedMetal.id !== originalMetalObj.id) {
+              // Remove the original metal's price contribution and add the new one
+              const originalMetalMultiplier = 1 + (originalMetalObj.priceModifier / 100);
+              const newMetalMultiplier = 1 + (selectedMetal.priceModifier / 100);
+              
+              // Adjust the price: first remove original metal effect, then apply new metal effect
+              const priceWithoutMetal = priceEstimate / originalMetalMultiplier;
+              priceEstimate = priceWithoutMetal * newMetalMultiplier;
+              
+              console.log(`Adjusting INR price for metal change: ${originalMetalObj.name} -> ${selectedMetal.name}`);
+              console.log(`Metal price adjustment for INR: ${priceEstimate}`);
+            }
           }
         }
         
-        if (secondaryStoneId && secondaryStoneId !== "none_selected" && stoneTypes) {
-          const selectedSecondaryStone = stoneTypes.find((stone: any) => String(stone.id) === secondaryStoneId);
-          if (selectedSecondaryStone && selectedSecondaryStone.priceModifier) {
-            const secondaryStoneUpcharge = (selectedSecondaryStone.priceModifier / 200) * priceEstimate;
-            const oldPrice = priceEstimate;
-            priceEstimate = priceEstimate + secondaryStoneUpcharge;
-            console.log(`Applying secondary stone modifier for INR ${selectedSecondaryStone.priceModifier/2}%: ${oldPrice} -> ${priceEstimate}`);
-          }
-        }
+        // Round to nearest whole number
+        const finalPrice = Math.round(priceEstimate);
+        console.log("Final estimated price:", finalPrice);
+        setEstimatedPrice(finalPrice);
+      } catch (error) {
+        console.error("Error calculating price:", error);
+        // If there's an error, just use the original price
+        setEstimatedPrice(Math.round(product.calculatedPriceUSD || product.basePrice));
       }
-      
-      // Round to nearest whole number
-      const finalPrice = Math.round(priceEstimate);
-      console.log("Final estimated price:", finalPrice);
-      setEstimatedPrice(finalPrice);
     }
   }, [product, metalTypeId, primaryStoneId, secondaryStoneId, metalTypes, stoneTypes, currency]);
   
