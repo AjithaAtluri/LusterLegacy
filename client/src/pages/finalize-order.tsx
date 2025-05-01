@@ -239,7 +239,7 @@ export default function FinalizeOrder() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Product
           </Button>
-          <h1 className="font-playfair text-3xl font-bold mb-2">Request Finalize Order</h1>
+          <h1 className="font-playfair text-3xl font-bold mb-2">Finalyse Order</h1>
           <p className="text-foreground/70 mb-3">
             Complete your information below to request final quotation for {product.name}
           </p>
@@ -407,6 +407,8 @@ export default function FinalizeOrder() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        readOnly={!!user?.email}
+                        className={user?.email ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed" : ""}
                       />
                     </div>
                     <div className="space-y-2">
