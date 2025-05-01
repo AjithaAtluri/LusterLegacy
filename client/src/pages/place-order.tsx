@@ -242,6 +242,47 @@ export default function PlaceOrder() {
                 </div>
                 <h3 className="font-playfair text-lg font-semibold">{product.name}</h3>
                 <p className="text-foreground/70 text-sm my-2">{product.description}</p>
+                
+                {/* Product Specifications Component */}
+                {product.details && (
+                  <>
+                    {(() => {
+                      try {
+                        const details = JSON.parse(product.details);
+                        const additionalData = details.additionalData || {};
+                        const aiInputs = additionalData.aiInputs || {};
+                        
+                        const metalType = aiInputs.metalType || additionalData.metalType || "";
+                        const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
+                        const mainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
+                        const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
+                        const secondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
+                        const secondaryStoneWeight = aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
+                        const otherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
+                        const otherStoneWeight = aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
+                        
+                        return (
+                          <ProductSpecifications
+                            productMetalType={metalType}
+                            productMetalWeight={metalWeight}
+                            mainStoneType={mainStoneType}
+                            mainStoneWeight={mainStoneWeight}
+                            secondaryStoneType={secondaryStoneType}
+                            secondaryStoneWeight={secondaryStoneWeight}
+                            otherStoneType={otherStoneType}
+                            otherStoneWeight={otherStoneWeight}
+                            currentPrice={getProductPrice()}
+                            formatCurrency={(value) => formatCurrency(value, currency)}
+                            className="mt-4"
+                          />
+                        );
+                      } catch (e) {
+                        console.error("Error parsing product details:", e);
+                        return null;
+                      }
+                    })()}
+                  </>
+                )}
               </CardContent>
               <CardFooter className="flex flex-col p-6 pt-0 space-y-4">
                 <div className="w-full mb-2">

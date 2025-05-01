@@ -20,6 +20,7 @@ import { formatCurrency } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
+import { ProductSpecifications } from "@/components/products/product-specifications";
 
 export default function CustomizeRequest() {
   const { id } = useParams();
@@ -258,12 +259,48 @@ export default function CustomizeRequest() {
               </div>
               <h3 className="font-playfair text-lg font-semibold">{product.name}</h3>
               <p className="text-foreground/70 text-sm my-2">{product.description}</p>
-              <div className="mt-2">
-                <span className="font-semibold">Base Price: </span>
-                <span className="text-lg">
-                  {formatCurrency(product.calculatedPriceUSD || product.basePrice)}
-                </span>
-              </div>
+              
+              {/* Product Specifications Component */}
+              {product.details && (
+                <>
+                  {(() => {
+                    try {
+                      const details = JSON.parse(product.details);
+                      const additionalData = details.additionalData || {};
+                      const aiInputs = additionalData.aiInputs || {};
+                      
+                      const metalType = aiInputs.metalType || additionalData.metalType || "";
+                      const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
+                      const mainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
+                      const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
+                      const secondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";
+                      const secondaryStoneWeight = aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
+                      const otherStoneType = aiInputs.otherStoneType || additionalData.otherStoneType || "";
+                      const otherStoneWeight = aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
+                      
+                      return (
+                        <ProductSpecifications
+                          productMetalType={metalType}
+                          productMetalWeight={metalWeight}
+                          mainStoneType={mainStoneType}
+                          mainStoneWeight={mainStoneWeight}
+                          secondaryStoneType={secondaryStoneType}
+                          secondaryStoneWeight={secondaryStoneWeight}
+                          otherStoneType={otherStoneType}
+                          otherStoneWeight={otherStoneWeight}
+                          currentPrice={product.calculatedPriceUSD || product.basePrice}
+                          formatCurrency={formatCurrency}
+                          className="mt-4"
+                        />
+                      );
+                    } catch (e) {
+                      console.error("Error parsing product details:", e);
+                      return null;
+                    }
+                  })()}
+                </>
+              )}
+              
               <p className="mt-4 text-sm text-foreground/60">
                 * Final price may vary based on customization requests
               </p>
