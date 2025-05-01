@@ -1763,6 +1763,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create address string
       const fullAddress = `${address}, ${city}, ${state}, ${postalCode}, ${country}`;
       
+      // The action parameter tells us if this is a quote request or payment
+      const action = req.body.action || "request_quote";
+      
+      // Calculate advance amount (50% of total) and balance amount
+      const totalAmount = price;
+      const advanceAmount = Math.round(totalAmount * 0.5); // 50% advance
+      const balanceAmount = totalAmount - advanceAmount;
+      
+      // Order status and payment status
+      const orderStatus = "new";
+      const paymentStatus = action === "make_payment" ? "advance_pending" : "pending";
+      
       const order = await storage.createOrder({
         userId: req.user.id,
         customerName: name,
@@ -1771,10 +1783,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         shippingAddress: fullAddress,
         currency: currency,
         paymentMethod: paymentMethod,
-        totalAmount: price,
+        totalAmount: totalAmount,
+        advanceAmount: advanceAmount,
+        balanceAmount: balanceAmount,
         specialInstructions: additionalNotes || "",
-        orderStatus: "new",
-        paymentStatus: "pending",
+        orderStatus: orderStatus,
+        paymentStatus: paymentStatus,
         createdAt: new Date(),
       });
       
