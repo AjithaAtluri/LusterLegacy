@@ -681,7 +681,7 @@ export default function CustomizeRequest() {
                             <div className="p-2 text-center text-muted-foreground">No stone types available</div>
                           ) : (
                             stoneTypes.map((stone) => (
-                              <SelectItem key={`primary-${stone.id}`} value={String(stone.id)}>
+                              <SelectItem key={stone.id} value={String(stone.id)}>
                                 {stone.name}
                               </SelectItem>
                             ))
@@ -704,7 +704,7 @@ export default function CustomizeRequest() {
                             <div className="p-2 text-center text-muted-foreground">No stone types available</div>
                           ) : (
                             stoneTypes.map((stone) => (
-                              <SelectItem key={`secondary-${stone.id}`} value={String(stone.id)}>
+                              <SelectItem key={stone.id} value={String(stone.id)}>
                                 {stone.name}
                               </SelectItem>
                             ))
