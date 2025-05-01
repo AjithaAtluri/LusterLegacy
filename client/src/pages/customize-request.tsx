@@ -142,9 +142,9 @@ export default function CustomizeRequest() {
   
   // Update estimated price based on selected customization options
   useEffect(() => {
-    if (product && product.basePrice) {
-      // Start with the product's original base price
-      let priceEstimate = product.basePrice;
+    if (product) {
+      // Start with the product's calculated price if available, or fall back to base price
+      let priceEstimate = product.calculatedPriceUSD || product.basePrice;
       
       // Apply metal type modifier (multiply by a percentage)
       if (metalTypeId && metalTypes) {
@@ -160,8 +160,8 @@ export default function CustomizeRequest() {
       if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes) {
         const selectedStone = stoneTypes.find((stone: any) => stone.id === primaryStoneId);
         if (selectedStone && selectedStone.priceModifier) {
-          // Add a percentage of the base price for the stone upgrade
-          const stoneUpcharge = (selectedStone.priceModifier / 100) * product.basePrice;
+          // Add a percentage of the calculated price for the stone upgrade
+          const stoneUpcharge = (selectedStone.priceModifier / 100) * priceEstimate;
           priceEstimate = priceEstimate + stoneUpcharge;
         }
       }
@@ -171,15 +171,41 @@ export default function CustomizeRequest() {
         const selectedSecondaryStone = stoneTypes.find((stone: any) => stone.id === secondaryStoneId);
         if (selectedSecondaryStone && selectedSecondaryStone.priceModifier) {
           // Add a smaller percentage for secondary stone
-          const secondaryStoneUpcharge = (selectedSecondaryStone.priceModifier / 200) * product.basePrice;
+          const secondaryStoneUpcharge = (selectedSecondaryStone.priceModifier / 200) * priceEstimate;
           priceEstimate = priceEstimate + secondaryStoneUpcharge;
         }
       }
       
       // Apply currency conversion if needed
-      if (currency === "INR") {
-        // Approximate INR conversion (this will be refined with actual API)
-        priceEstimate = priceEstimate * 84;
+      if (currency === "INR" && product.calculatedPriceINR) {
+        // Use product's calculated INR price if available
+        priceEstimate = product.calculatedPriceINR;
+        
+        // Apply the same modifiers as above but for INR price
+        if (metalTypeId && metalTypes) {
+          const selectedMetal = metalTypes.find((metal: any) => metal.id === metalTypeId);
+          if (selectedMetal && selectedMetal.priceModifier) {
+            const metalMultiplier = 1 + (selectedMetal.priceModifier / 100);
+            priceEstimate = priceEstimate * metalMultiplier;
+          }
+        }
+        
+        // Re-apply stone modifiers for INR
+        if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes) {
+          const selectedStone = stoneTypes.find((stone: any) => stone.id === primaryStoneId);
+          if (selectedStone && selectedStone.priceModifier) {
+            const stoneUpcharge = (selectedStone.priceModifier / 100) * priceEstimate;
+            priceEstimate = priceEstimate + stoneUpcharge;
+          }
+        }
+        
+        if (secondaryStoneId && secondaryStoneId !== "none_selected" && stoneTypes) {
+          const selectedSecondaryStone = stoneTypes.find((stone: any) => stone.id === secondaryStoneId);
+          if (selectedSecondaryStone && selectedSecondaryStone.priceModifier) {
+            const secondaryStoneUpcharge = (selectedSecondaryStone.priceModifier / 200) * priceEstimate;
+            priceEstimate = priceEstimate + secondaryStoneUpcharge;
+          }
+        }
       }
       
       // Round to nearest whole number
@@ -340,6 +366,7 @@ export default function CustomizeRequest() {
                           secondaryStoneWeight={secondaryStoneWeight}
                           otherStoneType={otherStoneType}
                           otherStoneWeight={otherStoneWeight}
+                          // Use calculated price if available, fall back to base price
                           currentPrice={product.calculatedPriceUSD || product.basePrice}
                           formatCurrency={formatCurrency}
                           className="mt-4"
