@@ -21,7 +21,7 @@ const GemMetalGuide = lazy(() => import("@/pages/gem-metal-guide"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard"));
 const AuthPage = lazy(() => import("@/pages/auth-page"));
-const PlaceOrder = lazy(() => import("@/pages/place-order"));
+const FinalizeOrder = lazy(() => import("@/pages/place-order"));
 const CustomizeRequest = lazy(() => import("@/pages/customize-request"));
 
 // Tools and utilities
@@ -79,7 +79,7 @@ function App() {
             <Route path="/gem-metal-guide" component={GemMetalGuide} />
             <Route path="/inspiration" component={InspirationGallery} />
             <ProtectedRoute path="/customer-dashboard" component={CustomerDashboard} />
-            <ProtectedRoute path="/place-order/:id" component={PlaceOrder} />
+            <ProtectedRoute path="/finalize-order/:id" component={FinalizeOrder} />
             <ProtectedRoute path="/customize-request/:id" component={CustomizeRequest} />
             <ProtectedRoute path="/custom-designs/:id" component={lazy(() => import("@/pages/custom-designs/[id]"))} />
             <Route path="/auth" component={AuthPage} />

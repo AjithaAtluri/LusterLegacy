@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
 import { ProductSpecifications } from "@/components/products/product-specifications";
 
-export default function RequestFinalizeOrder() {
+export default function FinalizeOrder() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -180,7 +180,7 @@ export default function RequestFinalizeOrder() {
   // Redirect to login if not authenticated
   const handleLoginRedirect = () => {
     // Store the current URL to redirect back after login
-    localStorage.setItem('redirectAfterLogin', `/request-finalize-order/${id}`);
+    localStorage.setItem('redirectAfterLogin', `/finalize-order/${id}`);
     setLocation('/auth');
   };
 
