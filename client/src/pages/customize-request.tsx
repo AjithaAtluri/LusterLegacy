@@ -66,12 +66,20 @@ export default function CustomizeRequest() {
     queryKey: [`/api/products/${productId}`],
     queryFn: async () => {
       console.log(`Fetching product data for ID ${productId}`);
+      
+      // Validate productId is present and numeric
+      if (!productId || isNaN(Number(productId))) {
+        throw new Error("Invalid product ID");
+      }
+      
       const response = await fetch(`/api/products/${productId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch product details");
       }
       return response.json();
     },
+    // Only run query if productId is valid
+    enabled: !!productId && !isNaN(Number(productId))
   });
 
   // Get all metal types
@@ -197,7 +205,7 @@ export default function CustomizeRequest() {
           
           const stoneName = stone.name.toLowerCase();
           // Check if any keyword matches
-          return keywords.some(keyword => stoneName.includes(keyword));
+          return keywords.some((keyword: string) => stoneName.includes(keyword));
         });
         
         console.log("Similar stones for customization:", similarStones);
@@ -279,7 +287,7 @@ export default function CustomizeRequest() {
         
         // Calculate stone cost changes
         // First, calculate how much the original stones contributed
-        console.log("All available stone types in database:", stoneTypes?.map(s => `${s.name} - ₹${s.priceModifier}/carat`));
+        console.log("All available stone types in database:", stoneTypes?.map((s: any) => `${s.name} - ₹${s.priceModifier}/carat`));
         
         const originalPrimaryStoneObj = stoneTypes?.find((stone: any) => 
           stone.name.toLowerCase() === originalMainStoneType.toLowerCase());
@@ -515,7 +523,7 @@ export default function CustomizeRequest() {
                     </SelectTrigger>
                     <SelectContent>
                       {metalTypes && 
-                        metalTypes.map((metal) => (
+                        metalTypes.map((metal: any) => (
                           <SelectItem key={`metal-${metal.id}`} value={String(metal.id)}>
                             {metal.name}
                           </SelectItem>
@@ -564,7 +572,7 @@ export default function CustomizeRequest() {
                         All Stones
                       </div>
                       {stoneTypes && 
-                        stoneTypes.map((stone) => (
+                        stoneTypes.map((stone: any) => (
                           <SelectItem key={`primary-${stone.id}`} value={String(stone.id)}>
                             {stone.name}
                           </SelectItem>
@@ -591,7 +599,7 @@ export default function CustomizeRequest() {
                       <SelectContent>
                         <SelectItem value="none_selected" key="none-secondary">None</SelectItem>
                         {stoneTypes && 
-                          stoneTypes.map((stone) => (
+                          stoneTypes.map((stone: any) => (
                             <SelectItem key={`secondary-${stone.id}`} value={String(stone.id)}>
                               {stone.name}
                             </SelectItem>
