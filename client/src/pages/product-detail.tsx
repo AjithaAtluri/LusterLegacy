@@ -561,35 +561,7 @@ export default function ProductDetail() {
                     </div>
                   </div>
 
-                  {/* Product Category Section */}
-                  <div className="p-6 bg-card rounded-lg shadow-sm">
-                    <h3 className="font-playfair text-lg font-semibold mb-4">Product Category</h3>
-                    <div className="space-y-4">
-                      {/* Product Category */}
-                      {(product.productType || product.category) && (
-                        <div className="bg-background border border-border rounded-md p-4">
-                          <div className="flex items-center justify-between">
-                            <span className="font-montserrat font-semibold text-sm text-foreground/80">Product Category</span>
-                          </div>
-                          <div className="font-cormorant text-xl mt-1 capitalize">{product.productType || product.category || "Not specified"}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* All Stones Collection */}
-                  <div className="p-6 bg-card rounded-lg shadow-sm">
-                    {Array.isArray(productStones) && productStones.length > 0 && (
-                      <>
-                        <h3 className="font-playfair text-lg font-semibold mb-4">All Stones & Gems</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {productStones.map((stone, index) => (
-                            <Badge key={index} variant="outline">{stone}</Badge>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
+
 
                   {/* Design Inspiration Section */}
                   {userDescription && (
