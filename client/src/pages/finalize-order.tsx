@@ -312,24 +312,6 @@ export default function FinalizeOrder() {
                 )}
               </CardContent>
               <CardFooter className="flex flex-col p-6 pt-0 space-y-4">
-                <div className="w-full mb-2">
-                  <Label htmlFor="currency" className="mb-2 block">Currency</Label>
-                  <Select 
-                    value={currency} 
-                    onValueChange={(value) => setCurrency(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD (Ship to USA)</SelectItem>
-                      <SelectItem value="INR">INR (Ship to India)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-foreground/60 mt-1">
-                    * USD payments will ship to the USA, INR payments will ship to India
-                  </p>
-                </div>
                 <Separator />
                 <div className="flex justify-between items-center w-full">
                   <span className="font-medium">Price:</span>
@@ -477,6 +459,27 @@ export default function FinalizeOrder() {
                   {/* Payment Method section (moved from sidebar) */}
                   <div className="mb-6 border border-slate-200 dark:border-slate-800 rounded-md p-6">
                     <h2 className="font-playfair text-xl font-semibold mb-4">Payment Method</h2>
+                    
+                    {/* Currency selection - moved from sidebar */}
+                    <div className="mb-6">
+                      <Label htmlFor="currency" className="mb-2 block">Currency</Label>
+                      <Select 
+                        value={currency} 
+                        onValueChange={(value) => setCurrency(value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="USD">USD (Ship to USA)</SelectItem>
+                          <SelectItem value="INR">INR (Ship to India)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-foreground/60 mt-1">
+                        * USD payments will ship to the USA, INR payments will ship to India
+                      </p>
+                    </div>
+                    
                     <RadioGroup 
                       defaultValue={paymentMethod} 
                       onValueChange={setPaymentMethod}
