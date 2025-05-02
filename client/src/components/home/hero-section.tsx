@@ -87,11 +87,11 @@ export default function HeroSection() {
             <span className="block mt-2 text-shadow-lg text-white">Designed by You</span>
           </h1>
           
-          {/* Tagline with elegant styling using both purple and gold */}
+          {/* Tagline with elegant styling using gold for better visibility */}
           <div className="mb-8 max-w-xl">
-            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4">
-              <span className="font-semibold text-primary text-glow">Experience bespoke luxury in every piece.</span>{" "}
-              <span className="font-medium text-accent purple-glow">Timeless elegance reimagined for the modern connoisseur.</span>
+            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4 text-primary text-glow">
+              <span className="font-semibold">Experience bespoke luxury in every piece.</span>{" "}
+              <span className="font-medium">Timeless elegance reimagined for the modern connoisseur.</span>
             </p>
           </div>
           
@@ -109,11 +109,11 @@ export default function HeroSection() {
             <Button 
               asChild
               variant="outline"
-              className="font-montserrat font-medium border border-accent/80 bg-accent/20 backdrop-blur-sm text-white px-6 py-3 md:px-8 md:py-4 rounded-none hover:bg-accent/30 focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-charcoal transition duration-300 h-auto shadow-lg"
+              className="font-montserrat font-medium border-2 border-accent/90 bg-accent/20 backdrop-blur-sm text-white px-6 py-3 md:px-8 md:py-4 rounded-none hover:bg-accent/40 focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-charcoal transition duration-300 h-auto shadow-lg"
             >
               <Link href="/custom-design" className="flex items-center">
                 <span>Create Custom Design</span>
-                <span className="ml-2 text-accent">✦</span>
+                <span className="ml-2 text-accent/90">✦</span>
               </Link>
             </Button>
           </div>
