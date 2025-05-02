@@ -61,8 +61,9 @@ export default function AuthPage() {
     if (returnTo) {
       setReturnPath(returnTo);
       
-      // Debug logging to check if there is form data saved in sessionStorage
+      // Check for saved form data based on the return path
       if (returnTo === '/custom-design') {
+        // Custom design request form
         const savedData = sessionStorage.getItem('designFormData');
         console.log("Auth page - found saved custom design data:", savedData ? "Yes" : "No");
         if (savedData) {
@@ -76,6 +77,39 @@ export default function AuthPage() {
             });
           } catch (e) {
             console.error("Auth page - error parsing saved form data:", e);
+          }
+        }
+      } else if (returnTo.startsWith('/customize-request/')) {
+        // Product customization request form
+        const savedData = sessionStorage.getItem('customizationFormData');
+        console.log("Auth page - found saved customization data:", savedData ? "Yes" : "No");
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            console.log("Auth page - saved customization form data preview:", {
+              productId: parsedData.productId,
+              customizationType: parsedData.customizationType,
+              hasRequirements: !!parsedData.requirements
+            });
+          } catch (e) {
+            console.error("Auth page - error parsing saved customization form data:", e);
+          }
+        }
+      } else if (returnTo.startsWith('/place-order/')) {
+        // Quote request form
+        const savedData = sessionStorage.getItem('quoteFormData');
+        console.log("Auth page - found saved quote request data:", savedData ? "Yes" : "No");
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            console.log("Auth page - saved quote form data preview:", {
+              productId: parsedData.productId,
+              name: parsedData.name,
+              email: parsedData.email,
+              currency: parsedData.currency
+            });
+          } catch (e) {
+            console.error("Auth page - error parsing saved quote form data:", e);
           }
         }
       }
