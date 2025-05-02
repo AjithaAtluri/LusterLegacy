@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
-import { Upload, X, CheckCircle, Image as ImageIcon, Check, ChevronsUpDown } from "lucide-react";
+import { Upload, X, CheckCircle, Image as ImageIcon, Check, ChevronsUpDown, MessageCircle, Pencil, Gem } from "lucide-react";
 import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS } from "@/lib/constants";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -762,7 +762,9 @@ export default function CustomDesignSection() {
             
             <div className="space-y-4 mb-auto">
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</div>
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <MessageCircle className="h-4 w-4" />
+                </div>
                 <div>
                   <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Initial Design Consultation</h5>
                   <p className="font-montserrat text-sm text-foreground/70">Share your vision with our expert designers who will guide you through the possibilities</p>
@@ -770,7 +772,9 @@ export default function CustomDesignSection() {
               </div>
               
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</div>
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <Pencil className="h-4 w-4" />
+                </div>
                 <div>
                   <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">CAD Design Development</h5>
                   <p className="font-montserrat text-sm text-foreground/70">Our designers create detailed 3D renderings of your custom piece for your review</p>
@@ -778,7 +782,9 @@ export default function CustomDesignSection() {
               </div>
               
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</div>
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <Gem className="h-4 w-4" />
+                </div>
                 <div>
                   <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Design Refinements</h5>
                   <p className="font-montserrat text-sm text-foreground/70">We'll incorporate your feedback to perfect every detail until you're completely satisfied</p>
@@ -786,7 +792,9 @@ export default function CustomDesignSection() {
               </div>
               
               <div className="flex items-start p-4 rounded-lg bg-background/50 border border-foreground/10 hover:border-primary/30 hover:bg-primary/5 transition-colors">
-                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">4</div>
+                <div className="bg-primary text-pearl w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                  <Check className="h-4 w-4" />
+                </div>
                 <div>
                   <h5 className="font-playfair text-lg font-semibold text-foreground mb-1">Final Design Approval</h5>
                   <p className="font-montserrat text-sm text-foreground/70">Approve your custom design to proceed to creation with a 50% advance payment</p>
