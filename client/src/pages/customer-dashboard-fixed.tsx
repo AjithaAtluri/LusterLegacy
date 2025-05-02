@@ -51,12 +51,20 @@ export default function CustomerDashboard() {
   
   // Combine all design and customization requests
   const allRequests = useMemo(() => {
-    // Combine the data from all request types with type identifiers to prevent duplicate keys
-    const requests = [
-      ...(customizationRequests || []).map(req => ({ ...req, requestType: 'customization' })),
-      ...(customDesigns || []).map(req => ({ ...req, requestType: 'design' })),
-      ...(quoteRequests || []).map(req => ({ ...req, requestType: 'quote' }))
-    ];
+    // Get all custom designs
+    const designs = (customDesigns || []).map(req => ({ ...req, requestType: 'design' }));
+    
+    // Get all quote requests
+    const quotes = (quoteRequests || []).map(req => ({ ...req, requestType: 'quote' }));
+    
+    // For customization requests, filter out duplicates that already exist in designs array
+    // This prevents the same request appearing both as a customization and design
+    const customizations = (customizationRequests || [])
+      .filter(req => !designs.some(design => design.id === req.id))
+      .map(req => ({ ...req, requestType: 'customization' }));
+    
+    // Combine all requests
+    const requests = [...designs, ...customizations, ...quotes];
     
     // Sort by date
     return requests.sort((a, b) => 
