@@ -22,7 +22,7 @@
     --muted: 60 4.8% 95.9%;
     --muted-foreground: 0 0% 45%;
     
-    --accent: 292 63% 18%;     /* Deep plum */
+    --accent: 292 63% 22%;     /* Brighter deep plum for better visibility */
     --accent-foreground: 36 33% 97%;
     
     --destructive: 0 84.2% 60.2%;
@@ -55,13 +55,13 @@
     --primary: 46 65% 58%;      /* Brighter Gold for dark theme */
     --primary-foreground: 0 0% 10%;
     
-    --secondary: 292 63% 22%;   /* Brighter Deep plum */
+    --secondary: 292 63% 30%;   /* Brighter Deep plum */
     --secondary-foreground: 36 33% 97%;
     
     --muted: 0 0% 15%;
     --muted-foreground: 36 33% 90%;
     
-    --accent: 292 63% 25%;      /* Brighter Deep plum */
+    --accent: 292 63% 32%;      /* Enhanced Purple */ 
     --accent-foreground: 36 33% 97%;
     
     --destructive: 0 62.8% 35%;
@@ -167,12 +167,27 @@
     background: linear-gradient(135deg, hsl(46, 70%, 58%) 0%, hsl(46, 97%, 85%) 50%, hsl(46, 70%, 58%) 100%);
   }
   
+  .purple-gradient {
+    background: linear-gradient(135deg, hsl(292, 63%, 25%) 0%, hsl(292, 80%, 40%) 50%, hsl(292, 63%, 25%) 100%);
+  }
+  
+  .dark .purple-gradient {
+    background: linear-gradient(135deg, hsl(292, 63%, 28%) 0%, hsl(292, 80%, 45%) 50%, hsl(292, 63%, 28%) 100%);
+  }
+  
   .text-shadow {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   }
   
   .dark .text-shadow {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  }
+  
+  .purple-glow {
+    text-shadow: 0 0 10px rgba(190, 110, 210, 0.6), 
+                 0 0 15px rgba(190, 110, 210, 0.4), 
+                 0 0 20px rgba(190, 110, 210, 0.3),
+                 0 2px 4px rgba(0, 0, 0, 0.8);
   }
   
   .text-shadow-sm {

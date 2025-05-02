@@ -50,19 +50,22 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-br from-charcoal/70 via-charcoal/55 to-charcoal/30"></div>
       </div>
       
-      {/* Subtle gold accents */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/80 via-primary/40 to-transparent"></div>
-      <div className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-l from-primary/80 via-primary/40 to-transparent"></div>
+      {/* Gold and purple accent lines */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/80 via-accent/60 to-transparent"></div>
+      <div className="absolute bottom-0 right-0 w-full h-1 bg-gradient-to-l from-accent/80 via-primary/60 to-transparent"></div>
       
-      {/* Decorative diamond pattern overlay */}
+      {/* Decorative diamond pattern overlay with alternating gold and purple */}
       <div className="absolute inset-0 z-5 opacity-5 pointer-events-none">
         <div className="h-full w-full" 
              style={{ 
-               backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M20 10 L30 20 L20 30 L10 20 Z\' stroke=\'%23D4AF37\' stroke-width=\'0.5\' fill=\'none\'/%3E%3C/svg%3E")',
-               backgroundSize: '40px 40px'
+               backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M20 10 L30 20 L20 30 L10 20 Z\' stroke=\'%23D4AF37\' stroke-width=\'0.5\' fill=\'none\'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg width=\'80\' height=\'80\' viewBox=\'0 0 80 80\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M40 20 L60 40 L40 60 L20 40 Z\' stroke=\'%23a855f7\' stroke-width=\'0.5\' fill=\'none\'/%3E%3C/svg%3E")',
+               backgroundSize: '40px 40px, 80px 80px'
              }}>
         </div>
       </div>
+      
+      {/* Subtle purple accent in top right */}
+      <div className="absolute top-6 right-6 w-32 h-32 rounded-full bg-accent/5 blur-3xl"></div>
       
       {/* Content - only displays after image is loaded */}
       <div className={`relative z-20 container h-full mx-auto px-6 flex flex-col justify-center transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
@@ -84,11 +87,11 @@ export default function HeroSection() {
             <span className="block mt-2 text-shadow-lg text-white">Designed by You</span>
           </h1>
           
-          {/* Tagline with elegant styling and enhanced readability - all in gold for better visibility */}
+          {/* Tagline with elegant styling using both purple and gold */}
           <div className="mb-8 max-w-xl">
-            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4 text-primary text-glow">
-              <span className="font-semibold">Experience bespoke luxury in every piece.</span>{" "}
-              <span className="font-medium">Timeless elegance reimagined for the modern connoisseur.</span>
+            <p className="font-cormorant text-xl md:text-2xl leading-relaxed border-l-2 border-primary pl-4">
+              <span className="font-semibold text-primary text-glow">Experience bespoke luxury in every piece.</span>{" "}
+              <span className="font-medium text-accent purple-glow">Timeless elegance reimagined for the modern connoisseur.</span>
             </p>
           </div>
           
@@ -106,27 +109,27 @@ export default function HeroSection() {
             <Button 
               asChild
               variant="outline"
-              className="font-montserrat font-medium border border-primary/80 bg-primary/20 backdrop-blur-sm text-white px-6 py-3 md:px-8 md:py-4 rounded-none hover:bg-primary/30 focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-charcoal transition duration-300 h-auto shadow-lg"
+              className="font-montserrat font-medium border border-accent/80 bg-accent/20 backdrop-blur-sm text-white px-6 py-3 md:px-8 md:py-4 rounded-none hover:bg-accent/30 focus:ring-2 focus:ring-accent focus:ring-offset-1 focus:ring-offset-charcoal transition duration-300 h-auto shadow-lg"
             >
               <Link href="/custom-design" className="flex items-center">
                 <span>Create Custom Design</span>
-                <span className="ml-2">✦</span>
+                <span className="ml-2 text-accent">✦</span>
               </Link>
             </Button>
           </div>
         </div>
       </div>
       
-      {/* Decorative corner elements - only shows after image loads */}
+      {/* Decorative corner elements with alternating colors - only shows after image loads */}
       <div className={`absolute top-6 left-6 h-16 w-16 border-t-2 border-l-2 border-primary/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
-      <div className={`absolute bottom-6 right-6 h-16 w-16 border-b-2 border-r-2 border-primary/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
+      <div className={`absolute bottom-6 right-6 h-16 w-16 border-b-2 border-r-2 border-accent/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
       
-      {/* Scroll indicator - only shows after image loads */}
+      {/* Scroll indicator with purple accents - only shows after image loads */}
       <div className={`absolute bottom-6 left-0 right-0 flex justify-center z-20 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <a href="#collections" className="flex flex-col items-center group">
-          <span className="text-xs text-pearl/70 uppercase tracking-widest mb-2 font-montserrat group-hover:text-primary transition-colors duration-300">Discover</span>
+          <span className="text-xs text-pearl/70 uppercase tracking-widest mb-2 font-montserrat group-hover:text-accent transition-colors duration-300">Discover</span>
           <div className="relative w-6 h-10 border-2 border-pearl/30 rounded-full flex justify-center p-1">
-            <div className="w-1 h-2 bg-primary rounded-full animate-scroll"></div>
+            <div className="w-1 h-2 bg-accent rounded-full animate-scroll"></div>
           </div>
         </a>
       </div>
