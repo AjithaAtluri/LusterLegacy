@@ -108,11 +108,11 @@ export default function HeroSection() {
             </Button>
             <Button 
               asChild
-              className="font-montserrat font-medium bg-primary/90 text-white px-6 py-3 md:px-8 md:py-4 rounded-none border border-primary/80 hover:bg-primary transition duration-300 hover-shine h-auto group shadow-lg"
+              className="font-montserrat font-medium bg-transparent text-primary px-6 py-3 md:px-8 md:py-4 rounded-none border-2 border-primary/70 hover:bg-primary/5 hover:text-primary hover:border-primary transition duration-300 h-auto group shadow-[0_0_15px_rgba(212,175,55,0.2)]"
             >
               <Link href="/custom-design" className="flex items-center">
                 <span>Create Custom Design</span>
-                <span className="ml-2">✦</span>
+                <span className="ml-2 text-primary">✦</span>
               </Link>
             </Button>
           </div>
