@@ -32,15 +32,21 @@ export default function Header() {
     checkAdminAuth();
   }, [location]); // Check on location change
   
+  // Define cart item interface
+  interface CartData {
+    items?: any[];
+    total?: number;
+  }
+  
   // Fetch cart items count
-  const { data: cartData } = useQuery({
+  const { data: cartData } = useQuery<CartData | any[]>({
     queryKey: ['/api/cart'],
     // Enable the cart query to properly show cart items
     staleTime: 60000 // 1 minute stale time to reduce refetches
   });
   
   // Safely extract items from the cart data response
-  const cartItems = cartData?.items || [];
+  const cartItems = Array.isArray(cartData) ? cartData : cartData?.items || [];
   const cartCount = cartItems.length;
   
   const handleLogout = async () => {
@@ -116,12 +122,16 @@ export default function Header() {
                 <LogOut className="h-4 w-4 mr-2" />
                 {logoutMutation.isPending ? "Logging out..." : "Logout"}
               </Button>
+              <ThemeToggle />
             </div>
           ) : (
-            <Link href="/auth" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
-              <User className="h-4 w-4 mr-2" />
-              Sign Up/Login
-            </Link>
+            <div className="flex items-center space-x-2">
+              <Link href="/auth" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
+                <User className="h-4 w-4 mr-2" />
+                Sign Up/Login
+              </Link>
+              <ThemeToggle />
+            </div>
           )}
         </div>
         
@@ -192,16 +202,24 @@ export default function Header() {
                       <LogOut className="h-4 w-4 mr-2" />
                       {logoutMutation.isPending ? "Logging out..." : "Logout"}
                     </Button>
+                    <div className="flex justify-center mt-2">
+                      <ThemeToggle />
+                    </div>
                   </div>
                 ) : (
-                  <Link 
-                    href="/auth"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center mt-4"
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    Sign Up/Login
-                  </Link>
+                  <div className="flex flex-col space-y-4 mt-4">
+                    <Link 
+                      href="/auth"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center justify-center"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Sign Up/Login
+                    </Link>
+                    <div className="flex justify-center">
+                      <ThemeToggle />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

@@ -43,33 +43,33 @@
   }
  
   .dark {
-    --background: 0 0% 13%;    /* Charcoal */
-    --foreground: 36 33% 97%;  /* Pearl white */
+    --background: 0 0% 7%;      /* Very Dark Charcoal/Black */
+    --foreground: 36 33% 97%;   /* Pearl white */
     
-    --card: 0 0% 18%;
+    --card: 0 0% 12%;           /* Dark Charcoal */
     --card-foreground: 36 33% 97%;
     
-    --popover: 0 0% 18%;
+    --popover: 0 0% 12%;
     --popover-foreground: 36 33% 97%;
     
-    --primary: 46 65% 52%;     /* Gold */
-    --primary-foreground: 0 0% 13%;
+    --primary: 46 65% 58%;      /* Brighter Gold for dark theme */
+    --primary-foreground: 0 0% 10%;
     
-    --secondary: 292 63% 18%;  /* Deep plum */
+    --secondary: 292 63% 22%;   /* Brighter Deep plum */
     --secondary-foreground: 36 33% 97%;
     
-    --muted: 0 0% 18%;
+    --muted: 0 0% 15%;
     --muted-foreground: 36 33% 90%;
     
-    --accent: 292 63% 18%;     /* Deep plum */
+    --accent: 292 63% 25%;      /* Brighter Deep plum */
     --accent-foreground: 36 33% 97%;
     
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 35%;
     --destructive-foreground: 36 33% 97%;
     
-    --border: 0 0% 25%;
-    --input: 0 0% 25%;
-    --ring: 46 65% 52%;        /* Gold */
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 46 65% 58%;         /* Brighter Gold ring */
   }
 }
 
@@ -92,12 +92,24 @@
     background: linear-gradient(135deg, hsl(46, 65%, 52%) 0%, hsl(46, 97%, 81%) 50%, hsl(46, 65%, 52%) 100%);
   }
   
+  .dark .gold-gradient {
+    background: linear-gradient(135deg, hsl(46, 70%, 58%) 0%, hsl(46, 97%, 85%) 50%, hsl(46, 70%, 58%) 100%);
+  }
+  
   .text-shadow {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   }
   
+  .dark .text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  }
+  
   .text-shadow-sm {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  }
+  
+  .dark .text-shadow-sm {
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
   }
   
   .text-shadow-lg {
@@ -106,11 +118,24 @@
                  0 12px 20px rgba(0, 0, 0, 0.5);
   }
   
+  .dark .text-shadow-lg {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 
+                 0 4px 12px rgba(0, 0, 0, 0.8),
+                 0 12px 20px rgba(0, 0, 0, 0.6);
+  }
+  
   .text-glow {
     text-shadow: 0 0 10px rgba(212, 175, 55, 0.5), 
                  0 0 15px rgba(212, 175, 55, 0.3), 
                  0 0 20px rgba(212, 175, 55, 0.2),
                  0 2px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .dark .text-glow {
+    text-shadow: 0 0 10px rgba(230, 190, 70, 0.6), 
+                 0 0 15px rgba(230, 190, 70, 0.4), 
+                 0 0 20px rgba(230, 190, 70, 0.3),
+                 0 2px 4px rgba(0, 0, 0, 0.9);
   }
   
   .hover-shine {
@@ -131,11 +156,26 @@
     transition: all 0.6s ease;
   }
   
+  .dark .hover-shine::after {
+    background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(230, 190, 70, 0.2) 100%);
+  }
+  
   .hover-shine:hover::after {
     opacity: 1;
     top: -30%;
     left: -30%;
     transition: all 0.6s ease;
+  }
+  
+  /* Special dark mode hover effect for product cards */
+  .dark .product-card {
+    transition: all 0.3s ease;
+  }
+  
+  .dark .product-card:hover {
+    box-shadow: 0 0 15px rgba(230, 190, 70, 0.15),
+                0 0 30px rgba(230, 190, 70, 0.1);
+    transform: translateY(-2px);
   }
   
   .bg-gradient-radial {
