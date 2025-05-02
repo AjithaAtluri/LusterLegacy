@@ -19,7 +19,11 @@ import {
   insertMetalTypeSchema,
   insertStoneTypeSchema,
   insertInspirationGallerySchema,
-  insertProductTypeSchema
+  insertProductTypeSchema,
+  insertCustomizationRequestSchema,
+  insertCustomizationRequestCommentSchema,
+  insertQuoteRequestSchema,
+  insertQuoteRequestCommentSchema
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -398,6 +402,456 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Customization Request routes
+   */
+  app.post("/api/customization-requests", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validatedData = insertCustomizationRequestSchema.parse(req.body);
+      
+      // Add user ID if authenticated
+      if (req.isAuthenticated() && req.user) {
+        validatedData.userId = req.user.id;
+      }
+      
+      // Create customization request
+      const newCustomizationRequest = await storage.createCustomizationRequest(validatedData);
+      
+      res.status(201).json(newCustomizationRequest);
+    } catch (error) {
+      console.error("Error creating customization request:", error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to create customization request" 
+      });
+    }
+  });
+  
+  // Get all customization requests (admin only)
+  app.get("/api/customization-requests", async (req: Request, res: Response) => {
+    try {
+      // Check if admin
+      const isAdmin = await validateAdmin(req);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Not authorized to view all customization requests" });
+      }
+      
+      // Get all customization requests
+      const customizationRequests = await storage.getAllCustomizationRequests();
+      
+      // For each request, get product name
+      const enrichedRequests = await Promise.all(
+        customizationRequests.map(async (request) => {
+          try {
+            const product = await storage.getProduct(request.productId);
+            return {
+              ...request,
+              productName: product ? product.name : "Unknown Product",
+              customizationType: request.requestedMetalType !== request.originalMetalType && 
+                               request.requestedStoneType !== request.originalStoneType
+                ? "metal_and_stone"
+                : request.requestedMetalType !== request.originalMetalType
+                  ? "metal_only"
+                  : "stone_only",
+              preferredMetal: request.requestedMetalType,
+              preferredStones: [request.requestedStoneType],
+              customizationDetails: request.additionalNotes || "",
+              quotedPrice: request.estimatedPrice,
+              currency: "USD", // Default currency
+            };
+          } catch (error) {
+            console.error(`Error enriching customization request ${request.id}:`, error);
+            return request;
+          }
+        })
+      );
+      
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Error fetching customization requests:", error);
+      res.status(500).json({ message: "Failed to fetch customization requests" });
+    }
+  });
+  
+  // Get a specific customization request
+  app.get("/api/customization-requests/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid customization request ID" });
+      }
+      
+      // Get the customization request
+      const customizationRequest = await storage.getCustomizationRequest(id);
+      if (!customizationRequest) {
+        return res.status(404).json({ message: "Customization request not found" });
+      }
+      
+      // Check authorization - admin or owner
+      const isAdmin = await validateAdmin(req);
+      const isOwner = req.isAuthenticated() && req.user && req.user.id === customizationRequest.userId;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Not authorized to view this customization request" });
+      }
+      
+      // Get product name
+      const product = await storage.getProduct(customizationRequest.productId);
+      
+      // Get comments for this customization request
+      const comments = await storage.getCustomizationRequestComments(id);
+      
+      // Return enriched request
+      const enrichedRequest = {
+        ...customizationRequest,
+        productName: product ? product.name : "Unknown Product",
+        customizationType: customizationRequest.requestedMetalType !== customizationRequest.originalMetalType && 
+                         customizationRequest.requestedStoneType !== customizationRequest.originalStoneType
+          ? "metal_and_stone"
+          : customizationRequest.requestedMetalType !== customizationRequest.originalMetalType
+            ? "metal_only"
+            : "stone_only",
+        preferredMetal: customizationRequest.requestedMetalType,
+        preferredStones: [customizationRequest.requestedStoneType],
+        customizationDetails: customizationRequest.additionalNotes || "",
+        quotedPrice: customizationRequest.estimatedPrice,
+        currency: "USD", // Default currency
+        comments: comments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      };
+      
+      res.json(enrichedRequest);
+    } catch (error) {
+      console.error(`Error fetching customization request:`, error);
+      res.status(500).json({ message: "Failed to fetch customization request" });
+    }
+  });
+  
+  // Update a customization request (status, price)
+  app.patch("/api/customization-requests/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid customization request ID" });
+      }
+      
+      // Check if admin
+      const isAdmin = await validateAdmin(req);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Not authorized to update customization requests" });
+      }
+      
+      // Get the existing request
+      const existingRequest = await storage.getCustomizationRequest(id);
+      if (!existingRequest) {
+        return res.status(404).json({ message: "Customization request not found" });
+      }
+      
+      // Update only allowed fields
+      const updates: Record<string, any> = {};
+      
+      if (req.body.status && typeof req.body.status === 'string') {
+        updates.status = req.body.status;
+      }
+      
+      if (req.body.quotedPrice && !isNaN(parseFloat(req.body.quotedPrice))) {
+        updates.estimatedPrice = parseFloat(req.body.quotedPrice);
+      }
+      
+      // Update the request
+      const updatedRequest = await storage.updateCustomizationRequest(id, updates);
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error updating customization request:", error);
+      res.status(500).json({ message: "Failed to update customization request" });
+    }
+  });
+  
+  // Add a comment to a customization request
+  app.post("/api/customization-comments", upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      const { customizationRequestId, content, createdBy, isAdmin } = req.body;
+      
+      if (!customizationRequestId || !content) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Validate the request exists
+      const customizationRequest = await storage.getCustomizationRequest(parseInt(customizationRequestId));
+      if (!customizationRequest) {
+        return res.status(404).json({ message: "Customization request not found" });
+      }
+      
+      // Check authorization - admin or owner
+      const isAdminUser = await validateAdmin(req);
+      const isOwner = req.isAuthenticated() && req.user && req.user.id === customizationRequest.userId;
+      
+      // Check if the user claims to be admin but isn't
+      if (isAdmin === 'true' && !isAdminUser) {
+        return res.status(403).json({ message: "Not authorized to post admin comments" });
+      }
+      
+      if (!isAdminUser && !isOwner) {
+        return res.status(403).json({ message: "Not authorized to comment on this customization request" });
+      }
+      
+      // Create comment data
+      const commentData: any = {
+        customizationRequestId: parseInt(customizationRequestId),
+        content: content,
+        createdBy: isAdminUser ? req.user?.username || 'Admin' : createdBy || req.user?.username || 'Customer',
+        isAdmin: isAdminUser
+      };
+      
+      // Add user ID if authenticated
+      if (req.isAuthenticated() && req.user) {
+        commentData.userId = req.user.id;
+      }
+      
+      // Add image URL if provided
+      if (req.file) {
+        commentData.imageUrl = `/uploads/${req.file.filename}`;
+      }
+      
+      // Create the comment
+      const newComment = await storage.addCustomizationRequestComment(commentData);
+      
+      res.status(201).json(newComment);
+    } catch (error) {
+      console.error("Error adding customization comment:", error);
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+  
+  /**
+   * Quote Request routes
+   */
+  app.post("/api/quote-requests", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validatedData = insertQuoteRequestSchema.parse(req.body);
+      
+      // Add user ID if authenticated
+      if (req.isAuthenticated() && req.user) {
+        validatedData.userId = req.user.id;
+      }
+      
+      // Create quote request
+      const newQuoteRequest = await storage.createQuoteRequest(validatedData);
+      
+      res.status(201).json(newQuoteRequest);
+    } catch (error) {
+      console.error("Error creating quote request:", error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to create quote request" 
+      });
+    }
+  });
+  
+  // Get all quote requests (admin only)
+  app.get("/api/quote-requests", async (req: Request, res: Response) => {
+    try {
+      // Check if admin
+      const isAdmin = await validateAdmin(req);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Not authorized to view all quote requests" });
+      }
+      
+      // Get all quote requests
+      const quoteRequests = await storage.getAllQuoteRequests();
+      
+      // For each request, get product name
+      const enrichedRequests = await Promise.all(
+        quoteRequests.map(async (request) => {
+          try {
+            const product = await storage.getProduct(request.productId);
+            return {
+              ...request,
+              productName: product ? product.name : "Unknown Product",
+              quantity: 1, // Default quantity
+              specialRequirements: request.additionalNotes,
+              preferredCurrency: "USD", // Default currency
+              quotedPrice: request.estimatedPrice,
+              imageUrl: product ? product.imageUrl : null,
+              currency: "USD", // Default currency
+              shippingAddress: null // Default
+            };
+          } catch (error) {
+            console.error(`Error enriching quote request ${request.id}:`, error);
+            return request;
+          }
+        })
+      );
+      
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Error fetching quote requests:", error);
+      res.status(500).json({ message: "Failed to fetch quote requests" });
+    }
+  });
+  
+  // Get a specific quote request
+  app.get("/api/quote-requests/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid quote request ID" });
+      }
+      
+      // Get the quote request
+      const quoteRequest = await storage.getQuoteRequest(id);
+      if (!quoteRequest) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      
+      // Check authorization - admin or owner
+      const isAdmin = await validateAdmin(req);
+      const isOwner = req.isAuthenticated() && req.user && req.user.id === quoteRequest.userId;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Not authorized to view this quote request" });
+      }
+      
+      // Get product name and image
+      const product = await storage.getProduct(quoteRequest.productId);
+      
+      // Get comments for this quote request
+      const comments = await storage.getQuoteRequestComments(id);
+      
+      // Return enriched request
+      const enrichedRequest = {
+        ...quoteRequest,
+        productName: product ? product.name : "Unknown Product",
+        quantity: 1, // Default quantity
+        specialRequirements: quoteRequest.additionalNotes,
+        preferredCurrency: "USD", // Default currency
+        quotedPrice: quoteRequest.estimatedPrice,
+        imageUrl: product ? product.imageUrl : null,
+        currency: "USD", // Default currency
+        shippingAddress: null, // Default
+        comments: comments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      };
+      
+      res.json(enrichedRequest);
+    } catch (error) {
+      console.error(`Error fetching quote request:`, error);
+      res.status(500).json({ message: "Failed to fetch quote request" });
+    }
+  });
+  
+  // Update a quote request (status, price)
+  app.patch("/api/quote-requests/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid quote request ID" });
+      }
+      
+      // Check if admin
+      const isAdmin = await validateAdmin(req);
+      if (!isAdmin) {
+        return res.status(403).json({ message: "Not authorized to update quote requests" });
+      }
+      
+      // Get the existing request
+      const existingRequest = await storage.getQuoteRequest(id);
+      if (!existingRequest) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      
+      // Update only allowed fields
+      const updates: Record<string, any> = {};
+      
+      if (req.body.status && typeof req.body.status === 'string') {
+        updates.status = req.body.status;
+      }
+      
+      if (req.body.quotedPrice && !isNaN(parseFloat(req.body.quotedPrice))) {
+        updates.estimatedPrice = parseFloat(req.body.quotedPrice);
+      }
+      
+      // Update the request
+      const updatedRequest = await storage.updateQuoteRequest(id, updates);
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error updating quote request:", error);
+      res.status(500).json({ message: "Failed to update quote request" });
+    }
+  });
+  
+  // Add a comment to a quote request
+  app.post("/api/quote-comments", upload.single('image'), async (req: Request, res: Response) => {
+    try {
+      const { quoteRequestId, content, createdBy, isAdmin } = req.body;
+      
+      if (!quoteRequestId || !content) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Validate the request exists
+      const quoteRequest = await storage.getQuoteRequest(parseInt(quoteRequestId));
+      if (!quoteRequest) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      
+      // Check authorization - admin or owner
+      const isAdminUser = await validateAdmin(req);
+      const isOwner = req.isAuthenticated() && req.user && req.user.id === quoteRequest.userId;
+      
+      // Check if the user claims to be admin but isn't
+      if (isAdmin === 'true' && !isAdminUser) {
+        return res.status(403).json({ message: "Not authorized to post admin comments" });
+      }
+      
+      if (!isAdminUser && !isOwner) {
+        return res.status(403).json({ message: "Not authorized to comment on this quote request" });
+      }
+      
+      // Create comment data
+      const commentData: any = {
+        quoteRequestId: parseInt(quoteRequestId),
+        content: content,
+        createdBy: isAdminUser ? req.user?.username || 'Admin' : createdBy || req.user?.username || 'Customer',
+        isAdmin: isAdminUser
+      };
+      
+      // Add user ID if authenticated
+      if (req.isAuthenticated() && req.user) {
+        commentData.userId = req.user.id;
+      }
+      
+      // Add image URL if provided
+      if (req.file) {
+        commentData.imageUrl = `/uploads/${req.file.filename}`;
+      }
+      
+      // Create the comment
+      const newComment = await storage.addQuoteRequestComment(commentData);
+      
+      res.status(201).json(newComment);
+    } catch (error) {
+      console.error("Error adding quote comment:", error);
+      res.status(500).json({ message: "Failed to add comment" });
+    }
+  });
+  
   /**
    * Debug routes (temporary)
    */

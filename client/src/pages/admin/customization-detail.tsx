@@ -1,103 +1,98 @@
-import { useEffect, useState } from "react";
-import { useParams, useLocation } from "wouter";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import AdminLayout from "@/components/admin/admin-layout";
 import CustomizationDetail from "@/components/admin/customization-detail";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 
-export default function CustomizationDetailPage() {
+export default function AdminCustomizationDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [, setLocation] = useLocation();
-  const [notFound, setNotFound] = useState(false);
-  
-  // Fetch customization request details
-  const { data: customization, isLoading, isError } = useQuery({
+  const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
+  const [_, navigate] = useLocation();
+
+  // Redirect if not admin
+  useEffect(() => {
+    if (!authLoading && !user?.role?.includes("admin")) {
+      toast({
+        title: "Access Denied",
+        description: "You must be an admin to view this page",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [user, authLoading, navigate, toast]);
+
+  // Fetch customization request
+  const { data: customization, isLoading, error } = useQuery({
     queryKey: [`/api/customization-requests/${id}`],
-    queryFn: async () => {
-      try {
-        const res = await fetch(`/api/customization-requests/${id}`);
-        
-        if (res.status === 404) {
-          setNotFound(true);
-          return null;
-        }
-        
-        if (!res.ok) {
-          throw new Error(`Failed to fetch customization request: ${res.statusText}`);
-        }
-        
-        return await res.json();
-      } catch (error) {
-        console.error("Error fetching customization request:", error);
-        throw error;
-      }
-    },
-    enabled: !!id
+    enabled: !!id && !!user?.role?.includes("admin"),
   });
-  
-  // Go back to customization requests list
-  const handleBack = () => {
-    setLocation("/admin/customizations");
-  };
-  
-  // If the customization request is not found
-  if (notFound) {
+
+  if (authLoading || isLoading) {
     return (
-      <AdminLayout title="Customization Request Not Found">
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <h2 className="text-xl font-medium">Customization Request Not Found</h2>
-          <p className="text-muted-foreground">
-            The customization request you're looking for doesn't exist or has been removed.
-          </p>
-          <Button onClick={handleBack} variant="outline" className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Customization Requests
-          </Button>
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="mt-4 text-lg">Loading customization request...</p>
         </div>
       </AdminLayout>
     );
   }
-  
-  // Loading state
-  if (isLoading) {
+
+  if (error) {
     return (
-      <AdminLayout title="Loading Customization Request...">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold text-destructive">Error Loading Request</h2>
+            <p className="text-muted-foreground">
+              {error instanceof Error ? error.message : "Failed to load customization request"}
+            </p>
+            <Button onClick={() => navigate("/admin/customizations")}>
+              Back to Customization Requests
+            </Button>
+          </div>
         </div>
       </AdminLayout>
     );
   }
-  
-  // Error state
-  if (isError || !customization) {
+
+  if (!customization) {
     return (
-      <AdminLayout title="Error Loading Customization Request">
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <h2 className="text-xl font-medium text-destructive">Error Loading Customization Request</h2>
-          <p className="text-muted-foreground">
-            There was a problem loading the customization request details.
-          </p>
-          <Button onClick={handleBack} variant="outline" className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Customization Requests
-          </Button>
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold">Customization Request Not Found</h2>
+            <p className="text-muted-foreground">
+              The requested customization request could not be found
+            </p>
+            <Button onClick={() => navigate("/admin/customizations")}>
+              Back to Customization Requests
+            </Button>
+          </div>
         </div>
       </AdminLayout>
     );
   }
-  
+
   return (
-    <AdminLayout title={`Customization Request #${id}`}>
-      <div className="mb-6">
-        <Button onClick={handleBack} variant="outline" size="sm">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Customization Requests
+    <AdminLayout>
+      <div className="container mx-auto py-8">
+        <Button
+          onClick={() => navigate("/admin/customizations")}
+          variant="outline"
+          className="mb-6"
+        >
+          ← Back to Customization Requests
         </Button>
+        
+        <CustomizationDetail customization={customization} />
       </div>
-      
-      <CustomizationDetail customization={customization} />
     </AdminLayout>
   );
 }

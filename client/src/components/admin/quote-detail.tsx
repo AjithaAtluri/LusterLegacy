@@ -22,12 +22,15 @@ interface QuoteDetailProps {
     country: string | null;
     productId: number;
     productName: string;
+    metalType: string;
+    stoneType: string;
     quantity: number;
-    shippingAddress: string | null;
     specialRequirements: string | null;
-    preferredCurrency: string;
+    preferredCurrency: string | null;
+    shippingAddress: any | null;
     status: string;
     quotedPrice: number | null;
+    currency: string | null;
     imageUrl: string | null;
     createdAt: string;
     comments?: Array<{
@@ -152,7 +155,7 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
 
       toast({
         title: "Price updated",
-        description: `Quoted price has been updated to ${formatCurrency(price, quote.preferredCurrency)}`,
+        description: `Quoted price has been updated to ${formatCurrency(price, quote.currency || "USD")}`,
       });
 
       // Refresh quote requests data
@@ -247,10 +250,21 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                 </>
               )}
               
+              {quote.preferredCurrency && (
+                <>
+                  <div className="font-medium">Preferred Currency:</div>
+                  <div className="col-span-2">{quote.preferredCurrency}</div>
+                </>
+              )}
+              
               {quote.shippingAddress && (
                 <>
                   <div className="font-medium">Shipping Address:</div>
-                  <div className="col-span-2 whitespace-pre-wrap">{quote.shippingAddress}</div>
+                  <div className="col-span-2 whitespace-pre-wrap">
+                    {typeof quote.shippingAddress === 'string' 
+                      ? quote.shippingAddress 
+                      : JSON.stringify(quote.shippingAddress, null, 2)}
+                  </div>
                 </>
               )}
             </div>
@@ -259,24 +273,27 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
         
         <Card>
           <CardHeader>
-            <CardTitle>Quote Details</CardTitle>
+            <CardTitle>Product Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-2">
               <div className="font-medium">Product:</div>
               <div className="col-span-2">{quote.productName}</div>
               
+              <div className="font-medium">Metal Type:</div>
+              <div className="col-span-2">{quote.metalType}</div>
+              
+              <div className="font-medium">Stone Type:</div>
+              <div className="col-span-2">{quote.stoneType}</div>
+              
               <div className="font-medium">Quantity:</div>
-              <div className="col-span-2">{quote.quantity}</div>
+              <div className="col-span-2">{quote.quantity || 1}</div>
               
-              <div className="font-medium">Currency:</div>
-              <div className="col-span-2">{quote.preferredCurrency}</div>
-              
-              {quote.quotedPrice && (
+              {quote.quotedPrice && quote.currency && (
                 <>
                   <div className="font-medium">Quoted Price:</div>
                   <div className="col-span-2 font-bold">
-                    {formatCurrency(quote.quotedPrice, quote.preferredCurrency)}
+                    {formatCurrency(quote.quotedPrice, quote.currency)}
                   </div>
                 </>
               )}
@@ -289,16 +306,17 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
               </div>
             )}
             
+            {/* Display Product Image */}
             {quote.imageUrl && (
               <div className="pt-2">
-                <h4 className="font-medium mb-1">Reference Image:</h4>
+                <h4 className="font-medium mb-1">Product Image:</h4>
                 <div 
                   className="relative aspect-video w-full max-w-xs rounded-md overflow-hidden border cursor-pointer"
                   onClick={() => handleImageClick(quote.imageUrl!)}
                 >
                   <img 
                     src={quote.imageUrl} 
-                    alt="Quote reference" 
+                    alt="Product" 
                     className="object-cover w-full h-full"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -396,7 +414,7 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Currency: {quote.preferredCurrency}
+                Currency: {quote.currency || "USD"}
               </p>
             </div>
           </div>
