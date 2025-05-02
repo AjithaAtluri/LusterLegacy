@@ -52,16 +52,32 @@ export default function CustomerDashboard() {
   // Combine all design and customization requests
   const allRequests = useMemo(() => {
     // Get all custom designs
-    const designs = (customDesigns || []).map(req => ({ ...req, requestType: 'design' }));
+    // Process custom design requests (completely new designs from customer specifications)
+    const designs = (customDesigns || []).map(req => ({ 
+      ...req, 
+      requestType: 'design',
+      needsConsultationFee: true,
+      description: 'Custom-designed jewelry from your specifications with up to 4 design iterations.'
+    }));
     
-    // Get all quote requests
-    const quotes = (quoteRequests || []).map(req => ({ ...req, requestType: 'quote' }));
+    // Process quote requests (requests for final pricing on unmodified catalog items)
+    const quotes = (quoteRequests || []).map(req => ({ 
+      ...req, 
+      requestType: 'quote',
+      needsConsultationFee: false,
+      description: 'Price quote for a catalog item without modifications.'
+    }));
     
-    // For customization requests, filter out duplicates that already exist in designs array
-    // This prevents the same request appearing both as a customization and design
+    // Process customization requests (modifications to existing products)
+    // Filter out any duplicates that match design request IDs
     const customizations = (customizationRequests || [])
       .filter(req => !designs.some(design => design.id === req.id))
-      .map(req => ({ ...req, requestType: 'customization' }));
+      .map(req => ({ 
+        ...req, 
+        requestType: 'customization',
+        needsConsultationFee: false,
+        description: 'Product customization request for modifying an existing product.'
+      }));
     
     // Combine all requests
     const requests = [...designs, ...customizations, ...quotes];
@@ -122,6 +138,29 @@ export default function CustomerDashboard() {
                   <CardTitle>All Requests</CardTitle>
                   <CardDescription>View and track all your jewelry requests</CardDescription>
                 </CardHeader>
+                <div className="px-6 pb-2 mb-4 border-b border-border/20 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-3 bg-accent/5 rounded-lg">
+                    <h3 className="font-medium text-sm mb-1 flex items-center">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                      Custom Design
+                    </h3>
+                    <p className="text-xs text-foreground/70">Completely custom jewelry with your design. Requires $150 consultation fee.</p>
+                  </div>
+                  <div className="p-3 bg-accent/5 rounded-lg">
+                    <h3 className="font-medium text-sm mb-1 flex items-center">
+                      <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+                      Product Customization
+                    </h3>
+                    <p className="text-xs text-foreground/70">Modifications to existing catalog items. No consultation fee required.</p>
+                  </div>
+                  <div className="p-3 bg-accent/5 rounded-lg">
+                    <h3 className="font-medium text-sm mb-1 flex items-center">
+                      <span className="w-2 h-2 bg-teal-500 rounded-full mr-2"></span>
+                      Quote Request
+                    </h3>
+                    <p className="text-xs text-foreground/70">Price quote for standard catalog items without modifications.</p>
+                  </div>
+                </div>
                 <CardContent>
                   {isLoadingRequests || isLoadingCustomDesigns || isLoadingQuoteRequests ? (
                     <div className="p-8 text-center">
@@ -263,10 +302,13 @@ export default function CustomerDashboard() {
                                       : 'Not paid - Pay to begin design process'}
                                   </span>
                                   {!request.consultationFeePaid && (
-                                    <Button variant="outline" size="sm" asChild>
-                                      <Link href={`/checkout/consultation/${request.id}`}>
-                                        Pay Fee <ArrowRight className="ml-1 h-3 w-3" />
-                                      </Link>
+                                    <Button 
+                                      variant="default" 
+                                      size="sm" 
+                                      className="bg-primary text-background hover:bg-primary/90"
+                                      onClick={() => setLocation(`/payment/design-consultation/${request.id}`)}
+                                    >
+                                      Pay Fee <ArrowRight className="ml-1 h-3 w-3" />
                                     </Button>
                                   )}
                                 </div>
