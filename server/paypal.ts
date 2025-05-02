@@ -48,6 +48,8 @@ export const createOrder = async (req: Request, res: Response) => {
         itemAny.name.toLowerCase().includes('consultation fee');
     });
     
+    console.log('PayPal order creation - Consultation fee detected:', isConsultationFee, 'Cart items:', JSON.stringify(cartItems));
+    
     if (!isConsultationFee) {
       // Only validate shipping for regular product orders
       // Skip for consultation fees and custom design requests
@@ -71,6 +73,30 @@ export const createOrder = async (req: Request, res: Response) => {
     const items = [];
 
     for (const item of cartItems) {
+      // Handle consultation fee products differently
+      if (item.isCustomDesign && item.designRequestId) {
+        const designRequest = await storage.getDesignRequest(item.designRequestId);
+        if (!designRequest) {
+          return res.status(404).json({ error: `Design request not found: ${item.designRequestId}` });
+        }
+        
+        // For consultation fees, use fixed price or item price
+        const price = item.price || 150; // Default to $150 if price not set
+        itemTotal += price;
+        
+        items.push({
+          name: `Consultation Fee for Design Request #${item.designRequestId}`,
+          unit_amount: {
+            currency_code: currency,
+            value: price.toString()
+          },
+          quantity: 1
+        });
+        
+        continue; // Skip the rest of the loop for this item
+      }
+      
+      // For regular products
       const product = await storage.getProduct(item.productId);
       
       if (!product) {

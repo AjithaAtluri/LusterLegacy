@@ -173,11 +173,22 @@ function PayPalButtonContent({
         firstItem: formattedCartItems[0]
       });
       
+      // Check if this is for a design consultation fee payment
+      const isDesignConsultation = cartItems.some(item => {
+        // Check if it's marked as a custom design or has designRequestId
+        if ((item as any).isCustomDesign) return true;
+        if ((item as any).designRequestId) return true;
+        
+        // Check the name as a fallback
+        return item.name && item.name.toLowerCase().includes('consultation fee');
+      });
+      
       // Use the helper function to create the order
       const orderID = await createPayPalOrder({
         cartItems: formattedCartItems,
         currency,
-        shippingAddress: shippingAddress || {}
+        // Set shippingAddress to null for design consultation fees
+        shippingAddress: isDesignConsultation ? null : (shippingAddress || {})
       });
       
       // Store the order ID
@@ -223,10 +234,10 @@ function PayPalButtonContent({
         orderID: data.orderID
       });
       
-      // Use the helper function to capture the order
+      // For design consultation fees, we don't need a shipping address
       const result = await capturePayPalOrder({
         orderID: data.orderID,
-        shippingAddress: shippingAddress || {},
+        shippingAddress: isConsultationFee ? null : (shippingAddress || {}),
         currency,
         designRequestId: designRequestId
       });

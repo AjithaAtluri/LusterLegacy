@@ -111,6 +111,8 @@ export default function DesignConsultationPayment() {
       id: 0,
       name: `Consultation Fee for Design Request #${design.id}`,
       price: CONSULTATION_FEE,
+      isCustomDesign: true,
+      designRequestId: parseInt(id as string),
     }
   ];
   
@@ -193,7 +195,7 @@ export default function DesignConsultationPayment() {
                   <PayPalButton
                     cartItems={cartItems}
                     currency="USD"
-                    shippingAddress={{}}
+                    shippingAddress={null}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                   />
