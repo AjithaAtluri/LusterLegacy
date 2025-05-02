@@ -161,31 +161,46 @@ export default function AddProduct() {
         if (parsedInputs.metalType) {
           form.setValue('metalType', parsedInputs.metalType);
           setMetalType(parsedInputs.metalType);
+          console.log("Setting metal type from localStorage:", parsedInputs.metalType);
         }
         
         if (parsedInputs.metalWeight) {
-          form.setValue('metalWeight', parsedInputs.metalWeight);
-          setMetalWeight(parsedInputs.metalWeight);
+          form.setValue('metalWeight', parsedInputs.metalWeight.toString());
+          setMetalWeight(parsedInputs.metalWeight.toString());
+          console.log("Setting metal weight from localStorage:", parsedInputs.metalWeight);
         }
         
         if (parsedInputs.mainStoneType) {
           setMainStoneType(parsedInputs.mainStoneType);
+          console.log("Setting main stone type from localStorage:", parsedInputs.mainStoneType);
         }
         
         if (parsedInputs.mainStoneWeight) {
-          setMainStoneWeight(parsedInputs.mainStoneWeight);
+          setMainStoneWeight(parsedInputs.mainStoneWeight.toString());
+          console.log("Setting main stone weight from localStorage:", parsedInputs.mainStoneWeight);
         }
         
         // We no longer support the array format for secondary stones
         // Everything uses the single stone type approach
+        if (parsedInputs.secondaryStoneType) {
+          setSecondaryStoneType(parsedInputs.secondaryStoneType);
+          console.log("Setting secondary stone type from localStorage:", parsedInputs.secondaryStoneType);
+        }
+        
+        if (parsedInputs.secondaryStoneWeight) {
+          setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight.toString());
+          console.log("Setting secondary stone weight from localStorage:", parsedInputs.secondaryStoneWeight);
+        }
         
         // Other stone type (newer format)
         if (parsedInputs.otherStoneType) {
           setOtherStoneType(parsedInputs.otherStoneType);
+          console.log("Setting other stone type from localStorage:", parsedInputs.otherStoneType);
         }
         
         if (parsedInputs.otherStoneWeight) {
           setOtherStoneWeight(parsedInputs.otherStoneWeight.toString());
+          console.log("Setting other stone weight from localStorage:", parsedInputs.otherStoneWeight);
         }
 
         if (parsedInputs.userDescription) {
@@ -419,6 +434,15 @@ export default function AddProduct() {
     form.setValue("basePrice", content.priceUSD.toString());
     form.setValue("basePriceINR", content.priceINR.toString());
     
+    // Explicitly set metal type and weight and propagate to form
+    if (metalType) {
+      form.setValue("metalType", metalType);
+    }
+    
+    if (metalWeight) {
+      form.setValue("metalWeight", metalWeight);
+    }
+    
     // Handle the imageInsights field if available
     if (content.imageInsights) {
       // Store image insights in the database - add a note to the description
@@ -433,8 +457,8 @@ export default function AddProduct() {
     // Save input values to localStorage
     const aiGeneratorInputs = {
       productType: productType,
-      metalType: form.getValues("metalType"),
-      metalWeight: form.getValues("metalWeight"),
+      metalType: metalType || form.getValues("metalType"),
+      metalWeight: metalWeight || form.getValues("metalWeight"),
       mainStoneType: mainStoneType,
       mainStoneWeight: mainStoneWeight,
       secondaryStoneType: secondaryStoneType,

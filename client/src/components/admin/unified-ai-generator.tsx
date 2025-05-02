@@ -352,7 +352,10 @@ export default function UnifiedAIGenerator({
                     <FormItem>
                       <FormLabel>5. Metal Type</FormLabel>
                       <Select 
-                        onValueChange={field.onChange} 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setMetalType(value);
+                        }} 
                         value={field.value}
                       >
                         <FormControl>
@@ -384,7 +387,17 @@ export default function UnifiedAIGenerator({
                     <FormItem>
                       <FormLabel>6. Metal Weight (grams)</FormLabel>
                       <FormControl>
-                        <Input type="number" min="0" step="0.1" placeholder="e.g. 5.2" {...field} />
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          step="0.1" 
+                          placeholder="e.g. 5.2" 
+                          {...field} 
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setMetalWeight(e.target.value);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
