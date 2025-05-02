@@ -446,10 +446,52 @@ export default function CustomDesignDetail() {
               onChange={(e) => setNewComment(e.target.value)}
               rows={3}
             />
-            <div className="flex justify-end">
+            
+            {/* Hidden file input */}
+            <input 
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageSelection}
+            />
+            
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="relative w-full border rounded-md p-2 mt-2">
+                <div className="relative max-h-[200px] overflow-hidden rounded-md">
+                  <img 
+                    src={imagePreview} 
+                    alt="Upload preview" 
+                    className="max-h-[200px] max-w-full object-contain mx-auto"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background border"
+                    aria-label="Remove image"
+                  >
+                    <XIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={triggerImageUpload}
+                className="text-xs"
+              >
+                <ImagePlus className="h-4 w-4 mr-1" />
+                Attach Image
+              </Button>
+              
               <Button 
                 onClick={handleCommentSubmit}
-                disabled={isSubmitting || !newComment.trim()}
+                disabled={isSubmitting || (!newComment.trim() && !uploadedImage)}
               >
                 {isSubmitting ? (
                   <>

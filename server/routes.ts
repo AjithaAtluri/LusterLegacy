@@ -1221,7 +1221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Add a comment to a design request
-  app.post('/api/custom-designs/:id/comments', async (req, res) => {
+  app.post('/api/custom-designs/:id/comments', upload.single('image'), async (req, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: 'Authentication required' });
@@ -1245,9 +1245,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Unauthorized access to design request' });
       }
       
-      const { content } = req.body;
-      if (!content || typeof content !== 'string' || content.trim() === '') {
-        return res.status(400).json({ message: 'Comment content is required' });
+      // Get content from form data (not JSON)
+      const content = req.body.content;
+      const imageFile = req.file;
+      
+      // Validate that at least one of content or image is provided
+      if ((!content || content.trim() === '') && !imageFile) {
+        return res.status(400).json({ message: 'Comment content or image is required' });
+      }
+      
+      // Process uploaded image if present
+      let imageUrl = null;
+      if (imageFile) {
+        // Set image URL with proper path
+        imageUrl = `/uploads/${imageFile.filename}`;
+        console.log(`Design request comment image uploaded: ${imageUrl}`);
       }
       
       // Create the comment
@@ -1256,10 +1268,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (storage.addDesignRequestComment) {
           comment = await storage.addDesignRequestComment({
             designRequestId: designId,
-            content: content.trim(),
+            content: content ? content.trim() : '',
             createdBy: req.user.username || req.user.email,
             userId: req.user.id,
-            isAdmin: isAdmin
+            isAdmin: isAdmin,
+            imageUrl: imageUrl
           });
         } else {
           return res.status(501).json({ message: 'Comment functionality not implemented' });
