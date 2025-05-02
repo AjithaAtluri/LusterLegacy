@@ -20,7 +20,7 @@ const ProductDetail = lazy(() => import("@/pages/product-detail"));
 const Checkout = lazy(() => import("@/pages/checkout"));
 const GemMetalGuide = lazy(() => import("@/pages/gem-metal-guide"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
-const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard"));
+const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard-fixed"));
 const AuthPage = lazy(() => import("@/pages/auth-page"));
 const FinalizeOrder = lazy(() => import("@/pages/finalize-order"));
 const CustomizeRequest = lazy(() => import("@/pages/customize-request"));
