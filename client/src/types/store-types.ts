@@ -56,4 +56,33 @@ export interface AIGeneratedContent {
   priceUSD: number;
   priceINR: number;
   imageInsights?: string;
+  imageUrl?: string;
+  additionalData?: {
+    metalType?: string;
+    metalWeight?: number;
+    mainStoneType?: string;
+    mainStoneWeight?: number;
+    secondaryStoneType?: string;
+    secondaryStoneWeight?: number;
+    otherStoneType?: string;
+    otherStoneWeight?: number;
+    productTypeId?: string;
+    tagline?: string;
+    basePriceINR?: number;
+    userDescription?: string;
+    stoneTypes?: string[];
+    dimensions?: string;
+    aiInputs?: {
+      productType?: string;
+      metalType?: string;
+      metalWeight?: number;
+      mainStoneType?: string;
+      mainStoneWeight?: number;
+      secondaryStoneType?: string;
+      secondaryStoneWeight?: number;
+      otherStoneType?: string;
+      otherStoneWeight?: number;
+      userDescription?: string;
+    };
+  };
 }

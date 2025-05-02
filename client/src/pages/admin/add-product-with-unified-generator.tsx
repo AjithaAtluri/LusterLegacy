@@ -151,6 +151,19 @@ export default function AddProduct() {
   useEffect(() => {
     const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
     
+    // Also load any additionalData from the content
+    const savedContentJson = localStorage.getItem('aiGeneratedContent');
+    let additionalData: any = {};
+    
+    if (savedContentJson) {
+      try {
+        const parsedContent = JSON.parse(savedContentJson) as AIGeneratedContent;
+        additionalData = parsedContent.additionalData || {};
+      } catch (error) {
+        console.error('Error parsing saved content from localStorage:', error);
+      }
+    }
+    
     // Load saved input values
     if (savedInputsJson) {
       try {
@@ -161,22 +174,36 @@ export default function AddProduct() {
           form.setValue('metalType', parsedInputs.metalType);
           setMetalType(parsedInputs.metalType);
           console.log("Setting metal type from localStorage:", parsedInputs.metalType);
+        } else if (additionalData.metalType) {
+          form.setValue('metalType', additionalData.metalType);
+          setMetalType(additionalData.metalType);
+          console.log("Setting metal type from additionalData:", additionalData.metalType);
         }
         
         if (parsedInputs.metalWeight) {
           form.setValue('metalWeight', parsedInputs.metalWeight.toString());
           setMetalWeight(parsedInputs.metalWeight.toString());
           console.log("Setting metal weight from localStorage:", parsedInputs.metalWeight);
+        } else if (additionalData.metalWeight) {
+          form.setValue('metalWeight', additionalData.metalWeight.toString());
+          setMetalWeight(additionalData.metalWeight.toString());
+          console.log("Setting metal weight from additionalData:", additionalData.metalWeight);
         }
         
         if (parsedInputs.mainStoneType) {
           setMainStoneType(parsedInputs.mainStoneType);
           console.log("Setting main stone type from localStorage:", parsedInputs.mainStoneType);
+        } else if (additionalData.mainStoneType) {
+          setMainStoneType(additionalData.mainStoneType);
+          console.log("Setting main stone type from additionalData:", additionalData.mainStoneType);
         }
         
         if (parsedInputs.mainStoneWeight) {
           setMainStoneWeight(parsedInputs.mainStoneWeight.toString());
           console.log("Setting main stone weight from localStorage:", parsedInputs.mainStoneWeight);
+        } else if (additionalData.mainStoneWeight) {
+          setMainStoneWeight(additionalData.mainStoneWeight.toString());
+          console.log("Setting main stone weight from additionalData:", additionalData.mainStoneWeight);
         }
         
         // We no longer support the array format for secondary stones
@@ -442,6 +469,31 @@ export default function AddProduct() {
       form.setValue("metalWeight", metalWeight);
     }
     
+    // Explicitly set stone details to form state variables
+    if (content.additionalData?.mainStoneType) {
+      setMainStoneType(content.additionalData.mainStoneType);
+    }
+    
+    if (content.additionalData?.mainStoneWeight) {
+      setMainStoneWeight(content.additionalData.mainStoneWeight.toString());
+    }
+    
+    if (content.additionalData?.secondaryStoneType) {
+      setSecondaryStoneType(content.additionalData.secondaryStoneType);
+    }
+    
+    if (content.additionalData?.secondaryStoneWeight) {
+      setSecondaryStoneWeight(content.additionalData.secondaryStoneWeight.toString());
+    }
+    
+    if (content.additionalData?.otherStoneType) {
+      setOtherStoneType(content.additionalData.otherStoneType);
+    }
+    
+    if (content.additionalData?.otherStoneWeight) {
+      setOtherStoneWeight(content.additionalData.otherStoneWeight.toString());
+    }
+    
     // Handle the imageInsights field if available
     if (content.imageInsights) {
       // Store image insights in the database - add a note to the description
@@ -451,20 +503,31 @@ export default function AddProduct() {
     }
     
     // Save content to localStorage for potential regeneration
-    localStorage.setItem('aiGeneratedContent', JSON.stringify(content));
+    localStorage.setItem('aiGeneratedContent', JSON.stringify({
+      ...content,
+      // Add stone details to the content object if they're not already there
+      additionalData: {
+        ...content.additionalData,
+        mainStoneType: mainStoneType || content.additionalData?.mainStoneType,
+        mainStoneWeight: mainStoneWeight ? parseFloat(mainStoneWeight) : content.additionalData?.mainStoneWeight,
+        secondaryStoneType: secondaryStoneType || content.additionalData?.secondaryStoneType,
+        secondaryStoneWeight: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) : content.additionalData?.secondaryStoneWeight,
+        otherStoneType: otherStoneType || content.additionalData?.otherStoneType,
+        otherStoneWeight: otherStoneWeight ? parseFloat(otherStoneWeight) : content.additionalData?.otherStoneWeight
+      }
+    }));
     
     // Save input values to localStorage
     const aiGeneratorInputs = {
       productType: productType,
       metalType: metalType || form.getValues("metalType"),
       metalWeight: metalWeight || form.getValues("metalWeight"),
-      mainStoneType: mainStoneType,
-      mainStoneWeight: mainStoneWeight,
-      secondaryStoneType: secondaryStoneType,
-      secondaryStoneWeight: secondaryStoneWeight,
-      // Only store single secondary stone type, not array
-      otherStoneType: otherStoneType,
-      otherStoneWeight: otherStoneWeight,
+      mainStoneType: mainStoneType || content.additionalData?.mainStoneType,
+      mainStoneWeight: mainStoneWeight || (content.additionalData?.mainStoneWeight?.toString()),
+      secondaryStoneType: secondaryStoneType || content.additionalData?.secondaryStoneType,
+      secondaryStoneWeight: secondaryStoneWeight || (content.additionalData?.secondaryStoneWeight?.toString()),
+      otherStoneType: otherStoneType || content.additionalData?.otherStoneType,
+      otherStoneWeight: otherStoneWeight || (content.additionalData?.otherStoneWeight?.toString()),
       userDescription: form.getValues("userDescription")
     };
     localStorage.setItem('aiGeneratorInputs', JSON.stringify(aiGeneratorInputs));
@@ -472,6 +535,21 @@ export default function AddProduct() {
     // Save image preview to localStorage if available
     if (mainImagePreview) {
       localStorage.setItem('aiGeneratedImagePreview', mainImagePreview);
+    } else if (content.imageUrl) {
+      // If no preview but we have an image URL from the AI, use that
+      localStorage.setItem('aiGeneratedImagePreview', content.imageUrl);
+      setMainImagePreview(content.imageUrl);
+    }
+    
+    // Save image data as a dataURL if available
+    if (mainImageFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          localStorage.setItem('aiGeneratedImageData', e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(mainImageFile);
     }
     
     // Save additional images if available
