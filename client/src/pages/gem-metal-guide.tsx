@@ -711,7 +711,7 @@ export default function GemMetalGuide() {
                       <Brush className="h-5 w-5 text-orange-500" />
                       Enamellists & Specialists
                     </h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       Practitioners of specialized decorative techniques that add color, texture, and dimension to jewelry through methods that may be centuries old.
                     </p>
                     <ul className="list-disc pl-5 space-y-1.5 text-sm">
@@ -734,7 +734,7 @@ export default function GemMetalGuide() {
                         </p>
                         <div className="bg-gradient-to-r from-primary/5 to-transparent p-5 rounded-lg mb-4">
                           <h4 className="font-semibold text-lg mb-2">Signature Design Houses</h4>
-                          <p className="mb-3">
+                          <p className="mb-3 dark:text-slate-300">
                             The most prestigious luxury jewelry houses maintain distinctive design languages recognizable across generations. Their signature elements become cultural touchstones, with pieces that represent not just adornment but cultural artifacts.
                           </p>
                           <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -750,7 +750,7 @@ export default function GemMetalGuide() {
                         <div className="flex flex-col h-full">
                           <div className="bg-gradient-to-r from-primary/5 to-transparent p-5 rounded-lg mb-4">
                             <h4 className="font-semibold text-lg mb-2">Independent Designer-Artisans</h4>
-                            <p className="mb-3">
+                            <p className="mb-3 dark:text-slate-300">
                               Independent jewelry artists who both design and create their work represent a special category where artistic vision meets technical mastery, resulting in deeply personal, distinctive jewelry.
                             </p>
                             <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -799,7 +799,7 @@ export default function GemMetalGuide() {
                       <h4 className="font-semibold text-lg mb-3">Indian Jewelry Masters</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <p className="mb-3">
+                          <p className="mb-3 dark:text-slate-300">
                             Indian jewelry traditions span thousands of years, with regional specializations that have been refined over centuries by dedicated family workshops.
                           </p>
                           <ul className="list-disc pl-5 space-y-1.5">
@@ -810,7 +810,7 @@ export default function GemMetalGuide() {
                           </ul>
                         </div>
                         <div>
-                          <p className="mb-3">
+                          <p className="mb-3 dark:text-slate-300">
                             The hallmark of Indian craftsmanship is the extraordinary level of detail achieved through painstaking handwork that can require months for a single piece.
                           </p>
                           <ul className="list-disc pl-5 space-y-1.5">
@@ -826,7 +826,7 @@ export default function GemMetalGuide() {
                   
                   <div className="bg-muted/5 p-5 rounded-lg border border-primary/10">
                     <h4 className="font-semibold text-lg mb-2">Italian Goldsmithing</h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       Italy's jewelry tradition, particularly centered in regions like Arezzo, Vicenza, and Valenza, is renowned for excellence in chain-making, hollow-form construction, and innovative gold alloys.
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
@@ -839,7 +839,7 @@ export default function GemMetalGuide() {
                   
                   <div className="bg-muted/5 p-5 rounded-lg border border-primary/10">
                     <h4 className="font-semibold text-lg mb-2">French High Jewelry</h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       French jewelry making, especially from Parisian houses, emphasizes sophisticated design, elegant proportions, and impeccable gem setting quality.
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
@@ -852,7 +852,7 @@ export default function GemMetalGuide() {
                   
                   <div className="bg-muted/5 p-5 rounded-lg border border-primary/10">
                     <h4 className="font-semibold text-lg mb-2">Japanese Metalwork</h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       Japanese jewelry artisans draw from centuries of metalworking traditions like those used in sword fittings, bringing extraordinary surface treatments to contemporary jewelry.
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
@@ -869,7 +869,7 @@ export default function GemMetalGuide() {
                     <HeartHandshake className="h-5 w-5 text-rose-500" />
                     The Future of Jewelry Craftsmanship
                   </h4>
-                  <p className="mb-4">
+                  <p className="mb-4 dark:text-slate-300">
                     Today's most innovative jewelry artists are finding ways to honor traditional craftsmanship while embracing new technologies and sustainable practices. This fusion approach represents the future of luxury jewelry.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
