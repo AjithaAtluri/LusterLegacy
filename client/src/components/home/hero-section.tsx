@@ -84,7 +84,7 @@ export default function HeroSection() {
           <h1 className="font-playfair font-bold text-3xl md:text-5xl lg:text-6xl mb-5 leading-tight">
             <span className="block text-shadow-lg text-white">Crafted by</span>
             <span className="block text-primary text-glow font-extrabold my-1">Artisans</span>
-            <span className="block mt-2 text-shadow-lg text-white">Designed by You</span>
+            <span className="block mt-2 text-shadow-lg text-white">Designed by <span className="text-accent text-glow">You</span></span>
           </h1>
           
           {/* Tagline with elegant styling using gold for better visibility */}
