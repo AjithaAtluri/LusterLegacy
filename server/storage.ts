@@ -1878,8 +1878,8 @@ export class DatabaseStorage implements IStorage {
     try {
       const requests = await db
         .select()
-        .from(designRequests)
-        .orderBy(desc(designRequests.createdAt));
+        .from(customizationRequests)
+        .orderBy(desc(customizationRequests.createdAt));
       return requests;
     } catch (error) {
       console.error("Error getting all customization requests:", error);
