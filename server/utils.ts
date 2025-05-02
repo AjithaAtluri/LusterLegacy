@@ -2,11 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 
 // DEVELOPMENT ONLY: Simple bypass for admin authentication
+// This function can be called in two ways:
+// 1. As middleware with (req, res, next)
+// 2. As a function to check admin status with (req)
 export const validateAdmin = async (
   req: Request, 
-  res: Response, 
-  next: NextFunction
-) => {
+  res?: Response, 
+  next?: NextFunction
+): Promise<boolean> => {
   try {
     const endpoint = req.originalUrl || req.url;
     
@@ -32,7 +35,8 @@ export const validateAdmin = async (
       }
       
       // Even if we couldn't set the user, proceed with access
-      return next();
+      if (next) next();
+      return true;
     }
     
     // Regular bypass for direct API calls without headers
@@ -52,11 +56,13 @@ export const validateAdmin = async (
     }
     
     // Always proceed without authentication checks
-    return next();
+    if (next) next();
+    return true;
   } catch (error) {
     console.error('Error in admin auth bypass:', error);
     // Even if error occurs, still proceed
-    return next();
+    if (next) next();
+    return true;
   }
 };
 

@@ -292,11 +292,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Quote Requests",
       icon: <Receipt className="h-5 w-5" />,
       href: "/admin/quotes"
-    },
-    { 
-      title: "Orders", 
-      icon: <ShoppingBag className="h-5 w-5" />, 
-      href: "/admin/orders" 
     }
   ];
   

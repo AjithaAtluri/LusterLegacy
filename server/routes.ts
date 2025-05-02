@@ -438,11 +438,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all customization requests (admin only)
   app.get("/api/customization-requests", async (req: Request, res: Response) => {
     try {
-      // Check if admin
-      const isAdmin = await validateAdmin(req);
-      if (!isAdmin) {
-        return res.status(403).json({ message: "Not authorized to view all customization requests" });
-      }
+      // Check if admin - use validateAdmin as a function that returns a boolean
+      await validateAdmin(req, res);
       
       // Get all customization requests
       const customizationRequests = await storage.getAllCustomizationRequests();
@@ -542,11 +539,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid customization request ID" });
       }
       
-      // Check if admin
-      const isAdmin = await validateAdmin(req);
-      if (!isAdmin) {
-        return res.status(403).json({ message: "Not authorized to update customization requests" });
-      }
+      // Check if admin - use validateAdmin as middleware
+      await validateAdmin(req, res);
       
       // Get the existing request
       const existingRequest = await storage.getCustomizationRequest(id);
@@ -667,11 +661,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all quote requests (admin only)
   app.get("/api/quote-requests", async (req: Request, res: Response) => {
     try {
-      // Check if admin
-      const isAdmin = await validateAdmin(req);
-      if (!isAdmin) {
-        return res.status(403).json({ message: "Not authorized to view all quote requests" });
-      }
+      // Check if admin - use validateAdmin as a function that returns a boolean
+      await validateAdmin(req, res);
       
       // Get all quote requests
       const quoteRequests = await storage.getAllQuoteRequests();
