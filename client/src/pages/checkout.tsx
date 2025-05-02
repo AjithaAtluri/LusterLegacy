@@ -3,7 +3,7 @@ import { useLocation, Link as WouterLink } from "wouter";
 import { Helmet } from "react-helmet";
 import PayPalCheckoutForm from "@/components/checkout/paypal-checkout-form";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShoppingBag, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, ShoppingBag, AlertTriangle, CheckCircle2, Hammer, Mail, CreditCard, PackageCheck } from "lucide-react";
 
 export default function Checkout() {
   const [location] = useLocation();
@@ -39,20 +39,28 @@ export default function Checkout() {
               <h2 className="font-playfair text-xl font-semibold mb-3">What Happens Next?</h2>
               <ol className="font-montserrat text-left space-y-2">
                 <li className="flex items-start">
-                  <span className="inline-block bg-primary text-background w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">1</span>
-                  <span>Our artisans will begin crafting your jewelry with meticulous care.</span>
+                  <span className="inline-block bg-primary text-background w-6 h-6 rounded-full flex items-center justify-center mr-2 mt-0.5">
+                    <Hammer className="h-3.5 w-3.5 text-background" />
+                  </span>
+                  <span className="dark:text-slate-300">Our artisans will begin crafting your jewelry with meticulous care.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="inline-block bg-primary text-background w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">2</span>
-                  <span>You'll receive progress updates via email.</span>
+                  <span className="inline-block bg-primary text-background w-6 h-6 rounded-full flex items-center justify-center mr-2 mt-0.5">
+                    <Mail className="h-3.5 w-3.5 text-background" />
+                  </span>
+                  <span className="dark:text-slate-300">You'll receive progress updates via email.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="inline-block bg-primary text-background w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">3</span>
-                  <span>Once complete, we'll notify you for the balance payment.</span>
+                  <span className="inline-block bg-primary text-background w-6 h-6 rounded-full flex items-center justify-center mr-2 mt-0.5">
+                    <CreditCard className="h-3.5 w-3.5 text-background" />
+                  </span>
+                  <span className="dark:text-slate-300">Once complete, we'll notify you for the balance payment.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="inline-block bg-primary text-background w-5 h-5 rounded-full flex items-center justify-center mr-2 mt-0.5">4</span>
-                  <span>Your masterpiece will be securely delivered to your doorstep.</span>
+                  <span className="inline-block bg-primary text-background w-6 h-6 rounded-full flex items-center justify-center mr-2 mt-0.5">
+                    <PackageCheck className="h-3.5 w-3.5 text-background" />
+                  </span>
+                  <span className="dark:text-slate-300">Your masterpiece will be securely delivered to your doorstep.</span>
                 </li>
               </ol>
             </div>
