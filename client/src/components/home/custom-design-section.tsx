@@ -73,10 +73,101 @@ export default function CustomDesignSection() {
         description: "Your design details have been saved. Please log in or create an account to continue."
       });
       
+      // Save form data to session storage first
+      try {
+        // Create form data structure that matches the one expected by design-form.tsx
+        let formData: any = {
+          ...data,
+          phone: "", // Add missing fields required by design-form.tsx
+          country: "us", // Default to US
+          imageInfo: uploadedImage ? {
+            name: uploadedImage.name,
+            type: uploadedImage.type,
+            size: uploadedImage.size,
+            lastModified: uploadedImage.lastModified
+          } : null
+        };
+        
+        // Make sure primaryStones is properly saved as an array
+        formData.primaryStones = Array.isArray(data.primaryStones) ? data.primaryStones : [];
+        
+        // Set primaryStone field for backward compatibility
+        if (formData.primaryStones.length > 0) {
+          formData.primaryStone = formData.primaryStones[0];
+        }
+        
+        // Save the initial form data first (without images)
+        sessionStorage.setItem('designFormData', JSON.stringify(formData));
+        
+        // Then handle multiple images if available
+        if (uploadedImages.length > 0) {
+          // Get the latest form data to update it
+          const existingData = sessionStorage.getItem('designFormData');
+          if (existingData) {
+            const parsedData = JSON.parse(existingData);
+            
+            // Save info about all images
+            parsedData.allImagesInfo = uploadedImages.map(img => ({
+              name: img.name,
+              size: img.size,
+              type: img.type,
+              lastModified: img.lastModified
+            }));
+            
+            // Save updated metadata
+            sessionStorage.setItem('designFormData', JSON.stringify(parsedData));
+            
+            // Process image data URLs (in the background)
+            const promises = uploadedImages.map((file, index) => {
+              return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  resolve({
+                    index,
+                    dataUrl: reader.result
+                  });
+                };
+                reader.onerror = () => {
+                  console.error(`Failed to read image ${index}`);
+                  resolve(null);
+                };
+                reader.readAsDataURL(file);
+              });
+            });
+            
+            // Process all image conversions
+            Promise.all(promises).then((results: any[]) => {
+              // Filter out null results and create a map of valid data URLs
+              const imageDataUrls: Record<string, string> = {};
+              results.filter(r => r !== null).forEach(result => {
+                if (result && typeof result.index === 'number' && result.dataUrl) {
+                  imageDataUrls[result.index.toString()] = result.dataUrl as string;
+                }
+              });
+              
+              // Get the latest form data again to update it with image data URLs
+              const latestData = sessionStorage.getItem('designFormData');
+              if (latestData) {
+                try {
+                  const latestParsedData = JSON.parse(latestData);
+                  latestParsedData.imageDataUrls = imageDataUrls;
+                  sessionStorage.setItem('designFormData', JSON.stringify(latestParsedData));
+                  console.log("Image data saved to session storage, redirecting to login...");
+                } catch (parseError) {
+                  console.error('Error parsing form data for image update:', parseError);
+                }
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error saving form data to session storage', error);
+      }
+      
       // Create a more detailed returnTo URL with design details as query parameters
       const redirectParams = new URLSearchParams();
       
-      // Add design details to query parameters
+      // Add design details to query parameters - but will mostly rely on session storage
       if (data.metalType) redirectParams.append('metalType', data.metalType);
       
       // Handle primaryStones array - convert to comma-separated list
