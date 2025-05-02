@@ -140,6 +140,8 @@ export const designRequestComments = pgTable("design_request_comments", {
   content: text("content").notNull(),
   createdBy: text("created_by").notNull(),
   isAdmin: boolean("is_admin").notNull().default(false),
+  imageUrl: text("image_url"), // Single image URL for comment image
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow()
 });
 
@@ -155,6 +157,8 @@ export const insertDesignRequestCommentSchema = createInsertSchema(designRequest
   content: true,
   createdBy: true,
   isAdmin: true,
+  imageUrl: true,
+  userId: true,
 });
 
 // Design feedback schema (for advanced chat functionality)
