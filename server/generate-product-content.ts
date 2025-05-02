@@ -63,11 +63,19 @@ export const generateProductContent = async (req: Request, res: Response) => {
         const files = req.files as { [fieldname: string]: Express.Multer.File[] };
         const mainImageFile = files.mainImage ? files.mainImage[0] : null;
         
-        // Extract additional images if present
-        const additionalImages = [];
-        if (files.additionalImage1) additionalImages.push(files.additionalImage1[0]);
-        if (files.additionalImage2) additionalImages.push(files.additionalImage2[0]);
-        if (files.additionalImage3) additionalImages.push(files.additionalImage3[0]);
+        // Create a properly typed array for additional images
+        let additionalImages: Express.Multer.File[] = [];
+        
+        // Add each additional image if it exists
+        if (files.additionalImage1) {
+          additionalImages = [...additionalImages, files.additionalImage1[0]];
+        }
+        if (files.additionalImage2) {
+          additionalImages = [...additionalImages, files.additionalImage2[0]];
+        }
+        if (files.additionalImage3) {
+          additionalImages = [...additionalImages, files.additionalImage3[0]];
+        }
         
         // Check if main image was uploaded
         if (!mainImageFile) {
@@ -148,7 +156,7 @@ I've uploaded a main product image and ${additionalImages.length} additional ima
             content: [
               {
                 type: "text",
-                text: "You are an expert jewelry copywriter and product description specialist for a luxury jewelry brand called 'Luster Legacy'. Create compelling, creative, and detailed jewelry product descriptions and metadata for e-commerce. Focus on craftsmanship, materials, design elements, and the emotional appeal. Price estimates should reflect luxury market positioning with USD and INR pricing."
+                text: "You are an expert jewelry copywriter and product description specialist for a luxury jewelry brand called 'Luster Legacy'. Create compelling, creative, and detailed jewelry product descriptions and metadata for e-commerce. Focus on craftsmanship, materials, design elements, and the emotional appeal. Price estimates should reflect luxury market positioning with USD and INR pricing.\n\nIMPORTANT: Generate highly diverse product titles that don't repeat the same patterns or formulas. Avoid overused phrases and patterns like 'The [Metal] [Stone] [Product]', 'Eternal [Stone] [Product]', or '[Stone] [Metal] [Product]'. Instead, use evocative, distinctive names that reflect the product's unique character. Each product title should stand out as completely unique in style from other titles."
               }
             ]
           },
@@ -289,11 +297,11 @@ Format your response as structured JSON with these fields: title, tagline, short
                 messages: [
                   {
                     role: "system",
-                    content: "You are a jewelry product description expert. Generate compelling product descriptions for luxury jewelry."
+                    content: "You are a jewelry product description expert for a luxury brand called 'Luster Legacy'. Generate compelling product descriptions with CREATIVE, UNIQUE TITLES that avoid standard patterns. Don't use titles like 'The [Metal] [Stone] [Product]' or '[Stone] [Metal] [Product]'. Create evocative, distinct names instead."
                   },
                   {
                     role: "user",
-                    content: `Generate content for a ${productType} made of ${metalType} with ${mainStoneType} stones. Return in JSON format with these fields: title, tagline, shortDescription, detailedDescription, priceUSD (number), priceINR (number).`
+                    content: `Generate content for a ${productType} made of ${metalType} with ${mainStoneType} stones. The title must be unique and creative - avoid generic patterns used in other jewelry products. Return in JSON format with these fields: title, tagline, shortDescription, detailedDescription, priceUSD (number), priceINR (number).`
                   }
                 ],
                 temperature: 0.7,
