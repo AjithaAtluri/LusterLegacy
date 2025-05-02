@@ -7,11 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AIGeneratedContent } from "@/lib/ai-content-generator";
+import { AIGeneratedContent } from "@/types/store-types";
 import AIContentGenerator from "@/components/admin/ai-content-generator";
 import { X, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
-import { ProductType, StoneType } from "@shared/schema";
+import { ProductType, StoneType } from "@/types/store-types";
 
 interface UnifiedAIGeneratorProps {
   form: UseFormReturn<any>;

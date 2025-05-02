@@ -42,48 +42,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import AdminLayout from "@/components/admin/admin-layout";
 import StoneTypeFilter from "@/components/admin/stone-type-filter";
-
-// Define the generated content interface
-interface AIGeneratedContent {
-  title: string;
-  tagline: string;
-  shortDescription: string;
-  detailedDescription: string;
-  priceUSD: number;
-  priceINR: number;
-  imageInsights?: string;
-}
-
-// Use the same StoneType interface as in stone-type-filter.tsx
-interface StoneType {
-  id: number;
-  name: string;
-  description?: string | null;
-  displayOrder?: number;
-  isActive?: boolean;
-  color?: string | null;
-  createdAt?: Date | null;
-  priceModifier?: number;
-  imageUrl?: string | null;
-  category?: string | null;
-  stoneForm?: string | null;
-  quality?: string | null;
-  size?: string | null;
-  pricePerCarat?: number; // Additional field for this page
-}
-
-interface MetalType {
-  id: number;
-  name: string;
-  priceFactor: number;
-  description?: string;
-}
-
-interface ProductType {
-  id: number;
-  name: string;
-  description?: string;
-}
+import { StoneType, ProductType, MetalType, AIGeneratedContent } from "@/types/store-types";
 
 // Image upload component
 interface ImageUploadProps {

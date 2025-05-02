@@ -1,0 +1,42 @@
+// Common type definitions for the application
+// These are shared between components to ensure consistency
+
+export interface StoneType {
+  id: number;
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  isActive?: boolean;
+  color?: string | null;
+  createdAt?: Date | null;
+  priceModifier?: number;
+  imageUrl?: string | null;
+  category?: string | null;
+  stoneForm?: string | null;
+  quality?: string | null;
+  size?: string | null;
+  pricePerCarat?: number; // Used in pricing calculations
+}
+
+export interface MetalType {
+  id: number;
+  name: string;
+  priceFactor: number;
+  description?: string;
+}
+
+export interface ProductType {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface AIGeneratedContent {
+  title: string;
+  tagline: string;
+  shortDescription: string;
+  detailedDescription: string;
+  priceUSD: number;
+  priceINR: number;
+  imageInsights?: string;
+}
