@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -24,8 +23,7 @@ import {
   DollarSign, 
   Clock, 
   CheckCircle, 
-  User, 
-  Mail,
+  Upload, 
   ChevronLeft
 } from "lucide-react";
 
@@ -35,12 +33,10 @@ export default function DesignDetailPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [estimatedPrice, setEstimatedPrice] = useState("");
-  const [cadImageUrl, setCadImageUrl] = useState("");
   const [status, setStatus] = useState("");
   const [newComment, setNewComment] = useState("");
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("info");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -55,7 +51,6 @@ export default function DesignDetailPage() {
   useEffect(() => {
     if (design) {
       setEstimatedPrice(design.estimatedPrice?.toString() || "");
-      setCadImageUrl(design.cadImageUrl || "");
       setStatus(design.status || "pending");
     }
   }, [design]);
@@ -92,13 +87,26 @@ export default function DesignDetailPage() {
     setIsUpdating(true);
     
     try {
-      const updateData = {
-        status,
-        estimatedPrice: estimatedPrice ? parseInt(estimatedPrice) : null,
-        cadImageUrl: cadImageUrl || null
-      };
+      const formData = new FormData();
+      formData.append("status", status);
       
-      await apiRequest("PUT", `/api/custom-designs/${id}`, updateData);
+      if (estimatedPrice) {
+        formData.append("estimatedPrice", estimatedPrice);
+      }
+      
+      if (uploadedImage) {
+        formData.append("cadImage", uploadedImage);
+      }
+      
+      const response = await fetch(`/api/custom-designs/${id}`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to update design request");
+      }
       
       toast({
         title: "Design request updated",
@@ -108,6 +116,13 @@ export default function DesignDetailPage() {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/custom-designs/${id}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/custom-designs'] });
+      
+      // Clear uploaded image state
+      setUploadedImage(null);
+      setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       
     } catch (error) {
       console.error("Error updating design request:", error);
@@ -303,7 +318,7 @@ export default function DesignDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Customer & Request Info */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:grid-cols-1">
               {/* Customer Info */}
               <Card>
                 <CardHeader>
@@ -386,7 +401,7 @@ export default function DesignDetailPage() {
               </Card>
               
               {/* Design Images */}
-              <Card className="md:col-span-2">
+              <Card className="md:col-span-2 lg:col-span-1">
                 <CardHeader>
                   <CardTitle>Design References</CardTitle>
                   <CardDescription>
@@ -396,7 +411,7 @@ export default function DesignDetailPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Main reference image */}
                     <div className="aspect-square rounded-md overflow-hidden relative">
                       <img 
@@ -431,7 +446,7 @@ export default function DesignDetailPage() {
               
               {/* CAD Preview (if available) */}
               {design.cadImageUrl && (
-                <Card className="md:col-span-2">
+                <Card className="md:col-span-2 lg:col-span-1">
                   <CardHeader>
                     <CardTitle>CAD Preview</CardTitle>
                   </CardHeader>
@@ -447,10 +462,10 @@ export default function DesignDetailPage() {
                 </Card>
               )}
             </div>
-          </TabsContent>
+          </div>
           
-          {/* Tab 2: Communication */}
-          <TabsContent value="communication" className="space-y-4">
+          {/* Middle Column - Communication */}
+          <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Communication with Customer</CardTitle>
@@ -575,22 +590,92 @@ export default function DesignDetailPage() {
                 </div>
               </CardFooter>
             </Card>
-          </TabsContent>
-          
-          {/* Tab 3: Manage Request */}
-          <TabsContent value="manage" className="space-y-4">
+            
+            {/* Timeline */}
             <Card>
               <CardHeader>
-                <CardTitle>Update Status & Pricing</CardTitle>
+                <CardTitle>Request Timeline</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4 flex-shrink-0">
+                      <Clock className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Design Request Submitted</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(design.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className={`h-10 w-10 rounded-full ${design.consultationFeePaid ? 'bg-green-500/20' : 'bg-muted'} flex items-center justify-center mr-4 flex-shrink-0`}>
+                      <DollarSign className={`h-5 w-5 ${design.consultationFeePaid ? 'text-green-500' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div>
+                      <h3 className={`font-medium ${!design.consultationFeePaid && 'text-muted-foreground'}`}>
+                        Consultation Fee {design.consultationFeePaid ? 'Paid' : 'Pending'}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {design.consultationFeePaid 
+                          ? "Customer has paid the consultation fee" 
+                          : "Waiting for customer to pay consultation fee"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className={`h-10 w-10 rounded-full ${design.status === 'quoted' || design.status === 'approved' || design.status === 'completed' ? 'bg-blue-500/20' : 'bg-muted'} flex items-center justify-center mr-4 flex-shrink-0`}>
+                      <FileImage className={`h-5 w-5 ${design.status === 'quoted' || design.status === 'approved' || design.status === 'completed' ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div>
+                      <h3 className={`font-medium ${!(design.status === 'quoted' || design.status === 'approved' || design.status === 'completed') && 'text-muted-foreground'}`}>
+                        CAD Design & Quote
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {design.status === 'quoted' || design.status === 'approved' || design.status === 'completed'
+                          ? `CAD design and quote provided (${formatCurrency(design.estimatedPrice || 0)})` 
+                          : "CAD design and quote not yet provided"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className={`h-10 w-10 rounded-full ${design.status === 'approved' || design.status === 'completed' ? 'bg-green-500/20' : 'bg-muted'} flex items-center justify-center mr-4 flex-shrink-0`}>
+                      <CheckCircle className={`h-5 w-5 ${design.status === 'approved' || design.status === 'completed' ? 'text-green-500' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div>
+                      <h3 className={`font-medium ${!(design.status === 'approved' || design.status === 'completed') && 'text-muted-foreground'}`}>
+                        Customer Approval
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {design.status === 'approved' || design.status === 'completed'
+                          ? "Customer has approved the design and quote" 
+                          : "Waiting for customer approval"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Right Column - Request Management */}
+          <div className="lg:col-span-1 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Manage Design Request</CardTitle>
                 <CardDescription>
-                  Update the design request status, provide CAD image URL and set the estimated price
+                  Update status, provide CAD image and price estimate
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent>
+                <div className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="status">Request Status</Label>
+                      <Label htmlFor="status">Status</Label>
                       <select
                         id="status"
                         className="w-full rounded-md border border-input bg-background px-3 py-2"
@@ -707,7 +792,7 @@ export default function DesignDetailPage() {
                       )}
                     </div>
                     
-                    <div className="mt-8 bg-muted/30 p-4 rounded-md">
+                    <div className="mt-4 bg-muted/30 p-4 rounded-md">
                       <h3 className="font-semibold mb-2">Payment Instructions</h3>
                       <p className="text-sm">
                         When the status is set to "Quoted", inform the customer that:
@@ -721,11 +806,11 @@ export default function DesignDetailPage() {
                   </div>
                 </div>
                 
-                <div className="flex justify-end mt-4">
+                <div className="flex justify-end mt-6">
                   <Button 
                     onClick={handleUpdate} 
                     disabled={isUpdating}
-                    className="w-full md:w-auto"
+                    className="w-full"
                   >
                     {isUpdating ? (
                       <>
@@ -742,77 +827,8 @@ export default function DesignDetailPage() {
                 </div>
               </CardContent>
             </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Request Timeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center mr-4 flex-shrink-0">
-                      <Clock className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Design Request Submitted</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(design.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className={`h-10 w-10 rounded-full ${design.consultationFeePaid ? 'bg-green-500/20' : 'bg-muted'} flex items-center justify-center mr-4 flex-shrink-0`}>
-                      <DollarSign className={`h-5 w-5 ${design.consultationFeePaid ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div>
-                      <h3 className={`font-medium ${!design.consultationFeePaid && 'text-muted-foreground'}`}>
-                        Consultation Fee {design.consultationFeePaid ? 'Paid' : 'Pending'}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {design.consultationFeePaid 
-                          ? "Customer has paid the consultation fee" 
-                          : "Waiting for customer to pay consultation fee"}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className={`h-10 w-10 rounded-full ${design.status === 'quoted' || design.status === 'approved' || design.status === 'completed' ? 'bg-blue-500/20' : 'bg-muted'} flex items-center justify-center mr-4 flex-shrink-0`}>
-                      <FileImage className={`h-5 w-5 ${design.status === 'quoted' || design.status === 'approved' || design.status === 'completed' ? 'text-blue-500' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div>
-                      <h3 className={`font-medium ${!(design.status === 'quoted' || design.status === 'approved' || design.status === 'completed') && 'text-muted-foreground'}`}>
-                        CAD Design & Quote
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {design.status === 'quoted' || design.status === 'approved' || design.status === 'completed'
-                          ? `CAD design and quote provided (${formatCurrency(design.estimatedPrice || 0)})` 
-                          : "CAD design and quote not yet provided"}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className={`h-10 w-10 rounded-full ${design.status === 'approved' || design.status === 'completed' ? 'bg-green-500/20' : 'bg-muted'} flex items-center justify-center mr-4 flex-shrink-0`}>
-                      <CheckCircle className={`h-5 w-5 ${design.status === 'approved' || design.status === 'completed' ? 'text-green-500' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div>
-                      <h3 className={`font-medium ${!(design.status === 'approved' || design.status === 'completed') && 'text-muted-foreground'}`}>
-                        Customer Approval
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {design.status === 'approved' || design.status === 'completed'
-                          ? "Customer has approved the design and quote" 
-                          : "Waiting for customer approval"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );
