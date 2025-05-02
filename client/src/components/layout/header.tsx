@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Header() {
   const [location] = useLocation();
