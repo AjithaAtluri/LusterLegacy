@@ -51,6 +51,11 @@ const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminProductTypes = lazy(() => import("@/pages/admin/product-types"));
 const AdminOrders = lazy(() => import("@/pages/admin/orders"));
 const AdminDesigns = lazy(() => import("@/pages/admin/designs"));
+// New request type pages
+const AdminCustomizations = lazy(() => import("@/pages/admin/customizations"));
+const AdminCustomizationDetail = lazy(() => import("@/pages/admin/customization-detail"));
+const AdminQuotes = lazy(() => import("@/pages/admin/quotes"));
+const AdminQuoteDetail = lazy(() => import("@/pages/admin/quote-detail"));
 // AI Content Generator
 const AIContentGenerator = lazy(() => import("@/pages/admin/ai-content-generator-page"));
 
@@ -114,6 +119,10 @@ function App() {
                 <Route path="/admin/product-types" component={AdminProductTypes} />
                 <Route path="/admin/orders" component={AdminOrders} />
                 <Route path="/admin/designs" component={AdminDesigns} />
+                <Route path="/admin/customizations" component={AdminCustomizations} />
+                <Route path="/admin/customizations/:id" component={AdminCustomizationDetail} />
+                <Route path="/admin/quotes" component={AdminQuotes} />
+                <Route path="/admin/quotes/:id" component={AdminQuoteDetail} />
                 
                 {/* Redirect old add-product URL to the AI generator */}
                 <Route path="/admin/add-product">

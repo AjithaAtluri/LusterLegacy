@@ -49,7 +49,6 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [priceUpdateLoading, setPriceUpdateLoading] = useState(false);
   const [quotedPrice, setQuotedPrice] = useState(customization.quotedPrice?.toString() || "");
@@ -181,28 +180,9 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
   };
 
   // Open image dialog
-  const handleImageClick = (imageUrl: string, index: number) => {
+  const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
-    setSelectedImageIndex(index);
     setShowImageDialog(true);
-  };
-
-  // Navigate to next/previous image
-  const navigateImage = (direction: "next" | "prev") => {
-    const allImages = [
-      ...(customization.imageUrl ? [customization.imageUrl] : []),
-      ...(customization.imageUrls || [])
-    ];
-    
-    let newIndex = selectedImageIndex;
-    if (direction === "next") {
-      newIndex = (selectedImageIndex + 1) % allImages.length;
-    } else {
-      newIndex = (selectedImageIndex - 1 + allImages.length) % allImages.length;
-    }
-    
-    setSelectedImageIndex(newIndex);
-    setSelectedImage(allImages[newIndex]);
   };
 
   // Format date for display
@@ -216,12 +196,6 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
-
-  // Combine all images for display
-  const allImages = [
-    ...(customization.imageUrl ? [customization.imageUrl] : []),
-    ...(customization.imageUrls || [])
-  ];
 
   return (
     <div className="space-y-6">
@@ -237,6 +211,7 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
           className={
             customization.status === "completed" ? "bg-green-500" :
             customization.status === "in_progress" ? "bg-blue-500" :
+            customization.status === "quoted" ? "bg-purple-500" :
             customization.status === "cancelled" ? "bg-destructive" :
             "bg-yellow-500"
           }
@@ -247,7 +222,7 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
       
       <Separator />
       
-      {/* Product & Customer Details */}
+      {/* Customer & Product Details */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -274,6 +249,15 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
                   <div className="col-span-2">{customization.country}</div>
                 </>
               )}
+              
+              {customization.budget && customization.currency && (
+                <>
+                  <div className="font-medium">Budget:</div>
+                  <div className="col-span-2">
+                    {formatCurrency(customization.budget, customization.currency)}
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -288,77 +272,89 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
               <div className="col-span-2">{customization.productName}</div>
               
               <div className="font-medium">Type:</div>
-              <div className="col-span-2">{customization.customizationType}</div>
+              <div className="col-span-2">
+                {customization.customizationType.replace("_", " ").charAt(0).toUpperCase() + 
+                customization.customizationType.replace("_", " ").slice(1)}
+              </div>
               
               {customization.preferredMetal && (
                 <>
-                  <div className="font-medium">Metal:</div>
+                  <div className="font-medium">Preferred Metal:</div>
                   <div className="col-span-2">{customization.preferredMetal}</div>
                 </>
               )}
               
               {customization.preferredStones && customization.preferredStones.length > 0 && (
                 <>
-                  <div className="font-medium">Stones:</div>
-                  <div className="col-span-2">{customization.preferredStones.join(", ")}</div>
-                </>
-              )}
-              
-              {customization.budget && (
-                <>
-                  <div className="font-medium">Budget:</div>
+                  <div className="font-medium">Preferred Stones:</div>
                   <div className="col-span-2">
-                    {formatCurrency(customization.budget, customization.currency || "USD")}
+                    {customization.preferredStones.join(", ")}
                   </div>
                 </>
               )}
               
-              {customization.quotedPrice && (
+              {customization.quotedPrice && customization.currency && (
                 <>
                   <div className="font-medium">Quoted Price:</div>
                   <div className="col-span-2 font-bold">
-                    {formatCurrency(customization.quotedPrice, customization.currency || "USD")}
+                    {formatCurrency(customization.quotedPrice, customization.currency)}
                   </div>
                 </>
               )}
             </div>
             
             <div className="pt-2">
-              <h4 className="font-medium mb-1">Details:</h4>
+              <h4 className="font-medium mb-1">Customization Details:</h4>
               <p className="text-sm whitespace-pre-wrap">{customization.customizationDetails}</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Images Section */}
-      {allImages.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Request Images</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {allImages.map((imageUrl, index) => (
+            
+            {/* Display Single Image */}
+            {customization.imageUrl && !customization.imageUrls && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Reference Image:</h4>
                 <div 
-                  key={index} 
-                  className="relative aspect-square rounded-md overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => handleImageClick(imageUrl, index)}
+                  className="relative aspect-video w-full max-w-xs rounded-md overflow-hidden border cursor-pointer"
+                  onClick={() => handleImageClick(customization.imageUrl!)}
                 >
                   <img 
-                    src={imageUrl} 
-                    alt={`Customization request image ${index + 1}`}
+                    src={customization.imageUrl} 
+                    alt="Customization reference" 
                     className="object-cover w-full h-full"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Eye className="w-6 h-6 text-white" />
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+            
+            {/* Display Multiple Images */}
+            {customization.imageUrls && customization.imageUrls.length > 0 && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Reference Images:</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {customization.imageUrls.map((url, index) => (
+                    <div 
+                      key={index}
+                      className="relative aspect-square rounded-md overflow-hidden border cursor-pointer"
+                      onClick={() => handleImageClick(url)}
+                    >
+                      <img 
+                        src={url} 
+                        alt={`Reference ${index + 1}`} 
+                        className="object-cover w-full h-full"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Eye className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+      </div>
       
       {/* Admin Actions */}
       <Card>
@@ -385,6 +381,14 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
                   disabled={statusUpdateLoading || customization.status === "in_progress"}
                 >
                   In Progress
+                </Button>
+                <Button
+                  variant={customization.status === "quoted" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("quoted")}
+                  disabled={statusUpdateLoading || customization.status === "quoted" || !customization.quotedPrice}
+                >
+                  Quoted
                 </Button>
                 <Button
                   variant={customization.status === "completed" ? "default" : "outline"}
@@ -482,7 +486,7 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
                           src={comment.imageUrl} 
                           alt="Comment attachment" 
                           className="object-cover w-full h-full cursor-pointer"
-                          onClick={() => handleImageClick(comment.imageUrl!, -1)}
+                          onClick={() => handleImageClick(comment.imageUrl!)}
                         />
                       </div>
                     )}
@@ -571,7 +575,7 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
         <DialogContent className="max-w-4xl w-[90vw] max-h-[90vh] flex flex-col p-0">
           <DialogHeader className="p-4 border-b">
-            <DialogTitle>Image {selectedImageIndex + 1} of {allImages.length}</DialogTitle>
+            <DialogTitle>Image Preview</DialogTitle>
           </DialogHeader>
           <div className="relative flex-1 overflow-hidden p-1 flex items-center justify-center">
             <img 
@@ -579,31 +583,6 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
               alt="Full size view" 
               className="max-h-[70vh] max-w-full object-contain"
             />
-            
-            {allImages.length > 1 && (
-              <>
-                <Button 
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2"
-                  variant="secondary"
-                  size="icon"
-                  onClick={() => navigateImage("prev")}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m15 18-6-6 6-6"/>
-                  </svg>
-                </Button>
-                <Button 
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2"
-                  variant="secondary"
-                  size="icon"
-                  onClick={() => navigateImage("next")}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m9 18 6-6-6-6"/>
-                  </svg>
-                </Button>
-              </>
-            )}
           </div>
         </DialogContent>
       </Dialog>
