@@ -43,7 +43,7 @@ export default function GemMetalGuide() {
           <span className="text-foreground">Gem & Metal</span>
           <span className="text-primary"> Guide</span>
         </h1>
-        <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+        <p className="text-muted-foreground dark:text-slate-300 text-lg max-w-3xl mx-auto">
           Dive into the world of fine jewelry with our comprehensive guide to gemstones, metals, 
           and jewelry crafting techniques. Become an informed collector with our expert insights.
         </p>
@@ -83,7 +83,7 @@ export default function GemMetalGuide() {
                     <Sparkles className="h-5 w-5 text-amber-500" />
                     Overview of Gemstone Types
                   </h3>
-                  <p className="mb-4">
+                  <p className="mb-4 dark:text-slate-300">
                     The world of gemstones spans from earth-mined natural gems to sophisticated lab creations and affordable simulants. Understanding the differences in origin, composition, optical properties, and value helps collectors make informed decisions based on their preferences and budget.
                   </p>
                 </div>
@@ -217,7 +217,7 @@ export default function GemMetalGuide() {
                     <Wrench className="h-5 w-5 text-slate-500" />
                     Treatments & Enhancements
                   </h3>
-                  <p className="mb-4">
+                  <p className="mb-4 dark:text-slate-300">
                     Most gemstones undergo some form of enhancement to improve their appearance. Understanding these treatments and their impact on value is crucial for informed purchasing decisions.
                   </p>
                 </div>
@@ -225,7 +225,7 @@ export default function GemMetalGuide() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Heat Treatment</h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       The most common and accepted treatment for sapphires and rubies. Permanent enhancement that improves color and clarity.
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
@@ -237,7 +237,7 @@ export default function GemMetalGuide() {
                   
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Oil/Resin Treatments</h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       Used primarily for emeralds and other included stones to improve clarity by filling fractures.
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
@@ -249,7 +249,7 @@ export default function GemMetalGuide() {
                   
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Fracture Filling/Glass Filling</h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       Used on rubies, diamonds, and other stones with fractures. Lead glass or similar substances fill cracks.
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
