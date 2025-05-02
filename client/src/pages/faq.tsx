@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Link } from "wouter";
+import { MessageCircle, Pencil, Gem, Hammer, PackageCheck } from "lucide-react";
 
 export default function FAQ() {
   return (
@@ -94,23 +95,38 @@ export default function FAQ() {
                 How does your custom design process work?
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
-                <ol className="list-decimal ml-5 space-y-2">
-                  <li>
-                    <strong>Initial Consultation:</strong> Submit your design request with references, inspiration, and preferences.
-                  </li>
-                  <li>
-                    <strong>Design & Pricing:</strong> Our designers create a concept and provide a detailed quote.
-                  </li>
-                  <li>
-                    <strong>CAD Approval:</strong> View 3D renders of your design and request any adjustments.
-                  </li>
-                  <li>
-                    <strong>Production:</strong> Upon 50% advance payment, we begin crafting your piece.
-                  </li>
-                  <li>
-                    <strong>Delivery:</strong> After final payment, your completed jewelry is carefully packaged and shipped.
-                  </li>
-                </ol>
+                <div className="space-y-3">
+                  <div className="flex items-start">
+                    <span className="inline-block bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </span>
+                    <span><strong>Initial Consultation:</strong> Submit your design request with references, inspiration, and preferences.</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="inline-block bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </span>
+                    <span><strong>Design & Pricing:</strong> Our designers create a concept and provide a detailed quote.</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="inline-block bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                      <Gem className="h-3.5 w-3.5" />
+                    </span>
+                    <span><strong>CAD Approval:</strong> View 3D renders of your design and request any adjustments.</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="inline-block bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                      <Hammer className="h-3.5 w-3.5" />
+                    </span>
+                    <span><strong>Production:</strong> Upon 50% advance payment, we begin crafting your piece.</span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="inline-block bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                      <PackageCheck className="h-3.5 w-3.5" />
+                    </span>
+                    <span><strong>Delivery:</strong> After final payment, your completed jewelry is carefully packaged and shipped.</span>
+                  </div>
+                </div>
               </AccordionContent>
             </AccordionItem>
             
