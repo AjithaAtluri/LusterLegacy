@@ -27,6 +27,8 @@ const designFormSchema = z.object({
   // Add primaryStone for backward compatibility
   primaryStone: z.string().optional(),
   notes: z.string().optional(),
+  // Phone field is added for compatibility with full design form
+  phone: z.string().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms to continue"
   })
@@ -53,6 +55,7 @@ export default function CustomDesignSection() {
       primaryStones: [],
       primaryStone: "",
       notes: "",
+      phone: "", // Added phone field with empty default
       agreeToTerms: false
     }
   });
@@ -205,7 +208,7 @@ export default function CustomDesignSection() {
       // Create form data structure that matches the one expected by design-form.tsx
       let formData: any = {
         ...data,
-        phone: "", // Add missing fields required by design-form.tsx
+        phone: data.phone || "", // Use the phone value from the form data
         country: "us", // Default to US
         imageInfo: uploadedImage ? {
           name: uploadedImage.name,
@@ -768,7 +771,7 @@ export default function CustomDesignSection() {
                   <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
                     Contact Information*
                   </FormLabel>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <FormField
                       control={form.control}
                       name="fullName"
@@ -807,6 +810,29 @@ export default function CustomDesignSection() {
                       )}
                     />
                   </div>
+                  
+                  {/* Phone Field - Added as controlled FormField for better form data persistence */}
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem className="mb-4">
+                        <FormControl>
+                          <Input 
+                            {...field}
+                            id="phone-input"
+                            type="tel"
+                            placeholder="Phone Number" 
+                            className="p-3 border border-foreground/20 rounded font-montserrat text-sm w-full" 
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Phone number will be saved with your design request
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 
                 <FormField
