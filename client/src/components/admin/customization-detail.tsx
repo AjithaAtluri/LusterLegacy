@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
-import { Eye, Loader2, MessageCircle, ImageIcon, X } from "lucide-react";
+import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText, ArrowRight } from "lucide-react";
 
 interface CustomizationDetailProps {
   customization: {
@@ -22,16 +22,19 @@ interface CustomizationDetailProps {
     country: string | null;
     productId: number;
     productName: string;
+    originalMetalType: string;
+    requestedMetalType: string;
+    originalStoneType: string;
+    requestedStoneType: string;
+    additionalNotes: string | null;
     customizationType: string;
+    preferredMetal: string;
+    preferredStones: string[];
     customizationDetails: string;
-    preferredMetal: string | null;
-    preferredStones: string[] | null;
-    budget: number | null;
-    currency: string | null;
-    imageUrl: string | null;
-    imageUrls: string[] | null;
     status: string;
     quotedPrice: number | null;
+    currency: string | null;
+    imageUrls: string[] | null;
     createdAt: string;
     comments?: Array<{
       id: number;
@@ -197,27 +200,49 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  // Get customization type badge label and color
+  const getCustomizationTypeDisplay = () => {
+    switch(customization.customizationType) {
+      case "metal_and_stone":
+        return { label: "Metal & Stone", color: "bg-amber-500" };
+      case "metal_only":
+        return { label: "Metal Only", color: "bg-yellow-500" };
+      case "stone_only":
+        return { label: "Stone Only", color: "bg-purple-500" };
+      default:
+        return { label: "Other", color: "bg-slate-500" };
+    }
+  };
+
+  const typeDisplay = getCustomizationTypeDisplay();
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
         <div>
           <h2 className="text-2xl font-bold">Customization Request #{customization.id}</h2>
           <p className="text-muted-foreground">
             Submitted on {formatDate(customization.createdAt)}
           </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge 
+              className={
+                customization.status === "completed" ? "bg-green-500" :
+                customization.status === "in_progress" ? "bg-blue-500" :
+                customization.status === "quoted" ? "bg-purple-500" :
+                customization.status === "cancelled" ? "bg-destructive" :
+                "bg-yellow-500"
+              }
+            >
+              {customization.status.replace("_", " ").toUpperCase()}
+            </Badge>
+            
+            <Badge className={typeDisplay.color}>
+              {typeDisplay.label}
+            </Badge>
+          </div>
         </div>
-        <Badge 
-          className={
-            customization.status === "completed" ? "bg-green-500" :
-            customization.status === "in_progress" ? "bg-blue-500" :
-            customization.status === "quoted" ? "bg-purple-500" :
-            customization.status === "cancelled" ? "bg-destructive" :
-            "bg-yellow-500"
-          }
-        >
-          {customization.status.replace("_", " ").toUpperCase()}
-        </Badge>
       </div>
       
       <Separator />
@@ -249,16 +274,14 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
                   <div className="col-span-2">{customization.country}</div>
                 </>
               )}
-              
-              {customization.budget && customization.currency && (
-                <>
-                  <div className="font-medium">Budget:</div>
-                  <div className="col-span-2">
-                    {formatCurrency(customization.budget, customization.currency)}
-                  </div>
-                </>
-              )}
             </div>
+            
+            {customization.customizationDetails && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Additional Notes:</h4>
+                <p className="text-sm whitespace-pre-wrap">{customization.customizationDetails}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
         
@@ -271,27 +294,19 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
               <div className="font-medium">Product:</div>
               <div className="col-span-2">{customization.productName}</div>
               
-              <div className="font-medium">Type:</div>
-              <div className="col-span-2">
-                {customization.customizationType.replace("_", " ").charAt(0).toUpperCase() + 
-                customization.customizationType.replace("_", " ").slice(1)}
+              <div className="font-medium">Original Metal:</div>
+              <div className="col-span-2 flex items-center">
+                <span>{customization.originalMetalType}</span>
+                <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                <span className="text-primary font-medium">{customization.requestedMetalType}</span>
               </div>
               
-              {customization.preferredMetal && (
-                <>
-                  <div className="font-medium">Preferred Metal:</div>
-                  <div className="col-span-2">{customization.preferredMetal}</div>
-                </>
-              )}
-              
-              {customization.preferredStones && customization.preferredStones.length > 0 && (
-                <>
-                  <div className="font-medium">Preferred Stones:</div>
-                  <div className="col-span-2">
-                    {customization.preferredStones.join(", ")}
-                  </div>
-                </>
-              )}
+              <div className="font-medium">Original Stone:</div>
+              <div className="col-span-2 flex items-center">
+                <span>{customization.originalStoneType}</span>
+                <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                <span className="text-primary font-medium">{customization.requestedStoneType}</span>
+              </div>
               
               {customization.quotedPrice && customization.currency && (
                 <>
@@ -303,40 +318,15 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
               )}
             </div>
             
-            <div className="pt-2">
-              <h4 className="font-medium mb-1">Customization Details:</h4>
-              <p className="text-sm whitespace-pre-wrap">{customization.customizationDetails}</p>
-            </div>
-            
-            {/* Display Single Image */}
-            {customization.imageUrl && !customization.imageUrls && (
-              <div className="pt-2">
-                <h4 className="font-medium mb-1">Reference Image:</h4>
-                <div 
-                  className="relative aspect-video w-full max-w-xs rounded-md overflow-hidden border cursor-pointer"
-                  onClick={() => handleImageClick(customization.imageUrl!)}
-                >
-                  <img 
-                    src={customization.imageUrl} 
-                    alt="Customization reference" 
-                    className="object-cover w-full h-full"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Eye className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Display Multiple Images */}
+            {/* Display Reference Images */}
             {customization.imageUrls && customization.imageUrls.length > 0 && (
               <div className="pt-2">
                 <h4 className="font-medium mb-1">Reference Images:</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {customization.imageUrls.map((url, index) => (
                     <div 
                       key={index}
-                      className="relative aspect-square rounded-md overflow-hidden border cursor-pointer"
+                      className="relative aspect-video rounded-md overflow-hidden border cursor-pointer"
                       onClick={() => handleImageClick(url)}
                     >
                       <img 
@@ -391,6 +381,14 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
                   Quoted
                 </Button>
                 <Button
+                  variant={customization.status === "approved" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("approved")}
+                  disabled={statusUpdateLoading || customization.status === "approved"}
+                >
+                  Approved
+                </Button>
+                <Button
                   variant={customization.status === "completed" ? "default" : "outline"}
                   size="sm"
                   onClick={() => updateStatus("completed")}
@@ -399,12 +397,12 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
                   Completed
                 </Button>
                 <Button
-                  variant={customization.status === "cancelled" ? "destructive" : "outline"}
+                  variant={customization.status === "rejected" ? "destructive" : "outline"}
                   size="sm"
-                  onClick={() => updateStatus("cancelled")}
-                  disabled={statusUpdateLoading || customization.status === "cancelled"}
+                  onClick={() => updateStatus("rejected")}
+                  disabled={statusUpdateLoading || customization.status === "rejected"}
                 >
-                  Cancel
+                  Rejected
                 </Button>
               </div>
               {statusUpdateLoading && (

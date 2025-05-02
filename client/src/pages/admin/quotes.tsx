@@ -7,15 +7,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, RefreshCw } from "lucide-react";
+import { Loader2, Search, RefreshCw, ExternalLink } from "lucide-react";
 import { SelectSeparator } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { QuoteRequest } from "@shared/schema";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { formatCurrency } from "@/lib/utils";
+
+interface QuoteRequestDisplay extends QuoteRequest {
+  productName: string;
+  quotedPrice: number | null;
+  currency: string | null;
+}
 
 export default function QuotesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("active");
+  const [_, navigate] = useLocation();
+  const { user, isLoading: authLoading } = useAuth();
+  
+  // Redirect if not admin
+  useEffect(() => {
+    if (!authLoading && !user?.role?.includes("admin")) {
+      navigate("/");
+    }
+  }, [user, authLoading, navigate]);
   
   // Fetch all quote requests
   const { data: quoteRequests, isLoading, isError, refetch } = useQuery({
@@ -24,12 +42,13 @@ export default function QuotesPage() {
       const res = await fetch("/api/quote-requests");
       if (!res.ok) throw new Error("Failed to fetch quote requests");
       return res.json();
-    }
+    },
+    enabled: !!user?.role?.includes("admin")
   });
   
   // Filter requests based on search term and active tab
-  const filteredRequests = quoteRequests ? quoteRequests
-    .filter((request: QuoteRequest) => {
+  const filteredRequests = quoteRequests ? (quoteRequests as QuoteRequestDisplay[])
+    .filter((request) => {
       const searchLower = searchTerm.toLowerCase();
       return (
         request.fullName.toLowerCase().includes(searchLower) ||
@@ -38,7 +57,7 @@ export default function QuotesPage() {
         String(request.id).includes(searchTerm)
       );
     })
-    .filter((request: QuoteRequest) => {
+    .filter((request) => {
       if (activeTab === "active") {
         return !["completed", "cancelled"].includes(request.status);
       } else if (activeTab === "completed") {
@@ -53,12 +72,37 @@ export default function QuotesPage() {
     refetch();
   };
   
+  // Get status badge color
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-500';
+      case 'approved':
+        return 'bg-emerald-500';
+      case 'in_progress':
+        return 'bg-blue-500';
+      case 'quoted':
+        return 'bg-purple-500';
+      case 'cancelled':
+      case 'rejected':
+        return 'bg-destructive';
+      default:
+        return 'bg-yellow-500'; // Pending
+    }
+  };
+  
+  // Format date relative to now
+  const formatDate = (dateString: string) => {
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+  };
+  
   // Loading state
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
-      <AdminLayout title="Quote Requests">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="mt-4 text-lg">Loading quote requests...</p>
         </div>
       </AdminLayout>
     );
@@ -67,156 +111,167 @@ export default function QuotesPage() {
   // Error state
   if (isError) {
     return (
-      <AdminLayout title="Quote Requests">
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-destructive">Error loading quote requests</p>
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Try Again
-          </Button>
-        </div>
-      </AdminLayout>
-    );
-  }
-  
-  // Empty state
-  if (quoteRequests && quoteRequests.length === 0) {
-    return (
-      <AdminLayout title="Quote Requests">
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-muted-foreground">No quote requests found</p>
+      <AdminLayout>
+        <div className="container mx-auto py-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-destructive">Error Loading Quote Requests</CardTitle>
+              <CardDescription>
+                There was a problem fetching the quote requests. Please try again.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={handleRefresh}>Retry</Button>
+            </CardContent>
+          </Card>
         </div>
       </AdminLayout>
     );
   }
   
   return (
-    <AdminLayout title="Quote Requests">
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:w-1/3">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search by name, email, or ID..."
-              className="w-full pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
-          </div>
-        </div>
-        
-        <Tabs defaultValue="active" onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value={activeTab} className="space-y-4">
-            {filteredRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 gap-4">
-                <p className="text-muted-foreground">No matching quote requests found</p>
+    <AdminLayout>
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardHeader className="space-y-1">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle className="text-2xl">Quote Requests</CardTitle>
+                <CardDescription>
+                  Manage and respond to product quote requests from customers
+                </CardDescription>
               </div>
-            ) : (
-              <ScrollArea className="h-[calc(100vh-280px)]">
-                <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                  {filteredRequests.map((request: QuoteRequest) => (
-                    <QuoteRequestCard key={request.id} request={request} />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="self-start"
+                onClick={handleRefresh}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+            
+            <div className="flex flex-col md:flex-row gap-4 mt-4 md:items-center">
+              <div className="relative w-full md:w-72">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email or ID..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              <Tabs 
+                defaultValue="active" 
+                className="w-full md:w-auto"
+                value={activeTab}
+                onValueChange={setActiveTab}
+              >
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="active">Active</TabsTrigger>
+                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                  <TabsTrigger value="all">All</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          </CardHeader>
+          
+          <SelectSeparator />
+          
+          <CardContent>
+            <ScrollArea className="h-[600px] w-full pr-4">
+              {filteredRequests.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredRequests.map((request) => (
+                    <Card key={request.id} className="overflow-hidden">
+                      <div className="p-6">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-lg">Quote #{request.id}</h3>
+                              <Badge className={getStatusBadgeColor(request.status)}>
+                                {request.status.replace("_", " ").toUpperCase()}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              From: {request.fullName} ({request.email})
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Submitted {formatDate(request.createdAt)}
+                            </p>
+                          </div>
+                          
+                          <Button 
+                            variant="outline" 
+                            className="self-start"
+                            onClick={() => navigate(`/admin/quotes/${request.id}`)}
+                          >
+                            View Details
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Product</p>
+                            <p className="text-sm">{request.productName || "Unknown Product"}</p>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Metal Type</p>
+                            <p className="text-sm">{request.metalType}</p>
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Stone Type</p>
+                            <p className="text-sm">{request.stoneType}</p>
+                          </div>
+                        </div>
+                        
+                        {request.quotedPrice && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium">Quoted Price</p>
+                            <p className="text-lg font-bold text-primary">
+                              {formatCurrency(request.quotedPrice, request.currency || 'USD')}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {request.specialRequirements && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium">Special Requirements</p>
+                            <p className="text-sm mt-1 line-clamp-2">
+                              {request.specialRequirements}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
                   ))}
                 </div>
-              </ScrollArea>
-            )}
-          </TabsContent>
-        </Tabs>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <p className="text-muted-foreground mb-4">
+                    {searchTerm 
+                      ? "No quote requests match your search criteria" 
+                      : "No quote requests found"}
+                  </p>
+                  {searchTerm && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSearchTerm("")}
+                    >
+                      Clear Search
+                    </Button>
+                  )}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
-  );
-}
-
-interface QuoteRequestCardProps {
-  request: QuoteRequest;
-}
-
-function QuoteRequestCard({ request }: QuoteRequestCardProps) {
-  // Format the date
-  const formattedDate = request.createdAt 
-    ? formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })
-    : "Unknown date";
-  
-  // Generate status badge
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge className="bg-yellow-500">Pending</Badge>;
-      case "in_progress":
-        return <Badge className="bg-blue-500">In Progress</Badge>;
-      case "quoted":
-        return <Badge className="bg-purple-500">Quoted</Badge>;
-      case "completed":
-        return <Badge className="bg-green-500">Completed</Badge>;
-      case "cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
-  // Format quoted price
-  const formattedPrice = request.quotedPrice 
-    ? new Intl.NumberFormat('en-US', { 
-        style: 'currency', 
-        currency: request.currency || 'USD',
-        maximumFractionDigits: 0 
-      }).format(request.quotedPrice)
-    : "Not quoted yet";
-  
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>Quote #{request.id}</CardTitle>
-            <CardDescription>{formattedDate}</CardDescription>
-          </div>
-          {getStatusBadge(request.status)}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <h3 className="font-medium">Customer Details</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
-            <div className="text-sm text-muted-foreground">Name:</div>
-            <div className="text-sm">{request.fullName}</div>
-            <div className="text-sm text-muted-foreground">Email:</div>
-            <div className="text-sm">{request.email}</div>
-          </div>
-        </div>
-        
-        <SelectSeparator />
-        
-        <div>
-          <h3 className="font-medium">Product Details</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
-            <div className="text-sm text-muted-foreground">Product:</div>
-            <div className="text-sm">{request.productName}</div>
-            <div className="text-sm text-muted-foreground">Quoted Price:</div>
-            <div className="text-sm font-medium">{formattedPrice}</div>
-          </div>
-        </div>
-        
-        <SelectSeparator />
-        
-        <Button className="w-full" variant="outline" asChild>
-          <a href={`/admin/quotes/${request.id}`}>View Details</a>
-        </Button>
-      </CardContent>
-    </Card>
   );
 }

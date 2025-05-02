@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
-import { Eye, Loader2, MessageCircle, ImageIcon, X } from "lucide-react";
+import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText } from "lucide-react";
 
 interface QuoteDetailProps {
   quote: {
@@ -200,24 +200,26 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
         <div>
           <h2 className="text-2xl font-bold">Quote Request #{quote.id}</h2>
           <p className="text-muted-foreground">
             Submitted on {formatDate(quote.createdAt)}
           </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge 
+              className={
+                quote.status === "completed" ? "bg-green-500" :
+                quote.status === "in_progress" ? "bg-blue-500" :
+                quote.status === "quoted" ? "bg-purple-500" :
+                quote.status === "cancelled" ? "bg-destructive" :
+                "bg-yellow-500"
+              }
+            >
+              {quote.status.replace("_", " ").toUpperCase()}
+            </Badge>
+          </div>
         </div>
-        <Badge 
-          className={
-            quote.status === "completed" ? "bg-green-500" :
-            quote.status === "in_progress" ? "bg-blue-500" :
-            quote.status === "quoted" ? "bg-purple-500" :
-            quote.status === "cancelled" ? "bg-destructive" :
-            "bg-yellow-500"
-          }
-        >
-          {quote.status.replace("_", " ").toUpperCase()}
-        </Badge>
       </div>
       
       <Separator />
@@ -249,25 +251,14 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                   <div className="col-span-2">{quote.country}</div>
                 </>
               )}
-              
-              {quote.preferredCurrency && (
-                <>
-                  <div className="font-medium">Preferred Currency:</div>
-                  <div className="col-span-2">{quote.preferredCurrency}</div>
-                </>
-              )}
-              
-              {quote.shippingAddress && (
-                <>
-                  <div className="font-medium">Shipping Address:</div>
-                  <div className="col-span-2 whitespace-pre-wrap">
-                    {typeof quote.shippingAddress === 'string' 
-                      ? quote.shippingAddress 
-                      : JSON.stringify(quote.shippingAddress, null, 2)}
-                  </div>
-                </>
-              )}
             </div>
+            
+            {quote.specialRequirements && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Special Requirements:</h4>
+                <p className="text-sm whitespace-pre-wrap">{quote.specialRequirements}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
         
@@ -287,7 +278,7 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
               <div className="col-span-2">{quote.stoneType}</div>
               
               <div className="font-medium">Quantity:</div>
-              <div className="col-span-2">{quote.quantity || 1}</div>
+              <div className="col-span-2">{quote.quantity}</div>
               
               {quote.quotedPrice && quote.currency && (
                 <>
@@ -299,25 +290,16 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
               )}
             </div>
             
-            {quote.specialRequirements && (
-              <div className="pt-2">
-                <h4 className="font-medium mb-1">Special Requirements:</h4>
-                <p className="text-sm whitespace-pre-wrap">{quote.specialRequirements}</p>
-              </div>
-            )}
-            
             {/* Display Product Image */}
             {quote.imageUrl && (
               <div className="pt-2">
                 <h4 className="font-medium mb-1">Product Image:</h4>
-                <div 
-                  className="relative aspect-video w-full max-w-xs rounded-md overflow-hidden border cursor-pointer"
-                  onClick={() => handleImageClick(quote.imageUrl!)}
-                >
+                <div className="relative aspect-square max-w-[200px] rounded-md overflow-hidden border cursor-pointer">
                   <img 
                     src={quote.imageUrl} 
-                    alt="Product" 
+                    alt={quote.productName} 
                     className="object-cover w-full h-full"
+                    onClick={() => handleImageClick(quote.imageUrl!)}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Eye className="w-6 h-6 text-white" />
@@ -364,6 +346,14 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                   Quoted
                 </Button>
                 <Button
+                  variant={quote.status === "approved" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("approved")}
+                  disabled={statusUpdateLoading || quote.status === "approved"}
+                >
+                  Approved
+                </Button>
+                <Button
                   variant={quote.status === "completed" ? "default" : "outline"}
                   size="sm"
                   onClick={() => updateStatus("completed")}
@@ -372,12 +362,12 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                   Completed
                 </Button>
                 <Button
-                  variant={quote.status === "cancelled" ? "destructive" : "outline"}
+                  variant={quote.status === "rejected" ? "destructive" : "outline"}
                   size="sm"
-                  onClick={() => updateStatus("cancelled")}
-                  disabled={statusUpdateLoading || quote.status === "cancelled"}
+                  onClick={() => updateStatus("rejected")}
+                  disabled={statusUpdateLoading || quote.status === "rejected"}
                 >
-                  Cancel
+                  Rejected
                 </Button>
               </div>
               {statusUpdateLoading && (
