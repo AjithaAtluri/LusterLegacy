@@ -33,6 +33,7 @@ interface DesignDetailProps {
     comments?: Array<{
       id: number;
       content: string;
+      imageUrl?: string; // Image URL for comment
       createdAt: string;
       createdBy: string;
       isAdmin: boolean;
@@ -48,6 +49,9 @@ export default function DesignDetail({ design }: DesignDetailProps) {
   const [cadImageUrl, setCadImageUrl] = useState(design.cadImageUrl || "");
   const [status, setStatus] = useState(design.status);
   const [newComment, setNewComment] = useState("");
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -111,31 +115,103 @@ export default function DesignDetail({ design }: DesignDetailProps) {
     }
   };
   
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Validate file type
+      if (!file.type.match('image.*')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Image must be less than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setUploadedImage(file);
+      
+      // Create image preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  const triggerImageUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
   const handleCommentSubmit = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() && !uploadedImage) return;
     
     setIsSubmittingComment(true);
     
     try {
-      await apiRequest("POST", `/api/custom-designs/${design.id}/comments`, {
-        content: newComment
+      // Create form data to support file upload
+      const formData = new FormData();
+      
+      if (newComment.trim()) {
+        formData.append("content", newComment);
+      }
+      
+      if (uploadedImage) {
+        formData.append("image", uploadedImage);
+      }
+      
+      // Send request with formData
+      const response = await fetch(`/api/custom-designs/${design.id}/comments`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
       });
       
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+      
       toast({
-        title: "Comment added",
-        description: "Your comment has been added to the design request"
+        title: uploadedImage ? "Message with image sent" : "Message sent",
+        description: "Your message has been added to the conversation"
       });
       
       // Invalidate query to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/custom-designs'] });
       
-      // Clear comment field
+      // Clear comment field and image
       setNewComment("");
+      setUploadedImage(null);
+      setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
       console.error("Error adding comment:", error);
       toast({
-        title: "Comment failed",
-        description: "Failed to add comment",
+        title: "Message failed",
+        description: "Failed to send message. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -404,7 +480,22 @@ export default function DesignDetail({ design }: DesignDetailProps) {
                           {new Date(comment.createdAt).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                      
+                      {/* Comment text */}
+                      {comment.content && (
+                        <p className="text-sm whitespace-pre-wrap mb-2">{comment.content}</p>
+                      )}
+                      
+                      {/* Comment image (if any) */}
+                      {comment.imageUrl && (
+                        <div className="mt-2 max-w-[280px]">
+                          <img 
+                            src={comment.imageUrl} 
+                            alt="Attached image" 
+                            className="rounded-md border border-border max-h-[200px] object-contain"
+                          />
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -426,10 +517,50 @@ export default function DesignDetail({ design }: DesignDetailProps) {
                   onChange={(e) => setNewComment(e.target.value)}
                   rows={3}
                 />
-                <div className="flex justify-end">
+                
+                {/* Hidden file input */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                />
+                
+                {/* Image preview */}
+                {imagePreview && (
+                  <div className="relative w-24 h-24 overflow-hidden rounded-md border border-border mt-2">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-1 right-1 bg-background/80 rounded-full p-1"
+                    >
+                      <X className="h-4 w-4 text-destructive" />
+                    </button>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center">
+                  {/* Image upload button */}
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={triggerImageUpload}
+                    size="sm"
+                  >
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    Add Image
+                  </Button>
+                  
+                  {/* Submit button */}
                   <Button 
                     onClick={handleCommentSubmit}
-                    disabled={isSubmittingComment || !newComment.trim()}
+                    disabled={isSubmittingComment || (!newComment.trim() && !uploadedImage)}
                   >
                     {isSubmittingComment ? (
                       <>
