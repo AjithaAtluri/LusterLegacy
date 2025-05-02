@@ -28,7 +28,24 @@ export interface MetalType {
 export interface ProductType {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null;
+  displayOrder?: number;
+  isActive?: boolean;
+  icon?: string | null;
+  color?: string | null;
+  createdAt?: Date | null;
+}
+
+export interface AIContentRequest {
+  productType: string;
+  metalType: string;
+  metalWeight?: number;
+  primaryGems?: Array<{
+    name: string;
+    carats?: number;
+  }>;
+  userDescription?: string;
+  imageUrls?: string[];
 }
 
 export interface AIGeneratedContent {

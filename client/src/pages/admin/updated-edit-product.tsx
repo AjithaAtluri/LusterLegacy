@@ -23,9 +23,8 @@ import { Badge } from "@/components/ui/badge";
 import AIContentGenerator from "@/components/admin/ai-content-generator";
 import StoneTypeFilter from "@/components/admin/stone-type-filter";
 import { useToast } from "@/hooks/use-toast";
-import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
-import type { ProductType, StoneType } from "@shared/schema";
+import { AIGeneratedContent, ProductType, StoneType } from "@/types/store-types";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ProductDetails {

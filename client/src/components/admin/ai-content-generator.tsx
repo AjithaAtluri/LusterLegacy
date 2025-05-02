@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { generateProductContent, type AIContentRequest, type AIGeneratedContent } from "@/lib/ai-content-generator";
+import { generateProductContent } from "@/lib/ai-content-generator";
+import { AIContentRequest, AIGeneratedContent } from "@/types/store-types";
 import { AlertCircle, AlertTriangle, Check, ExternalLink, Loader2, Sparkles, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
