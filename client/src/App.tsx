@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { ThemeProvider } from "@/components/theme-provider";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("@/pages/home"));
@@ -62,12 +63,13 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          <Suspense fallback={<PageLoader />}>
-            <Switch>
+    <ThemeProvider defaultTheme="dark">
+      <AuthProvider>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow">
+            <Suspense fallback={<PageLoader />}>
+              <Switch>
             <Route path="/" component={Home} />
             <Route path="/collections" component={Collections} />
             <Route path="/custom-design" component={CustomDesign} />
@@ -134,6 +136,7 @@ function App() {
       <WhatsAppButton />
     </div>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 
