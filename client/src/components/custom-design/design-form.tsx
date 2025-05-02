@@ -103,28 +103,36 @@ export default function DesignForm() {
       form.setValue("fullName", user.username);
       form.setValue("email", user.email);
       
-      // First check for URL query parameters and apply them
-      const queryParams = getQueryParams();
-      if (Object.keys(queryParams).length > 0) {
-        console.log("DesignForm - Applying query parameters to form");
-        
-        // Apply each parameter to the form
-        if (queryParams.metalType) {
-          form.setValue("metalType", queryParams.metalType);
+      // First, always check session storage
+      console.log("DesignForm - Checking for saved form data in sessionStorage...");
+      const savedFormData = sessionStorage.getItem('designFormData');
+      console.log("DesignForm - savedFormData exists:", !!savedFormData);
+      
+      // Only check for URL query parameters if session storage is empty
+      if (!savedFormData) {
+        const queryParams = getQueryParams();
+        if (Object.keys(queryParams).length > 0) {
+          console.log("DesignForm - Applying query parameters to form");
+          
+          // Apply each parameter to the form
+          if (queryParams.metalType) {
+            form.setValue("metalType", queryParams.metalType);
+          }
+          
+          if (queryParams.primaryStones && queryParams.primaryStones.length > 0) {
+            form.setValue("primaryStones", queryParams.primaryStones);
+            setSelectedStones(queryParams.primaryStones);
+          }
+          
+          if (queryParams.notes) {
+            form.setValue("notes", queryParams.notes);
+          }
+          
+          // Clean URL after applying parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+          return; // Skip checking session storage if we applied URL parameters
         }
-        
-        if (queryParams.primaryStones && queryParams.primaryStones.length > 0) {
-          form.setValue("primaryStones", queryParams.primaryStones);
-          setSelectedStones(queryParams.primaryStones);
-        }
-        
-        if (queryParams.notes) {
-          form.setValue("notes", queryParams.notes);
-        }
-        
-        // Clean URL after applying parameters
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return; // Skip checking session storage if we applied URL parameters
+        return; // No session storage or URL parameters found
       }
       
       // If no URL params, try to restore saved form data from session storage
