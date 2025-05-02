@@ -49,7 +49,6 @@ const AdminEditProductNew = lazy(() => import("@/pages/admin/edit-product-new"))
 const AdminMetalTypes = lazy(() => import("@/pages/admin/metal-types"));
 const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminProductTypes = lazy(() => import("@/pages/admin/product-types"));
-const AdminOrders = lazy(() => import("@/pages/admin/orders"));
 const AdminDesigns = lazy(() => import("@/pages/admin/designs"));
 // New request type pages
 const AdminCustomizations = lazy(() => import("@/pages/admin/customizations"));
@@ -117,7 +116,6 @@ function App() {
                 <Route path="/admin/metal-types" component={AdminMetalTypes} />
                 <Route path="/admin/stone-types" component={AdminStoneTypes} />
                 <Route path="/admin/product-types" component={AdminProductTypes} />
-                <Route path="/admin/orders" component={AdminOrders} />
                 <Route path="/admin/designs" component={AdminDesigns} />
                 <Route path="/admin/customizations" component={AdminCustomizations} />
                 <Route path="/admin/customizations/:id" component={AdminCustomizationDetail} />
