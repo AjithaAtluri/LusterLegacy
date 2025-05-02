@@ -35,20 +35,20 @@ export function StoneTypeFilter({ stoneTypes, isLoading, onFilter }: StoneTypeFi
     // Apply filters based on selected values
     let filtered = [...stoneTypes];
     
-    // Only filter if value is not empty
-    if (category) {
+    // Only filter if value is not empty and not an "all_X" value
+    if (category && category !== "all_categories") {
       filtered = filtered.filter((stone) => stone.category === category);
     }
     
-    if (stoneForm) {
+    if (stoneForm && stoneForm !== "all_forms") {
       filtered = filtered.filter((stone) => stone.stoneForm === stoneForm);
     }
     
-    if (quality) {
+    if (quality && quality !== "all_qualities") {
       filtered = filtered.filter((stone) => stone.quality === quality);
     }
     
-    if (size) {
+    if (size && size !== "all_sizes") {
       filtered = filtered.filter((stone) => stone.size === size);
     }
     
@@ -86,7 +86,7 @@ export function StoneTypeFilter({ stoneTypes, isLoading, onFilter }: StoneTypeFi
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all_categories">All Categories</SelectItem>
               {uniqueCategories.map((cat) => (
                 <SelectItem key={cat} value={cat}>
                   {cat}
@@ -104,7 +104,7 @@ export function StoneTypeFilter({ stoneTypes, isLoading, onFilter }: StoneTypeFi
               <SelectValue placeholder="All Forms" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Forms</SelectItem>
+              <SelectItem value="all_forms">All Forms</SelectItem>
               {uniqueStoneForms.map((form) => (
                 <SelectItem key={form} value={form}>
                   {form}
@@ -122,7 +122,7 @@ export function StoneTypeFilter({ stoneTypes, isLoading, onFilter }: StoneTypeFi
               <SelectValue placeholder="All Qualities" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Qualities</SelectItem>
+              <SelectItem value="all_qualities">All Qualities</SelectItem>
               {uniqueQualities.map((q) => (
                 <SelectItem key={q} value={q}>
                   {q}
@@ -140,7 +140,7 @@ export function StoneTypeFilter({ stoneTypes, isLoading, onFilter }: StoneTypeFi
               <SelectValue placeholder="All Sizes" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Sizes</SelectItem>
+              <SelectItem value="all_sizes">All Sizes</SelectItem>
               {uniqueSizes.map((s) => (
                 <SelectItem key={s} value={s}>
                   {s}

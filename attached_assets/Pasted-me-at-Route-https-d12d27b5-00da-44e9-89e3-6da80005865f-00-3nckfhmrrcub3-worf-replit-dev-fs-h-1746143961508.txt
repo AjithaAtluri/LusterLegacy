@@ -1,0 +1,30 @@
+me
+    at Route (https://d12d27b5-00da-44e9-89e3-6da80005865f-00-3nckfhmrrcub3.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a1c76b6d:323:16)
+    at Switch (https://d12d27b5-00da-44e9-89e3-6da80005865f-00-3nckfhmrrcub3.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=a1c76b6d:379:17)
+    at Suspense
+    at main
+    at div
+    at AuthProvider (https://d12d27b5-00da-44e9-89e3-6da80005865f-00-3nckfhmrrcub3.worf.replit.dev/src/hooks/use-auth.tsx:31:32)
+    at App
+    at Provider (https://d12d27b5-00da-44e9-89e3-6da80005865f-00-3nckfhmrrcub3.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-E7IAXTU4.js?v=a1c76b6d:38:15)
+    at TooltipProvider (https://d12d27b5-00da-44e9-89e3-6da80005865f-00-3nckfhmrrcub3.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=a1c76b6d:63:5)
+    at QueryClientProvider (https://d12d27b5-00da-44e9-89e3-6da80005865f-00-3nckfhmrrcub3.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=a1c76b6d:2805:3)
+Mt.forEach.n.<computed> @ Console.js:61
+printWarning @ chunk-RPCDYKBN.js?v=a1c76b6d:521
+error @ chunk-RPCDYKBN.js?v=a1c76b6d:505
+validateProperty$1 @ chunk-RPCDYKBN.js?v=a1c76b6d:3427
+warnUnknownProperties @ chunk-RPCDYKBN.js?v=a1c76b6d:3459
+validateProperties$2 @ chunk-RPCDYKBN.js?v=a1c76b6d:3478
+validatePropertiesInDevelopment @ chunk-RPCDYKBN.js?v=a1c76b6d:7346
+setInitialProperties @ chunk-RPCDYKBN.js?v=a1c76b6d:7535
+finalizeInitialChildren @ chunk-RPCDYKBN.js?v=a1c76b6d:8345
+completeWork @ chunk-RPCDYKBN.js?v=a1c76b6d:16293
+completeUnitOfWork @ chunk-RPCDYKBN.js?v=a1c76b6d:19224
+performUnitOfWork @ chunk-RPCDYKBN.js?v=a1c76b6d:19206
+workLoopConcurrent @ chunk-RPCDYKBN.js?v=a1c76b6d:19189
+renderRootConcurrent @ chunk-RPCDYKBN.js?v=a1c76b6d:19164
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=a1c76b6d:18678
+workLoop @ chunk-RPCDYKBN.js?v=a1c76b6d:197
+flushWork @ chunk-RPCDYKBN.js?v=a1c76b6d:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=a1c76b6d:384Understand this error
+ Auth query successful for /api/products/featured: 

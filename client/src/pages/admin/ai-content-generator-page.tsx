@@ -630,17 +630,17 @@ export default function AIContentGeneratorPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {stoneTypesError ? (
-                            <SelectItem value="error" disabled>Error loading stone types</SelectItem>
+                            <SelectItem value="error_types" disabled>Error loading stone types</SelectItem>
                           ) : isLoadingStoneTypes ? (
-                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                            <SelectItem value="loading_types" disabled>Loading...</SelectItem>
                           ) : filteredMainStoneTypes && filteredMainStoneTypes.length > 0 ? (
                             filteredMainStoneTypes.map((stoneType) => (
-                              <SelectItem key={stoneType.id} value={stoneType.name}>
-                                {stoneType.name}
+                              <SelectItem key={stoneType.id} value={stoneType.name || `stone-${stoneType.id}`}>
+                                {stoneType.name || `Stone ${stoneType.id}`}
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="no_types" disabled>No stone types match your filters</SelectItem>
+                            <SelectItem value="no_matching_types" disabled>No stone types match your filters</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -690,17 +690,17 @@ export default function AIContentGeneratorPage() {
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
                           {stoneTypesError ? (
-                            <SelectItem value="error" disabled>Error loading stone types</SelectItem>
+                            <SelectItem value="error_secondary" disabled>Error loading stone types</SelectItem>
                           ) : isLoadingStoneTypes ? (
-                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                            <SelectItem value="loading_secondary" disabled>Loading...</SelectItem>
                           ) : filteredSecondaryStoneTypes && filteredSecondaryStoneTypes.length > 0 ? (
                             filteredSecondaryStoneTypes.map((stoneType) => (
-                              <SelectItem key={stoneType.id} value={stoneType.name}>
-                                {stoneType.name}
+                              <SelectItem key={stoneType.id} value={stoneType.name || `stone-${stoneType.id}`}>
+                                {stoneType.name || `Stone ${stoneType.id}`}
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="no_types" disabled>No stone types match your filters</SelectItem>
+                            <SelectItem value="no_secondary_types" disabled>No stone types match your filters</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -752,17 +752,17 @@ export default function AIContentGeneratorPage() {
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
                           {stoneTypesError ? (
-                            <SelectItem value="error" disabled>Error loading stone types</SelectItem>
+                            <SelectItem value="error_other" disabled>Error loading stone types</SelectItem>
                           ) : isLoadingStoneTypes ? (
-                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                            <SelectItem value="loading_other" disabled>Loading...</SelectItem>
                           ) : filteredOtherStoneTypes && filteredOtherStoneTypes.length > 0 ? (
                             filteredOtherStoneTypes.map((stoneType) => (
-                              <SelectItem key={stoneType.id} value={stoneType.name}>
-                                {stoneType.name}
+                              <SelectItem key={stoneType.id} value={stoneType.name || `stone-${stoneType.id}`}>
+                                {stoneType.name || `Stone ${stoneType.id}`}
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="no_types" disabled>No stone types match your filters</SelectItem>
+                            <SelectItem value="no_other_types" disabled>No stone types match your filters</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
