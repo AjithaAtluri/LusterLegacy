@@ -269,7 +269,7 @@ export default function GemMetalGuide() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Faceted Cuts</h4>
-                    <p className="mb-2">Stones cut with multiple flat surfaces (facets) to maximize light reflection and brilliance.</p>
+                    <p className="mb-2 dark:text-slate-300">Stones cut with multiple flat surfaces (facets) to maximize light reflection and brilliance.</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><span className="font-medium">Value impact:</span> Highest for precision-cut gems</li>
                       <li><span className="font-medium">Popular cuts:</span> Oval, cushion, and emerald cuts for these gems</li>
@@ -280,7 +280,7 @@ export default function GemMetalGuide() {
                   
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Cabochons (Cabs)</h4>
-                    <p className="mb-2">Stones with a polished, rounded top and flat bottom, no facets.</p>
+                    <p className="mb-2 dark:text-slate-300">Stones with a polished, rounded top and flat bottom, no facets.</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><span className="font-medium">Value impact:</span> Generally lower than faceted cuts</li>
                       <li><span className="font-medium">Best for:</span> Star rubies or emeralds with interesting inclusions</li>
@@ -291,7 +291,7 @@ export default function GemMetalGuide() {
                   
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Carved Gems</h4>
-                    <p className="mb-2">Stones carved into decorative shapes or with engraved designs.</p>
+                    <p className="mb-2 dark:text-slate-300">Stones carved into decorative shapes or with engraved designs.</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><span className="font-medium">Value factors:</span> Artistry, complexity, and stone quality</li>
                       <li><span className="font-medium">Types:</span> Relief carvings, intaglios, and three-dimensional figures</li>
@@ -304,7 +304,7 @@ export default function GemMetalGuide() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Beads & Their Shapes</h4>
-                    <p className="mb-2">Perforated stones used in strands or as components in jewelry designs.</p>
+                    <p className="mb-2 dark:text-slate-300">Perforated stones used in strands or as components in jewelry designs.</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><span className="font-medium">Round beads:</span> Most traditional, labor-intensive, highest value</li>
                       <li><span className="font-medium">Rondelles:</span> Disc-shaped, show more color face-up</li>
@@ -316,7 +316,7 @@ export default function GemMetalGuide() {
                   
                   <div>
                     <h4 className="font-semibold text-lg mb-2">Onyx: Varieties & Properties</h4>
-                    <p className="mb-2">Onyx is a type of chalcedony quartz that comes in various colors, not just black.</p>
+                    <p className="mb-2 dark:text-slate-300">Onyx is a type of chalcedony quartz that comes in various colors, not just black.</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><span className="font-medium">Composition:</span> Layered chalcedony quartz with parallel bands</li>
                       <li><span className="font-medium">Natural colors:</span> White, red (sardonyx), brown, and rarely black</li>
@@ -335,10 +335,10 @@ export default function GemMetalGuide() {
                 <CardDescription>Understanding the classification of gemstones</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   The terms "precious" and "semi-precious" are traditional classifications that have been used for centuries, but modern gemologists recognize that this distinction is somewhat arbitrary.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   Historically, only diamonds, rubies, sapphires, and emeralds were considered precious, while all other gemstones were deemed semi-precious. Today, factors like rarity, durability, and market demand are more important indicators of a gemstone's value.
                 </p>
               </CardContent>
@@ -350,10 +350,10 @@ export default function GemMetalGuide() {
                 <CardDescription>The weight and measurement of gemstones</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Carat is a unit of weight used specifically for gemstones, equal to 200 milligrams. Don't confuse it with "karat," which measures gold purity.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   While larger gemstones (higher carat weight) are generally more valuable, factors like color, clarity, and cut can influence a stone's value more significantly than size alone.
                 </p>
               </CardContent>
@@ -427,10 +427,10 @@ export default function GemMetalGuide() {
                 <CardDescription>Traditional Indian gemstone techniques</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Polki refers to uncut, natural diamonds that have been used in traditional Indian jewelry for centuries. Unlike modern cut diamonds, Polki stones retain their natural character and are set with their flat side up.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   Kundan is a traditional technique of setting gems in gold foil. This labor-intensive process creates a distinctive look that has adorned Indian royalty for generations.
                 </p>
               </CardContent>
@@ -451,10 +451,10 @@ export default function GemMetalGuide() {
               </CardHeader>
               <CardContent>
                 <div className="mb-6">
-                  <p className="mb-4">
+                  <p className="mb-4 dark:text-slate-300">
                     The karat system measures the purity of gold in 24 parts. 24K gold is pure (99.9%), while 22K, 18K, and 14K contain 22, 18, and 14 parts gold, respectively, mixed with other metals.
                   </p>
-                  <p>
+                  <p className="dark:text-slate-300">
                     Higher karat gold (22K-24K) is more valuable but softer, while lower karat gold is more durable for everyday wear. Different jewelry pieces benefit from different karat levels based on their intended use.
                   </p>
                 </div>
@@ -536,10 +536,10 @@ export default function GemMetalGuide() {
                 <CardDescription>Beyond the traditional yellow</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Yellow gold is the natural color of pure gold alloyed with silver and copper. White gold contains white metals like palladium or silver, plus usually a rhodium plating. Rose gold incorporates a higher percentage of copper for its distinctive pink hue.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   Each gold color has unique properties and aesthetic qualities that suit different skin tones and design styles.
                 </p>
               </CardContent>
