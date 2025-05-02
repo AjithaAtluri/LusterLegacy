@@ -85,6 +85,77 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-playfair;
   }
+  
+  /* Ensure all text is properly visible in dark mode */
+  .dark input,
+  .dark textarea,
+  .dark select,
+  .dark button,
+  .dark .text-foreground-50,
+  .dark .text-foreground-100,
+  .dark .text-foreground-200,
+  .dark .text-foreground-300,
+  .dark .text-foreground-400,
+  .dark .text-foreground-500,
+  .dark .text-foreground-600,
+  .dark .text-foreground-700,
+  .dark .text-foreground-800,
+  .dark .text-foreground-900,
+  .dark .text-muted-foreground {
+    @apply text-slate-200;
+  }
+  
+  /* Fix any input placeholders in dark mode */
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    @apply text-slate-400;
+  }
+  
+  /* Fix specific components with potentially hard-to-read text */
+  .dark .prose,
+  .dark .prose p,
+  .dark .prose li,
+  .dark .prose h1,
+  .dark .prose h2,
+  .dark .prose h3,
+  .dark .prose h4,
+  .dark .prose h5,
+  .dark .prose h6 {
+    @apply text-slate-200;
+  }
+  
+  /* Fix any text that might be using default text color */
+  .dark .text-black,
+  .dark .text-gray-700,
+  .dark .text-gray-800,
+  .dark .text-gray-900,
+  .dark .text-zinc-700,
+  .dark .text-zinc-800,
+  .dark .text-zinc-900,
+  .dark .text-slate-700,
+  .dark .text-slate-800,
+  .dark .text-slate-900 {
+    @apply text-white;
+  }
+  
+  /* Fix dropdown menus and popover components */
+  .dark [data-radix-popper-content-wrapper] {
+    @apply text-slate-200;
+  }
+  
+  /* Fix form field labels and descriptions */
+  .dark label,
+  .dark .form-label,
+  .dark .form-description,
+  .dark .form-message {
+    @apply text-slate-200;
+  }
+  
+  /* Fix any shadcn components with hard-coded dark text */
+  .dark .text-popover-foreground,
+  .dark .text-card-foreground {
+    @apply text-slate-200;
+  }
 }
 
 @layer utilities {
@@ -199,5 +270,25 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+  
+  /* Enhanced dark mode styling for badges */
+  .dark .badge-outline {
+    @apply border-primary/40 text-primary-foreground;
+  }
+  
+  /* Enhanced dark mode styling for select menus */
+  .dark .select-trigger {
+    @apply border-primary/30 bg-card text-slate-200;
+  }
+  
+  /* Enhanced dark mode styling for inputs */
+  .dark .input {
+    @apply border-primary/30 bg-card text-slate-200;
+  }
+  
+  /* Enhanced dark mode styling for tooltips */
+  .dark .tooltip {
+    @apply bg-primary/90 text-primary-foreground;
   }
 }
