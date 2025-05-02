@@ -53,13 +53,52 @@ export default function FinalizeOrder() {
     }
   }, [currency]);
   
-  // Pre-fill form with user data if available
+  // Pre-fill form with user data if available or restore from session storage
   useEffect(() => {
+    // First check for saved form data in session storage
+    const savedFormData = sessionStorage.getItem('quoteFormData');
+    
+    if (savedFormData && user) {
+      try {
+        console.log("Found saved quote form data in session storage");
+        const parsedData = JSON.parse(savedFormData);
+        
+        // Only restore data if the product ID matches
+        if (parsedData.productId && parsedData.productId === Number(id)) {
+          setName(parsedData.name || user.username);
+          setEmail(parsedData.email || user.email || "");
+          setPhone(parsedData.phone || "");
+          setAddress(parsedData.address || "");
+          setCity(parsedData.city || "");
+          setState(parsedData.state || "");
+          setPostalCode(parsedData.postalCode || "");
+          setCountry(parsedData.country || "USA");
+          setAdditionalNotes(parsedData.additionalNotes || "");
+          setPaymentMethod(parsedData.paymentMethod || "paypal");
+          setCurrency(parsedData.currency || "USD");
+          
+          // Show success message
+          toast({
+            title: "Form restored",
+            description: "Your quote request details have been restored.",
+          });
+          
+          // Clear the saved data to prevent reloading it on subsequent visits
+          sessionStorage.removeItem('quoteFormData');
+          
+          return;
+        }
+      } catch (error) {
+        console.error("Error restoring quote form data:", error);
+      }
+    }
+    
+    // If no saved data or error occurred, fill with user data
     if (user) {
       setName(user.username);
       setEmail(user.email || "");
     }
-  }, [user]);
+  }, [user, id, toast]);
 
   // Handle form submission
   const orderMutation = useMutation({
@@ -179,9 +218,39 @@ export default function FinalizeOrder() {
   
   // Redirect to login if not authenticated
   const handleLoginRedirect = () => {
+    // Save form data to session storage before redirecting
+    try {
+      const formData = {
+        productId: Number(id),
+        name,
+        email,
+        phone,
+        address,
+        city,
+        state,
+        postalCode,
+        country,
+        additionalNotes,
+        paymentMethod,
+        currency
+      };
+      
+      // Save form data to session storage
+      sessionStorage.setItem('quoteFormData', JSON.stringify(formData));
+      console.log("Quote form data saved to session storage");
+      
+      // Show notification
+      toast({
+        title: "Form data saved",
+        description: "Your quote information has been saved for after you log in."
+      });
+    } catch (error) {
+      console.error("Error saving quote form data to session storage:", error);
+    }
+    
     // Store the current URL to redirect back after login
-    localStorage.setItem('redirectAfterLogin', `/finalize-order/${id}`);
-    setLocation('/auth');
+    const returnUrl = `/place-order/${id}`;
+    window.location.href = `/auth?returnTo=${encodeURIComponent(returnUrl)}`;
   };
 
   if (isAuthLoading || isLoading) {

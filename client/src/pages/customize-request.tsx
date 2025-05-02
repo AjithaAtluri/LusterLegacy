@@ -123,7 +123,46 @@ export default function CustomizeRequest() {
       return;
     }
     
-    // Submit the form
+    // Check if user is logged in
+    if (!user) {
+      // Save form data to session storage first
+      try {
+        const formData = {
+          productId: Number(id),
+          name,
+          email,
+          phone,
+          customizationDetails,
+          preferredBudget,
+          timeline,
+          metalTypeId,
+          primaryStoneId,
+          secondaryStoneId,
+          otherStoneId,
+          estimatedPrice
+        };
+        
+        // Save the form data to session storage
+        sessionStorage.setItem('customizationFormData', JSON.stringify(formData));
+        console.log("Customization form data saved to session storage");
+        
+        // Toast notification to inform user
+        toast({
+          title: "Login required",
+          description: "Your customization details have been saved. Please log in or create an account to continue.",
+        });
+        
+        // Redirect to auth page with detailed return URL
+        const returnUrl = `/customize-request/${id}`;
+        window.location.href = `/auth?returnTo=${encodeURIComponent(returnUrl)}`;
+        return;
+      } catch (error) {
+        console.error('Error saving form data to session storage', error);
+      }
+      return;
+    }
+    
+    // If user is logged in, submit the form
     customizationMutation.mutate({
       productId: Number(id),
       name,
@@ -139,10 +178,48 @@ export default function CustomizeRequest() {
     });
   };
 
-  // Navigate back to product detail
-  // Pre-fill form with user data and product specifications if available
+  // Restore form data from session storage or pre-fill with user data
   useEffect(() => {
-    // Fill user data
+    // First, check for saved form data in session storage
+    const savedFormData = sessionStorage.getItem('customizationFormData');
+    
+    if (savedFormData && user) {
+      try {
+        console.log("Found saved customization form data in session storage");
+        const parsedData = JSON.parse(savedFormData);
+        
+        // Only restore data if the product ID matches
+        if (parsedData.productId && parsedData.productId === Number(id)) {
+          setName(parsedData.name || user.username);
+          setEmail(parsedData.email || user.email || "");
+          setPhone(parsedData.phone || "");
+          setCustomizationDetails(parsedData.customizationDetails || "");
+          setPreferredBudget(parsedData.preferredBudget || "");
+          setTimeline(parsedData.timeline || "");
+          setMetalTypeId(parsedData.metalTypeId || "");
+          setPrimaryStoneId(parsedData.primaryStoneId || "");
+          setSecondaryStoneId(parsedData.secondaryStoneId || "");
+          setOtherStoneId(parsedData.otherStoneId || "");
+          setEstimatedPrice(parsedData.estimatedPrice || 0);
+          
+          // Show success message
+          toast({
+            title: "Form restored",
+            description: "Your customization details have been restored.",
+          });
+          
+          // Clear the saved data to prevent reloading it on subsequent visits
+          sessionStorage.removeItem('customizationFormData');
+          
+          // Skip the rest of the function to avoid overwriting with default values
+          return;
+        }
+      } catch (error) {
+        console.error("Error restoring customization form data:", error);
+      }
+    }
+    
+    // If no saved data or error occurred, fill with user data
     if (user) {
       setName(user.username);
       setEmail(user.email || "");
