@@ -1,15 +1,44 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import AdminLayout from "@/components/admin/admin-layout";
-import DesignDetail from "@/components/admin/design-detail";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Search, Download } from "lucide-react";
+import { Loader2, Search, Download, Eye } from "lucide-react";
+
+// Define interfaces
+interface DesignComment {
+  id: number;
+  content: string;
+  createdAt: string;
+  imageUrl?: string;
+  isAdmin: boolean;
+}
+
+interface CustomDesign {
+  id: number;
+  fullName: string;
+  email: string;
+  phone?: string;
+  country?: string;
+  metalType: string;
+  primaryStone?: string;
+  primaryStones?: string[];
+  notes?: string;
+  imageUrl: string;
+  imageUrls?: string[];
+  status: string;
+  estimatedPrice?: number;
+  cadImageUrl?: string;
+  consultationFeePaid: boolean;
+  createdAt: string;
+  comments?: DesignComment[];
+}
 
 export default function AdminDesigns() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -182,7 +211,12 @@ export default function AdminDesigns() {
                       {design.estimatedPrice ? formatCurrency(design.estimatedPrice) : "Not quoted"}
                     </td>
                     <td className="p-4">
-                      <DesignDetail design={design} />
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/admin/designs/${design.id}`}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Link>
+                      </Button>
                     </td>
                   </tr>
                 ))}
