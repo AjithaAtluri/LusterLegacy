@@ -64,6 +64,8 @@ export default function DesignDetailPage() {
     switch (status) {
       case "pending":
         return "bg-orange-500";
+      case "design-fee-paid":
+        return "bg-teal-500";
       case "quoted":
         return "bg-blue-500";
       case "approved":
@@ -297,25 +299,10 @@ export default function DesignDetailPage() {
           </Badge>
         </div>
         
-        {/* Main Content */}
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="info">
-              <User className="h-4 w-4 mr-2" />
-              Customer & Design Info
-            </TabsTrigger>
-            <TabsTrigger value="communication">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Communication
-            </TabsTrigger>
-            <TabsTrigger value="manage">
-              <DollarSign className="h-4 w-4 mr-2" />
-              Manage Request
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Tab 1: Customer & Design Info */}
-          <TabsContent value="info" className="space-y-4">
+        {/* Main Content - Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Customer & Request Info */}
+          <div className="lg:col-span-1 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Customer Info */}
               <Card>
@@ -611,6 +598,7 @@ export default function DesignDetailPage() {
                         onChange={(e) => setStatus(e.target.value)}
                       >
                         <option value="pending">Pending</option>
+                        <option value="design-fee-paid">Design Fee Paid</option>
                         <option value="quoted">Quoted (CAD & Price Ready)</option>
                         <option value="approved">Approved by Customer</option>
                         <option value="rejected">Rejected by Customer</option>
@@ -625,18 +613,79 @@ export default function DesignDetailPage() {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="cadImageUrl">CAD Image URL</Label>
-                      <Input
-                        id="cadImageUrl"
-                        value={cadImageUrl}
-                        onChange={(e) => setCadImageUrl(e.target.value)}
-                        placeholder="https://example.com/cad-image.jpg"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Add a URL to the CAD render image for this design
-                      </p>
-                    </div>
+                    {(design.status === 'design-fee-paid' || design.status === 'quoted' || design.status === 'approved' || design.status === 'completed') ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="cadImage">CAD Design Image</Label>
+                        <div className="mt-2 flex flex-col space-y-4">
+                          {design.cadImageUrl && (
+                            <div className="relative rounded-md overflow-hidden border border-border aspect-video">
+                              <img
+                                src={design.cadImageUrl}
+                                alt="Current CAD design"
+                                className="object-contain w-full h-full"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex flex-col space-y-2">
+                            <input
+                              type="file"
+                              id="cadImage"
+                              ref={fileInputRef}
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="hidden"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={triggerImageUpload}
+                              className="w-full"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {design.cadImageUrl ? "Replace CAD Design" : "Upload CAD Design"}
+                            </Button>
+                            
+                            {imagePreview && (
+                              <div className="relative rounded-md overflow-hidden border border-border aspect-video mt-2">
+                                <img
+                                  src={imagePreview}
+                                  alt="CAD design preview"
+                                  className="object-contain w-full h-full"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-2 right-2 h-8 w-8 rounded-full"
+                                  onClick={handleRemoveImage}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Upload the CAD design image for this request
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="cadImageUrl" className="text-muted-foreground">CAD Design Image</Label>
+                        <div className="p-4 border border-dashed rounded-md bg-muted/30">
+                          <div className="flex flex-col items-center justify-center text-center">
+                            <FileImage className="h-8 w-8 text-muted-foreground mb-2" />
+                            <p className="text-sm font-medium text-muted-foreground">
+                              CAD design upload is only available after design fee is paid
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Update the status to "Design Fee Paid" first
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-4">
