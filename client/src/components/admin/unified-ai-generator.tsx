@@ -84,8 +84,9 @@ export default function UnifiedAIGenerator({
   const productTypeId = form.watch("productTypeId");
   const selectedProductType = productTypes?.find(type => type.id.toString() === productTypeId);
   const productType = selectedProductType?.name || form.watch("category");
-  const metalType = form.watch("metalType");
-  const metalWeight = form.watch("metalWeight") ? parseFloat(form.watch("metalWeight")) : undefined;
+  // Using form values for metal type and weight
+  const formMetalType = form.watch("metalType");
+  const formMetalWeight = form.watch("metalWeight");
   
   // Define type-safe versions of state setters to fix TypeScript issues
   const handleSetSelectedStoneTypes = (updater: (prev: Array<{id: number, name: string}>) => Array<{id: number, name: string}>) => {
@@ -352,10 +353,7 @@ export default function UnifiedAIGenerator({
                     <FormItem>
                       <FormLabel>5. Metal Type</FormLabel>
                       <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setMetalType(value);
-                        }} 
+                        onValueChange={field.onChange} 
                         value={field.value}
                       >
                         <FormControl>
@@ -582,8 +580,8 @@ export default function UnifiedAIGenerator({
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${metalType ? 'bg-green-500' : 'bg-amber-500'}`}>
-                    {metalType ? (
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${formMetalType ? 'bg-green-500' : 'bg-amber-500'}`}>
+                    {formMetalType ? (
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
@@ -598,7 +596,7 @@ export default function UnifiedAIGenerator({
                   <div>
                     <h4 className="text-sm font-medium">Metal Type</h4>
                     <p className="text-sm text-muted-foreground">
-                      {metalType ? `${metalType}${metalWeight ? ` (${metalWeight}g)` : ''}` : 'Not selected'}
+                      {formMetalType ? `${formMetalType}${formMetalWeight ? ` (${formMetalWeight}g)` : ''}` : 'Not selected'}
                     </p>
                   </div>
                 </div>
