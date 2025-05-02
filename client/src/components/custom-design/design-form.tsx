@@ -980,6 +980,7 @@ export default function DesignForm() {
                     <FormControl>
                       <Input 
                         {...field} 
+                        type="tel"
                         placeholder="Phone Number" 
                         className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
                       />
