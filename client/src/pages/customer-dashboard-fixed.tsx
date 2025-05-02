@@ -146,7 +146,13 @@ export default function CustomerDashboard() {
                         <Card key={`${request.requestType}-${request.id}`} className="overflow-hidden">
                           <CardHeader className="bg-background/50 pb-2">
                             <div className="flex justify-between items-center">
-                              <CardTitle className="text-lg">{request.requestType === 'design' ? 'Custom Design' : request.requestType === 'customization' ? 'Customization' : 'Quote'} #{request.id}</CardTitle>
+                              <CardTitle className="text-lg">
+                                {request.requestType === 'design' 
+                                  ? 'Custom Design' 
+                                  : request.requestType === 'customization' 
+                                  ? 'Product Customization' 
+                                  : 'Quote Request'} #{request.id}
+                              </CardTitle>
                               <div className="flex items-center gap-2">
                                 {/* Two types of requests: product customization vs custom design form */}
                                 {request.productId ? (
@@ -235,6 +241,30 @@ export default function CustomerDashboard() {
                                     </div>
                                   )}
                                 </div>
+                              </div>
+                            )}
+                            
+                            {/* Consultation fee status for Custom Design requests */}
+                            {request.requestType === 'design' && (
+                              <div className={`p-3 rounded-md mb-3 ${request.consultationFeePaid ? 'bg-green-100/10' : 'bg-accent/10'}`}>
+                                <h4 className="text-sm font-medium mb-1">Consultation Fee ($150):</h4>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm">
+                                    {request.consultationFeePaid 
+                                      ? 'Paid - Up to 4 iterations included' 
+                                      : 'Not paid - Pay to begin design process'}
+                                  </span>
+                                  {!request.consultationFeePaid && (
+                                    <Button variant="outline" size="sm" asChild>
+                                      <Link href={`/checkout/consultation/${request.id}`}>
+                                        Pay Fee <ArrowRight className="ml-1 h-3 w-3" />
+                                      </Link>
+                                    </Button>
+                                  )}
+                                </div>
+                                {request.consultationFeePaid && request.iterationsCount > 0 && (
+                                  <p className="text-xs mt-2">Design iterations used: {request.iterationsCount}/4</p>
+                                )}
                               </div>
                             )}
                             
