@@ -19,7 +19,7 @@ console.log('PayPal Environment:',
  */
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { cartItems, currency = 'USD', shippingAddress } = req.body;
+    const { cartItems, currency = 'USD', shippingAddress = {} } = req.body;
     
     if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
       return res.status(400).json({ error: 'Invalid cart items' });
@@ -33,19 +33,37 @@ export const createOrder = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Currency must be USD or INR' });
     }
 
-    // Validate shipping address based on currency
-    if (!shippingAddress || !shippingAddress.country) {
-      return res.status(400).json({ error: 'Shipping address is required' });
-    }
+    // Skip shipping address validation for design consultation payments
+    const isConsultationFee = cartItems.some(item => {
+      // First check if it's marked as a custom design
+      if (item.isCustomDesign) return true;
+      
+      // If we have a design request ID, it's likely a consultation fee
+      if (item.designRequestId) return true;
+      
+      // This check might not work directly since 'name' isn't in the cart item type
+      // But we keep it for backward compatibility with older code that might set a name
+      const itemAny = item as any;
+      return itemAny.name && typeof itemAny.name === 'string' && 
+        itemAny.name.toLowerCase().includes('consultation fee');
+    });
+    
+    if (!isConsultationFee) {
+      // Only validate shipping for regular product orders
+      // Skip for consultation fees and custom design requests
+      if (!shippingAddress || !shippingAddress.country) {
+        return res.status(400).json({ error: 'Shipping address is required for product orders' });
+      }
 
-    // Check country and currency match
-    if (
-      (currency === 'USD' && shippingAddress.country !== 'US') ||
-      (currency === 'INR' && shippingAddress.country !== 'IN')
-    ) {
-      return res.status(400).json({ 
-        error: 'Currency and shipping country mismatch. USD for US addresses and INR for India addresses only.'
-      });
+      // Check country and currency match
+      if (
+        (currency === 'USD' && shippingAddress.country !== 'US') ||
+        (currency === 'INR' && shippingAddress.country !== 'IN')
+      ) {
+        return res.status(400).json({ 
+          error: 'Currency and shipping country mismatch. USD for US addresses and INR for India addresses only.'
+        });
+      }
     }
 
     // Calculate totals
@@ -114,7 +132,7 @@ export const createOrder = async (req: Request, res: Response) => {
  */
 export const captureOrder = async (req: Request, res: Response) => {
   try {
-    const { orderID, shippingAddress, currency } = req.body;
+    const { orderID, shippingAddress = {}, currency } = req.body;
     
     if (!orderID) {
       return res.status(400).json({ error: 'Order ID is required' });
@@ -127,20 +145,55 @@ export const captureOrder = async (req: Request, res: Response) => {
     if (!cartItems || cartItems.length === 0) {
       return res.status(400).json({ error: 'No items in cart' });
     }
-
+    
+    // Check if this is a design consultation fee payment
+    const isConsultationFee = cartItems.some(item => {
+      // First check if it's marked as a custom design
+      if (item.isCustomDesign) return true;
+      
+      // If we have a design request ID, it's likely a consultation fee
+      if (item.designRequestId) return true;
+      
+      // This check might not work directly since 'name' isn't in the cart item type
+      // But we keep it for backward compatibility with older code that might set a name
+      const itemAny = item as any;
+      return itemAny.name && typeof itemAny.name === 'string' && 
+        itemAny.name.toLowerCase().includes('consultation fee');
+    });
+    
     // Record the order in the database (simplified version)
     const totalAmount = cartItems.reduce((sum, item) => sum + item.price, 0);
     
+    // Get authenticated user if available
+    let userId = null;
+    if (req.user && req.user.id) {
+      userId = req.user.id;
+    }
+    
+    // If this is a consultation fee payment, handle it differently
+    if (isConsultationFee && userId) {
+      // For consultation fees, mark the associated design request as paid
+      const designRequestId = cartItems[0].designRequestId;
+      if (designRequestId) {
+        // Update the design request status to indicate fee has been paid
+        await storage.updateDesignRequest(designRequestId, {
+          status: 'design-fee-paid',
+          consultationFeePaid: true
+        });
+        console.log(`Design consultation fee paid for request #${designRequestId}`);
+      }
+    }
+    
     const orderDetails = {
       sessionId,
-      userId: null, // If user is logged in, get their ID
+      userId, // Use authenticated user ID if available
       orderStatus: 'pending',
       paymentStatus: 'completed',
       totalAmount: totalAmount,
       advanceAmount: totalAmount * 0.5, // 50% advance payment
       balanceAmount: totalAmount * 0.5, // 50% remaining payment
-      customerName: `${shippingAddress.name}`,
-      customerEmail: shippingAddress.email || 'customer@example.com',
+      customerName: shippingAddress.name || (req.user ? req.user.username : 'Guest User'),
+      customerEmail: shippingAddress.email || (req.user ? req.user.email : 'customer@example.com'),
       customerPhone: shippingAddress.phone || '',
       shippingAddress,
       paymentMethod: 'paypal',

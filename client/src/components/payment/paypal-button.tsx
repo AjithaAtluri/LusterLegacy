@@ -153,11 +153,31 @@ function PayPalButtonContent({
     try {
       console.log("PayPal Button: Creating order with cart items:", cartItems.length);
       
+      // Check if this is a design consultation fee
+      const isConsultationFee = cartItems.some(item => 
+        item.name && item.name.toLowerCase().includes('consultation fee')
+      );
+      
+      // Prepare properly formatted cart items
+      const formattedCartItems = cartItems.map(item => ({
+        ...item,
+        designRequestId: (item as any).designRequestId,  // Include designRequestId if available
+        isCustomDesign: isConsultationFee,
+        price: item.price || amount, // Use price from item or fallback to amount prop
+        name: item.name || (isConsultationFee ? 'Design Consultation Fee' : 'Product')
+      }));
+      
+      console.log("PayPal Button: Prepared cart items for PayPal:", {
+        isConsultationFee,
+        itemCount: formattedCartItems.length,
+        firstItem: formattedCartItems[0]
+      });
+      
       // Use the helper function to create the order
       const orderID = await createPayPalOrder({
-        cartItems,
+        cartItems: formattedCartItems,
         currency,
-        shippingAddress
+        shippingAddress: shippingAddress || {}
       });
       
       // Store the order ID
@@ -188,21 +208,44 @@ function PayPalButtonContent({
     try {
       console.log("PayPal Button: Capturing order:", data.orderID);
       
+      // Check if this is a design consultation fee
+      const isConsultationFee = cartItems.some(item => 
+        item.name && item.name.toLowerCase().includes('consultation fee')
+      );
+      
+      // Get the designRequestId from cart items if it exists
+      const designRequestId = isConsultationFee && cartItems.length > 0 ? 
+        (cartItems[0] as any).designRequestId : null;
+      
+      console.log("PayPal Button: Preparing to capture payment:", {
+        isConsultationFee,
+        designRequestId: designRequestId || 'none',
+        orderID: data.orderID
+      });
+      
       // Use the helper function to capture the order
       const result = await capturePayPalOrder({
         orderID: data.orderID,
-        shippingAddress,
-        currency
+        shippingAddress: shippingAddress || {},
+        currency,
+        designRequestId: designRequestId
       });
       
       if (result.success) {
         console.log("PayPal Button: Order captured successfully, order ID:", result.orderId);
         
-        // Show success message
-        toast({
-          title: "Payment Successful",
-          description: "Your order has been placed successfully. Thank you for your purchase!",
-        });
+        // Show appropriate success message based on payment type
+        if (isConsultationFee) {
+          toast({
+            title: "Consultation Fee Paid",
+            description: "Your design consultation fee has been processed. Our team will review your request and provide CAD designs soon.",
+          });
+        } else {
+          toast({
+            title: "Payment Successful",
+            description: "Your order has been placed successfully. Thank you for your purchase!",
+          });
+        }
         
         // Call the success callback
         onSuccess(result.orderId);

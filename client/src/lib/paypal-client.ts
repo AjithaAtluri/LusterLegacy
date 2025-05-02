@@ -70,6 +70,7 @@ export async function capturePayPalOrder(data: {
   orderID: string;
   shippingAddress: any;
   currency: 'USD' | 'INR';
+  designRequestId?: number | null;
 }): Promise<{ success: boolean; orderId: number }> {
   try {
     console.log("Capturing PayPal order:", data.orderID);
