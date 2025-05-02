@@ -54,21 +54,22 @@ interface AIGeneratedContent {
   imageInsights?: string;
 }
 
+// Use the same StoneType interface as in stone-type-filter.tsx
 interface StoneType {
   id: number;
   name: string;
-  pricePerCarat?: number; 
-  priceModifier?: number;
-  description?: string;
-  color?: string | null;
-  size?: string | null;
+  description?: string | null;
   displayOrder?: number;
   isActive?: boolean;
+  color?: string | null;
+  createdAt?: Date | null;
+  priceModifier?: number;
   imageUrl?: string | null;
   category?: string | null;
   stoneForm?: string | null;
   quality?: string | null;
-  createdAt?: Date | null;
+  size?: string | null;
+  pricePerCarat?: number; // Additional field for this page
 }
 
 interface MetalType {

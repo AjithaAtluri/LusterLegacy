@@ -2,7 +2,23 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StoneType } from "@shared/schema";
+
+// Use a generic definition that works with both database schema and frontend models
+interface StoneType {
+  id: number;
+  name: string;
+  description?: string | null;
+  displayOrder?: number;
+  isActive?: boolean;
+  color?: string | null;
+  createdAt?: Date | null;
+  priceModifier?: number;
+  imageUrl?: string | null;
+  category?: string | null;
+  stoneForm?: string | null;
+  quality?: string | null;
+  size?: string | null;
+}
 
 interface StoneTypeFilterProps {
   stoneTypes: StoneType[];

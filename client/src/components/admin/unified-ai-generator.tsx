@@ -390,11 +390,7 @@ export default function UnifiedAIGenerator({
                           min="0" 
                           step="0.1" 
                           placeholder="e.g. 5.2" 
-                          {...field} 
-                          onChange={(e) => {
-                            field.onChange(e);
-                            setMetalWeight(e.target.value);
-                          }}
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -680,8 +676,8 @@ export default function UnifiedAIGenerator({
         {/* AI Content Generator */}
         <AIContentGenerator
           productType={productType}
-          metalType={metalType}
-          metalWeight={metalWeight}
+          metalType={formMetalType || ""}
+          metalWeight={formMetalWeight ? parseFloat(formMetalWeight) : 0}
           primaryGems={[
             ...(mainStoneType ? [{
               name: mainStoneType,
