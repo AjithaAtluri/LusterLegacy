@@ -157,8 +157,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
-    <div className="bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[500px]">
-      <div className="relative h-[320px] overflow-hidden flex-shrink-0 bg-white bg-opacity-5 flex items-center justify-center p-2">
+    <div className="product-card bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[500px]">
+      <div className="relative h-[320px] overflow-hidden flex-shrink-0 bg-white dark:bg-black dark:bg-opacity-40 bg-opacity-5 flex items-center justify-center p-2">
         {/* Using the reliable product image component for consistent images */}
         <Link href={`/product-detail/${product.id}`}>
           <ReliableProductImage 
@@ -197,11 +197,11 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Product title with simplified 5-word versions for all products */}
         <div className="relative mb-4 py-2">
           {/* Decorative lines before and after title */}
-          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40"></div>
+          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40 dark:bg-primary/60"></div>
           <h3 className="font-cormorant text-xl italic font-semibold tracking-wide text-foreground group-hover:text-primary transition-colors duration-300 text-center uppercase px-2 leading-tight">
             {getShortProductTitle(product)}
           </h3>
-          <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40"></div>
+          <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40 dark:bg-primary/60"></div>
         </div>
         
         {/* Flex spacer to push button to bottom */}
@@ -211,7 +211,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div>
           <Button 
             asChild
-            className="font-montserrat bg-accent hover:bg-accent/90 text-white w-full py-2 rounded transition duration-300"
+            className="font-montserrat bg-accent hover:bg-accent/90 dark:bg-primary/90 dark:hover:bg-primary text-white w-full py-2 rounded transition duration-300"
           >
             <Link href={`/product-detail/${product.id}`}>
               View Details
