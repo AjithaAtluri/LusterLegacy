@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { useAuth } from "@/hooks/use-auth";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, isImageFile } from "@/lib/utils";
 
 import {
   Card,
@@ -24,7 +24,10 @@ import {
   ArrowRight,
   Check,
   X,
-  MessageCircle
+  MessageCircle,
+  ImagePlus,
+  X as XIcon,
+  Image
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,10 +39,13 @@ export default function CustomDesignDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // State for new comments
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   // Fetch design request data
   const { data: design, isLoading, error } = useQuery({
@@ -73,19 +79,84 @@ export default function CustomDesignDetail() {
     });
   };
 
+  const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      
+      if (!isImageFile(file)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file (jpg, jpeg, png, gif).",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image under 5MB.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setUploadedImage(file);
+      
+      // Create image preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  const triggerImageUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   const handleCommentSubmit = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() && !uploadedImage) return;
     
     setIsSubmitting(true);
     
     try {
-      await apiRequest("POST", `/api/custom-designs/${id}/comments`, {
-        content: newComment
+      // Create form data to support file upload
+      const formData = new FormData();
+      
+      if (newComment.trim()) {
+        formData.append("content", newComment);
+      }
+      
+      if (uploadedImage) {
+        formData.append("image", uploadedImage);
+      }
+      
+      // Send request with formData instead of JSON
+      const response = await fetch(`/api/custom-designs/${id}/comments`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
       });
       
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+      
       toast({
-        title: "Comment added",
-        description: "Your comment has been added to the design request"
+        title: uploadedImage ? "Message with image sent" : "Message sent",
+        description: "Your message has been added to the conversation"
       });
       
       // Invalidate query to refresh data
@@ -94,13 +165,18 @@ export default function CustomDesignDetail() {
       // Also invalidate user designs query to keep both views in sync
       queryClient.invalidateQueries({ queryKey: ['/api/custom-designs/user'] });
       
-      // Clear comment field
+      // Clear comment field and image
       setNewComment("");
+      setUploadedImage(null);
+      setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
       console.error("Error adding comment:", error);
       toast({
-        title: "Comment failed",
-        description: "Failed to add comment. Please try again.",
+        title: "Message failed",
+        description: "Failed to send message. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -331,7 +407,24 @@ export default function CustomDesignDetail() {
                       {new Date(comment.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                  
+                  {/* Comment Text */}
+                  {comment.content && (
+                    <p className="text-sm whitespace-pre-wrap mb-2">{comment.content}</p>
+                  )}
+                  
+                  {/* Comment Image (if any) */}
+                  {comment.imageUrl && (
+                    <div className="mt-2 rounded-md overflow-hidden">
+                      <img 
+                        src={comment.imageUrl} 
+                        alt="Attached Image" 
+                        className="max-h-[300px] object-contain max-w-full"
+                        onClick={() => window.open(comment.imageUrl, '_blank')}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
