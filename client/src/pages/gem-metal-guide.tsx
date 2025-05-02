@@ -918,19 +918,19 @@ export default function GemMetalGuide() {
                     <History className="h-5 w-5 text-rose-500" />
                     Royal Patronage: The Foundation of Luxury
                   </h3>
-                  <p className="mb-4">
+                  <p className="mb-4 dark:text-slate-300">
                     India's jewelry heritage is inextricably linked to royal patronage, which fostered the development of specialized techniques and designs that continue to define luxury today. For centuries, Indian maharajas commissioned extraordinary pieces that combined massive gemstones with intricate craftsmanship.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="border-l-4 border-primary/30 pl-4">
                       <h4 className="font-semibold text-lg mb-2">The Patiala Necklace</h4>
-                      <p>
+                      <p className="dark:text-slate-300">
                         Perhaps the most legendary example of Indian jewelry opulence, this Cartier creation for Maharaja Bhupinder Singh of Patiala featured 2,930 diamonds and multiple Burmese rubies. Commissioned in 1928, it exemplified how Indian royalty influenced global luxury jewelry design, creating pieces that built generational legacy.
                       </p>
                     </div>
                     <div className="border-l-4 border-amber-300/50 pl-4">
                       <h4 className="font-semibold text-lg mb-2">The Baroda Pearl Carpet</h4>
-                      <p>
+                      <p className="dark:text-slate-300">
                         Created by the Maharaja of Baroda, this extraordinary piece featured 1.5-2 million natural pearls, along with diamonds, rubies, emeralds, and sapphires. Intended as a gift for the tomb of the Prophet Muhammad in Medina, it never reached its destination and instead became a symbol of how jewelry transcends adornment to become cultural artifacts of immense value.
                       </p>
                     </div>
@@ -947,7 +947,7 @@ export default function GemMetalGuide() {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="bg-muted/10 p-4 rounded-lg border border-primary/10">
                       <h4 className="font-semibold text-lg mb-2 text-primary">Kundan & Meenakari</h4>
-                      <p className="mb-3">
+                      <p className="mb-3 dark:text-slate-300">
                         Originating in the royal courts of Rajasthan and Gujarat, Kundan involves setting stones in a gold foil base, while Meenakari adds colored enameling to the reverse side. This combination creates pieces with incredible dimension and color contrast.
                       </p>
                       <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -959,7 +959,7 @@ export default function GemMetalGuide() {
                     
                     <div className="bg-muted/10 p-4 rounded-lg border border-primary/10">
                       <h4 className="font-semibold text-lg mb-2 text-primary">Temple Jewelry</h4>
-                      <p className="mb-3">
+                      <p className="mb-3 dark:text-slate-300">
                         Developed in South India, particularly Tamil Nadu and Kerala, Temple jewelry originated as adornments for deity statues. Characterized by divine motifs and substantial gold work, these pieces embody both luxury and spiritual significance.
                       </p>
                       <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -971,7 +971,7 @@ export default function GemMetalGuide() {
                     
                     <div className="bg-muted/10 p-4 rounded-lg border border-primary/10">
                       <h4 className="font-semibold text-lg mb-2 text-primary">Jadau & Polki</h4>
-                      <p className="mb-3">
+                      <p className="mb-3 dark:text-slate-300">
                         Jadau is a technique of embedding uncut diamonds (Polki) and other gemstones into metal. This Mughal-era technique represents the pinnacle of Indian jewelry craftsmanship, combining substantial gemstone weight with artistic excellence.
                       </p>
                       <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -993,7 +993,7 @@ export default function GemMetalGuide() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
                       <h4 className="font-semibold text-lg mb-2">Collecting with Purpose</h4>
-                      <p className="mb-3">
+                      <p className="mb-3 dark:text-slate-300">
                         The most valuable jewelry collections tell a cohesive story. Whether focusing on a particular technique, gemstone, or historical period, intentional collecting creates both personal meaning and financial value.
                       </p>
                       <ul className="list-disc pl-5 space-y-2">
@@ -1011,7 +1011,7 @@ export default function GemMetalGuide() {
                     
                     <div>
                       <h4 className="font-semibold text-lg mb-2">Sustainability in Luxury</h4>
-                      <p className="mb-3">
+                      <p className="mb-3 dark:text-slate-300">
                         Modern luxury increasingly embraces sustainability and ethical sourcing. The most prestigious contemporary Indian jewelry houses are reviving traditional techniques with environmentally and socially responsible practices.
                       </p>
                       <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
