@@ -551,10 +551,10 @@ export default function GemMetalGuide() {
                 <CardDescription>Finding jewelry that works for sensitive skin</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Metal allergies are most commonly reactions to nickel, which can be present in white gold and other alloys. Pure metals like 24K gold or platinum rarely cause allergic reactions.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   For sensitive skin, consider platinum, palladium, titanium, or higher karat gold pieces that contain minimal alloys.
                 </p>
               </CardContent>
@@ -566,10 +566,10 @@ export default function GemMetalGuide() {
                 <CardDescription>Why it matters for quality and longevity</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   The weight of precious metals in a piece reflects its durability and investment value. Heavier pieces typically contain more precious metal and will withstand daily wear better.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   However, modern jewelry techniques can create strong yet lightweight pieces that are comfortable to wear while maintaining durability.
                 </p>
               </CardContent>
@@ -589,10 +589,10 @@ export default function GemMetalGuide() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Prong settings elevate gems for maximum light exposure but offer less protection. Bezel settings encircle stones completely, offering more security but potentially less brilliance.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   Pavé, channel, and invisible settings are techniques used to create surfaces of continuous sparkle with multiple smaller stones set closely together.
                 </p>
               </CardContent>
@@ -607,10 +607,10 @@ export default function GemMetalGuide() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Handcrafted jewelry carries the unique signature of its creator, with subtle variations that make each piece one-of-a-kind. These pieces often feature more complex designs and attention to detail.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   Machine-made jewelry offers consistency and precision but may lack the character and personal touch of handcrafted pieces. The best jewelry often combines both approaches.
                 </p>
               </CardContent>
@@ -625,10 +625,10 @@ export default function GemMetalGuide() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Polishing creates mirror-like surfaces that maximize sparkle and shine. Hammering or texturing adds visual interest and can disguise minor scratches over time.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   Techniques like engraving, filigree, and milgrain (tiny beads along edges) add intricate details that elevate a piece from ordinary to extraordinary.
                 </p>
               </CardContent>
@@ -643,10 +643,10 @@ export default function GemMetalGuide() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">
+                <p className="mb-4 dark:text-slate-300">
                   Different gems and metals require specific care. Diamonds are durable but can chip if struck at the right angle. Pearls are delicate and should avoid contact with perfumes and cosmetics.
                 </p>
-                <p>
+                <p className="dark:text-slate-300">
                   Regular professional cleaning and maintenance can extend the life of your jewelry. Store pieces separately to prevent scratching, and remove jewelry before swimming, exercising, or using household chemicals.
                 </p>
               </CardContent>
@@ -669,7 +669,7 @@ export default function GemMetalGuide() {
                       <Trophy className="h-5 w-5 text-amber-500" />
                       Master Craftspeople: The Guardians of Tradition
                     </h3>
-                    <p className="mb-4">
+                    <p className="mb-4 dark:text-slate-300">
                       Behind every exceptional piece of jewelry stands a master craftsperson whose skills have been refined over decades. These artisans represent the pinnacle of their specialized trades, with knowledge often passed down through generations and refined through years of dedicated practice.
                     </p>
                   </div>
@@ -679,7 +679,7 @@ export default function GemMetalGuide() {
                       <Hammer className="h-5 w-5 text-slate-500" />
                       Master Goldsmiths
                     </h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       Master goldsmiths are the architects of fine jewelry, transforming raw precious metals into wearable art through techniques like forging, casting, and fabrication.
                     </p>
                     <ul className="list-disc pl-5 space-y-1.5 text-sm">
@@ -695,7 +695,7 @@ export default function GemMetalGuide() {
                       <Gem className="h-5 w-5 text-emerald-500" />
                       Master Gemsetters
                     </h4>
-                    <p className="mb-3">
+                    <p className="mb-3 dark:text-slate-300">
                       The elite specialists who secure precious stones in their settings. Their steady hands and perfect eye ensure each stone is secure while maximizing its beauty.
                     </p>
                     <ul className="list-disc pl-5 space-y-1.5 text-sm">
@@ -729,7 +729,7 @@ export default function GemMetalGuide() {
                     </h3>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                       <div>
-                        <p className="mb-4">
+                        <p className="mb-4 dark:text-slate-300">
                           Jewelry designers are the visionaries who conceive the pieces that craftspeople bring to life. They blend artistic sensibility with technical understanding, creating designs that balance aesthetics, wearability, and structural integrity.
                         </p>
                         <div className="bg-gradient-to-r from-primary/5 to-transparent p-5 rounded-lg mb-4">
