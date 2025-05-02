@@ -84,7 +84,7 @@ export default function HeroSection() {
           <h1 className="font-playfair font-bold text-3xl md:text-5xl lg:text-6xl mb-5 leading-tight">
             <span className="block text-shadow-lg text-white">Crafted by</span>
             <span className="block text-primary text-glow font-extrabold my-1">Artisans</span>
-            <span className="block mt-2 text-shadow-lg text-white">Designed by <span className="text-accent text-glow">You</span></span>
+            <span className="block mt-2 text-shadow-lg text-white">Designed by You</span>
           </h1>
           
           {/* Tagline with elegant styling using gold for better visibility */}
@@ -108,7 +108,7 @@ export default function HeroSection() {
             </Button>
             <Button 
               asChild
-              className="font-montserrat font-medium bg-accent/90 text-white px-6 py-3 md:px-8 md:py-4 rounded-none border border-accent/80 hover:bg-accent transition duration-300 hover-shine h-auto group shadow-lg"
+              className="font-montserrat font-medium bg-primary/90 text-white px-6 py-3 md:px-8 md:py-4 rounded-none border border-primary/80 hover:bg-primary transition duration-300 hover-shine h-auto group shadow-lg"
             >
               <Link href="/custom-design" className="flex items-center">
                 <span>Create Custom Design</span>
@@ -119,16 +119,16 @@ export default function HeroSection() {
         </div>
       </div>
       
-      {/* Decorative corner elements with alternating colors - only shows after image loads */}
+      {/* Decorative corner elements with gold accents - only shows after image loads */}
       <div className={`absolute top-6 left-6 h-16 w-16 border-t-2 border-l-2 border-primary/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
-      <div className={`absolute bottom-6 right-6 h-16 w-16 border-b-2 border-r-2 border-accent/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
+      <div className={`absolute bottom-6 right-6 h-16 w-16 border-b-2 border-r-2 border-primary/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
       
-      {/* Scroll indicator with purple accents - only shows after image loads */}
+      {/* Scroll indicator with gold accents - only shows after image loads */}
       <div className={`absolute bottom-6 left-0 right-0 flex justify-center z-20 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <a href="#collections" className="flex flex-col items-center group">
-          <span className="text-xs text-pearl/70 uppercase tracking-widest mb-2 font-montserrat group-hover:text-accent transition-colors duration-300">Discover</span>
+          <span className="text-xs text-pearl/70 uppercase tracking-widest mb-2 font-montserrat group-hover:text-primary transition-colors duration-300">Discover</span>
           <div className="relative w-6 h-10 border-2 border-pearl/30 rounded-full flex justify-center p-1">
-            <div className="w-1 h-2 bg-accent rounded-full animate-scroll"></div>
+            <div className="w-1 h-2 bg-primary rounded-full animate-scroll"></div>
           </div>
         </a>
       </div>
