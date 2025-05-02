@@ -12,18 +12,9 @@ export async function getPayPalClientId(): Promise<string> {
       throw new Error("Empty response from server");
     }
     
-    // Handle the case where response might be a string
-    let clientData;
-    if (typeof response === 'string') {
-      try {
-        clientData = JSON.parse(response);
-      } catch (e) {
-        console.error("Invalid JSON in PayPal response", response);
-        throw new Error("Invalid response format");
-      }
-    } else {
-      clientData = response;
-    }
+    // Parse the response JSON
+    const clientData = await response.json();
+    console.log("PayPal client ID response data:", clientData);
     
     if (!clientData.clientId) {
       if (clientData.error) {
@@ -56,14 +47,16 @@ export async function createPayPalOrder(data: {
     });
     
     const response = await apiRequest("POST", "/api/payment/create-paypal-order", data);
+    const responseData = await response.json();
+    console.log("PayPal create order response:", responseData);
     
-    if (!response || !response.orderID) {
-      console.error("Invalid response from create-paypal-order:", response);
+    if (!responseData || !responseData.orderID) {
+      console.error("Invalid response from create-paypal-order:", responseData);
       throw new Error("Failed to create PayPal order: Invalid response from server");
     }
     
-    console.log("PayPal order created successfully:", response.orderID);
-    return response.orderID;
+    console.log("PayPal order created successfully:", responseData.orderID);
+    return responseData.orderID;
   } catch (error) {
     console.error("Error creating PayPal order:", error);
     throw error;
@@ -82,16 +75,18 @@ export async function capturePayPalOrder(data: {
     console.log("Capturing PayPal order:", data.orderID);
     
     const response = await apiRequest("POST", "/api/payment/capture-paypal-order", data);
+    const responseData = await response.json();
+    console.log("PayPal capture order response:", responseData);
     
-    if (!response || typeof response.success !== 'boolean') {
-      console.error("Invalid response from capture-paypal-order:", response);
+    if (!responseData || typeof responseData.success !== 'boolean') {
+      console.error("Invalid response from capture-paypal-order:", responseData);
       throw new Error("Failed to capture PayPal order: Invalid response from server");
     }
     
-    console.log("PayPal order capture result:", response.success ? "Success" : "Failed");
+    console.log("PayPal order capture result:", responseData.success ? "Success" : "Failed");
     return {
-      success: response.success,
-      orderId: response.orderId
+      success: responseData.success,
+      orderId: responseData.orderId
     };
   } catch (error) {
     console.error("Error capturing PayPal order:", error);
@@ -107,14 +102,16 @@ export async function cancelPayPalOrder(orderID: string): Promise<boolean> {
     console.log("Cancelling PayPal order:", orderID);
     
     const response = await apiRequest("POST", "/api/payment/cancel-paypal-order", { orderID });
+    const responseData = await response.json();
+    console.log("PayPal cancel order response:", responseData);
     
-    if (!response || typeof response.success !== 'boolean') {
-      console.error("Invalid response from cancel-paypal-order:", response);
+    if (!responseData || typeof responseData.success !== 'boolean') {
+      console.error("Invalid response from cancel-paypal-order:", responseData);
       return false;
     }
     
-    console.log("PayPal order cancellation result:", response.success ? "Success" : "Failed");
-    return response.success;
+    console.log("PayPal order cancellation result:", responseData.success ? "Success" : "Failed");
+    return responseData.success;
   } catch (error) {
     console.error("Error canceling PayPal order:", error);
     return false;
