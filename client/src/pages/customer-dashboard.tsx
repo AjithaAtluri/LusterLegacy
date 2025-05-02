@@ -86,11 +86,11 @@ export default function CustomerDashboard() {
   
   // Combine all design and customization requests
   const allRequests = useMemo(() => {
-    // Combine the data from all request types
+    // Combine the data from all request types with type identifiers to prevent duplicate keys
     const requests = [
-      ...(customizationRequests || []),
-      ...(customDesigns || []),
-      ...(quoteRequests || [])
+      ...(customizationRequests || []).map(req => ({ ...req, requestType: 'customization' })),
+      ...(customDesigns || []).map(req => ({ ...req, requestType: 'design' })),
+      ...(quoteRequests || []).map(req => ({ ...req, requestType: 'quote' }))
     ];
     
     // Sort by date
@@ -410,7 +410,7 @@ export default function CustomerDashboard() {
                   ) : (
                     <div className="space-y-4">
                       {allRequests.map((request) => (
-                        <Card key={request.id} className="overflow-hidden">
+                        <Card key={`${request.requestType}-${request.id}`} className="overflow-hidden">
                           <CardHeader className="bg-background/50 pb-2">
                             <div className="flex justify-between items-center">
                               <CardTitle className="text-lg">Request #{request.id}</CardTitle>
