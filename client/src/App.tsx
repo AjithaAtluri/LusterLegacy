@@ -118,6 +118,7 @@ function App() {
                 <Route path="/admin/stone-types" component={AdminStoneTypes} />
                 <Route path="/admin/product-types" component={AdminProductTypes} />
                 <Route path="/admin/designs" component={AdminDesigns} />
+                <Route path="/admin/designs/:id" component={lazy(() => import("@/pages/admin/design-detail/[id]"))} />
                 <Route path="/admin/customizations" component={AdminCustomizations} />
                 <Route path="/admin/customizations/:id" component={AdminCustomizationDetail} />
                 <Route path="/admin/quotes" component={AdminQuotes} />
