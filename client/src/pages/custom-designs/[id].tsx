@@ -246,6 +246,36 @@ export default function CustomDesignDetail() {
         </div>
       </div>
       
+      {/* Consultation Fee Notice */}
+      {!design.product && design.status === "pending" && !design.consultationFeePaid && (
+        <div className="mb-8 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-lg p-4">
+          <div className="flex items-start">
+            <svg className="h-6 w-6 text-amber-600 dark:text-amber-400 mr-3 mt-0.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div>
+              <h3 className="font-medium text-amber-800 dark:text-amber-300 mb-1">Consultation Fee Required</h3>
+              <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
+                Before our design team begins work on your custom design, the $150 consultation fee must be paid. 
+                This fee covers up to 4 iterations of your design and CAD modeling. 
+              </p>
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="bg-amber-600 hover:bg-amber-700 text-white border-0"
+                asChild
+              >
+                <Link href={`/payment/design-consultation/${design.id}`}>
+                  Pay Consultation Fee <ArrowRight className="ml-1 h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {/* Left Column - Design Image or Product Image */}
         <Card className="overflow-hidden">
@@ -392,6 +422,22 @@ export default function CustomDesignDetail() {
           <CardDescription>Messages between you and our design team</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Additional notification about design work not starting until fee is paid */}
+          {!design.product && design.status === "pending" && !design.consultationFeePaid && (
+            <div className="p-3 mb-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/30 rounded-md">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
+                  <span className="font-medium">Note:</span> Our design team will begin working on your custom design after the consultation fee is paid.
+                </p>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4">
             {design.comments && design.comments.length > 0 ? (
               design.comments.map((comment) => (
