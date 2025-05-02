@@ -413,7 +413,7 @@ export default function CustomerDashboard() {
                         <Card key={`${request.requestType}-${request.id}`} className="overflow-hidden">
                           <CardHeader className="bg-background/50 pb-2">
                             <div className="flex justify-between items-center">
-                              <CardTitle className="text-lg">Request #{request.id}</CardTitle>
+                              <CardTitle className="text-lg">{request.requestType === 'design' ? 'Custom Design' : request.requestType === 'customization' ? 'Customization' : 'Quote'} #{request.id}</CardTitle>
                               <div className="flex items-center gap-2">
                                 {/* Two types of requests: product customization vs custom design form */}
                                 {request.productId ? (
