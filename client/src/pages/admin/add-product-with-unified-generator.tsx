@@ -22,9 +22,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import UnifiedAIGenerator from "@/components/admin/unified-ai-generator";
 import { PriceCalculatorDisplay } from "@/components/admin/price-calculator-display";
 import { useToast } from "@/hooks/use-toast";
-import type { AIGeneratedContent } from "@/lib/ai-content-generator";
 import { useDropzone } from "react-dropzone";
-import type { ProductType, StoneType } from "@shared/schema";
+import { AIGeneratedContent, ProductType, StoneType } from "@/types/store-types";
 
 interface FormValues {
   title: string;
