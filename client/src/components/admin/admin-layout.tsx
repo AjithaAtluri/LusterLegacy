@@ -17,6 +17,8 @@ import {
   X,
   Diamond,
   Gem,
+  Paintbrush,
+  Receipt,
   Wand2,
   PlusCircle
 } from "lucide-react";
@@ -280,6 +282,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Custom Designs", 
       icon: <Package className="h-5 w-5" />, 
       href: "/admin/designs" 
+    },
+    {
+      title: "Product Customizations",
+      icon: <Paintbrush className="h-5 w-5" />,
+      href: "/admin/customizations"
+    },
+    {
+      title: "Quote Requests",
+      icon: <Receipt className="h-5 w-5" />,
+      href: "/admin/quotes"
     },
     { 
       title: "Orders", 
