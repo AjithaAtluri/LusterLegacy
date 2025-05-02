@@ -78,14 +78,10 @@ export default function CustomDesignSection() {
       
       // Save form data to session storage first
       try {
-        // Get the phone input value from the DOM
-        const phoneInput = document.getElementById('phone-input') as HTMLInputElement;
-        const phone = phoneInput ? phoneInput.value : "";
-        
         // Create form data structure that matches the one expected by design-form.tsx
         let formData: any = {
           ...data,
-          phone: phone || "", // Use the phone number from the input if available
+          phone: data.phone || "", // Use phone from form data
           country: "us", // Default to US
           imageInfo: uploadedImage ? {
             name: uploadedImage.name,
