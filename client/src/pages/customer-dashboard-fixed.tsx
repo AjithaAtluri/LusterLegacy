@@ -139,27 +139,70 @@ export default function CustomerDashboard() {
                   <CardTitle>All Requests</CardTitle>
                   <CardDescription>View and track all your jewelry requests</CardDescription>
                 </CardHeader>
-                <div className="px-6 pb-2 mb-4 border-b border-border/20 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-3 bg-accent/5 rounded-lg">
-                    <h3 className="font-medium text-sm mb-1 flex items-center">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-                      Custom Design
-                    </h3>
-                    <p className="text-xs text-foreground/70">Completely custom jewelry with your design. Requires $150 consultation fee.</p>
+                <div className="px-6 pb-2 mb-4 border-b border-border/20">
+                  <h4 className="text-sm font-medium mb-3">Request Types</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="p-3 bg-accent/5 rounded-lg">
+                      <h3 className="font-medium text-sm mb-1 flex items-center">
+                        <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                        Custom Design
+                      </h3>
+                      <p className="text-xs text-foreground/70">Completely custom jewelry with your design. Requires $150 consultation fee.</p>
+                    </div>
+                    <div className="p-3 bg-accent/5 rounded-lg">
+                      <h3 className="font-medium text-sm mb-1 flex items-center">
+                        <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+                        Product Customization
+                      </h3>
+                      <p className="text-xs text-foreground/70">Modifications to existing catalog items. No consultation fee required.</p>
+                    </div>
+                    <div className="p-3 bg-accent/5 rounded-lg">
+                      <h3 className="font-medium text-sm mb-1 flex items-center">
+                        <span className="w-2 h-2 bg-teal-500 rounded-full mr-2"></span>
+                        Quote Request
+                      </h3>
+                      <p className="text-xs text-foreground/70">Price quote for standard catalog items without modifications.</p>
+                    </div>
                   </div>
-                  <div className="p-3 bg-accent/5 rounded-lg">
-                    <h3 className="font-medium text-sm mb-1 flex items-center">
-                      <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
-                      Product Customization
-                    </h3>
-                    <p className="text-xs text-foreground/70">Modifications to existing catalog items. No consultation fee required.</p>
-                  </div>
-                  <div className="p-3 bg-accent/5 rounded-lg">
-                    <h3 className="font-medium text-sm mb-1 flex items-center">
-                      <span className="w-2 h-2 bg-teal-500 rounded-full mr-2"></span>
-                      Quote Request
-                    </h3>
-                    <p className="text-xs text-foreground/70">Price quote for standard catalog items without modifications.</p>
+                  
+                  <h4 className="text-sm font-medium mb-3">Status Indicators</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                    <div className="flex items-center">
+                      <span className="px-2 py-0.5 text-xs rounded-full inline-flex items-center bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 mr-2">
+                        <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
+                        <span>Pending</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="px-2 py-0.5 text-xs rounded-full inline-flex items-center bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 mr-2">
+                        <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
+                        <span>Design Fee Paid</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="px-2 py-0.5 text-xs rounded-full inline-flex items-center bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 mr-2">
+                        <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
+                        <span>Quoted</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="px-2 py-0.5 text-xs rounded-full inline-flex items-center bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 mr-2">
+                        <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
+                        <span>Approved</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="px-2 py-0.5 text-xs rounded-full inline-flex items-center bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 mr-2">
+                        <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
+                        <span>Rejected</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="px-2 py-0.5 text-xs rounded-full inline-flex items-center bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 mr-2">
+                        <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
+                        <span>Completed</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <CardContent>
@@ -226,6 +269,7 @@ export default function CustomerDashboard() {
                               </CardDescription>
                               <span className={`px-2 py-0.5 text-xs rounded-full inline-flex items-center ${
                                 request.status === 'pending' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                                request.status === 'design_fee_paid' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' :
                                 request.status === 'quoted' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 
                                 request.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
                                 request.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
@@ -233,7 +277,7 @@ export default function CustomerDashboard() {
                                 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
                               }`}>
                                 <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
-                                <span className="capitalize">{request.status || 'pending'}</span>
+                                <span className="capitalize">{request.status === 'design_fee_paid' ? 'Design Fee Paid' : (request.status || 'pending')}</span>
                               </span>
                             </div>
                           </CardHeader>
@@ -304,46 +348,105 @@ export default function CustomerDashboard() {
                               </div>
                             )}
                             
-                            {/* Consultation fee status for Custom Design requests */}
+                            {/* Custom Design Request Process - Visual Timeline */}
                             {request.requestType === 'design' && (
-                              <div className={`p-3 rounded-md mb-3 ${request.consultationFeePaid ? 'bg-green-100/10' : 'bg-accent/10'}`}>
-                                <h4 className="text-sm font-medium mb-1">Consultation Fee ($150):</h4>
-                                <div className="flex justify-between items-center">
-                                  <span className="text-sm">
-                                    {request.consultationFeePaid 
-                                      ? 'Paid - Up to 4 iterations included' 
-                                      : 'Not paid - Pay to begin design process'}
-                                  </span>
-                                  {!request.consultationFeePaid && (
-                                    <Button 
-                                      variant="default" 
-                                      size="sm" 
-                                      className="bg-primary text-background hover:bg-primary/90"
-                                      onClick={() => setLocation(`/payment/design-consultation/${request.id}`)}
-                                    >
-                                      Pay Fee <ArrowRight className="ml-1 h-3 w-3" />
-                                    </Button>
+                              <div className="mb-4">
+                                <div className="flex items-center mb-3">
+                                  <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 text-xs font-medium 
+                                    ${!request.consultationFeePaid ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'}`}>
+                                    1
+                                  </div>
+                                  <div className="h-0.5 flex-grow mx-1 bg-border"></div>
+                                  <div className={`h-8 w-8 rounded-full flex items-center justify-center mx-2 text-xs font-medium
+                                    ${request.status === 'design_fee_paid' && !request.cadImageUrl ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' : 
+                                    request.cadImageUrl ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
+                                    'bg-gray-100 text-gray-500 dark:bg-gray-800/30 dark:text-gray-400'}`}>
+                                    2
+                                  </div>
+                                  <div className="h-0.5 flex-grow mx-1 bg-border"></div>
+                                  <div className={`h-8 w-8 rounded-full flex items-center justify-center mx-2 text-xs font-medium
+                                    ${request.status === 'quoted' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 
+                                    'bg-gray-100 text-gray-500 dark:bg-gray-800/30 dark:text-gray-400'}`}>
+                                    3
+                                  </div>
+                                  <div className="h-0.5 flex-grow mx-1 bg-border"></div>
+                                  <div className={`h-8 w-8 rounded-full flex items-center justify-center ml-2 text-xs font-medium
+                                    ${request.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
+                                    request.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
+                                    'bg-gray-100 text-gray-500 dark:bg-gray-800/30 dark:text-gray-400'}`}>
+                                    4
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-4 text-center text-xs text-foreground/70 mb-3">
+                                  <div>Pay Fee</div>
+                                  <div>CAD Design</div>
+                                  <div>Price Quote</div>
+                                  <div>Decision</div>
+                                </div>
+
+                                {/* Consultation fee status */}
+                                <div className={`p-3 rounded-md mb-3 ${request.consultationFeePaid ? 'bg-green-100/10' : 'bg-accent/10'}`}>
+                                  <h4 className="text-sm font-medium mb-1">Consultation Fee ($150):</h4>
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm">
+                                      {request.consultationFeePaid 
+                                        ? 'Paid - Up to 4 iterations included' 
+                                        : 'Not paid - Pay to begin design process'}
+                                    </span>
+                                    {!request.consultationFeePaid && (
+                                      <Button 
+                                        variant="default" 
+                                        size="sm" 
+                                        className="bg-primary text-background hover:bg-primary/90"
+                                        onClick={() => setLocation(`/payment/design-consultation/${request.id}`)}
+                                      >
+                                        Pay Fee <ArrowRight className="ml-1 h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                  {request.consultationFeePaid && request.iterationsCount > 0 && (
+                                    <p className="text-xs mt-2">Design iterations used: {request.iterationsCount}/4</p>
                                   )}
                                 </div>
-                                {request.consultationFeePaid && request.iterationsCount > 0 && (
-                                  <p className="text-xs mt-2">Design iterations used: {request.iterationsCount}/4</p>
-                                )}
                               </div>
                             )}
                             
                             {/* Designer comments */}
                             {request.designerComments && (
-                              <div className="bg-primary/5 p-3 rounded-md mb-3">
-                                <h4 className="text-sm font-medium mb-1">Designer Comments:</h4>
-                                <p className="text-sm">{request.designerComments}</p>
+                              <div className="bg-indigo-50 dark:bg-indigo-950/20 p-4 rounded-md mb-3 border border-indigo-200 dark:border-indigo-800/30">
+                                <div className="flex items-center mb-2">
+                                  <h4 className="text-sm font-medium flex items-center">
+                                    <svg className="h-4 w-4 mr-2 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    Designer Feedback
+                                  </h4>
+                                </div>
+                                <div className="bg-background rounded-md border p-3">
+                                  <p className="text-sm leading-relaxed">{request.designerComments}</p>
+                                </div>
                               </div>
                             )}
                             
-                            {/* CAD image */}
+                            {/* CAD Design from Admin */}
                             {request.cadImageUrl && (
-                              <div className="bg-primary/5 p-3 rounded-md mb-3">
-                                <h4 className="text-sm font-medium mb-1">CAD Design:</h4>
-                                <div className="h-40 bg-background rounded-md border overflow-hidden">
+                              <div className="bg-primary/5 p-4 rounded-md mb-3 border border-primary/10">
+                                <div className="flex items-center mb-2">
+                                  <h4 className="text-sm font-medium flex items-center">
+                                    <svg className="h-4 w-4 mr-2 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                      <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                      <path d="M2 2l7.586 7.586"></path>
+                                      <circle cx="11" cy="11" r="2"></circle>
+                                    </svg>
+                                    CAD Design Received
+                                  </h4>
+                                  <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                    Step 2 Complete
+                                  </span>
+                                </div>
+                                <p className="text-xs text-foreground/70 mb-3">Our designer has created a custom CAD model based on your specifications.</p>
+                                <div className="h-48 bg-background rounded-md border overflow-hidden">
                                   <img 
                                     src={request.cadImageUrl} 
                                     alt="CAD design" 
@@ -355,15 +458,39 @@ export default function CustomerDashboard() {
                             
                             {/* Price quotes */}
                             {(request.status === 'quoted' || request.estimatedPrice) && (
-                              <div className="bg-accent/10 p-3 rounded-md">
-                                <div className="flex justify-between mb-1">
-                                  <h4 className="text-sm font-medium">Quote Amount:</h4>
-                                  <span className="font-medium">
-                                    {formatCurrency(request.quoteAmount || request.estimatedPrice || 0)}
+                              <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-md mb-3 border border-amber-200 dark:border-amber-800/30">
+                                <div className="flex items-center mb-2">
+                                  <h4 className="text-sm font-medium flex items-center">
+                                    <svg className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <circle cx="12" cy="12" r="10"></circle>
+                                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    Price Quote Ready
+                                  </h4>
+                                  <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                    Step 3 Complete
                                   </span>
                                 </div>
+                                <p className="text-xs text-foreground/70 mb-3">Our team has prepared a detailed price quote for your custom piece.</p>
+                                <div className="bg-background rounded-md border p-3 mb-3">
+                                  <div className="flex justify-between mb-1">
+                                    <span className="text-sm">Total Quote Amount:</span>
+                                    <span className="font-medium text-lg">
+                                      {formatCurrency(request.quoteAmount || request.estimatedPrice || 0)}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs text-foreground/70 mt-2">
+                                    <p>• 50% advance payment after quote acceptance</p>
+                                    <p>• 50% before shipping on completion</p>
+                                    <p>• Lead time: 4-6 weeks after approval</p>
+                                  </div>
+                                </div>
                                 {request.status === 'quoted' && (
-                                  <div className="flex justify-end mt-3">
+                                  <div className="flex justify-between items-center">
+                                    <p className="text-xs text-foreground/70">
+                                      Ready to move forward with your custom piece?
+                                    </p>
                                     <Button variant="default" size="sm" asChild>
                                       <Link href={`/checkout/custom/${request.id}`}>
                                         Accept & Proceed <ArrowRight className="ml-1 h-3 w-3" />
