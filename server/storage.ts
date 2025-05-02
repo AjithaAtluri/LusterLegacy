@@ -30,12 +30,24 @@ import {
   InsertDesignFeedback,
   DesignPayment,
   InsertDesignPayment,
+  CustomizationRequest,
+  InsertCustomizationRequest,
+  CustomizationRequestComment,
+  InsertCustomizationRequestComment,
+  QuoteRequest,
+  InsertQuoteRequest,
+  QuoteRequestComment,
+  InsertQuoteRequestComment,
   users,
   products,
   designRequests,
   designRequestComments,
   designFeedback,
   designPayments,
+  customizationRequests,
+  customizationRequestComments,
+  quoteRequests,
+  quoteRequestComments,
   cartItems,
   orders,
   orderItems,
@@ -109,6 +121,30 @@ export interface IStorage {
   getDesignPayments(designRequestId: number): Promise<DesignPayment[]>;
   addDesignPayment(payment: InsertDesignPayment): Promise<DesignPayment>;
   updateDesignPaymentStatus(id: number, status: string): Promise<DesignPayment | undefined>;
+  
+  // Product Customization Request methods
+  getCustomizationRequest(id: number): Promise<CustomizationRequest | undefined>;
+  getAllCustomizationRequests(): Promise<CustomizationRequest[]>;
+  getCustomizationRequestsByEmail(email: string): Promise<CustomizationRequest[]>;
+  getCustomizationRequestsByUserId(userId: number): Promise<CustomizationRequest[]>;
+  createCustomizationRequest(request: InsertCustomizationRequest): Promise<CustomizationRequest>;
+  updateCustomizationRequest(id: number, request: Partial<CustomizationRequest>): Promise<CustomizationRequest | undefined>;
+  
+  // Customization Request Comment methods
+  getCustomizationRequestComments(requestId: number): Promise<CustomizationRequestComment[]>;
+  addCustomizationRequestComment(comment: InsertCustomizationRequestComment): Promise<CustomizationRequestComment>;
+  
+  // Quote Request methods
+  getQuoteRequest(id: number): Promise<QuoteRequest | undefined>;
+  getAllQuoteRequests(): Promise<QuoteRequest[]>;
+  getQuoteRequestsByEmail(email: string): Promise<QuoteRequest[]>;
+  getQuoteRequestsByUserId(userId: number): Promise<QuoteRequest[]>;
+  createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest>;
+  updateQuoteRequest(id: number, request: Partial<QuoteRequest>): Promise<QuoteRequest | undefined>;
+  
+  // Quote Request Comment methods
+  getQuoteRequestComments(requestId: number): Promise<QuoteRequestComment[]>;
+  addQuoteRequestComment(comment: InsertQuoteRequestComment): Promise<QuoteRequestComment>;
 
   // Cart methods
   getCartItem(id: number): Promise<CartItem | undefined>;

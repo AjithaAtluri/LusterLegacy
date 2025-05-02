@@ -191,6 +191,150 @@ export const insertDesignFeedbackSchema = createInsertSchema(designFeedback).pic
   imageUrls: true,
 });
 
+// Product customization requests schema 
+export const customizationRequests = pgTable("customization_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  country: text("country"),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
+  originalMetalType: text("original_metal_type").notNull(),
+  requestedMetalType: text("requested_metal_type").notNull(),
+  originalStoneType: text("original_stone_type").notNull(),
+  requestedStoneType: text("requested_stone_type").notNull(),
+  additionalNotes: text("additional_notes"),
+  status: text("status").notNull().default("pending"), // 'pending', 'quoted', 'approved', 'rejected', 'completed'
+  estimatedPrice: integer("estimated_price"),
+  imageUrls: text("image_urls").array().default([]), // Reference images provided by customer
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const customizationRequestsRelations = relations(customizationRequests, ({ one, many }) => ({
+  user: one(users, {
+    fields: [customizationRequests.userId],
+    references: [users.id]
+  }),
+  product: one(products, {
+    fields: [customizationRequests.productId],
+    references: [products.id]
+  }),
+  comments: many(customizationRequestComments)
+}));
+
+export const insertCustomizationRequestSchema = createInsertSchema(customizationRequests).pick({
+  userId: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  country: true,
+  productId: true,
+  originalMetalType: true,
+  requestedMetalType: true,
+  originalStoneType: true,
+  requestedStoneType: true,
+  additionalNotes: true,
+  imageUrls: true,
+});
+
+// Customization request comments schema
+export const customizationRequestComments = pgTable("customization_request_comments", {
+  id: serial("id").primaryKey(),
+  customizationRequestId: integer("customization_request_id").notNull().references(() => customizationRequests.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  createdBy: text("created_by").notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
+  imageUrl: text("image_url"), // Single image URL for comment image
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const customizationRequestCommentsRelations = relations(customizationRequestComments, ({ one }) => ({
+  customizationRequest: one(customizationRequests, {
+    fields: [customizationRequestComments.customizationRequestId],
+    references: [customizationRequests.id]
+  })
+}));
+
+export const insertCustomizationRequestCommentSchema = createInsertSchema(customizationRequestComments).pick({
+  customizationRequestId: true,
+  content: true,
+  createdBy: true,
+  isAdmin: true,
+  imageUrl: true,
+  userId: true,
+});
+
+// Quote requests for catalog products (no modifications)
+export const quoteRequests = pgTable("quote_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  country: text("country"),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: 'cascade' }),
+  metalType: text("metal_type").notNull(),
+  stoneType: text("stone_type").notNull(),
+  additionalNotes: text("additional_notes"),
+  status: text("status").notNull().default("pending"), // 'pending', 'quoted', 'approved', 'rejected', 'completed'
+  estimatedPrice: integer("estimated_price"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const quoteRequestsRelations = relations(quoteRequests, ({ one, many }) => ({
+  user: one(users, {
+    fields: [quoteRequests.userId],
+    references: [users.id]
+  }),
+  product: one(products, {
+    fields: [quoteRequests.productId],
+    references: [products.id]
+  }),
+  comments: many(quoteRequestComments)
+}));
+
+export const insertQuoteRequestSchema = createInsertSchema(quoteRequests).pick({
+  userId: true,
+  fullName: true,
+  email: true,
+  phone: true, 
+  country: true,
+  productId: true,
+  metalType: true,
+  stoneType: true,
+  additionalNotes: true,
+});
+
+// Quote request comments schema
+export const quoteRequestComments = pgTable("quote_request_comments", {
+  id: serial("id").primaryKey(),
+  quoteRequestId: integer("quote_request_id").notNull().references(() => quoteRequests.id, { onDelete: 'cascade' }),
+  content: text("content").notNull(),
+  createdBy: text("created_by").notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
+  imageUrl: text("image_url"), // Single image URL for comment image
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const quoteRequestCommentsRelations = relations(quoteRequestComments, ({ one }) => ({
+  quoteRequest: one(quoteRequests, {
+    fields: [quoteRequestComments.quoteRequestId],
+    references: [quoteRequests.id]
+  })
+}));
+
+export const insertQuoteRequestCommentSchema = createInsertSchema(quoteRequestComments).pick({
+  quoteRequestId: true,
+  content: true,
+  createdBy: true,
+  isAdmin: true,
+  imageUrl: true,
+  userId: true,
+});
+
 // Design payments schema
 export const designPayments = pgTable("design_payments", {
   id: serial("id").primaryKey(),
