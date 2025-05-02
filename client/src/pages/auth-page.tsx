@@ -107,16 +107,41 @@ export default function AuthPage() {
   const onLoginSubmit = (data: LoginFormValues) => {
     // Check if there's a saved form state in the session that we need to return to
     const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
+    const hasSavedCustomizationForm = sessionStorage.getItem('customizationFormData') !== null;
+    const hasSavedQuoteForm = sessionStorage.getItem('quoteFormData') !== null;
     
-    // Preserve returnTo parameter if it exists, otherwise set it to /custom-design if we have saved form data
+    // Preserve returnTo parameter if it exists, otherwise check for form data and set appropriate return path
     const params = new URLSearchParams(window.location.search);
     const existingReturnTo = params.get("returnTo");
     
-    // If no explicit returnTo but we have saved design form data, redirect to custom design page
-    if (!existingReturnTo && hasSavedDesignForm) {
-      console.log("Setting custom-design as returnTo for login due to saved form data");
-      params.set("returnTo", "/custom-design");
-      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    if (!existingReturnTo) {
+      let redirectPath = null;
+      
+      // Set the appropriate return path based on which form data we have saved
+      if (hasSavedDesignForm) {
+        redirectPath = "/custom-design";
+        console.log("Setting custom-design as returnTo for login due to saved form data");
+      } else if (hasSavedCustomizationForm) {
+        // The actual customization request ID will be part of the saved data
+        const savedData = JSON.parse(sessionStorage.getItem('customizationFormData') || '{}');
+        if (savedData.productId) {
+          redirectPath = `/customize-request/${savedData.productId}`;
+          console.log(`Setting ${redirectPath} as returnTo for login due to saved customization form data`);
+        }
+      } else if (hasSavedQuoteForm) {
+        // The actual product ID will be part of the saved data
+        const savedData = JSON.parse(sessionStorage.getItem('quoteFormData') || '{}');
+        if (savedData.productId) {
+          redirectPath = `/place-order/${savedData.productId}`;
+          console.log(`Setting ${redirectPath} as returnTo for login due to saved quote form data`);
+        }
+      }
+      
+      // Update the URL if we found a redirect path
+      if (redirectPath) {
+        params.set("returnTo", redirectPath);
+        window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+      }
     }
     
     loginMutation.mutate(data);
@@ -127,16 +152,41 @@ export default function AuthPage() {
     
     // Check if there's a saved form state in the session that we need to return to
     const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
+    const hasSavedCustomizationForm = sessionStorage.getItem('customizationFormData') !== null;
+    const hasSavedQuoteForm = sessionStorage.getItem('quoteFormData') !== null;
     
-    // Preserve returnTo parameter if it exists, otherwise set it to /custom-design if we have saved form data
+    // Preserve returnTo parameter if it exists, otherwise check for form data and set appropriate return path
     const params = new URLSearchParams(window.location.search);
     const existingReturnTo = params.get("returnTo");
     
-    // If no explicit returnTo but we have saved design form data, redirect to custom design page
-    if (!existingReturnTo && hasSavedDesignForm) {
-      console.log("Setting custom-design as returnTo for registration due to saved form data");
-      params.set("returnTo", "/custom-design");
-      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    if (!existingReturnTo) {
+      let redirectPath = null;
+      
+      // Set the appropriate return path based on which form data we have saved
+      if (hasSavedDesignForm) {
+        redirectPath = "/custom-design";
+        console.log("Setting custom-design as returnTo for registration due to saved form data");
+      } else if (hasSavedCustomizationForm) {
+        // The actual customization request ID will be part of the saved data
+        const savedData = JSON.parse(sessionStorage.getItem('customizationFormData') || '{}');
+        if (savedData.productId) {
+          redirectPath = `/customize-request/${savedData.productId}`;
+          console.log(`Setting ${redirectPath} as returnTo for registration due to saved customization form data`);
+        }
+      } else if (hasSavedQuoteForm) {
+        // The actual product ID will be part of the saved data
+        const savedData = JSON.parse(sessionStorage.getItem('quoteFormData') || '{}');
+        if (savedData.productId) {
+          redirectPath = `/place-order/${savedData.productId}`;
+          console.log(`Setting ${redirectPath} as returnTo for registration due to saved quote form data`);
+        }
+      }
+      
+      // Update the URL if we found a redirect path
+      if (redirectPath) {
+        params.set("returnTo", redirectPath);
+        window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+      }
     }
     
     // Set the default role to "customer"
