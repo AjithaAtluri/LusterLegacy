@@ -19,7 +19,14 @@ console.log('PayPal Environment:',
  */
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { cartItems, currency = 'USD', shippingAddress = {} } = req.body;
+    const { cartItems, currency = 'USD', shippingAddress } = req.body;
+    
+    console.log('Create PayPal Order - Request body:', {
+      cartItemsCount: cartItems?.length || 0,
+      currency,
+      hasShippingAddress: shippingAddress !== null && shippingAddress !== undefined,
+      shippingCountry: shippingAddress?.country || 'none'
+    });
     
     if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
       return res.status(400).json({ error: 'Invalid cart items' });
@@ -158,7 +165,14 @@ export const createOrder = async (req: Request, res: Response) => {
  */
 export const captureOrder = async (req: Request, res: Response) => {
   try {
-    const { orderID, shippingAddress = {}, currency } = req.body;
+    const { orderID, shippingAddress, currency, designRequestId } = req.body;
+    
+    console.log('Capture PayPal Order - Request body:', {
+      orderID,
+      hasShippingAddress: shippingAddress !== null && shippingAddress !== undefined,
+      currency,
+      designRequestId: designRequestId || 'none'
+    });
     
     if (!orderID) {
       return res.status(400).json({ error: 'Order ID is required' });
@@ -210,18 +224,36 @@ export const captureOrder = async (req: Request, res: Response) => {
       }
     }
     
+    // Use fallback values for consultation fees that don't have shipping address
+    const safeShippingAddress = shippingAddress || {};
+    
+    // For consultation fees, we use user data from request instead of shipping data
+    const getUserName = () => {
+      if (isConsultationFee) {
+        return req.user ? req.user.username : 'Design Customer';
+      }
+      return safeShippingAddress.name || (req.user ? req.user.username : 'Guest User');
+    };
+    
+    const getUserEmail = () => {
+      if (isConsultationFee) {
+        return req.user ? req.user.email : 'design-customer@example.com';
+      }
+      return safeShippingAddress.email || (req.user ? req.user.email : 'customer@example.com');
+    };
+    
     const orderDetails = {
       sessionId,
       userId, // Use authenticated user ID if available
-      orderStatus: 'pending',
+      orderStatus: isConsultationFee ? 'design-fee-paid' : 'pending',
       paymentStatus: 'completed',
       totalAmount: totalAmount,
       advanceAmount: totalAmount * 0.5, // 50% advance payment
       balanceAmount: totalAmount * 0.5, // 50% remaining payment
-      customerName: shippingAddress.name || (req.user ? req.user.username : 'Guest User'),
-      customerEmail: shippingAddress.email || (req.user ? req.user.email : 'customer@example.com'),
-      customerPhone: shippingAddress.phone || '',
-      shippingAddress,
+      customerName: getUserName(),
+      customerEmail: getUserEmail(),
+      customerPhone: safeShippingAddress.phone || '',
+      shippingAddress: safeShippingAddress,
       paymentMethod: 'paypal',
       paymentId: orderID,
       currency: currency || 'USD'
