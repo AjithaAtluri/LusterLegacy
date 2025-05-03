@@ -56,7 +56,7 @@ export function ProtectedRoute({
         if (!user) {
           console.log("User not authenticated, redirecting to auth page");
           // Add returnTo parameter for easier navigation back to the intended page
-          const returnPath = pathString.startsWith('/admin') ? '/admin/direct-dashboard' : pathString;
+          const returnPath = pathString.startsWith('/admin') ? '/admin/dashboard' : pathString;
           
           // Special handling for admin routes - redirect to admin login
           if (pathString.startsWith('/admin')) {
