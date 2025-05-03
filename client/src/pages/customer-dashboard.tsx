@@ -1,154 +1,247 @@
 import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { 
-  ShoppingCart, 
-  Package, 
   PenTool, 
   Settings, 
   User, 
-  Trash2,
   ExternalLink,
   ArrowRight,
-  ShoppingBag
+  MessageCircle,
+  Package,
+  Clock,
+  CalendarDays,
+  BarChart3,
+  PlusCircle,
+  DollarSign,
+  Bell,
+  Gem,
+  Search,
+  Filter,
+  ShoppingBag,
+  Palette
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { Link, Redirect } from "wouter";
-import { formatCurrency } from "@/lib/utils";
+import { Link, Redirect, useLocation } from "wouter";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function CustomerDashboard() {
   const { user, isLoading: isLoadingAuth } = useAuth();
-  const [activeTab, setActiveTab] = useState("cart");
+  const [activeTab, setActiveTab] = useState("overview");
+  const { toast } = useToast();
+  const [_, setLocation] = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   
   // Redirect to auth page if not logged in
   if (!isLoadingAuth && !user) {
     return <Redirect to="/auth" />;
   }
   
-  // Fetch cart items
-  const { data: cart, isLoading: isLoadingCart } = useQuery({
-    queryKey: ['/api/cart'],
-    enabled: activeTab === "cart",
-    staleTime: 60000 // 1 minute cache
-  });
-  
   // Fetch all types of requests
   // 1. Customization requests (for existing products)
   const { data: customizationRequests, isLoading: isLoadingRequests } = useQuery({
-    queryKey: ['/api/customization-requests'],
-    enabled: activeTab === "requests" && !!user,
-    staleTime: 60000,
-    onSuccess: (data) => {
-      console.log("Successfully fetched customization requests:", data);
-    },
-    onError: () => {
-      console.error("Error fetching customization requests");
-      toast({
-        title: "Error",
-        description: "Failed to load your customization requests",
-        variant: "destructive",
-      });
-    }
+    queryKey: ['/api/customization-requests/user'],
+    enabled: !!user
   });
   
   // 2. Custom design requests 
   const { data: customDesigns, isLoading: isLoadingCustomDesigns } = useQuery({
     queryKey: ['/api/custom-designs/user'],
-    enabled: activeTab === "requests" && !!user,
-    staleTime: 60000,
-    onSuccess: (data) => {
-      console.log("Successfully fetched custom designs:", data);
-    },
-    onError: () => {
-      console.error("Error fetching custom designs");
-    }
+    enabled: !!user
   });
   
   // 3. Quote requests for existing products
   const { data: quoteRequests, isLoading: isLoadingQuoteRequests } = useQuery({
-    queryKey: ['/api/quote-requests'],
-    enabled: activeTab === "requests" && !!user,
-    staleTime: 60000,
-    onSuccess: (data) => {
-      console.log("Successfully fetched quote requests:", data);
-    },
-    onError: () => {
-      console.error("Error fetching quote requests");
-    }
+    queryKey: ['/api/quote-requests/user'],
+    enabled: !!user
   });
   
   // Combine all design and customization requests
   const allRequests = useMemo(() => {
-    // Combine the data from all request types with type identifiers to prevent duplicate keys
-    const requests = [
-      ...(customizationRequests || []).map(req => ({ ...req, requestType: 'customization' })),
-      ...(customDesigns || []).map(req => ({ ...req, requestType: 'design' })),
-      ...(quoteRequests || []).map(req => ({ ...req, requestType: 'quote' }))
-    ];
+    // Get all custom designs
+    // Process custom design requests (completely new designs from customer specifications)
+    const designs = (customDesigns || []).map(req => ({ 
+      ...req, 
+      requestType: 'design',
+      needsConsultationFee: true,
+      description: 'Custom-designed jewelry from your specifications with up to 4 design iterations.'
+    }));
+    
+    // Process quote requests (requests for final pricing on unmodified catalog items)
+    const quotes = (quoteRequests || []).map(req => ({ 
+      ...req, 
+      requestType: 'quote',
+      needsConsultationFee: false,
+      description: 'Price quote for a catalog item without modifications.'
+    }));
+    
+    // Process customization requests (modifications to existing products)
+    // Filter out any duplicates that match design request IDs
+    const customizations = (customizationRequests || [])
+      .filter(req => !designs.some(design => design.id === req.id))
+      .map(req => ({ 
+        ...req, 
+        requestType: 'customization',
+        needsConsultationFee: false,
+        description: 'Product customization request for modifying an existing product.'
+      }));
+    
+    // Combine all requests
+    const requests = [...designs, ...customizations, ...quotes];
     
     // Sort by date
     return requests.sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }, [customizationRequests, customDesigns, quoteRequests]);
-  
-  // Fetch orders
-  const { data: orders, isLoading: isLoadingOrders } = useQuery({
-    queryKey: ['/api/orders'],
-    enabled: activeTab === "orders",
-    staleTime: 60000
-  });
 
-  const { toast } = useToast();
-  
-  // Cart item removal mutation
-  const removeCartItemMutation = useMutation({
-    mutationFn: async (itemId: number) => {
-      return await apiRequest("DELETE", `/api/cart/${itemId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cart'] });
-      toast({
-        title: "Item removed",
-        description: "Item has been removed from your cart",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to remove item from cart",
-        variant: "destructive",
-      });
-      console.error('Error removing item from cart:', error);
+  // Filter requests by search query and filters
+  const filteredRequests = useMemo(() => {
+    if (!allRequests) return [];
+    
+    return allRequests.filter(request => {
+      // Apply search filter (on item name or request ID)
+      const searchMatch = searchQuery === "" || 
+        request.id?.toString().includes(searchQuery) || 
+        (request.productName && request.productName.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      // Apply status filter
+      const statusMatch = statusFilter === "all" || request.status === statusFilter;
+      
+      // Apply type filter  
+      const typeMatch = typeFilter === "all" || request.requestType === typeFilter;
+      
+      return searchMatch && statusMatch && typeMatch;
+    });
+  }, [allRequests, searchQuery, statusFilter, typeFilter]);
+
+  // Count requests by type and status
+  const stats = useMemo(() => {
+    if (!allRequests) return { total: 0, pending: 0, inProgress: 0, completed: 0 };
+    
+    return {
+      total: allRequests.length,
+      pending: allRequests.filter(r => r.status === 'pending').length,
+      inProgress: allRequests.filter(r => ['design_fee_paid', 'quoted', 'in_progress'].includes(r.status)).length,
+      completed: allRequests.filter(r => ['completed', 'approved'].includes(r.status)).length,
+      customDesigns: allRequests.filter(r => r.requestType === 'design').length,
+      customizations: allRequests.filter(r => r.requestType === 'customization').length,
+      quotes: allRequests.filter(r => r.requestType === 'quote').length
+    };
+  }, [allRequests]);
+
+  // Get the status badge color based on status
+  const getStatusBadgeClasses = (status) => {
+    switch(status) {
+      case 'pending':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'design_fee_paid':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
+      case 'quoted':
+      case 'in_progress':
+        return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+      case 'approved':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      case 'completed':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
     }
-  });
+  };
+
+  // Format status display text
+  const formatStatus = (status) => {
+    if (!status) return 'Pending';
+    
+    if (status === 'design_fee_paid') return 'Design Fee Paid';
+    
+    // Convert snake_case to Title Case
+    return status
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Format request type display
+  const formatRequestType = (type) => {
+    switch(type) {
+      case 'design': return 'Custom Design';
+      case 'customization': return 'Product Customization';
+      case 'quote': return 'Quote Request';
+      default: return type;
+    }
+  };
+
+  // Get request type color
+  const getRequestTypeColor = (type) => {
+    switch(type) {
+      case 'design': return 'text-purple-500';
+      case 'customization': return 'text-amber-500';
+      case 'quote': return 'text-teal-500';
+      default: return 'text-primary';
+    }
+  };
+
+  // Get the appropriate icon for the request type
+  const getRequestTypeIcon = (type) => {
+    switch(type) {
+      case 'design': return <PenTool className="h-5 w-5" />;
+      case 'customization': return <Palette className="h-5 w-5" />;
+      case 'quote': return <DollarSign className="h-5 w-5" />;
+      default: return <Package className="h-5 w-5" />;
+    }
+  };
+
+  // Get the URL for the request details page
+  const getRequestUrl = (request) => {
+    switch(request.requestType) {
+      case 'design': return `/custom-designs/${request.id}`;
+      case 'customization': return `/customization-requests/${request.id}`;
+      case 'quote': return `/quote-requests/${request.id}`;
+      default: return '#';
+    }
+  };
+
+  // Loading state
+  const isLoading = isLoadingRequests || isLoadingCustomDesigns || isLoadingQuoteRequests;
+
+  // Empty state
+  const isEmpty = !isLoading && (!allRequests || allRequests.length === 0);
 
   return (
     <>
       <Helmet>
         <title>My Account | Luster Legacy</title>
-        <meta name="description" content="Manage your account, cart, orders and custom design requests." />
+        <meta name="description" content="Manage your account and custom jewelry requests" />
       </Helmet>
       
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header with user info */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
-              <h1 className="font-playfair text-3xl font-bold text-foreground mb-2">My Account</h1>
+              <h1 className="font-playfair text-3xl font-bold text-foreground mb-2">My Dashboard</h1>
               <p className="font-montserrat text-foreground/70">
-                Manage your cart, orders, and custom jewelry requests
+                Track your custom jewelry requests and manage your account
               </p>
             </div>
             {user && (
-              <div className="flex items-center">
-                <Avatar className="h-10 w-10 mr-3">
+              <div className="flex items-center bg-background rounded-lg p-3 border shadow-sm">
+                <Avatar className="h-12 w-12 mr-3">
                   <AvatarFallback className="bg-primary/10 text-primary">
                     {user.username.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -161,243 +254,221 @@ export default function CustomerDashboard() {
             )}
           </div>
           
-          <Tabs defaultValue="cart" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 mb-8">
-              <TabsTrigger value="cart" className="flex items-center">
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                <span>My Cart</span>
-              </TabsTrigger>
-              <TabsTrigger value="orders" className="flex items-center">
-                <Package className="mr-2 h-4 w-4" />
-                <span>My Orders</span>
-              </TabsTrigger>
-              <TabsTrigger value="requests" className="flex items-center">
-                <PenTool className="mr-2 h-4 w-4" />
-                <span>Custom Requests</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Account</span>
-              </TabsTrigger>
-            </TabsList>
+          {/* Main dashboard tabs */}
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="bg-background border rounded-lg p-1 mb-6">
+              <TabsList className="grid grid-cols-3 h-auto">
+                <TabsTrigger value="overview" className="flex items-center py-3">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  <span>Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="requests" className="flex items-center py-3">
+                  <Gem className="mr-2 h-4 w-4" />
+                  <span>My Requests</span>
+                  {stats.total > 0 && (
+                    <Badge variant="secondary" className="ml-2 text-xs">{stats.total}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center py-3">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Account</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
-            {/* Cart Tab */}
-            <TabsContent value="cart">
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-medium">Total Requests</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-3xl font-bold">{stats.total}</div>
+                      <div className="p-2 bg-primary/10 rounded-full">
+                        <Package className="h-5 w-5 text-primary" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-medium">Pending</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-3xl font-bold">{stats.pending}</div>
+                      <div className="p-2 bg-blue-500/10 rounded-full">
+                        <Clock className="h-5 w-5 text-blue-500" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-medium">In Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-3xl font-bold">{stats.inProgress}</div>
+                      <div className="p-2 bg-amber-500/10 rounded-full">
+                        <PenTool className="h-5 w-5 text-amber-500" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-medium">Completed</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-3xl font-bold">{stats.completed}</div>
+                      <div className="p-2 bg-green-500/10 rounded-full">
+                        <ShoppingBag className="h-5 w-5 text-green-500" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Request Types Guide */}
               <Card>
                 <CardHeader>
-                  <CardTitle>My Shopping Cart</CardTitle>
-                  <CardDescription>Review and manage items in your cart</CardDescription>
+                  <CardTitle className="text-lg">Request Types Guide</CardTitle>
+                  <CardDescription>Understanding our different jewelry request options</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isLoadingCart ? (
-                    <div className="p-8 text-center">
-                      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                      <p>Loading your cart...</p>
-                    </div>
-                  ) : !cart || cart.items.length === 0 ? (
-                    <div className="text-center py-10">
-                      <ShoppingBag className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
-                      <h3 className="font-playfair text-xl font-medium mb-2">Your cart is empty</h3>
-                      <p className="font-montserrat text-foreground/60 mb-6">
-                        Start exploring our collections to find your perfect piece
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/20 rounded-lg">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-800/20 rounded-full">
+                          <PenTool className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <h3 className="font-medium">Custom Design</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Create completely custom jewelry pieces from your vision and specifications.
                       </p>
-                      <Button asChild>
-                        <Link href="/collections">
-                          Browse Collections <ArrowRight className="ml-2 h-4 w-4" />
+                      <ul className="text-xs space-y-1.5 text-foreground/80">
+                        <li className="flex items-start">
+                          <span className="text-purple-500 mr-1.5">•</span>
+                          <span>$150 consultation fee covers up to 4 design iterations</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-purple-500 mr-1.5">•</span>
+                          <span>Upload sketches, inspirations, and detailed specifications</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-purple-500 mr-1.5">•</span>
+                          <span>Receive CAD designs and final quote before production</span>
+                        </li>
+                      </ul>
+                      <Button variant="link" className="text-purple-600 dark:text-purple-400 p-0 h-auto mt-4" asChild>
+                        <Link href="/custom-design">
+                          Submit Custom Design Request <ArrowRight className="ml-1 h-3.5 w-3.5" />
                         </Link>
                       </Button>
                     </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {/* Cart items */}
-                      <div className="space-y-4">
-                        {cart.items.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between p-4 border rounded-md">
-                            <div className="flex items-center">
-                              <div className="w-16 h-16 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-4">
-                                {item.product?.imageUrl ? (
-                                  <img 
-                                    src={item.product.imageUrl} 
-                                    alt={item.product.name} 
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-foreground/5">
-                                    <ShoppingBag className="h-6 w-6 text-foreground/30" />
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <h3 className="font-medium mb-1">{item.product?.name}</h3>
-                                <p className="text-sm text-foreground/60">
-                                  {item.metalTypeId} • {item.stoneTypeId}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center">
-                              <p className="font-playfair font-medium mr-6">
-                                {formatCurrency(item.price)}
-                              </p>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => removeCartItemMutation.mutate(item.id)}
-                                disabled={removeCartItemMutation.isPending}
-                              >
-                                {removeCartItemMutation.isPending ? (
-                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                                ) : (
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <Separator />
-                      
-                      {/* Cart summary */}
-                      <div className="bg-accent/10 p-4 rounded-lg">
-                        <div className="flex justify-between mb-2">
-                          <span className="font-montserrat">Items ({cart.items.length})</span>
-                          <span className="font-medium">{formatCurrency(cart.total)}</span>
+                    
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-lg">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-amber-100 dark:bg-amber-800/20 rounded-full">
+                          <Palette className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         </div>
-                        <div className="flex justify-between mb-2">
-                          <span className="font-montserrat">Shipping</span>
-                          <span className="font-medium">Free</span>
-                        </div>
-                        <Separator className="my-3" />
-                        <div className="flex justify-between">
-                          <span className="font-montserrat font-medium">Total</span>
-                          <span className="font-semibold">{formatCurrency(cart.total)}</span>
-                        </div>
+                        <h3 className="font-medium">Product Customization</h3>
                       </div>
-                      
-                      <div className="flex justify-end">
-                        <Button asChild className="w-full md:w-auto">
-                          <Link href="/checkout">
-                            Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Orders Tab */}
-            <TabsContent value="orders">
-              <Card>
-                <CardHeader>
-                  <CardTitle>My Orders</CardTitle>
-                  <CardDescription>Track and manage your orders</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingOrders ? (
-                    <div className="p-8 text-center">
-                      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                      <p>Loading your orders...</p>
-                    </div>
-                  ) : !orders || orders.length === 0 ? (
-                    <div className="text-center py-10">
-                      <Package className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
-                      <h3 className="font-playfair text-xl font-medium mb-2">No orders yet</h3>
-                      <p className="font-montserrat text-foreground/60 mb-6">
-                        You haven't placed any orders yet. Start by adding items to your cart.
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Customize existing catalog pieces to your preferences.
                       </p>
-                      <Button asChild>
+                      <ul className="text-xs space-y-1.5 text-foreground/80">
+                        <li className="flex items-start">
+                          <span className="text-amber-500 mr-1.5">•</span>
+                          <span>No consultation fee required</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-amber-500 mr-1.5">•</span>
+                          <span>Change metals, stones, sizes, or other details</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-amber-500 mr-1.5">•</span>
+                          <span>Receive customization quote before committing</span>
+                        </li>
+                      </ul>
+                      <Button variant="link" className="text-amber-600 dark:text-amber-400 p-0 h-auto mt-4">
                         <Link href="/collections">
-                          Browse Collections <ArrowRight className="ml-2 h-4 w-4" />
+                          Browse Products to Customize <ArrowRight className="ml-1 h-3.5 w-3.5" />
                         </Link>
                       </Button>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {orders.map((order) => (
-                        <Card key={order.id} className="overflow-hidden">
-                          <CardHeader className="bg-background/50 pb-2">
-                            <div className="flex justify-between items-center">
-                              <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                              <Button variant="outline" size="sm" asChild>
-                                <Link href={`/orders/${order.id}`}>
-                                  View Details
-                                </Link>
-                              </Button>
-                            </div>
-                            <CardDescription>
-                              {new Date(order.createdAt).toLocaleDateString()} • 
-                              Status: <span className="font-medium capitalize">{order.orderStatus}</span>
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="pt-4">
-                            <div className="grid gap-4">
-                              {order.items && order.items.map((item) => (
-                                <div key={item.id} className="flex items-center">
-                                  <div className="w-12 h-12 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-3">
-                                    {item.product?.imageUrl ? (
-                                      <img 
-                                        src={item.product.imageUrl} 
-                                        alt={item.product.name} 
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center bg-foreground/5">
-                                        <ShoppingBag className="h-5 w-5 text-foreground/30" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="font-medium text-sm">{item.product?.name}</p>
-                                    <p className="text-xs text-foreground/60">
-                                      {item.metalTypeId} • {item.stoneTypeId}
-                                    </p>
-                                  </div>
-                                  <p className="font-medium text-sm">
-                                    {formatCurrency(item.price)}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                            <Separator className="my-3" />
-                            <div className="flex justify-between">
-                              <span className="font-montserrat text-sm">Total</span>
-                              <span className="font-medium">{formatCurrency(order.totalAmount)}</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                    
+                    <div className="p-4 bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-900/20 rounded-lg">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-teal-100 dark:bg-teal-800/20 rounded-full">
+                          <DollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        <h3 className="font-medium">Quote Request</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Request final pricing and availability for standard catalog items.
+                      </p>
+                      <ul className="text-xs space-y-1.5 text-foreground/80">
+                        <li className="flex items-start">
+                          <span className="text-teal-500 mr-1.5">•</span>
+                          <span>No consultation fee required</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-teal-500 mr-1.5">•</span>
+                          <span>Get exact pricing based on current material costs</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-teal-500 mr-1.5">•</span>
+                          <span>Specify your currency and shipping preferences</span>
+                        </li>
+                      </ul>
+                      <Button variant="link" className="text-teal-600 dark:text-teal-400 p-0 h-auto mt-4">
+                        <Link href="/collections">
+                          Browse Products to Quote <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
                     </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-            
-            {/* Custom Requests Tab */}
-            <TabsContent value="requests">
+              
+              {/* Recent Requests */}
               <Card>
-                <CardHeader>
-                  <CardTitle>All Requests</CardTitle>
-                  <CardDescription>View and track all your jewelry requests</CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <div>
+                    <CardTitle className="text-lg">Recent Requests</CardTitle>
+                    <CardDescription>Your most recent jewelry requests</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("requests")}>
+                    View All <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
                 </CardHeader>
                 <CardContent>
-                  {isLoadingRequests || isLoadingCustomDesigns || isLoadingQuoteRequests ? (
+                  {isLoading ? (
                     <div className="p-8 text-center">
                       <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
                       <p>Loading your requests...</p>
                     </div>
-                  ) : !allRequests || allRequests.length === 0 ? (
+                  ) : isEmpty ? (
                     <div className="text-center py-10">
-                      <PenTool className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
+                      <Gem className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
                       <h3 className="font-playfair text-xl font-medium mb-2">No requests yet</h3>
                       <p className="font-montserrat text-foreground/60 mb-6">
-                        You haven't submitted any customization or quote requests yet.
+                        You haven't submitted any jewelry requests yet.
                       </p>
                       <div className="flex flex-col sm:flex-row justify-center gap-4">
                         <Button asChild>
                           <Link href="/custom-design">
-                            Request Custom Design <ArrowRight className="ml-2 h-4 w-4" />
+                            Start Custom Design <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
                         </Button>
                         <Button variant="outline" asChild>
@@ -409,145 +480,291 @@ export default function CustomerDashboard() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {allRequests.map((request) => (
-                        <Card key={`${request.requestType}-${request.id}`} className="overflow-hidden">
-                          <CardHeader className="bg-background/50 pb-2">
-                            <div className="flex justify-between items-center">
-                              <CardTitle className="text-lg">{request.requestType === 'design' ? 'Custom Design' : request.requestType === 'customization' ? 'Customization' : 'Quote'} #{request.id}</CardTitle>
-                              <div className="flex items-center gap-2">
-                                {/* Two types of requests: product customization vs custom design form */}
-                                {request.productId ? (
-                                  <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/products/${request.productId}`}>
-                                      <ExternalLink className="h-3 w-3 mr-1" />
-                                      View Product
-                                    </Link>
-                                  </Button>
-                                ) : (
-                                  <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/custom-designs/${request.id}`}>
-                                      <ExternalLink className="h-3 w-3 mr-1" />
-                                      View Details
-                                    </Link>
-                                  </Button>
-                                )}
+                      {allRequests.slice(0, 3).map((request) => (
+                        <div key={`${request.requestType}-${request.id}`} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-full ${
+                              request.requestType === 'design' 
+                                ? 'bg-purple-100 dark:bg-purple-900/20' 
+                                : request.requestType === 'customization'
+                                ? 'bg-amber-100 dark:bg-amber-900/20'
+                                : 'bg-teal-100 dark:bg-teal-900/20'
+                            }`}>
+                              {getRequestTypeIcon(request.requestType)}
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {formatRequestType(request.requestType)} #{request.id}
+                              </div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{formatDate(request.createdAt)}</span>
                               </div>
                             </div>
-                            <CardDescription>
-                              {new Date(request.createdAt).toLocaleDateString()} {new Date(request.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • 
-                              Status: <span className="font-medium capitalize">{request.status}</span>
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="pt-4">
-                            {/* For product customization requests */}
-                            {request.productId && (
-                              <div className="flex items-start mb-4">
-                                <div className="w-16 h-16 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-4">
-                                  {request.product?.imageUrl ? (
-                                    <img 
-                                      src={request.product.imageUrl} 
-                                      alt={request.product.name} 
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-foreground/5">
-                                      <PenTool className="h-6 w-6 text-foreground/30" />
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`px-2 py-0.5 text-xs rounded-full inline-flex items-center ${getStatusBadgeClasses(request.status)}`}>
+                              <span className="w-1.5 h-1.5 rounded-full mr-1 bg-current"></span>
+                              <span>{formatStatus(request.status)}</span>
+                            </span>
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link href={getRequestUrl(request)}>
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+                {!isEmpty && allRequests && allRequests.length > 3 && (
+                  <CardFooter className="flex justify-center border-t pt-4">
+                    <Button variant="ghost" onClick={() => setActiveTab("requests")}>
+                      View All {allRequests.length} Requests
+                    </Button>
+                  </CardFooter>
+                )}
+              </Card>
+            </TabsContent>
+            
+            {/* Requests Tab */}
+            <TabsContent value="requests" className="space-y-6">
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle>All Requests</CardTitle>
+                      <CardDescription>Track and manage your jewelry requests</CardDescription>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button size="sm" asChild>
+                        <Link href="/custom-design">
+                          <PlusCircle className="mr-1.5 h-4 w-4" />
+                          New Request
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                {/* Filter Controls */}
+                <div className="px-6 pb-4 border-b">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        placeholder="Search by ID or product name" 
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="design_fee_paid">Design Fee Paid</SelectItem>
+                        <SelectItem value="quoted">Quoted</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="design">Custom Design</SelectItem>
+                        <SelectItem value="customization">Product Customization</SelectItem>
+                        <SelectItem value="quote">Quote Request</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Status Legend */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <Badge variant="outline" className="bg-blue-100/50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1 bg-blue-500"></span>
+                      Pending
+                    </Badge>
+                    <Badge variant="outline" className="bg-indigo-100/50 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1 bg-indigo-500"></span>
+                      Design Fee Paid
+                    </Badge>
+                    <Badge variant="outline" className="bg-amber-100/50 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1 bg-amber-500"></span>
+                      Quoted/In Progress
+                    </Badge>
+                    <Badge variant="outline" className="bg-green-100/50 text-green-800 dark:bg-green-900/20 dark:text-green-300 border-green-200 dark:border-green-800">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1 bg-green-500"></span>
+                      Approved
+                    </Badge>
+                    <Badge variant="outline" className="bg-red-100/50 text-red-800 dark:bg-red-900/20 dark:text-red-300 border-red-200 dark:border-red-800">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1 bg-red-500"></span>
+                      Rejected
+                    </Badge>
+                    <Badge variant="outline" className="bg-purple-100/50 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300 border-purple-200 dark:border-purple-800">
+                      <span className="w-1.5 h-1.5 rounded-full mr-1 bg-purple-500"></span>
+                      Completed
+                    </Badge>
+                  </div>
+                </div>
+                
+                <CardContent className="pt-6">
+                  {isLoading ? (
+                    <div className="p-8 text-center">
+                      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <p>Loading your requests...</p>
+                    </div>
+                  ) : isEmpty ? (
+                    <div className="text-center py-10">
+                      <Gem className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
+                      <h3 className="font-playfair text-xl font-medium mb-2">No requests yet</h3>
+                      <p className="font-montserrat text-foreground/60 mb-6">
+                        You haven't submitted any jewelry requests yet.
+                      </p>
+                      <div className="flex flex-col sm:flex-row justify-center gap-4">
+                        <Button asChild>
+                          <Link href="/custom-design">
+                            Start Custom Design <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                          <Link href="/collections">
+                            Browse Collections
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : filteredRequests.length === 0 ? (
+                    <div className="text-center py-10">
+                      <Search className="h-16 w-16 mx-auto mb-4 text-foreground/20" />
+                      <h3 className="font-playfair text-xl font-medium mb-2">No matching requests</h3>
+                      <p className="font-montserrat text-foreground/60 mb-6">
+                        Try adjusting your filters or search query
+                      </p>
+                      <Button variant="outline" onClick={() => {
+                        setSearchQuery("");
+                        setStatusFilter("all");
+                        setTypeFilter("all");
+                      }}>
+                        Clear Filters
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {filteredRequests.map((request) => (
+                        <Card key={`${request.requestType}-${request.id}`} className="overflow-hidden">
+                          <div className="flex flex-col md:flex-row">
+                            {/* Left side: request info */}
+                            <div className="flex-grow p-4 md:p-6">
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2 rounded-full ${
+                                    request.requestType === 'design' 
+                                      ? 'bg-purple-100 dark:bg-purple-900/20' 
+                                      : request.requestType === 'customization'
+                                      ? 'bg-amber-100 dark:bg-amber-900/20'
+                                      : 'bg-teal-100 dark:bg-teal-900/20'
+                                  }`}>
+                                    {getRequestTypeIcon(request.requestType)}
+                                  </div>
+                                  <div>
+                                    <h3 className="font-medium text-lg flex items-center">
+                                      <span className={getRequestTypeColor(request.requestType)}>
+                                        {formatRequestType(request.requestType)}
+                                      </span>
+                                      <span className="ml-2">#{request.id}</span>
+                                    </h3>
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <CalendarDays className="h-3.5 w-3.5" />
+                                      <span>{formatDate(request.createdAt)}</span>
                                     </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <h3 className="font-medium mb-1">
-                                    {request.product?.name || 'Custom Piece'}
-                                  </h3>
-                                  <p className="text-sm text-foreground/70 mb-2">
-                                    {request.specifications?.metalType} • {request.specifications?.stoneType}
-                                  </p>
-                                  <div className="text-sm">
-                                    <p className="line-clamp-2 text-foreground/70">{request.message}</p>
                                   </div>
                                 </div>
-                              </div>
-                            )}
-
-                            {/* For custom design form submissions */}
-                            {!request.productId && (
-                              <div className="flex items-start mb-4">
-                                <div className="w-16 h-16 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-4">
-                                  {request.imageUrl ? (
-                                    <img 
-                                      src={request.imageUrl} 
-                                      alt="Design reference" 
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-foreground/5">
-                                      <PenTool className="h-6 w-6 text-foreground/30" />
-                                    </div>
-                                  )}
-                                </div>
                                 <div>
-                                  <h3 className="font-medium mb-1">
-                                    Custom Jewelry Design
-                                  </h3>
-                                  <p className="text-sm text-foreground/70 mb-2">
-                                    {request.metalType || 'Custom Metal'} • {
-                                      request.primaryStones && request.primaryStones.length > 0 
-                                        ? request.primaryStones.join(', ') 
-                                        : (request.primaryStone || 'Custom Stone')
-                                    }
-                                  </p>
-                                  {request.notes && (
-                                    <div className="text-sm">
-                                      <p className="line-clamp-2 text-foreground/70">{request.notes}</p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Designer comments */}
-                            {request.designerComments && (
-                              <div className="bg-primary/5 p-3 rounded-md mb-3">
-                                <h4 className="text-sm font-medium mb-1">Designer Comments:</h4>
-                                <p className="text-sm">{request.designerComments}</p>
-                              </div>
-                            )}
-                            
-                            {/* CAD image */}
-                            {request.cadImageUrl && (
-                              <div className="bg-primary/5 p-3 rounded-md mb-3">
-                                <h4 className="text-sm font-medium mb-1">CAD Design:</h4>
-                                <div className="h-40 bg-background rounded-md border overflow-hidden">
-                                  <img 
-                                    src={request.cadImageUrl} 
-                                    alt="CAD design" 
-                                    className="w-full h-full object-contain"
-                                  />
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Price quotes */}
-                            {(request.status === 'quoted' || request.estimatedPrice) && (
-                              <div className="bg-accent/10 p-3 rounded-md">
-                                <div className="flex justify-between mb-1">
-                                  <h4 className="text-sm font-medium">Quote Amount:</h4>
-                                  <span className="font-medium">
-                                    {formatCurrency(request.quoteAmount || request.estimatedPrice || 0)}
+                                  <span className={`px-3 py-1 text-sm rounded-full inline-flex items-center ${getStatusBadgeClasses(request.status)}`}>
+                                    <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current"></span>
+                                    <span>{formatStatus(request.status)}</span>
                                   </span>
                                 </div>
-                                {request.status === 'quoted' && (
-                                  <div className="flex justify-end mt-3">
-                                    <Button variant="default" size="sm" asChild>
-                                      <Link href={`/checkout/custom/${request.id}`}>
-                                        Accept & Proceed <ArrowRight className="ml-1 h-3 w-3" />
-                                      </Link>
-                                    </Button>
+                              </div>
+                              
+                              {/* Request details */}
+                              <div className="mb-4">
+                                {request.productName && (
+                                  <div className="mb-2">
+                                    <h4 className="text-sm font-medium">Product</h4>
+                                    <p>{request.productName}</p>
+                                  </div>
+                                )}
+                                
+                                {request.description && (
+                                  <div className="mb-2">
+                                    <h4 className="text-sm font-medium">Description</h4>
+                                    <p className="text-sm text-muted-foreground">{request.description}</p>
+                                  </div>
+                                )}
+                                
+                                {request.additionalNotes && (
+                                  <div>
+                                    <h4 className="text-sm font-medium">Notes</h4>
+                                    <p className="text-sm text-muted-foreground line-clamp-2">{request.additionalNotes}</p>
                                   </div>
                                 )}
                               </div>
-                            )}
-                          </CardContent>
+                              
+                              {/* Price information if available */}
+                              {(request.estimatedPrice || request.consultationFee) && (
+                                <div className="mb-4 p-3 bg-muted/20 rounded-md">
+                                  {request.consultationFee && (
+                                    <div className="flex justify-between text-sm">
+                                      <span>Consultation Fee:</span>
+                                      <span className="font-medium">{formatCurrency(request.consultationFee, request.currency || 'USD')}</span>
+                                    </div>
+                                  )}
+                                  {request.estimatedPrice && (
+                                    <div className="flex justify-between text-sm">
+                                      <span>Estimated Price:</span>
+                                      <span className="font-medium">{formatCurrency(request.estimatedPrice, request.currency || 'USD')}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Right side: actions */}
+                            <div className="bg-muted/10 p-4 md:p-6 flex flex-row md:flex-col justify-between md:justify-center items-center md:border-l md:min-w-[180px]">
+                              <Button variant="default" size="sm" className="w-full" asChild>
+                                <Link href={getRequestUrl(request)}>
+                                  View Details
+                                </Link>
+                              </Button>
+                              
+                              {request.status === 'quoted' && (
+                                <Button variant="outline" size="sm" className="mt-2 w-full">
+                                  Approve Quote
+                                </Button>
+                              )}
+                              
+                              {request.status === 'pending' && request.requestType === 'design' && (
+                                <Button variant="outline" size="sm" className="mt-2 w-full">
+                                  Pay Design Fee
+                                </Button>
+                              )}
+                              
+                              <Button variant="ghost" size="sm" className="mt-2 w-full">
+                                <MessageCircle className="h-4 w-4 mr-1.5" />
+                                Contact
+                              </Button>
+                            </div>
+                          </div>
                         </Card>
                       ))}
                     </div>
@@ -556,53 +773,122 @@ export default function CustomerDashboard() {
               </Card>
             </TabsContent>
             
-            {/* Account Settings Tab */}
+            {/* Settings Tab */}
             <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Account Information</CardTitle>
-                  <CardDescription>Manage your account details</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Account Information</CardTitle>
+                    <CardDescription>Update your personal details</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <h3 className="font-medium">Personal Details</h3>
-                      <div className="bg-background/50 p-4 rounded-md border">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm text-foreground/70">Username</label>
-                            <p className="font-medium">{user?.username}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm text-foreground/70">Email</label>
-                            <p className="font-medium">{user?.email}</p>
-                          </div>
-                        </div>
-                      </div>
+                      <h3 className="text-sm font-medium leading-none">Username</h3>
+                      <p className="text-sm text-muted-foreground">{user?.username}</p>
                     </div>
-                    
                     <div className="space-y-2">
-                      <h3 className="font-medium">Address Book</h3>
-                      <div className="bg-background/50 p-4 rounded-md border">
-                        <p className="text-foreground/70 text-sm mb-3">
-                          Your saved shipping addresses will appear here.
-                        </p>
-                        <Button variant="outline" size="sm">
-                          <User className="h-4 w-4 mr-2" />
-                          Add New Address
+                      <h3 className="text-sm font-medium leading-none">Email</h3>
+                      <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium leading-none">Account Created</h3>
+                      <p className="text-sm text-muted-foreground">{user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</p>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" disabled>
+                      Edit Profile (Coming Soon)
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Notifications</CardTitle>
+                    <CardDescription>Manage your notification preferences</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-medium">Email Notifications</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Receive updates about your requests via email
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" disabled>
+                          Configure
+                        </Button>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-medium">Marketing Communications</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Receive special offers and updates
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" disabled>
+                          Configure
                         </Button>
                       </div>
                     </div>
-                    
-                    <div className="flex justify-end">
-                      <Button variant="outline" className="mr-2">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Update Profile
-                      </Button>
+                  </CardContent>
+                  <CardFooter>
+                    <p className="text-sm text-muted-foreground">
+                      Notification settings will be available in a future update
+                    </p>
+                  </CardFooter>
+                </Card>
+                
+                <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Privacy & Security</CardTitle>
+                    <CardDescription>Manage your account security</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-medium">Password</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Change your account password
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" disabled>
+                          Change Password
+                        </Button>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-medium">Account Data</h3>
+                          <p className="text-xs text-muted-foreground">
+                            Download or delete your account data
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" disabled>
+                            Download
+                          </Button>
+                          <Button variant="destructive" size="sm" disabled>
+                            Delete Account
+                          </Button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                  <CardFooter>
+                    <p className="text-sm text-muted-foreground">
+                      Security settings will be available in a future update
+                    </p>
+                  </CardFooter>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
