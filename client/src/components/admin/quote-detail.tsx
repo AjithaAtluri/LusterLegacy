@@ -307,6 +307,17 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                 </div>
               </div>
             )}
+            
+            {/* View Product Details Button */}
+            {quote.productId && (
+              <div className="pt-4">
+                <Button asChild variant="outline">
+                  <a href={`/products/${quote.productId}`} target="_blank" rel="noopener noreferrer">
+                    <Eye className="mr-2 h-4 w-4" /> View Product Details
+                  </a>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
