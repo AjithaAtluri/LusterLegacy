@@ -64,6 +64,10 @@ export default function CustomizeRequest() {
   // State to track successful submission
   const [isSubmitSuccessful, setIsSubmitSuccessful] = useState<boolean>(false);
   
+  // State to track requested metal and stone types for the success dialog
+  const [requestedMetalType, setRequestedMetalType] = useState<string>("Unknown");
+  const [requestedStoneType, setRequestedStoneType] = useState<string>("Unknown");
+  
   // Fetch product data to display in the form
   const { data: product, isLoading, error } = useQuery({
     queryKey: [`/api/products/${id}`],
@@ -113,10 +117,7 @@ export default function CustomizeRequest() {
       // Show a dialog confirming successful submission
       setIsSubmitSuccessful(true);
       
-      // Navigate to customer dashboard after successful submission
-      setTimeout(() => {
-        setLocation('/customer-dashboard');
-      }, 2000);
+      // Navigation will now be handled by the dialog button
     },
     onError: (error) => {
       toast({
@@ -202,11 +203,15 @@ export default function CustomizeRequest() {
         const selectedMetal = metalTypes.find((metal) => String(metal.id) === metalTypeId);
         if (selectedMetal) {
           requestedMetalType = selectedMetal.name;
+          // Set it to component state for the success dialog
+          setRequestedMetalType(selectedMetal.name);
         } else {
           requestedMetalType = originalMetalType; // Default to original if not found
+          setRequestedMetalType(originalMetalType);
         }
       } else {
         requestedMetalType = originalMetalType; // Default to original if not selected
+        setRequestedMetalType(originalMetalType);
       }
       
       // Get the requested stone type based on selected ID
@@ -214,11 +219,15 @@ export default function CustomizeRequest() {
         const selectedStone = stoneTypes.find((stone) => String(stone.id) === primaryStoneId);
         if (selectedStone) {
           requestedStoneType = selectedStone.name;
+          // Set it to component state for the success dialog
+          setRequestedStoneType(selectedStone.name);
         } else {
           requestedStoneType = originalStoneType; // Default to original if not found
+          setRequestedStoneType(originalStoneType);
         }
       } else {
         requestedStoneType = originalStoneType; // Default to original if not selected
+        setRequestedStoneType(originalStoneType);
       }
     } catch (error) {
       console.error("Error preparing customization data:", error);
@@ -993,6 +1002,38 @@ export default function CustomizeRequest() {
           </div>
         </div>
       </div>
+      {/* Success Dialog */}
+      <Dialog open={isSubmitSuccessful} onOpenChange={setIsSubmitSuccessful}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              Request Submitted Successfully
+            </DialogTitle>
+            <DialogDescription>
+              Your customization request has been submitted. Our designers will review your request and get back to you soon.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 bg-secondary/20 rounded-lg">
+            <p className="text-sm">Request details:</p>
+            <ul className="mt-2 space-y-1 text-sm">
+              <li><span className="font-medium">Product:</span> {product?.name}</li>
+              <li><span className="font-medium">Metal Type:</span> {requestedMetalType}</li>
+              {requestedStoneType !== "Unknown" && (
+                <li><span className="font-medium">Primary Stone:</span> {requestedStoneType}</li>
+              )}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={() => setLocation('/customer-dashboard')} 
+              className="w-full bg-primary hover:bg-primary/90"
+            >
+              Go to Dashboard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
