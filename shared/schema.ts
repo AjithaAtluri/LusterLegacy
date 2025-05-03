@@ -280,6 +280,9 @@ export const quoteRequests = pgTable("quote_requests", {
   additionalNotes: text("additional_notes"),
   status: text("status").notNull().default("pending"), // 'pending', 'quoted', 'approved', 'rejected', 'completed'
   estimatedPrice: integer("estimated_price"),
+  quotedPrice: integer("quoted_price"),
+  isReadyToShip: boolean("is_ready_to_ship").default(false),
+  currency: text("currency").default("USD"),
   createdAt: timestamp("created_at").defaultNow()
 });
 

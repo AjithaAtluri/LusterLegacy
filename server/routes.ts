@@ -913,8 +913,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updates.status = req.body.status;
       }
       
-      if (req.body.quotedPrice && !isNaN(parseFloat(req.body.quotedPrice))) {
-        updates.estimatedPrice = parseFloat(req.body.quotedPrice);
+      if (req.body.quotedPrice !== undefined && !isNaN(parseFloat(String(req.body.quotedPrice)))) {
+        updates.quotedPrice = parseFloat(String(req.body.quotedPrice));
+        
+        // If we're setting a quoted price, also set the estimatedPrice for backward compatibility
+        updates.estimatedPrice = parseFloat(String(req.body.quotedPrice));
+        
+        // When setting price, automatically set status to "quoted" if not already in a later stage
+        const latestStages = ["approved", "payment_received", "in_production", "shipping", "delivered", "completed"];
+        if (!updates.status && !latestStages.includes(existingRequest.status)) {
+          updates.status = "quoted";
+        }
+      }
+      
+      if (req.body.isReadyToShip !== undefined) {
+        updates.isReadyToShip = Boolean(req.body.isReadyToShip);
+      }
+      
+      if (req.body.currency) {
+        updates.currency = req.body.currency;
       }
       
       // Update the request
@@ -924,6 +941,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating quote request:", error);
       res.status(500).json({ message: "Failed to update quote request" });
+    }
+  });
+  
+  // Accept a quote request (customer action)
+  app.post("/api/quote-requests/:id/accept", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid quote request ID" });
+      }
+      
+      // Get the existing request
+      const existingRequest = await storage.getQuoteRequest(id);
+      if (!existingRequest) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      
+      // Check authorization - owner only
+      const isOwner = req.isAuthenticated() && req.user && req.user.id === existingRequest.userId;
+      
+      if (!isOwner) {
+        return res.status(403).json({ message: "Not authorized to accept this quote request" });
+      }
+      
+      // Make sure the request is in a 'quoted' status
+      if (existingRequest.status !== 'quoted') {
+        return res.status(400).json({ message: "Cannot accept a quote that hasn't been quoted yet" });
+      }
+      
+      // Update only allowed fields
+      const updates: Record<string, any> = {
+        status: "approved"
+      };
+      
+      // Preserve isReadyToShip status from request body or existing record
+      if (req.body.isReadyToShip !== undefined) {
+        updates.isReadyToShip = Boolean(req.body.isReadyToShip);
+      } else if (existingRequest.isReadyToShip !== undefined) {
+        updates.isReadyToShip = existingRequest.isReadyToShip;
+      }
+      
+      // Update the request
+      const updatedRequest = await storage.updateQuoteRequest(id, updates);
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error accepting quote request:", error);
+      res.status(500).json({ message: "Failed to accept quote request" });
     }
   });
   
