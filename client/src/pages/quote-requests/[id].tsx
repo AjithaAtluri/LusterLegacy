@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDate } from "@/lib/utils";
-import { ReliableProductImage } from "@/components/products/reliable-product-image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import ProductSpecifications from "@/components/products/product-specifications";
 
@@ -158,12 +157,18 @@ export default function QuoteRequestDetailsPage() {
                 <CardTitle>Product Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="mb-4 rounded-md overflow-hidden">
-                  <ReliableProductImage
-                    productId={quoteRequest.productId}
-                    alt={product?.name || "Product Image"}
-                    className="w-full h-auto object-cover"
-                  />
+                <div className="mb-4 rounded-md overflow-hidden h-64">
+                  {product?.imageUrl ? (
+                    <img 
+                      src={product.imageUrl} 
+                      alt={product?.name || "Product Image"} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-foreground/5">
+                      <Package className="h-16 w-16 text-foreground/20" />
+                    </div>
+                  )}
                 </div>
                 
                 <h3 className="font-playfair text-xl font-semibold">{product?.name}</h3>
