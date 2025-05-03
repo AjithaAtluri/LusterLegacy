@@ -72,21 +72,23 @@ export default function CustomizeRequest() {
   // Handle form submission
   const customizationMutation = useMutation({
     mutationFn: async (formData: {
+      userId?: number;
       productId: number;
-      name: string;
+      fullName: string;
       email: string;
       phone: string;
-      customizationDetails: string;
-      preferredBudget: string;
-      timeline: string;
-      metalTypeId?: string;
-      primaryStoneId?: string;
-      secondaryStoneId?: string;
-      otherStoneId?: string;
+      country: string;
+      originalMetalType: string;
+      requestedMetalType: string;
+      originalStoneType: string;
+      requestedStoneType: string;
+      additionalNotes?: string;
+      imageUrls?: string[];
     }) => {
       const response = await apiRequest("POST", "/api/customization-requests", formData);
       if (!response.ok) {
-        throw new Error("Failed to submit customization request");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to submit customization request");
       }
       return await response.json();
     },
@@ -162,19 +164,64 @@ export default function CustomizeRequest() {
       return;
     }
     
-    // If user is logged in, submit the form
+    // If user is logged in, submit the form according to the schema required fields
+    // First, determine the original and requested metal and stone types
+    let originalMetalType = "Unknown";
+    let requestedMetalType = "Unknown";
+    let originalStoneType = "Unknown";
+    let requestedStoneType = "Unknown";
+    
+    // Set original metal type from product data if available
+    try {
+      const details = product?.details ? 
+        (typeof product.details === 'string' ? JSON.parse(product.details) : product.details) : {};
+      
+      const additionalData = details.additionalData || {};
+      const specifications = additionalData.specifications || {};
+      
+      originalMetalType = specifications.metalType || "Unknown";
+      originalStoneType = (specifications.mainStoneType || specifications.stoneType || "Unknown");
+      
+      // Get the requested metal type based on selected ID
+      if (metalTypeId && metalTypes) {
+        const selectedMetal = metalTypes.find((metal) => String(metal.id) === metalTypeId);
+        if (selectedMetal) {
+          requestedMetalType = selectedMetal.name;
+        } else {
+          requestedMetalType = originalMetalType; // Default to original if not found
+        }
+      } else {
+        requestedMetalType = originalMetalType; // Default to original if not selected
+      }
+      
+      // Get the requested stone type based on selected ID
+      if (primaryStoneId && primaryStoneId !== "none_selected" && stoneTypes) {
+        const selectedStone = stoneTypes.find((stone) => String(stone.id) === primaryStoneId);
+        if (selectedStone) {
+          requestedStoneType = selectedStone.name;
+        } else {
+          requestedStoneType = originalStoneType; // Default to original if not found
+        }
+      } else {
+        requestedStoneType = originalStoneType; // Default to original if not selected
+      }
+    } catch (error) {
+      console.error("Error preparing customization data:", error);
+    }
+    
     customizationMutation.mutate({
+      userId: user?.id,
       productId: Number(id),
-      name,
+      fullName: name, // Schema expects fullName, not name
       email,
       phone,
-      customizationDetails,
-      preferredBudget,
-      timeline,
-      metalTypeId,
-      primaryStoneId,
-      secondaryStoneId,
-      otherStoneId,
+      country: "Unknown", // Required by schema, can add this field to form later
+      originalMetalType,
+      requestedMetalType,
+      originalStoneType,
+      requestedStoneType,
+      additionalNotes: customizationDetails, // Schema expects additionalNotes
+      imageUrls: [] // Required by schema
     });
   };
 
