@@ -839,6 +839,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Add a comment to a quote request
+  app.post("/api/quote-requests/:id/comments", async (req: Request, res: Response) => {
+    try {
+      const quoteRequestId = parseInt(req.params.id);
+      if (isNaN(quoteRequestId)) {
+        return res.status(400).json({ message: "Invalid quote request ID" });
+      }
+      
+      // Check if the quote request exists
+      const quoteRequest = await storage.getQuoteRequest(quoteRequestId);
+      if (!quoteRequest) {
+        return res.status(404).json({ message: "Quote request not found" });
+      }
+      
+      // Check authorization - admin or owner can comment
+      const isAdmin = await validateAdmin(req);
+      const isOwner = req.isAuthenticated() && req.user && req.user.id === quoteRequest.userId;
+      
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({ message: "Not authorized to comment on this quote request" });
+      }
+
+      // Extract data from request body
+      const { content, createdBy, isAdmin: isAdminComment = false, imageUrl } = req.body;
+      
+      // Validate required fields
+      if (!content) {
+        return res.status(400).json({ message: "Comment content is required" });
+      }
+      
+      // Create the comment
+      const comment = await storage.addQuoteRequestComment({
+        quoteRequestId,
+        content,
+        createdBy: createdBy || (req.user ? req.user.username : "Customer"),
+        isAdmin: isAdmin ? isAdminComment : false, // Only allow isAdmin=true if the user is actually an admin
+        imageUrl: imageUrl || null,
+        userId: req.user ? req.user.id : null
+      });
+      
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error(`Error creating quote request comment:`, error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
   // Update a quote request (status, price)
   app.patch("/api/quote-requests/:id", async (req: Request, res: Response) => {
     try {
