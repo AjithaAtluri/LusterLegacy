@@ -2412,6 +2412,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isCustomDesign: false
       });
       
+      // For "request_quote" action, also create a quote request entry
+      if (action === "request_quote") {
+        try {
+          await storage.createQuoteRequest({
+            userId: req.user.id,
+            fullName: name,
+            email: email,
+            phone: phone,
+            country: country,
+            productId: Number(productId),
+            metalType: metalType,
+            stoneType: stoneType,
+            additionalNotes: additionalNotes || "",
+          });
+          console.log(`Quote request created for order ${order.id}`);
+        } catch (quoteError) {
+          console.error("Error creating quote request:", quoteError);
+          // We continue even if quote request creation fails
+        }
+      }
+      
       console.log(`Order ${order.id} created successfully`);
       
       res.status(201).json({ 
