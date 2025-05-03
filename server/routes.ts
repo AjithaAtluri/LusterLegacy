@@ -2208,6 +2208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
+      // Log the request body for debugging
+      console.log("Received order request:", JSON.stringify(req.body, null, 2));
+      
       const { 
         productId, 
         name, 
@@ -2220,12 +2223,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         country, 
         additionalNotes, 
         paymentMethod,
-        currency
+        currency,
+        action = "request_quote" // Default to request_quote if not specified
       } = req.body;
+      
+      // Validate required fields
+      if (!productId || !name || !email || !phone || !address || !city || !state || !postalCode || !country) {
+        console.error("Missing required fields in order request");
+        return res.status(400).json({ 
+          message: "Missing required fields",
+          requiredFields: ["productId", "name", "email", "phone", "address", "city", "state", "postalCode", "country"]
+        });
+      }
       
       // Ensure the product exists
       const product = await storage.getProduct(Number(productId));
       if (!product) {
+        console.error(`Product not found for ID: ${productId}`);
         return res.status(404).json({ message: "Product not found" });
       }
       
@@ -2234,11 +2248,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? (product.calculatedPriceINR || product.basePrice) 
         : (product.calculatedPriceUSD || product.basePrice);
       
-      // Create address string
-      const fullAddress = `${address}, ${city}, ${state}, ${postalCode}, ${country}`;
-      
-      // The action parameter tells us if this is a quote request or payment
-      const action = req.body.action || "request_quote";
+      // Create address as a JSON object to match schema expectation
+      const shippingAddress = {
+        address,
+        city,
+        state,
+        postalCode,
+        country
+      };
       
       // Calculate advance amount (50% of total) and balance amount
       const totalAmount = price;
@@ -2249,14 +2266,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orderStatus = "new";
       const paymentStatus = action === "make_payment" ? "advance_pending" : "pending";
       
-      // Create order without the currency field which isn't in the schema
+      console.log(`Creating order for product ${productId} with action ${action}`);
+      console.log(`Order details: ${name}, ${email}, ${phone}, Payment status: ${paymentStatus}`);
+      
+      // Create order
       const order = await storage.createOrder({
         userId: req.user.id,
         customerName: name,
         customerEmail: email,
         customerPhone: phone,
-        shippingAddress: fullAddress,
-        // currency is handled separately in the order items
+        shippingAddress, // Use the JSON object
         totalAmount: totalAmount,
         advanceAmount: advanceAmount,
         balanceAmount: balanceAmount,
@@ -2274,16 +2293,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (product.details) {
         try {
           const details = JSON.parse(product.details);
-          if (details.additionalData && details.additionalData.metalType) {
-            metalType = details.additionalData.metalType;
-          }
-          if (details.additionalData && details.additionalData.primaryStone) {
-            stoneType = details.additionalData.primaryStone;
+          if (details.additionalData) {
+            // Use the AI inputs if available, otherwise fallback to direct properties
+            const aiInputs = details.additionalData.aiInputs || {};
+            
+            metalType = aiInputs.metalType || details.additionalData.metalType || metalType;
+            stoneType = aiInputs.mainStoneType || details.additionalData.mainStoneType || 
+                        details.additionalData.primaryStone || stoneType;
           }
         } catch (e) {
           console.log("Could not parse product details:", e);
         }
       }
+      
+      console.log(`Creating order item with metal type: ${metalType}, stone type: ${stoneType}`);
       
       // Create order item with required metal and stone type IDs and currency
       await storage.createOrderItem({
@@ -2296,6 +2319,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isCustomDesign: false
       });
       
+      console.log(`Order ${order.id} created successfully`);
+      
       res.status(201).json({ 
         success: true, 
         message: "Order placed successfully",
@@ -2303,7 +2328,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Error creating order:", error);
-      res.status(500).json({ message: "Server error creating order" });
+      res.status(500).json({ 
+        message: "Server error creating order", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
   
