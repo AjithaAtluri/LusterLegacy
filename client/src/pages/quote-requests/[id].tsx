@@ -436,31 +436,92 @@ export default function QuoteRequestDetailsPage() {
               </CardContent>
             </Card>
             
-            {/* Messages & Conversations placeholder - can be implemented in future */}
-            {/*
+            {/* Messages & Conversations */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle>Messages</CardTitle>
+                <CardTitle className="flex items-center">
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  Messages
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border border-slate-200 dark:border-slate-800 h-64 overflow-y-auto p-4 mb-4">
-                  <p className="text-center text-muted-foreground text-sm">No messages yet</p>
+                <div className="rounded-md border border-slate-200 dark:border-slate-800 h-64 overflow-y-auto p-4 mb-4" id="chat-container">
+                  {quoteRequest.comments && quoteRequest.comments.length > 0 ? (
+                    <div className="space-y-4">
+                      {quoteRequest.comments.map((comment, index) => (
+                        <div 
+                          key={index} 
+                          className={`flex ${comment.isAdmin ? 'justify-start' : 'justify-end'}`}
+                        >
+                          <div 
+                            className={`max-w-[80%] p-3 rounded-lg ${
+                              comment.isAdmin 
+                                ? 'bg-slate-100 dark:bg-slate-800 text-foreground' 
+                                : 'bg-primary/10 text-primary-foreground'
+                            }`}
+                          >
+                            <div className="flex items-center mb-1 text-xs">
+                              <span className="font-medium">{comment.createdBy}</span>
+                              <span className="ml-2 text-muted-foreground">
+                                {formatDate(comment.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                            {comment.imageUrl && (
+                              <div className="mt-2">
+                                <img 
+                                  src={comment.imageUrl} 
+                                  alt="Attached image" 
+                                  className="max-h-32 rounded-md object-cover"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center">
+                      <MessageSquare className="h-10 w-10 text-muted-foreground/40 mb-2" />
+                      <p className="text-center text-muted-foreground text-sm">No messages yet</p>
+                      <p className="text-center text-muted-foreground/60 text-xs mt-1">
+                        Start a conversation with our team about your quote request
+                      </p>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-4">
                   <Textarea
                     placeholder="Type your message here..."
-                    className="min-h-32"
+                    className="min-h-24 resize-none"
                     value={newMessage}
                     onChange={e => setNewMessage(e.target.value)}
                   />
-                  <div className="flex justify-end">
-                    <Button>Send Message</Button>
+                  <div className="flex items-center justify-between">
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      variant="outline"
+                      className="text-muted-foreground"
+                      onClick={() => toast({
+                        title: "Coming soon",
+                        description: "File attachments will be available soon"
+                      })}
+                    >
+                      Attach File
+                    </Button>
+                    <Button 
+                      type="button"
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                    >
+                      Send Message
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            */}
           </div>
         </div>
       </div>
