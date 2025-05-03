@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Helmet } from "react-helmet";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Calendar, DollarSign, Clock, Package, Tag, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,63 @@ export default function QuoteRequestDetailsPage() {
 
   const handleBack = () => {
     setLocation("/customer-dashboard");
+  };
+  
+  // Query client for cache invalidation
+  const queryClient = useQueryClient();
+  
+  // Add mutation for sending a message
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageData: any) => {
+      const response = await fetch(`/api/quote-requests/${id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(messageData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Clear the message input
+      setNewMessage('');
+      
+      // Invalidate and refetch the quote request data to show the new message
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests", id] });
+      
+      // Scroll to the bottom of the chat container
+      setTimeout(() => {
+        const chatContainer = document.getElementById('chat-container');
+        if (chatContainer) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      }, 100);
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to send message",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Handle sending a new message
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
+    
+    sendMessageMutation.mutate({
+      quoteRequestId: parseInt(id as string),
+      content: newMessage,
+      createdBy: user?.username || "Customer",
+      isAdmin: false,
+      userId: user?.id
+    });
   };
 
   const getStatusColor = (status: string) => {
