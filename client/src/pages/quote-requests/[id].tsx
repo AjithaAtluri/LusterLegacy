@@ -99,7 +99,10 @@ export default function QuoteRequestDetailsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: "approved" }),
+        body: JSON.stringify({ 
+          status: "approved",
+          isReadyToShip: quoteRequest.isReadyToShip
+        }),
       });
       
       if (!response.ok) {
@@ -114,7 +117,9 @@ export default function QuoteRequestDetailsPage() {
       
       toast({
         title: "Quote Accepted!",
-        description: "Our team will contact you with payment details shortly.",
+        description: quoteRequest.isReadyToShip
+          ? "Our team will contact you with payment details for the full amount shortly."
+          : "Our team will contact you with payment details for the 50% advance shortly.",
         duration: 5000,
       });
     },
@@ -271,6 +276,15 @@ export default function QuoteRequestDetailsPage() {
                 <h3 className="font-playfair text-xl font-semibold">{product?.name}</h3>
                 <p className="text-sm text-muted-foreground">{product?.description}</p>
                 
+                {quoteRequest.isReadyToShip && (
+                  <div className="mt-2">
+                    <Badge className="bg-green-600">Ready to Ship</Badge>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This item is in stock and ready for immediate shipment after full payment.
+                    </p>
+                  </div>
+                )}
+                
                 {/* Product Specifications Dialog */}
                 {product?.details && (
                   <Dialog>
@@ -374,7 +388,9 @@ export default function QuoteRequestDetailsPage() {
                         Accept Quote
                       </Button>
                       <p className="text-xs text-muted-foreground mt-2 text-center">
-                        By accepting, you agree to the quoted price. Our team will contact you with payment details.
+                        {quoteRequest.isReadyToShip ? 
+                          "This item is ready to ship. By accepting, you agree to pay 100% of the quoted price before shipping." :
+                          "By accepting, you agree to pay 50% advance of the quoted price. Remaining 50% due before shipping in 3-4 weeks."}
                       </p>
                     </div>
                   )}
@@ -605,7 +621,11 @@ export default function QuoteRequestDetailsPage() {
                       <li>Our team is reviewing your request</li>
                       <li>We'll prepare a detailed quote based on current metal rates and stone prices</li>
                       <li>You'll receive your final quote within 24 hours</li>
-                      <li>Once you approve the quote, a 50% advance payment will be required to begin production</li>
+                      {quoteRequest.isReadyToShip ? (
+                        <li>Once you approve the quote, 100% payment will be required before shipping</li>
+                      ) : (
+                        <li>Once you approve the quote, a 50% advance payment will be required to begin production</li>
+                      )}
                     </ul>
                   </div>
                 )}
@@ -622,15 +642,126 @@ export default function QuoteRequestDetailsPage() {
                   </div>
                 )}
                 
-                {quoteRequest.status === "completed" && (
+                {quoteRequest.status === "approved" && (
+                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
+                    <h3 className="font-medium text-green-800 dark:text-green-400 mb-1">Your quote has been approved:</h3>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-green-700 dark:text-green-300">
+                      <li>Thank you for accepting our quote!</li>
+                      {quoteRequest.isReadyToShip ? (
+                        <>
+                          <li>Our team will contact you shortly with payment instructions for the full amount</li>
+                          <li>Once we receive your payment, your item will be shipped immediately</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Our team will contact you shortly with payment instructions for the 50% advance</li>
+                          <li>Production will begin once we receive your advance payment</li>
+                          <li>The remaining 50% will be due before shipping in 3-4 weeks</li>
+                        </>
+                      )}
+                      <li>If you have any questions, please message us through this page</li>
+                    </ul>
+                  </div>
+                )}
+                
+                {quoteRequest.status === "quoted" && (
                   <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
                     <h3 className="font-medium text-green-800 dark:text-green-400 mb-1">Your quote has been completed:</h3>
                     <ul className="list-disc list-inside text-sm space-y-1 text-green-700 dark:text-green-300">
                       <li>A detailed quote has been sent to your email</li>
                       <li>The quote is valid for 7 days</li>
                       <li>To proceed, follow the payment instructions in the email</li>
-                      <li>Once the 50% advance is received, production will begin</li>
+                      {quoteRequest.isReadyToShip ? (
+                        <>
+                          <li>100% payment is required before shipping this ready-to-ship item</li>
+                          <li>Your item will be shipped immediately upon payment receipt</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Once the 50% advance is received, production will begin</li>
+                          <li>Remaining 50% will be due before shipping in 3-4 weeks</li>
+                        </>
+                      )}
                       <li>Please contact us if you have any questions</li>
+                    </ul>
+                  </div>
+                )}
+                
+                {quoteRequest.status === "payment_received" && (
+                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
+                    <h3 className="font-medium text-green-800 dark:text-green-400 mb-1">Your payment has been received:</h3>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-green-700 dark:text-green-300">
+                      <li>Thank you for your payment!</li>
+                      {quoteRequest.isReadyToShip ? (
+                        <li>Your item will be shipped soon</li>
+                      ) : (
+                        <>
+                          <li>We have received your 50% advance payment</li>
+                          <li>Production of your jewelry will begin shortly</li>
+                        </>
+                      )}
+                      <li>We will keep you updated on the status of your order</li>
+                      <li>Please contact us if you have any questions</li>
+                    </ul>
+                  </div>
+                )}
+                
+                {quoteRequest.status === "in_production" && (
+                  <div className="bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-md p-4">
+                    <h3 className="font-medium text-indigo-800 dark:text-indigo-400 mb-1">Your jewelry is being prepared:</h3>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-indigo-700 dark:text-indigo-300">
+                      {quoteRequest.isReadyToShip ? (
+                        <>
+                          <li>Your jewelry is being prepared for shipping</li>
+                          <li>This process typically takes 1-3 days</li>
+                          <li>We will update you when your piece has been shipped</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Our artisans are now crafting your jewelry piece</li>
+                          <li>This process typically takes 3-4 weeks</li>
+                          <li>We will update you when your piece is ready for shipping</li>
+                          <li>The remaining 50% payment will be due before shipping</li>
+                        </>
+                      )}
+                      <li>Please contact us if you have any questions</li>
+                    </ul>
+                  </div>
+                )}
+                
+                {quoteRequest.status === "shipping" && (
+                  <div className="bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-md p-4">
+                    <h3 className="font-medium text-purple-800 dark:text-purple-400 mb-1">Your order has been shipped:</h3>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-purple-700 dark:text-purple-300">
+                      <li>Your jewelry has been shipped and is on its way to you</li>
+                      <li>You should receive it within the next few days</li>
+                      <li>Please contact us if you have any questions about delivery</li>
+                      <li>We hope you love your new jewelry piece!</li>
+                    </ul>
+                  </div>
+                )}
+                
+                {quoteRequest.status === "delivered" && (
+                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
+                    <h3 className="font-medium text-green-800 dark:text-green-400 mb-1">Your order has been delivered:</h3>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-green-700 dark:text-green-300">
+                      <li>Your jewelry has been delivered</li>
+                      <li>We hope you're delighted with your purchase</li>
+                      <li>Please let us know if you have any questions or concerns</li>
+                      <li>We would love to hear your feedback!</li>
+                    </ul>
+                  </div>
+                )}
+                
+                {quoteRequest.status === "completed" && (
+                  <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
+                    <h3 className="font-medium text-green-800 dark:text-green-400 mb-1">Your order is complete:</h3>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-green-700 dark:text-green-300">
+                      <li>Thank you for choosing Luster Legacy!</li>
+                      <li>Your order is now marked as complete</li>
+                      <li>We hope you enjoy your beautiful jewelry piece</li>
+                      <li>If you need any cleaning or maintenance tips, feel free to ask</li>
+                      <li>We would be honored if you would share photos of your jewelry with us</li>
                     </ul>
                   </div>
                 )}
