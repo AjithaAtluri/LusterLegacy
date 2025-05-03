@@ -404,6 +404,38 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
                   Approved
                 </Button>
                 <Button
+                  variant={customization.status === "payment_received" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("payment_received")}
+                  disabled={statusUpdateLoading || customization.status === "payment_received"}
+                >
+                  Payment Received
+                </Button>
+                <Button
+                  variant={customization.status === "in_production" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("in_production")}
+                  disabled={statusUpdateLoading || customization.status === "in_production"}
+                >
+                  In Production
+                </Button>
+                <Button
+                  variant={customization.status === "shipping" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("shipping")}
+                  disabled={statusUpdateLoading || customization.status === "shipping"}
+                >
+                  Shipping
+                </Button>
+                <Button
+                  variant={customization.status === "delivered" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("delivered")}
+                  disabled={statusUpdateLoading || customization.status === "delivered"}
+                >
+                  Delivered
+                </Button>
+                <Button
                   variant={customization.status === "completed" ? "default" : "outline"}
                   size="sm"
                   onClick={() => updateStatus("completed")}

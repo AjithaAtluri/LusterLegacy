@@ -365,6 +365,38 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                   Approved
                 </Button>
                 <Button
+                  variant={quote.status === "payment_received" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("payment_received")}
+                  disabled={statusUpdateLoading || quote.status === "payment_received"}
+                >
+                  Payment Received
+                </Button>
+                <Button
+                  variant={quote.status === "in_production" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("in_production")}
+                  disabled={statusUpdateLoading || quote.status === "in_production"}
+                >
+                  In Production
+                </Button>
+                <Button
+                  variant={quote.status === "shipping" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("shipping")}
+                  disabled={statusUpdateLoading || quote.status === "shipping"}
+                >
+                  Shipping
+                </Button>
+                <Button
+                  variant={quote.status === "delivered" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("delivered")}
+                  disabled={statusUpdateLoading || quote.status === "delivered"}
+                >
+                  Delivered
+                </Button>
+                <Button
                   variant={quote.status === "completed" ? "default" : "outline"}
                   size="sm"
                   onClick={() => updateStatus("completed")}
