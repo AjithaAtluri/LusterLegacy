@@ -296,16 +296,20 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
               
               <div className="font-medium">Original Metal:</div>
               <div className="col-span-2 flex items-center">
-                <span>{customization.originalMetalType}</span>
+                <span>{customization.originalMetalType || "Not specified"}</span>
                 <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
-                <span className="text-primary font-medium">{customization.requestedMetalType}</span>
+                <span className="text-primary font-medium">{customization.preferredMetal || customization.requestedMetalType || "Not specified"}</span>
               </div>
               
               <div className="font-medium">Original Stone:</div>
               <div className="col-span-2 flex items-center">
-                <span>{customization.originalStoneType}</span>
+                <span>{customization.originalStoneType || "Not specified"}</span>
                 <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
-                <span className="text-primary font-medium">{customization.requestedStoneType}</span>
+                <span className="text-primary font-medium">
+                  {customization.preferredStones?.length ? 
+                    customization.preferredStones.join(', ') : 
+                    (customization.requestedStoneType || "Not specified")}
+                </span>
               </div>
               
               {customization.quotedPrice && customization.currency && (

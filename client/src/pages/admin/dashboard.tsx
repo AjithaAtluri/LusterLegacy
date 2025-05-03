@@ -306,7 +306,8 @@ export default function AdminDashboard() {
                               {req.fullName} • {new Date(req.createdAt).toLocaleDateString()}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                              Metal: {req.requestedMetalType || "Unknown"} • Stone: {req.requestedStoneType || "Unknown"}
+                              Metal: {req.originalMetalType || req.preferredMetal || req.requestedMetalType || "Not specified"} • 
+                              Stone: {req.originalStoneType || req.preferredStones?.join(', ') || req.requestedStoneType || "Not specified"}
                             </div>
                           </div>
                         </div>
@@ -372,7 +373,7 @@ export default function AdminDashboard() {
                               {req.fullName} • {new Date(req.createdAt).toLocaleDateString()}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                              Metal: {req.metalType || "Unknown"} • Stone: {req.stoneType || "Unknown"}
+                              Metal: {req.metalType || "Not specified"} • Stone: {req.stoneType || "Not specified"}
                             </div>
                           </div>
                         </div>
