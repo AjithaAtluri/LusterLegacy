@@ -130,7 +130,7 @@ export default function QuotesPage() {
   }
   
   return (
-    <AdminLayout>
+    <AdminLayout title="Quote Requests">
       <div className="container mx-auto py-8">
         <Card>
           <CardHeader className="space-y-1">
@@ -216,17 +216,17 @@ export default function QuotesPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                           <div className="space-y-1">
                             <p className="text-sm font-medium">Product</p>
-                            <p className="text-sm">{request.productName || "Unknown Product"}</p>
+                            <p className="text-sm">{request.productName || "Not specified"}</p>
                           </div>
                           
                           <div className="space-y-1">
                             <p className="text-sm font-medium">Metal Type</p>
-                            <p className="text-sm">{request.metalType}</p>
+                            <p className="text-sm">{request.metalType || "Not specified"}</p>
                           </div>
                           
                           <div className="space-y-1">
                             <p className="text-sm font-medium">Stone Type</p>
-                            <p className="text-sm">{request.stoneType}</p>
+                            <p className="text-sm">{request.stoneType || "Not specified"}</p>
                           </div>
                         </div>
                         

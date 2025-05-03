@@ -148,7 +148,7 @@ function CustomizationRequestCard({ request }: CustomizationRequestCardProps) {
   // Format the date
   const formattedDate = request.createdAt 
     ? formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })
-    : "Unknown date";
+    : "Date not available";
   
   // Generate status badge
   const getStatusBadge = (status: string) => {
