@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, DollarSign, Clock, Package, Tag, MessageSquare } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, Clock, Package, Tag, MessageSquare, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +91,46 @@ export default function QuoteRequestDetailsPage() {
     }
   });
   
+  // Handle accepting the quote
+  const acceptQuoteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/quote-requests/${id}/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to accept quote');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate and refetch the quote request data
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-requests", id] });
+      
+      toast({
+        title: "Quote Accepted!",
+        description: "Our team will contact you with payment details shortly.",
+        duration: 5000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to accept quote",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleAcceptQuote = () => {
+    acceptQuoteMutation.mutate();
+  };
+
   // Handle sending a new message
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
@@ -291,19 +331,53 @@ export default function QuoteRequestDetailsPage() {
                 {/* Price Information */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Estimated Price:</span>
-                    {quoteRequest.estimatedPrice ? (
+                    <span className="font-medium">Original Price:</span>
+                    {product?.basePrice ? (
+                      <span className={quoteRequest.quotedPrice ? "text-muted-foreground line-through" : "font-semibold text-purple-500"}>
+                        {formatCurrency(product.basePrice)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Unavailable</span>
+                    )}
+                  </div>
+                  
+                  {quoteRequest.quotedPrice && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Quoted Price:</span>
+                      <span className="font-semibold text-green-600">
+                        {formatCurrency(quoteRequest.quotedPrice)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {!quoteRequest.quotedPrice && quoteRequest.estimatedPrice && (
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Estimated Price:</span>
                       <span className="font-semibold text-purple-500">
                         {formatCurrency(quoteRequest.estimatedPrice)}
                       </span>
-                    ) : (
-                      <span className="text-muted-foreground">Pending</span>
-                    )}
-                  </div>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between items-center">
                     <span className="font-medium">Shipping:</span>
                     <span className="font-semibold">Free</span>
                   </div>
+                  
+                  {quoteRequest.status === "quoted" && (
+                    <div className="mt-4 border-t pt-4">
+                      <Button 
+                        className="w-full bg-green-600 hover:bg-green-700"
+                        onClick={handleAcceptQuote}
+                      >
+                        <Check className="mr-2 h-4 w-4" />
+                        Accept Quote
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2 text-center">
+                        By accepting, you agree to the quoted price. Our team will contact you with payment details.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -427,7 +501,7 @@ export default function QuoteRequestDetailsPage() {
                     <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-5 ml-3"></div>
                     
                     <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${quoteRequest.status === "in_progress" || quoteRequest.status === "completed" ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${["in_progress", "quoted", "approved", "payment_received", "in_production", "shipping", "delivered", "completed"].includes(quoteRequest.status) ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
                         <span className="text-white text-xs">2</span>
                       </div>
                       <div className="flex-1">
@@ -441,13 +515,83 @@ export default function QuoteRequestDetailsPage() {
                     <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-5 ml-3"></div>
                     
                     <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${quoteRequest.status === "completed" ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${["quoted", "approved", "payment_received", "in_production", "shipping", "delivered", "completed"].includes(quoteRequest.status) ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
                         <span className="text-white text-xs">3</span>
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">Final Quote Sent</p>
                         <p className="text-sm text-muted-foreground">
-                          Your finalized quote with payment details has been sent.
+                          Your finalized quote with pricing details has been sent.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-5 ml-3"></div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${["approved", "payment_received", "in_production", "shipping", "delivered", "completed"].includes(quoteRequest.status) ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+                        <span className="text-white text-xs">4</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">Quote Acceptance</p>
+                        <p className="text-sm text-muted-foreground">
+                          Quote accepted. Payment instructions sent to you.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-5 ml-3"></div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${["payment_received", "in_production", "shipping", "delivered", "completed"].includes(quoteRequest.status) ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+                        <span className="text-white text-xs">5</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">Payment Received</p>
+                        <p className="text-sm text-muted-foreground">
+                          Your payment has been received. Production will begin soon.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-5 ml-3"></div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${["in_production", "shipping", "delivered", "completed"].includes(quoteRequest.status) ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+                        <span className="text-white text-xs">6</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">In Production</p>
+                        <p className="text-sm text-muted-foreground">
+                          Your jewelry piece is being crafted by our artisans.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-5 ml-3"></div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${["shipping", "delivered", "completed"].includes(quoteRequest.status) ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+                        <span className="text-white text-xs">7</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">Shipping</p>
+                        <p className="text-sm text-muted-foreground">
+                          Your order has been shipped and is on its way to you.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="border-l-2 border-dashed border-slate-300 dark:border-slate-700 h-5 ml-3"></div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${["delivered", "completed"].includes(quoteRequest.status) ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+                        <span className="text-white text-xs">8</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">Delivered</p>
+                        <p className="text-sm text-muted-foreground">
+                          Your order has been delivered. We hope you love your new jewelry!
                         </p>
                       </div>
                     </div>
