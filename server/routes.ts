@@ -498,6 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ...request,
               productName: product ? product.name : "Unknown Product",
               productImageUrl: product ? product.imageUrl : null,
+              product: product || null, // Include full product data
               customizationType: request.requestedMetalType !== request.originalMetalType && 
                                request.requestedStoneType !== request.originalStoneType
                 ? "metal_and_stone"
@@ -556,6 +557,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedRequest = {
         ...customizationRequest,
         productName: product ? product.name : "Unknown Product",
+        productImageUrl: product ? product.imageUrl : null,
+        product: product || null, // Include full product data
         customizationType: customizationRequest.requestedMetalType !== customizationRequest.originalMetalType && 
                          customizationRequest.requestedStoneType !== customizationRequest.originalStoneType
           ? "metal_and_stone"
@@ -762,6 +765,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ...request,
               productName: product ? product.name : "Unknown Product",
               productImageUrl: product ? product.imageUrl : null,
+              product: product || null, // Include full product data
               quantity: 1, // Default quantity
               specialRequirements: request.additionalNotes,
               preferredCurrency: "USD", // Default currency
@@ -816,6 +820,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enrichedRequest = {
         ...quoteRequest,
         productName: product ? product.name : "Unknown Product",
+        productImageUrl: product ? product.imageUrl : null,
+        product: product || null, // Include full product data
         quantity: 1, // Default quantity
         specialRequirements: quoteRequest.additionalNotes,
         preferredCurrency: "USD", // Default currency

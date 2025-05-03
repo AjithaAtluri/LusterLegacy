@@ -286,10 +286,10 @@ export default function CustomerDashboard() {
                             {request.productId && (
                               <div className="flex items-start mb-4">
                                 <div className="w-16 h-16 bg-background rounded-md border overflow-hidden flex-shrink-0 mr-4">
-                                  {request.product?.imageUrl ? (
+                                  {request.productImageUrl ? (
                                     <img 
-                                      src={request.product.imageUrl} 
-                                      alt={request.product.name} 
+                                      src={request.productImageUrl} 
+                                      alt={request.productName || 'Custom Piece'} 
                                       className="w-full h-full object-cover"
                                     />
                                   ) : (
@@ -300,13 +300,13 @@ export default function CustomerDashboard() {
                                 </div>
                                 <div>
                                   <h3 className="font-medium mb-1">
-                                    {request.product?.name || 'Custom Piece'}
+                                    {request.productName || 'Custom Piece'}
                                   </h3>
                                   <p className="text-sm text-foreground/70 mb-2">
-                                    {request.specifications?.metalType} • {request.specifications?.stoneType}
+                                    {request.preferredMetal || request.originalMetalType} • {request.preferredStones?.[0] || request.originalStoneType || 'Not specified'}
                                   </p>
                                   <div className="text-sm">
-                                    <p className="line-clamp-2 text-foreground/70">{request.message}</p>
+                                    <p className="line-clamp-2 text-foreground/70">{request.additionalNotes || request.customizationDetails || "No additional notes provided"}</p>
                                   </div>
                                 </div>
                               </div>
