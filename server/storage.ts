@@ -1869,6 +1869,53 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+  
+  async getCustomizationRequest(id: number): Promise<any> {
+    try {
+      const [request] = await db
+        .select()
+        .from(customizationRequests)
+        .where(eq(customizationRequests.id, id));
+      return request;
+    } catch (error) {
+      console.error(`Error getting customization request ${id}:`, error);
+      return null;
+    }
+  }
+  
+  async getCustomizationRequestComments(requestId: number): Promise<any[]> {
+    try {
+      const comments = await db
+        .select()
+        .from(customizationRequestComments)
+        .where(eq(customizationRequestComments.customizationRequestId, requestId))
+        .orderBy(asc(customizationRequestComments.createdAt));
+      return comments;
+    } catch (error) {
+      console.error(`Error getting comments for customization request ${requestId}:`, error);
+      return [];
+    }
+  }
+  
+  async addCustomizationRequestComment(comment: any): Promise<any> {
+    try {
+      const [newComment] = await db
+        .insert(customizationRequestComments)
+        .values({
+          customizationRequestId: comment.customizationRequestId,
+          content: comment.content,
+          createdBy: comment.createdBy || 'Anonymous',
+          userId: comment.userId || null,
+          imageUrl: comment.imageUrl || null,
+          isAdmin: comment.isAdmin || false
+        })
+        .returning();
+      return newComment;
+    } catch (error) {
+      console.error("Error adding customization request comment:", error);
+      throw error;
+    }
+  }
 
   async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
     try {
