@@ -20,9 +20,14 @@ import {
 import { formatCurrency } from "@/lib/utils";
 
 export default function AdminDashboard() {
-  // Fetch orders
-  const { data: orders, isLoading: isLoadingOrders } = useQuery({
-    queryKey: ['/api/admin/orders']
+  // Fetch quote requests
+  const { data: quoteRequests, isLoading: isLoadingQuotes } = useQuery({
+    queryKey: ['/api/quote-requests']
+  });
+  
+  // Fetch customization requests
+  const { data: customizationRequests, isLoading: isLoadingCustomizations } = useQuery({
+    queryKey: ['/api/customization-requests']
   });
   
   // Fetch designs
@@ -37,20 +42,11 @@ export default function AdminDashboard() {
   
   // Calculate request statistics
   const calculateRequestStats = () => {
-    if (!orders) return {
-      pendingCustomizationRequests: 0,
-      pendingQuoteRequests: 0,
-    };
-    
-    // In our jewelry business model, we focus on pending requests that need attention
-    const pendingCustomizationRequests = Array.isArray(orders) ? orders.filter((order: any) => 
-      order.orderType === "customization" && order.orderStatus === "pending").length : 0;
-    const pendingQuoteRequests = Array.isArray(orders) ? orders.filter((order: any) => 
-      order.orderType === "quote" && order.orderStatus === "pending").length : 0;
-    
     return {
-      pendingCustomizationRequests,
-      pendingQuoteRequests,
+      pendingCustomizationRequests: Array.isArray(customizationRequests) ? 
+        customizationRequests.filter((req: any) => req.status === "pending").length : 0,
+      pendingQuoteRequests: Array.isArray(quoteRequests) ? 
+        quoteRequests.filter((req: any) => req.status === "pending").length : 0,
     };
   };
   
@@ -92,7 +88,7 @@ export default function AdminDashboard() {
   });
   
   // Loading state
-  const isLoading = isLoadingOrders || isLoadingDesigns || isLoadingProducts;
+  const isLoading = isLoadingQuotes || isLoadingCustomizations || isLoadingDesigns || isLoadingProducts;
   
   if (isLoading) {
     return (
