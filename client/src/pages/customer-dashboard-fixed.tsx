@@ -246,11 +246,18 @@ export default function CustomerDashboard() {
                               </CardTitle>
                               <div className="flex items-center gap-2">
                                 {/* Two types of requests: product customization vs custom design form */}
-                                {request.productId ? (
+                                {request.requestType === 'customization' ? (
                                   <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/products/${request.productId}`}>
+                                    <Link href={`/customization-requests/${request.id}`}>
                                       <ExternalLink className="h-3 w-3 mr-1" />
-                                      View Product
+                                      View Details
+                                    </Link>
+                                  </Button>
+                                ) : request.requestType === 'quote' ? (
+                                  <Button variant="outline" size="sm" asChild>
+                                    <Link href={`/quote-requests/${request.id}`}>
+                                      <ExternalLink className="h-3 w-3 mr-1" />
+                                      View Details
                                     </Link>
                                   </Button>
                                 ) : (
