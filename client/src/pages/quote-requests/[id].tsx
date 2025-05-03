@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
-import ProductSpecifications from "@/components/products/product-specifications";
+import { ProductSpecifications } from "@/components/products/product-specifications";
 
 export default function QuoteRequestDetailsPage() {
   const { id } = useParams();
