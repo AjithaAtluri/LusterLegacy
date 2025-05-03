@@ -88,6 +88,7 @@ function App() {
                 <ProtectedRoute path="/finalize-order/:id" component={FinalizeOrder} />
                 <ProtectedRoute path="/customize-request/:id" component={CustomizeRequest} />
                 <ProtectedRoute path="/custom-designs/:id" component={lazy(() => import("@/pages/custom-designs/[id]"))} />
+                <ProtectedRoute path="/customization-requests/:id" component={lazy(() => import("@/pages/customization-requests/[id]"))} />
                 <ProtectedRoute path="/payment/design-consultation/:id" component={lazy(() => import("@/pages/payment/design-consultation/[id]"))} />
                 <Route path="/auth" component={AuthPage} />
                 
