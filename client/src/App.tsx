@@ -67,7 +67,7 @@ const PageLoader = () => (
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark">
+    <ThemeProvider defaultTheme="light">
       <AuthProvider>
         <div className="flex flex-col min-h-screen">
           <Header />
