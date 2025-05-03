@@ -14,7 +14,15 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { ArrowLeft, Send, LogIn, Calculator, DollarSign } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { ArrowLeft, Send, LogIn, Calculator, DollarSign, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, calculatePrice } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -52,6 +60,9 @@ export default function CustomizeRequest() {
   // State to track which stone types exist in the original product
   const [hasSecondaryStone, setHasSecondaryStone] = useState<boolean>(false);
   const [hasOtherStone, setHasOtherStone] = useState<boolean>(false);
+  
+  // State to track successful submission
+  const [isSubmitSuccessful, setIsSubmitSuccessful] = useState<boolean>(false);
   
   // Fetch product data to display in the form
   const { data: product, isLoading, error } = useQuery({
@@ -98,9 +109,13 @@ export default function CustomizeRequest() {
         description: "We've received your request and will contact you soon.",
         variant: "default",
       });
-      // Navigate back to product detail page after successful submission
+      
+      // Show a dialog confirming successful submission
+      setIsSubmitSuccessful(true);
+      
+      // Navigate to customer dashboard after successful submission
       setTimeout(() => {
-        setLocation(`/product-detail/${id}`);
+        setLocation('/customer-dashboard');
       }, 2000);
     },
     onError: (error) => {
