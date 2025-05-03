@@ -29,7 +29,17 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    () => {
+      // Try to get from localStorage first
+      const savedTheme = localStorage.getItem(storageKey) as Theme;
+      // If found in localStorage, use it
+      if (savedTheme) {
+        return savedTheme;
+      }
+      // Otherwise use the default and save it to localStorage
+      localStorage.setItem(storageKey, defaultTheme);
+      return defaultTheme;
+    }
   )
 
   useEffect(() => {
@@ -38,12 +48,8 @@ export function ThemeProvider({
     root.classList.remove("light", "dark")
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
-      root.classList.add(systemTheme)
+      // Force dark theme even for system preference
+      root.classList.add("dark")
       return
     }
 
