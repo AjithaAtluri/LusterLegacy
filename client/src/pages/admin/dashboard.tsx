@@ -310,7 +310,7 @@ export default function AdminDashboard() {
                               Stone: {req.originalStoneType || req.preferredStones?.join(', ') || req.requestedStoneType || "Not specified"}
                             </div>
                             <div className="text-xs mt-1">
-                              <span className="text-primary-500 font-medium">Product:</span> {req.productName || "Not specified"}
+                              <span className="text-primary font-medium">Product:</span> {req.productName || "Not specified"}
                             </div>
                           </div>
                         </div>
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
                               Metal: {req.metalType || "Not specified"} • Stone: {req.stoneType || "Not specified"}
                             </div>
                             <div className="text-xs mt-1">
-                              <span className="text-primary-500 font-medium">Product:</span> {req.productName || "Not specified"}
+                              <span className="text-primary font-medium">Product:</span> {req.productName || "Not specified"}
                             </div>
                           </div>
                         </div>
