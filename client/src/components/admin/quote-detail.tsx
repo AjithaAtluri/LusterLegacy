@@ -149,17 +149,25 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
     setPriceUpdateLoading(true);
     try {
       const price = parseFloat(quotedPrice);
+      
+      // When setting a price, automatically update status to "quoted" if it's not already in a later stage
+      const latestStages = ["approved", "payment_received", "in_production", "shipping", "delivered", "completed"];
+      const shouldUpdateStatus = !latestStages.includes(quote.status);
+      
       const response = await apiRequest("PATCH", `/api/quote-requests/${quote.id}`, {
         quotedPrice: price,
-        isReadyToShip: isReadyToShip
+        isReadyToShip: isReadyToShip,
+        ...(shouldUpdateStatus && { status: "quoted" })
       });
 
       if (!response.ok) throw new Error("Failed to update price");
 
       const readyStatusMsg = isReadyToShip ? " (Ready to Ship)" : "";
+      const statusMsg = shouldUpdateStatus ? " and status changed to QUOTED" : "";
+      
       toast({
         title: "Quote updated",
-        description: `Quoted price has been updated to ${formatCurrency(price, quote.currency || "USD")}${readyStatusMsg}`,
+        description: `Quoted price has been updated to ${formatCurrency(price, quote.currency || "USD")}${readyStatusMsg}${statusMsg}`,
       });
 
       // Refresh quote requests data
