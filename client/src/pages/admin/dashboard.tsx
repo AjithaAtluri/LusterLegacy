@@ -309,13 +309,25 @@ export default function AdminDashboard() {
                               Metal: {req.originalMetalType || req.preferredMetal || req.requestedMetalType || "Not specified"} • 
                               Stone: {req.originalStoneType || req.preferredStones?.join(', ') || req.requestedStoneType || "Not specified"}
                             </div>
+                            <div className="text-xs mt-1">
+                              <span className="text-primary-500 font-medium">Product:</span> {req.productName || "Not specified"}
+                            </div>
                           </div>
                         </div>
-                        <Button asChild variant="ghost" size="sm">
-                          <Link href={`/admin/customizations/${req.id}`}>
-                            <ExternalLink className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                        <div className="flex flex-col gap-1">
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/admin/customizations/${req.id}`}>
+                              <ExternalLink className="h-4 w-4 mr-1" /> View Request
+                            </Link>
+                          </Button>
+                          {req.productId && (
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={`/products/${req.productId}`}>
+                                <Package className="h-4 w-4 mr-1" /> Product Details
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -375,13 +387,25 @@ export default function AdminDashboard() {
                             <div className="text-xs text-muted-foreground mt-1">
                               Metal: {req.metalType || "Not specified"} • Stone: {req.stoneType || "Not specified"}
                             </div>
+                            <div className="text-xs mt-1">
+                              <span className="text-primary-500 font-medium">Product:</span> {req.productName || "Not specified"}
+                            </div>
                           </div>
                         </div>
-                        <Button asChild variant="ghost" size="sm">
-                          <Link href={`/admin/quotes/${req.id}`}>
-                            <ExternalLink className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                        <div className="flex flex-col gap-1">
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/admin/quotes/${req.id}`}>
+                              <ExternalLink className="h-4 w-4 mr-1" /> View Request
+                            </Link>
+                          </Button>
+                          {req.productId && (
+                            <Button asChild variant="outline" size="sm">
+                              <Link href={`/products/${req.productId}`}>
+                                <Package className="h-4 w-4 mr-1" /> Product Details
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
