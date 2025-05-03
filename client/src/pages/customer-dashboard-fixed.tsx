@@ -34,7 +34,7 @@ export default function CustomerDashboard() {
   // Fetch all types of requests
   // 1. Customization requests (for existing products)
   const { data: customizationRequests, isLoading: isLoadingRequests } = useQuery({
-    queryKey: ['/api/customization-requests'],
+    queryKey: ['/api/customization-requests/user'],
     enabled: !!user
   });
   
@@ -46,7 +46,7 @@ export default function CustomerDashboard() {
   
   // 3. Quote requests for existing products
   const { data: quoteRequests, isLoading: isLoadingQuoteRequests } = useQuery({
-    queryKey: ['/api/quote-requests'],
+    queryKey: ['/api/quote-requests/user'],
     enabled: !!user
   });
   

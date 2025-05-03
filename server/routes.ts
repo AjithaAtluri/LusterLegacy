@@ -743,6 +743,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get user quote requests
+  app.get("/api/quote-requests/user", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Get user-specific quote requests
+      const quoteRequests = await storage.getQuoteRequestsByUserId(req.user.id);
+      
+      // For each request, get product name
+      const enrichedRequests = await Promise.all(
+        quoteRequests.map(async (request) => {
+          try {
+            const product = await storage.getProduct(request.productId);
+            return {
+              ...request,
+              productName: product ? product.name : "Unknown Product",
+              productImageUrl: product ? product.imageUrl : null,
+              quantity: 1, // Default quantity
+              specialRequirements: request.additionalNotes,
+              preferredCurrency: "USD", // Default currency
+              quotedPrice: request.estimatedPrice,
+              imageUrl: product ? product.imageUrl : null,
+              currency: "USD", // Default currency
+              shippingAddress: null // Default
+            };
+          } catch (error) {
+            console.error(`Error enriching quote request ${request.id}:`, error);
+            return request;
+          }
+        })
+      );
+      
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Error fetching user quote requests:", error);
+      res.status(500).json({ message: "Failed to fetch user quote requests" });
+    }
+  });
+  
   // Get a specific quote request
   app.get("/api/quote-requests/:id", async (req: Request, res: Response) => {
     try {
