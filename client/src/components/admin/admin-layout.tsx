@@ -20,7 +20,8 @@ import {
   Paintbrush,
   Receipt,
   Wand2,
-  PlusCircle
+  PlusCircle,
+  MessageSquare
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -292,6 +293,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Quote Requests",
       icon: <Receipt className="h-5 w-5" />,
       href: "/admin/quotes"
+    },
+    {
+      title: "Contact Messages",
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: "/admin/contact-messages"
     }
   ];
   
