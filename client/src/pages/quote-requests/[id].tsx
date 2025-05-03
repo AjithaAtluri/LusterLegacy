@@ -258,6 +258,25 @@ export default function QuoteRequestDetailsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
+                  {/* Customer Information */}
+                  <div className="border border-muted rounded-md p-3 bg-muted/5 mb-4">
+                    <h4 className="text-sm font-medium mb-2">Customer Contact</h4>
+                    <div className="grid gap-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Name:</span>
+                        <span>{quoteRequest.fullName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Email:</span>
+                        <span>{quoteRequest.email}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Phone:</span>
+                        <span>{quoteRequest.phone}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-[20px_1fr] gap-2 items-start">
                     <Calendar className="h-5 w-5 text-primary mt-0.5" />
                     <div>
@@ -287,11 +306,7 @@ export default function QuoteRequestDetailsPage() {
                     <div>
                       <p className="font-medium">Shipping To</p>
                       <p className="text-sm text-muted-foreground">
-                        {quoteRequest.address && (
-                          <>
-                            {quoteRequest.address}, {quoteRequest.city}, {quoteRequest.state} {quoteRequest.postalCode}, {quoteRequest.country}
-                          </>
-                        )}
+                        {quoteRequest.country || "Not specified"}
                       </p>
                     </div>
                   </div>
