@@ -32,6 +32,7 @@ interface QuoteDetailProps {
     quotedPrice: number | null;
     currency: string | null;
     imageUrl: string | null;
+    isReadyToShip?: boolean;
     createdAt: string;
     comments?: Array<{
       id: number;
@@ -52,6 +53,7 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [priceUpdateLoading, setPriceUpdateLoading] = useState(false);
   const [quotedPrice, setQuotedPrice] = useState(quote.quotedPrice?.toString() || "");
+  const [isReadyToShip, setIsReadyToShip] = useState(quote.isReadyToShip || false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -149,13 +151,15 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
       const price = parseFloat(quotedPrice);
       const response = await apiRequest("PATCH", `/api/quote-requests/${quote.id}`, {
         quotedPrice: price,
+        isReadyToShip: isReadyToShip
       });
 
       if (!response.ok) throw new Error("Failed to update price");
 
+      const readyStatusMsg = isReadyToShip ? " (Ready to Ship)" : "";
       toast({
-        title: "Price updated",
-        description: `Quoted price has been updated to ${formatCurrency(price, quote.currency || "USD")}`,
+        title: "Quote updated",
+        description: `Quoted price has been updated to ${formatCurrency(price, quote.currency || "USD")}${readyStatusMsg}`,
       });
 
       // Refresh quote requests data
@@ -164,7 +168,7 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update price. Please try again.",
+        description: "Failed to update quote. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -285,6 +289,9 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                   <div className="font-medium">Quoted Price:</div>
                   <div className="col-span-2 font-bold">
                     {formatCurrency(quote.quotedPrice, quote.currency)}
+                    {quote.isReadyToShip && (
+                      <Badge className="ml-2 bg-green-600">Ready to Ship</Badge>
+                    )}
                   </div>
                 </>
               )}
@@ -421,7 +428,7 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
               )}
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Label htmlFor="price">Update Quoted Price</Label>
               <div className="flex gap-2">
                 <Input
@@ -443,12 +450,43 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Updating
                     </>
-                  ) : "Update Price"}
+                  ) : "Update Quote"}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Currency: {quote.currency || "USD"}
-              </p>
+              
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="ready-to-ship"
+                    checked={isReadyToShip}
+                    onChange={(e) => setIsReadyToShip(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="ready-to-ship" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    Ready to Ship
+                  </Label>
+                </div>
+                
+                {isReadyToShip && (
+                  <Badge className="bg-green-600">100% Payment Required</Badge>
+                )}
+                
+                {!isReadyToShip && quotedPrice && (
+                  <Badge className="bg-blue-600">50% Advance Payment</Badge>
+                )}
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Currency: {quote.currency || "USD"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {isReadyToShip 
+                    ? "This product is in stock and ready for immediate shipment. Customer will be required to pay 100% of the quoted price upfront."
+                    : "This product will need to be custom made. Customer will pay 50% advance and 50% before shipping (3-4 weeks)."}
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
