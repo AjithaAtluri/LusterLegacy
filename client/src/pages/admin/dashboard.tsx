@@ -132,10 +132,15 @@ export default function AdminDashboard() {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{designStats.totalDesigns || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-orange-500">{designStats.pendingDesigns || 0}</span> need attention
-              </p>
+              <Link 
+                href="/admin/designs" 
+                className="block hover:opacity-75 transition-opacity cursor-pointer"
+              >
+                <div className="text-2xl font-bold">{designStats.totalDesigns || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-orange-500">{designStats.pendingDesigns || 0}</span> need attention
+                </p>
+              </Link>
             </CardContent>
           </Card>
           
@@ -145,11 +150,16 @@ export default function AdminDashboard() {
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{requestStats.pendingQuoteRequests || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="inline mr-1 h-3 w-3 text-blue-500" />
-                <span className="text-blue-500">Pending quotes</span>
-              </p>
+              <Link 
+                href="/admin/quotes" 
+                className="block hover:opacity-75 transition-opacity cursor-pointer"
+              >
+                <div className="text-2xl font-bold">{requestStats.pendingQuoteRequests || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  <TrendingUp className="inline mr-1 h-3 w-3 text-blue-500" />
+                  <span className="text-blue-500">Pending quotes</span>
+                </p>
+              </Link>
             </CardContent>
           </Card>
           
@@ -159,10 +169,15 @@ export default function AdminDashboard() {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{requestStats.pendingCustomizationRequests || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-orange-500">Need response</span>
-              </p>
+              <Link 
+                href="/admin/customizations" 
+                className="block hover:opacity-75 transition-opacity cursor-pointer"
+              >
+                <div className="text-2xl font-bold">{requestStats.pendingCustomizationRequests || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-orange-500">Need response</span>
+                </p>
+              </Link>
             </CardContent>
           </Card>
           
@@ -172,12 +187,17 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{Array.isArray(products) ? products.length : 0}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-primary">
-                  {Array.isArray(products) ? products.filter((p: any) => p.isFeatured).length : 0}
-                </span> featured
-              </p>
+              <Link 
+                href="/admin/products" 
+                className="block hover:opacity-75 transition-opacity cursor-pointer"
+              >
+                <div className="text-2xl font-bold">{Array.isArray(products) ? products.length : 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-primary">
+                    {Array.isArray(products) ? products.filter((p: any) => p.isFeatured).length : 0}
+                  </span> featured
+                </p>
+              </Link>
             </CardContent>
           </Card>
         </div>
