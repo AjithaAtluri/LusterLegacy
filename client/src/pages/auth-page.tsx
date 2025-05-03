@@ -239,7 +239,7 @@ export default function AuthPage() {
         
         // For admin users, use direct navigation since wouter Redirect sometimes fails
         setTimeout(() => {
-          window.location.href = window.location.origin + "/admin/direct-dashboard";
+          window.location.href = window.location.origin + "/admin/dashboard";
         }, 100);
       } else {
         // Otherwise go to return path or home

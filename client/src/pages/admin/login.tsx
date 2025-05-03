@@ -29,7 +29,7 @@ export default function AdminLogin() {
   useEffect(() => {
     if (user && user.role === "admin") {
       console.log("Admin already authenticated, redirecting to dashboard");
-      window.location.href = window.location.origin + "/admin/direct-dashboard";
+      window.location.href = window.location.origin + "/admin/dashboard";
     }
   }, [user]);
   
@@ -62,10 +62,10 @@ export default function AdminLogin() {
           description: "Welcome to Luster Legacy admin dashboard",
         });
         
-        // Navigate to the direct admin dashboard
+        // Navigate to the admin dashboard
         console.log("Admin login successful, redirecting to dashboard");
-        // Use the direct dashboard route for better compatibility
-        window.location.href = window.location.origin + "/admin/direct-dashboard";
+        // Use the dashboard route for better compatibility
+        window.location.href = window.location.origin + "/admin/dashboard";
       },
       onError: (error) => {
         console.error("Login error:", error);
