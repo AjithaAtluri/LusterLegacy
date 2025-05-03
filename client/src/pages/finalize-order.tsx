@@ -230,7 +230,7 @@ export default function FinalizeOrder() {
   return (
     <>
       <Helmet>
-        <title>Finalize Order for {product.name} | Luster Legacy</title>
+        <title>Request Final Quote for {product.name} | Luster Legacy</title>
       </Helmet>
       
       <div className="container mx-auto px-4 py-8">
@@ -239,9 +239,9 @@ export default function FinalizeOrder() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Product
           </Button>
-          <h1 className="font-playfair text-3xl font-bold mb-2">Finalize Order</h1>
+          <h1 className="font-playfair text-3xl font-bold mb-2">Request Final Quote</h1>
           <p className="text-foreground/70 mb-3">
-            You've selected this exact piece without customization. Complete your information below to receive a final quote and payment details.
+            You've selected this exact piece without customization. Complete your information below to receive a final quote.
           </p>
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
             <h3 className="font-playfair text-lg font-medium mb-1 flex items-center">
@@ -251,21 +251,21 @@ export default function FinalizeOrder() {
               About This Process
             </h3>
             <ol className="list-decimal list-inside space-y-1 text-sm pl-2">
-              <li>This form is for purchasing <span className="font-medium">{product.name}</span> exactly as shown, with no customizations</li>
+              <li>This form is for requesting a final quote for <span className="font-medium">{product.name}</span> exactly as shown</li>
               <li>After submitting, our team will verify pricing based on current metal rates and materials</li>
-              <li>You'll receive the final quote and payment instructions within 24 hours</li>
+              <li>You'll receive the final quote within 24 hours</li>
               <li>Once you approve the quote, you'll pay 50% advance to begin production</li>
             </ol>
           </div>
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 mb-6">
-            <h3 className="font-playfair text-lg font-semibold mb-2">Important Order Information</h3>
+            <h3 className="font-playfair text-lg font-semibold mb-2">Important Quote Information</h3>
             <ul className="list-disc list-inside space-y-1 text-sm">
               <li>Each piece is custom-made; exact weights and colors may vary slightly based on stone sizes</li>
               <li>Gold price will be locked on the day your 50% advance payment is received</li>
-              <li>Payment details will be sent to you after your order request is processed</li>
-              <li>Your order will be crafted over 3-4 weeks after advance payment</li>
+              <li>Your quote will be valid for 7 days after we send it</li>
+              <li>Production time is typically 3-4 weeks after advance payment</li>
               <li>Final shipping occurs after the remaining 50% payment is completed</li>
-              <li>Note: Selecting PayPal or Bank Transfer here only indicates your preferred payment method</li>
+              <li>Note: Selecting PayPal or Bank Transfer only indicates your preferred payment method for future reference</li>
             </ul>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function FinalizeOrder() {
           <div className="md:col-span-1 space-y-6">
             <Card className="h-fit">
               <CardContent className="p-6">
-                <h2 className="font-playfair text-xl font-semibold mb-4">Order Summary</h2>
+                <h2 className="font-playfair text-xl font-semibold mb-4">Quote Request Summary</h2>
                 <div className="mb-4 rounded-md overflow-hidden">
                   <ReliableProductImage
                     productId={product.id}
@@ -344,7 +344,7 @@ export default function FinalizeOrder() {
             <Card>
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit}>
-                  <h2 className="font-playfair text-xl font-semibold mb-6">Shipping Information</h2>
+                  <h2 className="font-playfair text-xl font-semibold mb-6">Contact Information</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name*</Label>
@@ -463,7 +463,7 @@ export default function FinalizeOrder() {
                   <div className="mb-6 border border-slate-200 dark:border-slate-800 rounded-md p-6">
                     <h2 className="font-playfair text-xl font-semibold mb-4">Payment Preferences</h2>
                     <p className="text-sm text-foreground/70 mb-4">
-                      Please indicate your preferred currency and payment method. Our team will send detailed payment instructions after reviewing your order.
+                      Please indicate your preferred currency and payment method. These will be used when preparing your final quote.
                     </p>
                     
                     {/* Currency selection - moved from sidebar */}
@@ -512,14 +512,14 @@ export default function FinalizeOrder() {
                     
                     <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-3 mt-4">
                       <p className="text-sm text-foreground/80">
-                        <strong>Important:</strong> Selecting a payment method here only indicates your preference. No payment is processed at this stage. We will send detailed payment instructions after confirming your order.
+                        <strong>Important:</strong> Selecting a payment method here only indicates your preference. No payment is processed at this stage. We will send detailed payment instructions with your final quote.
                       </p>
                     </div>
                   </div>
                   
                   <div className="space-y-6 mt-6">
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4">
-                      <h3 className="font-playfair text-base font-semibold mb-2">Custom Creation Process</h3>
+                      <h3 className="font-playfair text-base font-semibold mb-2">Final Quote & Creation Process</h3>
                       <ul className="list-disc list-inside space-y-1 text-sm">
                         <li>Each piece is custom-made with weights and colors that may vary based on stone sizes</li>
                         <li>50% advance payment locks the gold price on the day payment is received</li>
