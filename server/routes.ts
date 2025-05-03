@@ -23,7 +23,9 @@ import {
   insertCustomizationRequestSchema,
   insertCustomizationRequestCommentSchema,
   insertQuoteRequestSchema,
-  insertQuoteRequestCommentSchema
+  insertQuoteRequestCommentSchema,
+  eq,
+  inArray
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
