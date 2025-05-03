@@ -83,7 +83,7 @@ export function ProductSpecifications({
       {currentPrice > 0 && (
         <div className="flex justify-between items-center">
           <span className="font-montserrat text-sm font-semibold text-foreground/80">Estimated Price:</span>
-          <span className="font-cormorant text-lg font-semibold text-accent">{formatCurrency(currentPrice)}</span>
+          <span className="font-cormorant text-lg font-semibold text-primary">{formatCurrency(currentPrice)}</span>
         </div>
       )}
     </div>
