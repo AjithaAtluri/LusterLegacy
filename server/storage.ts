@@ -1813,64 +1813,33 @@ export class DatabaseStorage implements IStorage {
   // Customization request methods
   async createCustomizationRequest(request: any): Promise<any> {
     try {
-      // Update the primary stones array with the selected stones
-      const primaryStones = [];
-      if (request.primaryStoneId && request.primaryStoneId !== "none_selected") {
-        primaryStones.push(request.primaryStoneId);
-      }
-      if (request.secondaryStoneId && request.secondaryStoneId !== "none_selected") {
-        primaryStones.push(request.secondaryStoneId);
-      }
-      if (request.otherStoneId && request.otherStoneId !== "none_selected") {
-        primaryStones.push(request.otherStoneId);
-      }
+      console.log("Creating customization request with data:", request);
       
-      // Store selected metal and stone types in a JSON details object
-      const details = {
-        metalTypeId: request.metalTypeId || null,
-        primaryStoneId: request.primaryStoneId || null,
-        secondaryStoneId: request.secondaryStoneId || null,
-        otherStoneId: request.otherStoneId || null,
-        requestType: "customization",
-        productId: request.productId || null,
-        preferredBudget: request.preferredBudget || "",
-        timeline: request.timeline || ""
-      };
-      
+      // Use the correct table for customization requests
       const [newRequest] = await db
-        .insert(designRequests)
+        .insert(customizationRequests)
         .values({
           userId: request.userId || null,
-          fullName: request.name,
+          fullName: request.fullName, // Match the schema field name
           email: request.email,
           phone: request.phone || null,
           country: request.country || null,
-          metalType: request.metalTypeId || "Not specified",
-          primaryStone: request.primaryStoneId || "Not specified",
-          primaryStones: primaryStones,
-          notes: request.customizationDetails,
-          imageUrl: request.imageUrl || "/uploads/placeholder.jpg",
-          details: JSON.stringify(details),
+          productId: request.productId,
+          originalMetalType: request.originalMetalType || "Unknown",
+          requestedMetalType: request.requestedMetalType || "Unknown",
+          originalStoneType: request.originalStoneType || "Unknown",
+          requestedStoneType: request.requestedStoneType || "Unknown",
+          additionalNotes: request.additionalNotes || null,
+          status: "pending", // Default status
+          imageUrls: request.imageUrls || [],
         })
         .returning();
+      
+      console.log("Successfully created customization request:", newRequest);
       return newRequest;
     } catch (error) {
       console.error("Error creating customization request:", error);
       throw error;
-    }
-  }
-
-  async getCustomizationRequestsByUserId(userId: number): Promise<any[]> {
-    try {
-      const requests = await db
-        .select()
-        .from(designRequests)
-        .where(eq(designRequests.userId, userId))
-        .orderBy(desc(designRequests.createdAt));
-      return requests;
-    } catch (error) {
-      console.error("Error getting customization requests by user ID:", error);
-      return [];
     }
   }
 
@@ -1904,9 +1873,9 @@ export class DatabaseStorage implements IStorage {
   async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
     try {
       const [updatedRequest] = await db
-        .update(designRequests)
+        .update(customizationRequests)
         .set({ status })
-        .where(eq(designRequests.id, id))
+        .where(eq(customizationRequests.id, id))
         .returning();
       return updatedRequest;
     } catch (error) {
