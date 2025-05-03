@@ -1886,6 +1886,20 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+  
+  async getCustomizationRequestsByUserId(userId: number): Promise<any[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(customizationRequests)
+        .where(eq(customizationRequests.userId, userId))
+        .orderBy(desc(customizationRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error(`Error getting customization requests for user ${userId}:`, error);
+      return [];
+    }
+  }
 
   async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
     try {

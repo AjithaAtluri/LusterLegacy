@@ -436,6 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get all customization requests (admin only)
+  // Get all customization requests (admin only)
   app.get("/api/customization-requests", async (req: Request, res: Response) => {
     try {
       // Check if admin - use validateAdmin as a function that returns a boolean
@@ -475,6 +476,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching customization requests:", error);
       res.status(500).json({ message: "Failed to fetch customization requests" });
+    }
+  });
+  
+  // Get user customization requests
+  app.get("/api/customization-requests/user", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Get user-specific customization requests
+      const customizationRequests = await storage.getCustomizationRequestsByUserId(req.user.id);
+      
+      // For each request, get product name
+      const enrichedRequests = await Promise.all(
+        customizationRequests.map(async (request) => {
+          try {
+            const product = await storage.getProduct(request.productId);
+            return {
+              ...request,
+              productName: product ? product.name : "Unknown Product",
+              productImageUrl: product ? product.imageUrl : null,
+              customizationType: request.requestedMetalType !== request.originalMetalType && 
+                               request.requestedStoneType !== request.originalStoneType
+                ? "metal_and_stone"
+                : request.requestedMetalType !== request.originalMetalType
+                  ? "metal_only"
+                  : "stone_only",
+              preferredMetal: request.requestedMetalType,
+              preferredStones: [request.requestedStoneType],
+              customizationDetails: request.additionalNotes || "",
+              quotedPrice: request.estimatedPrice,
+              currency: "USD", // Default currency
+            };
+          } catch (error) {
+            console.error(`Error enriching customization request ${request.id}:`, error);
+            return request;
+          }
+        })
+      );
+      
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Error fetching user customization requests:", error);
+      res.status(500).json({ message: "Failed to fetch user customization requests" });
     }
   });
   
