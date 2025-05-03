@@ -497,7 +497,7 @@ export default function ProductDetail() {
                       onClick={handlePlaceOrder}
                     >
                       <Info className="mr-2 h-4 w-4" />
-                      Request Quote
+                      Request Final Quote
                     </Button>
                     <Button 
                       variant="default" 

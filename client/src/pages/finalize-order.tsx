@@ -547,7 +547,7 @@ export default function FinalizeOrder() {
                             Processing...
                           </span>
                         ) : (
-                          <>Request Final Quote & Payment Details</>
+                          <>Request Final Quote</>
                         )}
                       </Button>
                     </div>
