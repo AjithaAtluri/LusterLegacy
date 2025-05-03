@@ -241,8 +241,22 @@ export default function FinalizeOrder() {
           </Button>
           <h1 className="font-playfair text-3xl font-bold mb-2">Finalize Order</h1>
           <p className="text-foreground/70 mb-3">
-            Complete your information below to request final quotation for {product.name}
+            You've selected this exact piece without customization. Complete your information below to receive a final quote and payment details.
           </p>
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
+            <h3 className="font-playfair text-lg font-medium mb-1 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              About This Process
+            </h3>
+            <ol className="list-decimal list-inside space-y-1 text-sm pl-2">
+              <li>This form is for purchasing <span className="font-medium">{product.name}</span> exactly as shown, with no customizations</li>
+              <li>After submitting, our team will verify pricing based on current metal rates and materials</li>
+              <li>You'll receive the final quote and payment instructions within 24 hours</li>
+              <li>Once you approve the quote, you'll pay 50% advance to begin production</li>
+            </ol>
+          </div>
           <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 mb-6">
             <h3 className="font-playfair text-lg font-semibold mb-2">Important Order Information</h3>
             <ul className="list-disc list-inside space-y-1 text-sm">
@@ -533,7 +547,7 @@ export default function FinalizeOrder() {
                             Processing...
                           </span>
                         ) : (
-                          <>Confirm Order and Send Payment Details</>
+                          <>Request Final Quote & Payment Details</>
                         )}
                       </Button>
                     </div>
