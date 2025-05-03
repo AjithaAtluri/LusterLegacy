@@ -291,7 +291,7 @@ export default function CustomizationRequestDetail() {
               <div className="flex flex-wrap gap-2">
                 {customizationRequest.productId && (
                   <Button variant="outline" size="sm" className="mt-2" asChild>
-                    <Link href={`/products/${customizationRequest.productId}`}>
+                    <Link href={`/product-detail/${customizationRequest.productId}`}>
                       View Original Product
                     </Link>
                   </Button>
