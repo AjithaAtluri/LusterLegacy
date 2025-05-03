@@ -259,7 +259,52 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-4">
+                {Array.isArray(customizationRequests) && customizationRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {customizationRequests.map((req: any) => (
+                      <div key={req.id} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded overflow-hidden bg-muted">
+                            {req.productImageUrl ? (
+                              <img 
+                                src={req.productImageUrl} 
+                                alt="Product" 
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Package className="h-8 w-8 m-2 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium">
+                              Customization Request #{req.id}
+                              <Badge className="ml-2 bg-orange-500 text-white">
+                                {req.status === "pending" ? "Pending" : req.status}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {req.fullName} • {new Date(req.createdAt).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Metal: {req.requestedMetalType || "Unknown"} • Stone: {req.requestedStoneType || "Unknown"}
+                            </div>
+                          </div>
+                        </div>
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/admin/customizations/${req.id}`}>
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No customization requests to display
+                  </div>
+                )}
+                
+                <div className="mt-4 text-center">
                   <Button asChild variant="outline">
                     <Link href="/admin/customizations">
                       View All Customization Requests
@@ -280,7 +325,52 @@ export default function AdminDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-4">
+                {Array.isArray(quoteRequests) && quoteRequests.length > 0 ? (
+                  <div className="space-y-4">
+                    {quoteRequests.map((req: any) => (
+                      <div key={req.id} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded overflow-hidden bg-muted">
+                            {req.imageUrl ? (
+                              <img 
+                                src={req.imageUrl} 
+                                alt="Product" 
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <ShoppingBag className="h-8 w-8 m-2 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium">
+                              Quote Request #{req.id}
+                              <Badge className="ml-2 bg-blue-500 text-white">
+                                {req.status === "pending" ? "Pending" : req.status}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {req.fullName} • {new Date(req.createdAt).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Metal: {req.metalType || "Unknown"} • Stone: {req.stoneType || "Unknown"}
+                            </div>
+                          </div>
+                        </div>
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/admin/quotes/${req.id}`}>
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    No quote requests to display
+                  </div>
+                )}
+                
+                <div className="mt-4 text-center">
                   <Button asChild variant="outline">
                     <Link href="/admin/quotes">
                       View All Quote Requests
