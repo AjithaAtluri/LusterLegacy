@@ -1,13 +1,7 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
+import AdminLayout from "@/components/admin/admin-layout";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   Table, 
   TableBody, 
@@ -16,8 +10,17 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, Trash2, UserCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -26,124 +29,127 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Trash2, AlertTriangle } from "lucide-react";
-import AdminLayout from "@/components/admin/admin-layout";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
-export default function AdminUsers() {
+// User type definition
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+export default function AdminUsersPage() {
   const { toast } = useToast();
-  const [userToDelete, setUserToDelete] = useState<number | null>(null);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   
   // Fetch all users
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['/api/admin/users'],
+  const { data: users, isLoading, error } = useQuery({
+    queryKey: ["/api/admin/users"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/admin/users");
-      return await response.json();
+      const data = await response.json();
+      return data as User[];
     }
   });
   
-  // Delete user mutation
+  // Mutation for deleting a user
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await apiRequest("DELETE", `/api/admin/users/${userId}`);
-      return response.json();
+      await apiRequest("DELETE", `/api/admin/users/${userId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
         title: "User deleted",
-        description: "User and all associated data have been deleted successfully",
+        description: "User has been successfully deleted",
+        variant: "default"
       });
-      setIsConfirmOpen(false);
+      
+      // Invalidate and refetch users
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      
+      // Close the confirmation dialog
+      setUserToDelete(null);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: "Error deleting user",
-        description: error.message || "An error occurred while deleting the user",
+        title: "Error",
+        description: "Failed to delete user: " + (error instanceof Error ? error.message : "Unknown error"),
         variant: "destructive"
       });
-      setIsConfirmOpen(false);
     }
   });
   
-  const handleDeleteUser = (userId: number) => {
-    setUserToDelete(userId);
-    setIsConfirmOpen(true);
-  };
-  
-  const confirmDelete = () => {
-    if (userToDelete) {
-      deleteUserMutation.mutate(userToDelete);
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "PPP");
+    } catch (error) {
+      return "Invalid date";
     }
   };
   
   return (
     <AdminLayout title="User Management">
-      <Helmet>
-        <title>User Management | Admin | Luster Legacy</title>
-      </Helmet>
-      
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>All Users</CardTitle>
+            <CardTitle>Users</CardTitle>
             <CardDescription>
-              Manage all registered users on the platform
+              Manage user accounts in your system. You can delete user accounts, which will also remove all their associated data.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="flex justify-center items-center py-8">
+              <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
+            ) : error ? (
+              <div className="py-4 text-center text-destructive">
+                Error loading users. Please try again.
+              </div>
             ) : !users || users.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No users found
+              <div className="py-8 text-center text-muted-foreground">
+                No users found.
               </div>
             ) : (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
                       <TableHead>Username</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>Created On</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((user: any) => (
+                    {users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell>{user.id}</TableCell>
-                        <TableCell>{user.username}</TableCell>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          <UserCircle className="h-5 w-5 text-muted-foreground" />
+                          {user.username}
+                        </TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          <Badge 
-                            variant={user.role === 'admin' ? "destructive" : "secondary"}
-                          >
-                            {user.role}
+                          <Badge variant={user.role === "admin" ? "secondary" : "outline"}>
+                            {user.role || "user"}
                           </Badge>
                         </TableCell>
+                        <TableCell>{formatDate(user.createdAt)}</TableCell>
                         <TableCell>
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteUser(user.id)}
-                            disabled={user.role === 'admin'} // Prevent deleting admin accounts
-                            title={user.role === 'admin' ? "Admin accounts cannot be deleted" : "Delete user"}
+                            onClick={() => setUserToDelete(user)}
+                            disabled={user.role === "admin" || deleteUserMutation.isPending}
+                            title={user.role === "admin" ? "Admin users cannot be deleted" : "Delete user"}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -156,38 +162,32 @@ export default function AdminUsers() {
         </Card>
       </div>
       
-      {/* Confirmation Dialog */}
-      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+      {/* Confirmation dialog for user deletion */}
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Confirm User Deletion
-            </AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you want to delete this user?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the user account and ALL associated data including:
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Design requests and comments</li>
-                <li>Customization requests and comments</li>
-                <li>Quote requests and comments</li>
-                <li>Orders and order items</li>
-                <li>Cart items</li>
-              </ul>
-              <div className="mt-2 font-semibold">This action cannot be undone.</div>
+              This action will permanently delete the user <strong>{userToDelete?.username}</strong> and all of their associated data, including customization requests, quote requests, design requests, orders, and all comments.
+              <br /><br />
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
+            <AlertDialogAction
+              onClick={() => userToDelete && deleteUserMutation.mutate(userToDelete.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteUserMutation.isPending}
             >
               {deleteUserMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
               ) : (
-                <Trash2 className="h-4 w-4 mr-2" />
+                "Delete User"
               )}
-              Delete User
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

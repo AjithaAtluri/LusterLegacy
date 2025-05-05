@@ -128,6 +128,7 @@ function App() {
                 <Route path="/admin/quotes" component={AdminQuotes} />
                 <Route path="/admin/quotes/:id" component={AdminQuoteDetail} />
                 <Route path="/admin/contact-messages" component={AdminContactMessages} />
+                <Route path="/admin/users" component={lazy(() => import("@/pages/admin/users"))} />
                 
                 {/* Redirect old add-product URL to the AI generator */}
                 <Route path="/admin/add-product">

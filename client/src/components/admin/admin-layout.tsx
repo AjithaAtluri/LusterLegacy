@@ -21,7 +21,8 @@ import {
   Receipt,
   Wand2,
   PlusCircle,
-  MessageSquare
+  MessageSquare,
+  Users
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
