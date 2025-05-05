@@ -62,7 +62,7 @@ export default function Testimonials() {
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="font-playfair text-3xl md:text-4xl font-bold text-foreground mb-4">
-            What Our Clients Say
+            Our Client Stories
           </h2>
           <div className="w-24 h-1 bg-primary mx-auto mb-6"></div>
         </div>
