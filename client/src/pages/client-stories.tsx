@@ -1,107 +1,108 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Testimonial } from "@shared/schema";
+import { Helmet } from "react-helmet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { PenLine, Star, Heart } from "lucide-react";
 import { ClientStoryGrid } from "@/components/client-stories/client-story-grid";
 import { ClientStoryForm } from "@/components/client-stories/client-story-form";
 import { useAuth } from "@/hooks/use-auth";
 
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { PencilLine, Star, Users } from "lucide-react";
-
 export default function ClientStories() {
-  const [activeTab, setActiveTab] = useState("view");
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>("view");
   
   // Fetch approved testimonials
-  const { data: testimonials, isLoading } = useQuery<Testimonial[]>({
-    queryKey: ["/api/testimonials/approved"],
+  const { data: testimonials, isLoading } = useQuery({
+    queryKey: ["/api/testimonials"],
     queryFn: async () => {
-      const response = await fetch("/api/testimonials/approved");
-      if (!response.ok) {
+      const res = await fetch("/api/testimonials");
+      if (!res.ok) {
         throw new Error("Failed to fetch client stories");
       }
-      return response.json();
+      return res.json();
     },
   });
   
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Client Stories</h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Discover the experiences of our valued clients and their journey with Luster Legacy. 
-          From custom designs to heirloom pieces, each story reflects our commitment to excellence 
-          and personalized service.
-        </p>
-      </div>
+    <>
+      <Helmet>
+        <title>Client Stories | Luster Legacy</title>
+        <meta name="description" content="Read stories from satisfied Luster Legacy clients and share your own experience with our luxury jewelry." />
+      </Helmet>
       
-      <Tabs 
-        defaultValue="view" 
-        value={activeTab} 
-        onValueChange={setActiveTab}
-        className="mx-auto max-w-5xl"
-      >
-        <div className="flex justify-center mb-8">
-          <TabsList className="grid w-full md:w-auto grid-cols-2">
-            <TabsTrigger value="view" className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              Client Experiences
-            </TabsTrigger>
-            <TabsTrigger value="share" className="flex items-center">
-              <PencilLine className="h-4 w-4 mr-2" />
-              Share Your Story
-            </TabsTrigger>
-          </TabsList>
+      <div className="container py-12 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold tracking-tight mb-4">Client Stories</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Discover the experiences of our valued clients who have found their perfect pieces
+            with Luster Legacy, and share your own journey with our jewelry.
+          </p>
         </div>
         
-        <TabsContent value="view" className="pt-4">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-semibold">
-              Stories from Our Valued Clients
-            </h2>
+        <Tabs
+          defaultValue="view"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="max-w-5xl mx-auto"
+        >
+          <div className="flex justify-center mb-8">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="view" className="flex items-center gap-2">
+                <Heart className="h-4 w-4" />
+                <span>View Stories</span>
+              </TabsTrigger>
+              <TabsTrigger value="share" className="flex items-center gap-2">
+                <PenLine className="h-4 w-4" />
+                <span>Share Your Story</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <TabsContent value="view" className="max-w-6xl mx-auto">
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-semibold mb-4">Our Clients' Experiences</h2>
+              <p className="text-muted-foreground">
+                Read about the experiences of our clients and their journeys with Luster Legacy jewelry.
+              </p>
+            </div>
             
-            <Button 
-              variant="outline" 
-              onClick={() => setActiveTab("share")}
-              className="flex items-center"
-            >
-              <Star className="h-4 w-4 mr-2 fill-yellow-500 text-yellow-500" />
-              Share Your Experience
-            </Button>
-          </div>
+            <ClientStoryGrid 
+              stories={testimonials} 
+              isLoading={isLoading}
+              emptyMessage="No client stories available yet. Be the first to share your experience!"
+              showEmpty={true}
+            />
+            
+            {!user && (
+              <div className="mt-12 text-center">
+                <p className="text-muted-foreground mb-4">
+                  Have a Luster Legacy piece you'd like to share about?
+                </p>
+                <Button 
+                  onClick={() => setActiveTab("share")}
+                  className="flex items-center gap-2"
+                >
+                  <Star className="h-4 w-4" />
+                  <span>Share Your Story</span>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
           
-          <ClientStoryGrid 
-            stories={testimonials} 
-            showEmpty={true}
-            emptyMessage="No client stories yet. Be the first to share your experience!"
-          />
-        </TabsContent>
-        
-        <TabsContent value="share" className="pt-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">
-              Share Your Luster Legacy Experience
-            </h2>
-            <p className="text-gray-600">
-              We'd love to hear about your experience with Luster Legacy! Whether it's a custom piece or 
-              a selection from our collections, your story helps other clients on their jewelry journey.
-              {!user && (
-                <span className="block mt-2 text-primary">
-                  <a href="/auth" className="underline">Sign in</a> to track your submission, or continue as a guest.
-                </span>
-              )}
-            </p>
-          </div>
-          
-          <ClientStoryForm />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="share">
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-semibold mb-4">Share Your Luster Legacy Story</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                We'd love to hear about your experience with your Luster Legacy jewelry. 
+                Your story helps other clients discover the perfect piece for their collection.
+              </p>
+            </div>
+            
+            <ClientStoryForm />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 }

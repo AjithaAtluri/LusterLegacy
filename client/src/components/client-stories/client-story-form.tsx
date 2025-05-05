@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { InsertTestimonial } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { insertTestimonialSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -17,9 +21,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -27,113 +28,138 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Rating } from "./rating";
-import { FileUploader } from "@/components/ui/file-uploader";
 import { Spinner } from "@/components/ui/spinner";
+import { FileUploader } from "@/components/ui/file-uploader";
+import { Rating } from "./rating";
 
-// Define the form schema with validation
-const clientStorySchema = z.object({
-  customerName: z.string().min(2, { message: "Name must be at least 2 characters." }),
+// Extend the insert schema with additional validations
+const storyFormSchema = insertTestimonialSchema.extend({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  text: z.string().min(10, {
+    message: "Please provide a brief testimonial (at least 10 characters).",
+  }),
+  story: z.string().optional(),
+  rating: z.number().min(1, {
+    message: "Please rate your purchase.",
+  }).max(5),
+  productType: z.string().min(1, {
+    message: "Please select a product type.",
+  }),
   location: z.string().optional(),
-  productType: z.string().min(1, { message: "Please select a product type." }),
-  purchaseDate: z.string().optional(),
-  story: z.string().min(10, { message: "Your story must be at least 10 characters." }),
-  rating: z.number().min(1).max(5),
-  imageUrls: z.array(z.string()).optional(),
+  imageUrls: z.array(z.string()).default([]),
+  // Generate initials from name
+  initials: z.string().optional(),
 });
 
-type ClientStoryFormData = z.infer<typeof clientStorySchema>;
+type StoryFormValues = z.infer<typeof storyFormSchema>;
 
 export function ClientStoryForm() {
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
-  
-  // Initialize react-hook-form
-  const form = useForm<ClientStoryFormData>({
-    resolver: zodResolver(clientStorySchema),
-    defaultValues: {
-      customerName: user?.username || "",
-      location: "",
-      productType: "",
-      purchaseDate: "",
-      story: "",
-      rating: 5,
-      imageUrls: [],
-    },
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+
+  // Default values for the form
+  const defaultValues: Partial<StoryFormValues> = {
+    userId: user?.id || null,
+    rating: 0,
+    name: "",
+    text: "",
+    story: "",
+    productType: "",
+    location: "",
+    imageUrls: [],
+    status: "pending",
+    isApproved: false,
+  };
+
+  const form = useForm<StoryFormValues>({
+    resolver: zodResolver(storyFormSchema),
+    defaultValues,
   });
-  
-  // Submission mutation
-  const submitMutation = useMutation({
-    mutationFn: async (data: ClientStoryFormData) => {
-      const testimonial: InsertTestimonial = {
+
+  const storyMutation = useMutation({
+    mutationFn: async (data: StoryFormValues) => {
+      // Calculate initials from the name
+      const nameWords = data.name.trim().split(/\s+/);
+      const initials = nameWords.length > 1
+        ? `${nameWords[0][0]}${nameWords[nameWords.length - 1][0]}`.toUpperCase()
+        : nameWords[0].slice(0, 2).toUpperCase();
+
+      const testimonialData = {
         ...data,
-        imageUrls: uploadedImageUrls,
-        status: "pending", // All submissions start as pending for admin approval
-        userId: user?.id || null,
+        initials,
+        imageUrls: uploadedImages,
       };
-      
-      const response = await apiRequest("POST", "/api/testimonials", testimonial);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit story");
+
+      const res = await apiRequest("POST", "/api/testimonials", testimonialData);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to submit your story");
       }
-      
-      return response.json();
+      return await res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Story Submitted",
-        description: "Thank you for sharing your story. It will be reviewed and published soon.",
-        variant: "default",
+        title: "Success!",
+        description: "Your story has been submitted for review.",
       });
-      
-      // Reset form
-      form.reset();
-      setUploadedImageUrls([]);
-      
-      // Invalidate testimonials query to refresh the list
+      form.reset(defaultValues);
+      setUploadedImages([]);
       queryClient.invalidateQueries({ queryKey: ["/api/testimonials"] });
     },
     onError: (error: Error) => {
       toast({
-        title: "Submission Failed",
+        title: "Failed to submit story",
         description: error.message,
         variant: "destructive",
       });
     },
   });
-  
-  function onSubmit(data: ClientStoryFormData) {
-    submitMutation.mutate(data);
-  }
-  
-  // Handle image upload
-  const handleImageUpload = (uploadedUrls: string[]) => {
-    setUploadedImageUrls(uploadedUrls);
+
+  const onSubmit = (values: StoryFormValues) => {
+    storyMutation.mutate(values);
   };
-  
+
+  const handleRatingChange = (rating: number) => {
+    form.setValue("rating", rating, { shouldValidate: true });
+  };
+
+  const handleImageUploads = (urls: string[]) => {
+    setUploadedImages(urls);
+    form.setValue("imageUrls", urls, { shouldValidate: true });
+  };
+
   return (
-    <div className="bg-white shadow-md rounded-lg p-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Customer Name */}
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Share Your Experience</CardTitle>
+        <CardDescription>
+          Tell us about your Luster Legacy jewelry and help others discover the perfect piece.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="customerName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Your Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your name" {...field} />
+                    <Input placeholder="John Doe" {...field} />
                   </FormControl>
+                  <FormDescription>
+                    Your name will be displayed with your story.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            {/* Location */}
+
             <FormField
               control={form.control}
               name="location"
@@ -143,12 +169,14 @@ export function ClientStoryForm() {
                   <FormControl>
                     <Input placeholder="City, Country" {...field} />
                   </FormControl>
+                  <FormDescription>
+                    Sharing your location helps personalize your story.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            {/* Product Type */}
+
             <FormField
               control={form.control}
               name="productType"
@@ -161,110 +189,132 @@ export function ClientStoryForm() {
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select product type" />
+                        <SelectValue placeholder="Select a product type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="Necklace">Necklace</SelectItem>
                       <SelectItem value="Earrings">Earrings</SelectItem>
-                      <SelectItem value="Ring">Ring</SelectItem>
                       <SelectItem value="Bracelet">Bracelet</SelectItem>
-                      <SelectItem value="Custom">Custom Piece</SelectItem>
+                      <SelectItem value="Ring">Ring</SelectItem>
+                      <SelectItem value="Pendant">Pendant</SelectItem>
+                      <SelectItem value="Jewelry Set">Jewelry Set</SelectItem>
+                      <SelectItem value="Custom Design">Custom Design</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormDescription>
+                    The type of jewelry you purchased or had custom-made.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            {/* Purchase Date */}
+
             <FormField
               control={form.control}
-              name="purchaseDate"
+              name="rating"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Purchase Date (Optional)</FormLabel>
+                  <FormLabel>Your Rating</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <div>
+                      <Rating 
+                        value={field.value} 
+                        onChange={handleRatingChange} 
+                        size="lg"
+                      />
+                    </div>
                   </FormControl>
+                  <FormDescription>
+                    How would you rate your jewelry from 1 to 5 stars?
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-          
-          {/* Story */}
-          <FormField
-            control={form.control}
-            name="story"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Your Story</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Share your experience with the jewelry..."
-                    className="min-h-[120px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Tell us about your experience with the jewelry, what it means to you, or the occasion it was for.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Rating */}
-          <FormField
-            control={form.control}
-            name="rating"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Rate Your Experience</FormLabel>
-                <FormControl>
-                  <Rating
-                    value={field.value}
-                    onChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          {/* Images */}
-          <div>
-            <FormLabel className="block mb-2">Upload Images (Optional)</FormLabel>
-            <FormDescription className="mb-4">
-              Upload up to 3 photos of yourself wearing the jewelry or just the jewelry itself.
-            </FormDescription>
-            <FileUploader
-              maxFiles={3}
-              acceptedFileTypes={["image/*"]}
-              maxFileSizeMB={5}
-              endpoint="/api/upload"
-              onUploadsComplete={handleImageUpload}
+
+            <FormField
+              control={form.control}
+              name="text"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brief Testimonial</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Please share a brief summary of your experience with our jewelry."
+                      className="min-h-[80px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    This will be the main testimonial displayed in featured areas.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            className="w-full sm:w-auto"
-            disabled={submitMutation.isPending}
-          >
-            {submitMutation.isPending ? (
-              <>
-                <Spinner className="mr-2" size="sm" />
-                Submitting...
-              </>
-            ) : (
-              "Submit Your Story"
-            )}
-          </Button>
-        </form>
-      </Form>
-    </div>
+
+            <FormField
+              control={form.control}
+              name="story"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your Full Story (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Share the detailed story of your jewelry - what occasion it was for, how it made you feel, any compliments you received, etc."
+                      className="min-h-[150px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Tell us the full story behind your piece for our detailed client story section.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="space-y-2">
+              <Label>Images of Your Jewelry (Optional)</Label>
+              <FileUploader
+                maxFiles={3}
+                acceptedFileTypes={["image/jpeg", "image/png", "image/jpg"]}
+                maxSizeMB={5}
+                endpoint="/api/upload"
+                onUploadsComplete={handleImageUploads}
+              />
+              <p className="text-sm text-muted-foreground">
+                Share up to 3 images of your jewelry. Max 5MB per image.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <Button 
+                type="submit" 
+                disabled={storyMutation.isPending}
+                className="w-full"
+              >
+                {storyMutation.isPending ? (
+                  <>
+                    <Spinner className="mr-2" size="sm" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Your Story"
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+      <CardFooter className="flex flex-col space-y-2 border-t pt-4">
+        <p className="text-sm text-muted-foreground">
+          Your story will be reviewed by our team before being published. 
+          Thank you for sharing your experience with Luster Legacy!
+        </p>
+      </CardFooter>
+    </Card>
   );
 }
