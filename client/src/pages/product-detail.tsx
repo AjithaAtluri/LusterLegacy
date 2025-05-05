@@ -499,13 +499,8 @@ export default function ProductDetail() {
                       <Info className="mr-2 h-4 w-4" />
                       Request Final Quote
                     </Button>
-                    {/* Special check for product ID 48 and Beads & Gems products */}
+                    {/* Customization button - hidden for product ID 48 and Beads & Gems products */}
                     {(() => {
-                      // Log product details for debugging
-                      console.log("Product ID:", product.id);
-                      console.log("Product Type:", product.productType);
-                      console.log("Product Category:", product.category);
-                      
                       // Safely get product details if they exist
                       let additionalData = {};
                       let productTypeId = "";
@@ -518,38 +513,26 @@ export default function ProductDetail() {
                           
                           additionalData = productDetails.additionalData || {};
                           productTypeId = additionalData.productTypeId || "";
-                          
-                          console.log("Product Type ID:", productTypeId);
-                          console.log("Additional Data Product Type:", additionalData.productType);
                         }
                       } catch (e) {
                         // Safely handle parsing errors
                         console.error("Error parsing product details:", e);
                       }
                       
-                      // Explicit check for product ID 48
-                      if (product.id === 48) {
-                        console.log("This is product 48 - it should hide customization button");
-                        return false; // Don't show button for product 48
-                      }
+                      // Don't show button for specific products or product types
+                      // List of specific product IDs that should hide customization button
+                      const excludedProductIds = [48, 49, 50, 51];
                       
-                      // Check for productTypeId === "19" which is Beads & Gems
-                      if (productTypeId === "19") {
-                        console.log("Product has type ID 19 (Beads & Gems) - hiding customization button");
-                        return false; // Don't show button
-                      }
-                      
-                      // Explicit check for product type "Beads & Gems"
-                      const isBeadsAndGemsProductType = 
+                      if (
+                        excludedProductIds.includes(product.id) || // Special case for specific products
+                        productTypeId === "19" || // Product type ID 19 is Beads & Gems
                         product.productType === "Beads & Gems" || 
-                        additionalData.productType === "Beads & Gems";
-                      
-                      if (isBeadsAndGemsProductType) {
-                        console.log("Product is Beads & Gems type - hiding customization button");
+                        additionalData.productType === "Beads & Gems"
+                      ) {
+                        return false; // Don't show customization button
                       }
                       
-                      // Only show the button if it's NOT a Beads & Gems product type
-                      return !isBeadsAndGemsProductType;
+                      return true; // Show customization button for all other products
                     })() && (
                       <Button 
                         variant="default" 
