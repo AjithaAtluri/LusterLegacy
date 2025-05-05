@@ -410,14 +410,14 @@ export default function AdminTestimonials() {
                 <div>
                   <h4 className="text-sm font-medium mb-2">Brief Testimonial</h4>
                   <div className="bg-accent/20 p-3 rounded-md text-sm">
-                    {selectedTestimonial.briefTestimonial || "No brief testimonial available"}
+                    {selectedTestimonial.text || "No brief testimonial available"}
                   </div>
                 </div>
                 
                 <div>
                   <h4 className="text-sm font-medium mb-2">Full Testimonial</h4>
                   <div className="bg-accent/20 p-3 rounded-md text-sm">
-                    {selectedTestimonial.fullTestimonial || "No full testimonial available"}
+                    {selectedTestimonial.story || "No full testimonial available"}
                   </div>
                 </div>
               </div>
