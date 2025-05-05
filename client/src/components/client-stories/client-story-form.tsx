@@ -307,123 +307,121 @@ export function ClientStoryForm() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Your Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Your name will be displayed with your story.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Two-column layout for basic info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="City, Country" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Sharing your location helps personalize your story.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="City, Country" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="productType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a product type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Necklace">Necklace</SelectItem>
-                      <SelectItem value="Earrings">Earrings</SelectItem>
-                      <SelectItem value="Bracelet">Bracelet</SelectItem>
-                      <SelectItem value="Ring">Ring</SelectItem>
-                      <SelectItem value="Pendant">Pendant</SelectItem>
-                      <SelectItem value="Jewelry Set">Jewelry Set</SelectItem>
-                      <SelectItem value="Custom Design">Custom Design</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    The type of jewelry you purchased or had custom-made.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              </div>
+              
+              {/* Second row with product type and rating */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="productType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Product Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a product type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Necklace">Necklace</SelectItem>
+                          <SelectItem value="Earrings">Earrings</SelectItem>
+                          <SelectItem value="Bracelet">Bracelet</SelectItem>
+                          <SelectItem value="Ring">Ring</SelectItem>
+                          <SelectItem value="Pendant">Pendant</SelectItem>
+                          <SelectItem value="Jewelry Set">Jewelry Set</SelectItem>
+                          <SelectItem value="Custom Design">Custom Design</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="rating"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Rating</FormLabel>
-                  <FormControl>
-                    <div>
-                      <Rating 
-                        value={field.value} 
-                        onChange={handleRatingChange} 
-                        size="lg"
-                      />
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    How would you rate your jewelry from 1 to 5 stars?
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="rating"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Rating</FormLabel>
+                      <FormControl>
+                        <div>
+                          <Rating 
+                            value={field.value} 
+                            onChange={handleRatingChange} 
+                            size="lg"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="purchaseType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Was this purchase for yourself or a gift?</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select purchase type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="self">For myself</SelectItem>
-                      <SelectItem value="gift_for">As a gift for someone</SelectItem>
-                      <SelectItem value="gift_from">As a gift from someone</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              </div>
+              
+              {/* Purchase type and occasion in two columns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="purchaseType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Was this purchase for yourself or a gift?</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select purchase type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="self">For myself</SelectItem>
+                          <SelectItem value="gift_for">As a gift for someone</SelectItem>
+                          <SelectItem value="gift_from">As a gift from someone</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
             {form.watch("purchaseType") === "gift_for" && (
               <FormField
@@ -463,37 +461,35 @@ export function ClientStoryForm() {
               />
             )}
 
-            <FormField
-              control={form.control}
-              name="occasion"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>What was the occasion?</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select occasion" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="casual">Casual/Everyday</SelectItem>
-                      <SelectItem value="birthday">Birthday</SelectItem>
-                      <SelectItem value="wedding">Wedding</SelectItem>
-                      <SelectItem value="anniversary">Anniversary</SelectItem>
-                      <SelectItem value="special_occasion">Special Occasion</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    The occasion this jewelry was purchased for.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="occasion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>What was the occasion?</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select occasion" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="casual">Casual/Everyday</SelectItem>
+                          <SelectItem value="birthday">Birthday</SelectItem>
+                          <SelectItem value="wedding">Wedding</SelectItem>
+                          <SelectItem value="anniversary">Anniversary</SelectItem>
+                          <SelectItem value="special_occasion">Special Occasion</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
             <FormField
               control={form.control}
