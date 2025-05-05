@@ -519,12 +519,13 @@ export default function ProductDetail() {
                         console.error("Error parsing product details:", e);
                       }
                       
-                      // Don't show button for specific products or product types
-                      // List of specific product IDs that should hide customization button
-                      const excludedProductIds = [48, 49, 50, 51];
+                      // Specific ID exception for product 48
+                      if (product.id === 48) {
+                        return false;
+                      }
                       
+                      // Check product type - Beads & Gems
                       if (
-                        excludedProductIds.includes(product.id) || // Special case for specific products
                         productTypeId === "19" || // Product type ID 19 is Beads & Gems
                         product.productType === "Beads & Gems" || 
                         additionalData.productType === "Beads & Gems"
