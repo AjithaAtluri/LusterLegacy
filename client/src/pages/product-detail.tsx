@@ -499,10 +499,16 @@ export default function ProductDetail() {
                       <Info className="mr-2 h-4 w-4" />
                       Request Final Quote
                     </Button>
-                    {/* Only check the exact product type fields for "Beads & Gems" as requested */}
+                    {/* Special check for product ID 48 and Beads & Gems products */}
                     {(() => {
+                      // Log product details for debugging
+                      console.log("Product ID:", product.id);
+                      console.log("Product Type:", product.productType);
+                      console.log("Product Category:", product.category);
+                      
                       // Safely get product details if they exist
                       let additionalData = {};
+                      let productTypeId = "";
                       
                       try {
                         if (product.details) {
@@ -511,16 +517,36 @@ export default function ProductDetail() {
                             : product.details;
                           
                           additionalData = productDetails.additionalData || {};
+                          productTypeId = additionalData.productTypeId || "";
+                          
+                          console.log("Product Type ID:", productTypeId);
+                          console.log("Additional Data Product Type:", additionalData.productType);
                         }
                       } catch (e) {
                         // Safely handle parsing errors
                         console.error("Error parsing product details:", e);
                       }
                       
-                      // Only check for exact product type "Beads & Gems" (not stone types, names, etc)
+                      // Explicit check for product ID 48
+                      if (product.id === 48) {
+                        console.log("This is product 48 - it should hide customization button");
+                        return false; // Don't show button for product 48
+                      }
+                      
+                      // Check for productTypeId === "19" which is Beads & Gems
+                      if (productTypeId === "19") {
+                        console.log("Product has type ID 19 (Beads & Gems) - hiding customization button");
+                        return false; // Don't show button
+                      }
+                      
+                      // Explicit check for product type "Beads & Gems"
                       const isBeadsAndGemsProductType = 
                         product.productType === "Beads & Gems" || 
                         additionalData.productType === "Beads & Gems";
+                      
+                      if (isBeadsAndGemsProductType) {
+                        console.log("Product is Beads & Gems type - hiding customization button");
+                      }
                       
                       // Only show the button if it's NOT a Beads & Gems product type
                       return !isBeadsAndGemsProductType;
