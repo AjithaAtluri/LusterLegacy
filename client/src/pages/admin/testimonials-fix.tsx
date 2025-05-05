@@ -140,6 +140,10 @@ export default function AdminTestimonials() {
         null, 
         options
       );
+      // For 204 responses (no content), don't try to parse JSON
+      if (response.status === 204) {
+        return { success: true };
+      }
       return response.json();
     },
     onSuccess: () => {

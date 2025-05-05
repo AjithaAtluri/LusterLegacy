@@ -735,13 +735,16 @@ export function ClientStoryForm() {
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      defaultChecked={true}
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Would you consider Luster Legacy for your next custom design?
+                      Do you plan to get more custom design jewelry from Luster Legacy?
                     </FormLabel>
-
+                    <FormDescription>
+                      Would you consider us for your next jewelry purchase?
+                    </FormDescription>
                   </div>
                 </FormItem>
               )}
