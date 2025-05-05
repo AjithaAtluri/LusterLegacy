@@ -5,22 +5,22 @@ export default function HowItWorks() {
     {
       icon: <ShoppingBag className="h-6 w-6 text-background" />,
       title: "Explore Options",
-      description: "Browse our luxury collection, request a quote for catalog items, or start a custom design journey."
+      description: "Browse our luxury catalog, submit design ideas for custom pieces, or request personalization of existing designs."
     },
     {
       icon: <MessageSquare className="h-6 w-6 text-background" />,
-      title: "Consultation & Approval",
-      description: "Discuss your vision with our experts through our secure messaging platform and review design proposals."
+      title: "Consultation & Planning",
+      description: "Connect with our experts through our dedicated messaging platform to refine your vision and review proposals."
     },
     {
       icon: <Hammer className="h-6 w-6 text-background" />,
       title: "Expert Craftsmanship",
-      description: "Each piece is meticulously handcrafted by our master artisans using premium materials."
+      description: "Our master artisans meticulously create your jewelry using the finest materials and time-honored techniques."
     },
     {
       icon: <PackageCheck className="h-6 w-6 text-background" />,
       title: "Safe Delivery",
-      description: "Your luxury jewelry arrives in elegant packaging with signature confirmation and full insurance."
+      description: "Receive your exquisite piece in premium packaging with full insurance and signature confirmation."
     }
   ];
   
@@ -62,8 +62,8 @@ export default function HowItWorks() {
               </div>
               <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Custom Design</h4>
               <p className="font-montserrat text-foreground/70 dark:text-slate-300 text-center">
-                Create a one-of-a-kind piece with our design team. $150 consultation fee covers up to 
-                four design iterations.
+                Transform your vision into a bespoke masterpiece. $150 consultation fee includes up to 
+                four design iterations before final production.
               </p>
             </div>
             
@@ -73,8 +73,8 @@ export default function HowItWorks() {
               </div>
               <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Product Quote</h4>
               <p className="font-montserrat text-foreground/70 dark:text-slate-300 text-center">
-                Request a detailed quote for any catalog item with no obligation. Receive pricing, 
-                material options, and timing.
+                Request detailed pricing and specifications for any catalog piece. No obligation 
+                and no consultation fee.
               </p>
             </div>
             
@@ -84,8 +84,8 @@ export default function HowItWorks() {
               </div>
               <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Customization</h4>
               <p className="font-montserrat text-foreground/70 dark:text-slate-300 text-center">
-                Personalize existing designs with your choice of metals, gems, and finishes. 
-                No fee for customization consultations.
+                Personalize our existing designs with your preferred metals, gemstones, and dimensions. 
+                Complimentary consultation service.
               </p>
             </div>
           </div>
