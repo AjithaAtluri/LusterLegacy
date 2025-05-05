@@ -200,55 +200,54 @@ export function ClientStoryForm() {
     setAiErrorMessage("");
 
     try {
-      // Get current form data (raw)
-      const formData = form.getValues();
-      
-      // Force purchaseType from the UI if it's not set 
-      // This ensures the explicitly selected value is used
+      // CRITICAL FIX: Explicitly get the current values directly from the form state using watch()
+      // This gives us the absolutely current values, not the values that might be stale from getValues()
       const currentPurchaseType = form.watch("purchaseType");
+      const currentGiftGiver = form.watch("giftGiver");
+      const currentName = form.watch("name");
+      const currentProductType = form.watch("productType");
+      const currentRating = form.watch("rating");
+      const currentOccasion = form.watch("occasion");
+      const currentSatisfaction = form.watch("satisfaction");
+      const currentWouldReturn = form.watch("wouldReturn");
+      const currentLocation = form.watch("location");
+      const currentOrderType = form.watch("orderType");
+      const currentDesignTeamExperience = form.watch("designTeamExperience");
       
-      // Debug form data with special emphasis on purchaseType
-      console.log("FORM DATA DIRECTLY FROM FORM WATCH:", {
-        purchaseType: currentPurchaseType,
-        giftGiver: form.watch("giftGiver"),
-      });
-      
-      console.log("FORM DATA FROM getValues():", {
-        name: formData.name,
-        productType: formData.productType,
-        rating: formData.rating,
-        purchaseType: formData.purchaseType, // May be undefined
-        giftGiver: formData.giftGiver,
-        occasion: formData.occasion,
-      });
+      // Extreme debug mode 
+      console.log("==== AI TESTIMONIAL GENERATION - DEBUG ====");
+      console.log("PURCHASE TYPE (CURRENT):", currentPurchaseType);
+      console.log("GIFT GIVER (CURRENT):", currentGiftGiver);
+      console.log("==== END DEBUG ====");
       
       // Validate required fields for AI generation
-      if (!formData.name || !formData.productType || formData.rating === 0) {
+      if (!currentName || !currentProductType || currentRating === 0) {
         setAiErrorMessage("Please fill in your name, product type, and rating before generating AI testimonial");
         setIsGeneratingAI(false);
         return;
       }
       
-      // WORKAROUND: Manually enforce the purchaseType from what's visible in the UI
-      // This fixes the issue with purchaseType not being properly set
-      const enforcedPurchaseType = currentPurchaseType || "self";
-      console.log("USING ENFORCED PURCHASE TYPE:", enforcedPurchaseType);
-
-      // Build AI input data with careful defaults and enforced purchase type
+      // Force the proper purchase type value into the form data to ensure consistency
+      if (currentPurchaseType) {
+        form.setValue("purchaseType", currentPurchaseType, { shouldValidate: true, shouldDirty: true });
+      }
+      
+      // Use the explicitly watched values to build the AI input data
+      // This is critical to fix the gift context issue
       const aiInputData = {
-        name: formData.name,
-        productType: formData.productType,
-        rating: formData.rating,
-        // Use the enforced purchase type to ensure it's always correct
-        purchaseType: enforcedPurchaseType,
-        // Only include giftGiver if it was provided
-        giftGiver: formData.giftGiver || "",
-        occasion: formData.occasion || "casual",
-        satisfaction: formData.satisfaction || "very_much",
-        wouldReturn: formData.wouldReturn !== undefined ? formData.wouldReturn : true,
-        location: formData.location || "",
-        orderType: formData.orderType || "as_is",
-        designTeamExperience: formData.designTeamExperience || "good",
+        name: currentName,
+        productType: currentProductType,
+        rating: currentRating,
+        // IMPORTANT: Use the directly watched value, not the potentially stale form value
+        purchaseType: currentPurchaseType || "self",
+        // IMPORTANT: Use the directly watched value for gift giver
+        giftGiver: currentGiftGiver || "",
+        occasion: currentOccasion || "casual",
+        satisfaction: currentSatisfaction || "very_much", 
+        wouldReturn: currentWouldReturn !== undefined ? currentWouldReturn : true,
+        location: currentLocation || "",
+        orderType: currentOrderType || "as_is",
+        designTeamExperience: currentDesignTeamExperience || "good",
         imageUrls: uploadedImages,
       };
       
@@ -437,7 +436,13 @@ export function ClientStoryForm() {
                     <FormItem>
                       <FormLabel>Was this purchase for yourself or a gift?</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          // Directly set the value in the form
+                          field.onChange(value);
+                          // Explicitly update the form value to ensure it's changed
+                          form.setValue("purchaseType", value, { shouldValidate: true });
+                          console.log("PURCHASE TYPE CHANGED TO:", value);
+                        }}
                         defaultValue={field.value}
                       >
                         <FormControl>

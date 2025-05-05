@@ -25,39 +25,46 @@ export async function generateAITestimonial(
   }
 ): Promise<{ generatedTestimonial: string; generatedStory: string; aiInputData: any }> {
   try {
-    // Log the raw input data for debugging
-    console.log("DEBUG - OpenAI testimonial input data:", JSON.stringify({
-      purchaseType: inputData.purchaseType,
-      giftGiver: inputData.giftGiver,
-      occasion: inputData.occasion
-    }, null, 2));
+    // ====== EXTREME DEBUGGING FOR GIFT CONTEXT ISSUE ======
+    console.log("==================================================================");
+    console.log("TESTIMONIAL GENERATOR STARTED - FULL INPUT DATA:", JSON.stringify(inputData, null, 2));
+    console.log("RAW PURCHASE TYPE: '" + inputData.purchaseType + "'");
+    console.log("RAW GIFT GIVER: '" + inputData.giftGiver + "'");
+    console.log("TYPE OF PURCHASE TYPE: " + typeof inputData.purchaseType);
+    console.log("==================================================================");
     
-    // Build the prompt based on the available data - with stricter checking
-    let purchaseContext = "This was purchased for themselves.";
+    // Build the prompt based on the available data - with explicit handling
+    let purchaseContext = "";
     
-    // Explicitly check each purchase type to ensure correct context
-    if (inputData.purchaseType === "gift_for") {
+    // Force proper handling of gift context with triple equals and exact string comparison
+    const purchaseType = String(inputData.purchaseType || "").trim();
+    
+    console.log("NORMALIZED PURCHASE TYPE: '" + purchaseType + "'");
+    
+    if (purchaseType === "gift_for") {
       // Gift FOR someone (user bought it as a gift)
       purchaseContext = `This was purchased as a gift for ${inputData.giftGiver || "someone special"}.`;
-      console.log("Using GIFT FOR context");
+      console.log("MATCHED GIFT FOR CONTEXT");
     } 
-    else if (inputData.purchaseType === "gift_from") {
+    else if (purchaseType === "gift_from") {
       // Gift FROM someone (user received it as a gift)
       purchaseContext = `This was received as a gift from ${inputData.giftGiver || "someone special"}.`;
-      console.log("Using GIFT FROM context");
+      console.log("MATCHED GIFT FROM CONTEXT");
     }
-    else if (inputData.purchaseType === "self") {
+    else if (purchaseType === "self") {
       // Self purchase (default)
       purchaseContext = "This was purchased for themselves.";
-      console.log("Using SELF PURCHASE context");
+      console.log("MATCHED SELF PURCHASE CONTEXT");
     }
     else {
-      // If for some reason purchaseType is invalid or missing
-      console.log("WARNING: Unknown purchase type:", inputData.purchaseType);
+      // Something is wrong with the purchase type data
+      console.log("WARNING: UNKNOWN PURCHASE TYPE: '" + purchaseType + "'");
+      console.log("DEFAULTING TO SELF PURCHASE");
       purchaseContext = "This was purchased for themselves.";
     }
     
-    console.log("DEBUG - Final purchase context:", purchaseContext);
+    console.log("FINAL PURCHASE CONTEXT: " + purchaseContext);
+    console.log("==================================================================");
 
     const occasionContext = inputData.occasion 
       ? `The occasion was ${inputData.occasion.replace(/_/g, ' ')}.` 
