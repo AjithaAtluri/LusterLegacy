@@ -48,7 +48,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 // Helper function to format dates
-function formatDate(date: string | Date): string {
+function formatDate(date: string | Date | null): string {
+  if (!date) return "Unknown";
   return new Date(date).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -379,7 +380,7 @@ export default function AdminTestimonials() {
   };
   
   return (
-    <AdminLayout>
+    <AdminLayout title="Client Stories">
       <Helmet>
         <title>Manage Client Stories | Admin | Luster Legacy</title>
       </Helmet>
