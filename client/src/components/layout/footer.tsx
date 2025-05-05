@@ -1,43 +1,15 @@
 import { Link } from "wouter";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { COMPANY } from "@/lib/constants";
-import { Instagram, Facebook, ArrowRight } from "lucide-react";
+import { Instagram, Facebook } from "lucide-react";
 import { BsPinterest } from "react-icons/bs";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Footer() {
-  const [email, setEmail] = useState("");
-  const { toast } = useToast();
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email.trim()) {
-      toast({
-        title: "Email required",
-        description: "Please enter your email address",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // TODO: Implement newsletter subscription
-    toast({
-      title: "Thank you for subscribing!",
-      description: "You'll receive our latest updates soon.",
-    });
-    
-    setEmail("");
-  };
-  
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="bg-charcoal text-pearl">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Brand & Social */}
           <div>
             <Link href="/" className="font-playfair text-3xl font-bold text-pearl mb-6 block">
@@ -124,26 +96,6 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
-          
-          {/* Newsletter */}
-          <div>
-            <h3 className="font-playfair text-xl font-semibold text-pearl mb-6">Newsletter</h3>
-            <p className="font-montserrat text-pearl/70 mb-4">
-              Subscribe to receive updates, access to exclusive deals, and more.
-            </p>
-            <form className="flex" onSubmit={handleSubmit}>
-              <Input
-                type="email"
-                placeholder="Your email address"
-                className="flex-grow bg-charcoal border-pearl/30 rounded-l text-pearl focus:border-primary"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <Button type="submit" className="bg-primary rounded-r hover:bg-accent transition duration-300 px-3">
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </form>
           </div>
         </div>
         

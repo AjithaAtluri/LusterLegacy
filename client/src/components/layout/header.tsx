@@ -81,12 +81,12 @@ export default function Header() {
   return (
     <header className="bg-background shadow-md sticky top-0 z-50">
       <nav className="container mx-auto px-4 lg:px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex-shrink-0 mr-8">
           <Logo size="lg" />
         </div>
         
         {/* Desktop navigation */}
-        <div className="hidden md:flex space-x-6 items-center">
+        <div className="hidden md:flex space-x-4 items-center flex-grow justify-end">
           {navItems.map((item) => (
             <Link 
               key={item.path}
