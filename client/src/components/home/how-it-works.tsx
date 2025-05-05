@@ -1,16 +1,16 @@
-import { CrownIcon, Gem, Hammer, PackageCheck, RotateCcw, Settings, ShoppingBag } from "lucide-react";
+import { CrownIcon, Gem, Hammer, PackageCheck, RotateCcw, Settings, ShoppingBag, Sparkles, MessageSquare, Clock } from "lucide-react";
 
 export default function HowItWorks() {
   const steps = [
     {
       icon: <ShoppingBag className="h-6 w-6 text-background" />,
-      title: "Browse & Select",
-      description: "Explore our exclusive collection of fine jewelry or initiate a custom design project."
+      title: "Explore Options",
+      description: "Browse our luxury collection, request a quote for catalog items, or start a custom design journey."
     },
     {
-      icon: <CrownIcon className="h-6 w-6 text-background" />,
-      title: "Place Your Order",
-      description: "Complete your purchase for ready-made pieces or approve your custom design for creation."
+      icon: <MessageSquare className="h-6 w-6 text-background" />,
+      title: "Consultation & Approval",
+      description: "Discuss your vision with our experts through our secure messaging platform and review design proposals."
     },
     {
       icon: <Hammer className="h-6 w-6 text-background" />,
@@ -30,8 +30,9 @@ export default function HowItWorks() {
         <div className="text-center mb-16">
           <h2 className="font-playfair text-3xl md:text-4xl font-bold text-foreground mb-4">How It Works</h2>
           <div className="w-24 h-1 bg-primary mx-auto mb-6"></div>
-          <p className="font-montserrat text-lg text-foreground/80 max-w-2xl mx-auto dark:text-slate-300">
-            Our bespoke process ensures that every piece is as unique as the person who wears it.
+          <p className="font-montserrat text-lg text-foreground/80 max-w-3xl mx-auto dark:text-slate-300">
+            Whether you're seeking a catalog piece, a custom design, or a personalized variation, 
+            our dedicated process ensures that each journey results in a truly special treasure.
           </p>
         </div>
         
@@ -52,37 +53,40 @@ export default function HowItWorks() {
         
         <div className="mt-16 bg-white rounded-lg shadow-md p-8 dark:bg-gray-800">
           <h3 className="font-playfair text-2xl font-semibold text-primary mb-8 text-center dark:text-white">
-            Our Customer Assurance
+            Our Service Options
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 mr-4">
-                <div className="bg-accent w-10 h-10 rounded-full flex items-center justify-center">
-                  <RotateCcw className="h-5 w-5 text-white" />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-6">
+            <div className="flex flex-col items-center bg-card rounded-lg p-6 shadow-sm">
+              <div className="bg-accent w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Sparkles className="h-6 w-6 text-white" />
               </div>
-              <div>
-                <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white">Free Repairs</h4>
-                <p className="font-montserrat text-foreground/70 dark:text-slate-300">
-                  We offer complimentary repairs for any manufacturing defects throughout 
-                  the lifetime of your jewelry.
-                </p>
-              </div>
+              <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Custom Design</h4>
+              <p className="font-montserrat text-foreground/70 dark:text-slate-300 text-center">
+                Create a one-of-a-kind piece with our design team. $150 consultation fee covers up to 
+                four design iterations.
+              </p>
             </div>
             
-            <div className="flex items-start">
-              <div className="flex-shrink-0 mr-4">
-                <div className="bg-accent w-10 h-10 rounded-full flex items-center justify-center">
-                  <Gem className="h-5 w-5 text-white" />
-                </div>
+            <div className="flex flex-col items-center bg-card rounded-lg p-6 shadow-sm">
+              <div className="bg-accent w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <MessageSquare className="h-6 w-6 text-white" />
               </div>
-              <div>
-                <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white">100% Exchange Value</h4>
-                <p className="font-montserrat text-foreground/70 dark:text-slate-300">
-                  Full current value of metal and stones can be credited toward future 
-                  purchases or upgrades.
-                </p>
+              <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Product Quote</h4>
+              <p className="font-montserrat text-foreground/70 dark:text-slate-300 text-center">
+                Request a detailed quote for any catalog item with no obligation. Receive pricing, 
+                material options, and timing.
+              </p>
+            </div>
+            
+            <div className="flex flex-col items-center bg-card rounded-lg p-6 shadow-sm">
+              <div className="bg-accent w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Settings className="h-6 w-6 text-white" />
               </div>
+              <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Customization</h4>
+              <p className="font-montserrat text-foreground/70 dark:text-slate-300 text-center">
+                Personalize existing designs with your choice of metals, gems, and finishes. 
+                No fee for customization consultations.
+              </p>
             </div>
           </div>
         </div>
