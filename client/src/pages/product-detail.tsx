@@ -499,12 +499,37 @@ export default function ProductDetail() {
                       <Info className="mr-2 h-4 w-4" />
                       Request Final Quote
                     </Button>
-                    {/* Only show customization button if product is NOT in "Beads & Gems" category */}
-                    {(
-                      // Check both category and productType fields
-                      (!product.category || product.category !== "Beads & Gems") && 
-                      (!product.productType || product.productType !== "Beads & Gems")
-                    ) && (
+                    {/* Debug logs to examine product data */}
+                    {console.log("Product category:", product.category)}
+                    {console.log("Product type:", product.productType)}
+                    {console.log("Product details:", product.details)}
+                    {console.log("Product name:", product.name)}
+                    
+                    {/* Check product details for deeper gem or bead references */}
+                    {(() => {
+                      // Check if this is a beads or gems product based on various indicators
+                      const productName = product.name?.toLowerCase() || "";
+                      const productDesc = product.description?.toLowerCase() || "";
+                      const productDetails = typeof product.details === 'string' 
+                        ? product.details.toLowerCase() 
+                        : JSON.stringify(product.details).toLowerCase();
+                      
+                      // Check for bead or pearl keywords in various product data
+                      const hasBeadsOrPearlsKeywords = 
+                        productName.includes("bead") || 
+                        productName.includes("pearl") ||
+                        productDesc.includes("pearl") ||
+                        productDetails.includes("pearl") ||
+                        productDetails.includes("bead");
+                      
+                      console.log("Product contains beads/pearls keywords:", hasBeadsOrPearlsKeywords);
+                      
+                      return !hasBeadsOrPearlsKeywords && (
+                        // Also check legacy fields
+                        (!product.category || product.category !== "Beads & Gems") && 
+                        (!product.productType || product.productType !== "Beads & Gems")
+                      );
+                    })() && (
                       <Button 
                         variant="default" 
                         className="font-montserrat flex-1 bg-primary text-background hover:bg-primary/90"
