@@ -78,6 +78,30 @@ export default function AdminTestimonials() {
       });
     }
   });
+  
+  // Delete testimonial mutation (for deleting approved testimonials)
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/testimonials/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Testimonial deleted",
+        description: "The testimonial has been permanently deleted from the system.",
+        variant: "default",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/testimonials'] });
+      setDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete testimonial. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Filter testimonials by approval status
   const pendingTestimonials = Array.isArray(testimonials) 
@@ -102,6 +126,14 @@ export default function AdminTestimonials() {
   const handleReject = () => {
     if (selectedTestimonial) {
       rejectMutation.mutate(selectedTestimonial.id);
+    }
+  };
+  
+  const handleDelete = () => {
+    if (selectedTestimonial) {
+      if (window.confirm(`Are you sure you want to permanently delete this testimonial from ${selectedTestimonial.name}?`)) {
+        deleteMutation.mutate(selectedTestimonial.id);
+      }
     }
   };
 
@@ -213,7 +245,7 @@ export default function AdminTestimonials() {
                           </div>
                         </div>
                         <div className="mt-3 text-sm line-clamp-2">
-                          {testimonial.briefTestimonial || testimonial.fullTestimonial}
+                          {testimonial.text || testimonial.story || "No testimonial content"}
                         </div>
                         <div className="flex justify-end mt-2">
                           <Button 
@@ -311,7 +343,7 @@ export default function AdminTestimonials() {
                           </div>
                         </div>
                         <div className="mt-3 text-sm line-clamp-2">
-                          {testimonial.briefTestimonial || testimonial.fullTestimonial}
+                          {testimonial.text || testimonial.story || "No testimonial content"}
                         </div>
                       </div>
                     ))}
@@ -455,34 +487,49 @@ export default function AdminTestimonials() {
               </div>
               
               {/* Action Buttons */}
-              {!selectedTestimonial.isApproved && (
-                <div className="flex justify-end gap-2 mt-6">
+              <div className="flex justify-end gap-2 mt-6">
+                {!selectedTestimonial.isApproved ? (
+                  <>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleReject}
+                      disabled={rejectMutation.isPending}
+                    >
+                      {rejectMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <X className="h-4 w-4 mr-2" />
+                      )}
+                      Reject
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      onClick={handleApprove}
+                      disabled={approveMutation.isPending}
+                    >
+                      {approveMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Check className="h-4 w-4 mr-2" />
+                      )}
+                      Approve
+                    </Button>
+                  </>
+                ) : (
                   <Button 
                     variant="destructive" 
-                    onClick={handleReject}
-                    disabled={rejectMutation.isPending}
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
                   >
-                    {rejectMutation.isPending ? (
+                    {deleteMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     ) : (
                       <X className="h-4 w-4 mr-2" />
                     )}
-                    Reject
+                    Delete Testimonial
                   </Button>
-                  <Button 
-                    variant="default" 
-                    onClick={handleApprove}
-                    disabled={approveMutation.isPending}
-                  >
-                    {approveMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Check className="h-4 w-4 mr-2" />
-                    )}
-                    Approve
-                  </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </DialogContent>
         </Dialog>
