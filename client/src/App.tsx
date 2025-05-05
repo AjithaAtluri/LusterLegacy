@@ -58,6 +58,8 @@ const AdminCustomizationDetail = lazy(() => import("@/pages/admin/customization-
 const AdminQuotes = lazy(() => import("@/pages/admin/quotes"));
 const AdminQuoteDetail = lazy(() => import("@/pages/admin/quote-detail"));
 const AdminContactMessages = lazy(() => import("@/pages/admin/contact-messages"));
+// Client Stories/Testimonials management
+const AdminTestimonials = lazy(() => import("@/pages/admin/testimonials"));
 // AI Content Generator
 const AIContentGenerator = lazy(() => import("@/pages/admin/ai-content-generator-page"));
 
@@ -189,6 +191,7 @@ function App() {
                 <Route path="/admin/quotes/:id" component={AdminQuoteDetail} />
                 <Route path="/admin/contact-messages" component={AdminContactMessages} />
                 <Route path="/admin/users" component={lazy(() => import("@/pages/admin/users"))} />
+                <Route path="/admin/testimonials" component={AdminTestimonials} />
                 
                 {/* Redirect old add-product URL to the AI generator */}
                 <Route path="/admin/add-product">
