@@ -468,7 +468,7 @@ export function ClientStoryForm() {
                     <FormItem>
                       <FormLabel>Was this purchase for yourself or a gift?</FormLabel>
                       <Select
-                        onValueChange={(value) => {
+                        onValueChange={(value: "self" | "gift_for" | "gift_from") => {
                           // Directly set the value in the form
                           field.onChange(value);
                           // Explicitly update the form value to ensure it's changed
