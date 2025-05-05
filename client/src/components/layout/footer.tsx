@@ -119,11 +119,6 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/repairs" className="text-pearl/70 hover:text-primary transition duration-300">
-                  Repair Services
-                </Link>
-              </li>
-              <li>
                 <Link href="/faq" className="text-pearl/70 hover:text-primary transition duration-300">
                   FAQ
                 </Link>

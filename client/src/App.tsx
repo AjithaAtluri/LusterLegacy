@@ -35,7 +35,6 @@ const Privacy = lazy(() => import("@/pages/privacy"));
 const Terms = lazy(() => import("@/pages/terms"));
 const Shipping = lazy(() => import("@/pages/shipping"));
 const Returns = lazy(() => import("@/pages/returns"));
-const Repairs = lazy(() => import("@/pages/repairs"));
 const FAQ = lazy(() => import("@/pages/faq"));
 
 // Admin pages
@@ -164,7 +163,6 @@ function App() {
                 <Route path="/terms" component={Terms} />
                 <Route path="/shipping" component={Shipping} />
                 <Route path="/returns" component={Returns} />
-                <Route path="/repairs" component={Repairs} />
                 <Route path="/faq" component={FAQ} />
                 
                 {/* Admin routes - All routes have both regular protected access and direct access */}

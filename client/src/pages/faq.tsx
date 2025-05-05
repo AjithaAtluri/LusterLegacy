@@ -211,7 +211,7 @@ export default function FAQ() {
                   <li>Have your jewelry professionally inspected and cleaned annually</li>
                 </ul>
                 <p className="mt-2">
-                  We offer complimentary cleaning and inspection services for all our pieces. See our <Link href="/repairs" className="text-primary hover:underline">Repair Services</Link> page for more information.
+                  We offer complimentary cleaning and inspection services for all our pieces. Contact our customer service team for more information about maintenance and care.
                 </p>
               </AccordionContent>
             </AccordionItem>
@@ -298,8 +298,8 @@ export default function FAQ() {
               <AccordionContent className="px-4 pb-4">
                 <p>
                   All jewelry comes with a 1-year warranty against manufacturing defects. Additionally, we offer lifetime 
-                  cleaning and inspection services. For more information about our warranty coverage and repair services, 
-                  please visit our <Link href="/repairs" className="text-primary hover:underline">Repair Services</Link> page.
+                  cleaning and inspection services. For more information about our warranty coverage and maintenance services, 
+                  please contact our customer service team.
                 </p>
               </AccordionContent>
             </AccordionItem>
