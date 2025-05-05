@@ -104,7 +104,7 @@ export async function generateAITestimonial(
     }
     
     const prompt = `
-      Create a professional and compelling testimonial for a luxury jewelry brand called Luster Legacy.
+      Create a genuine, natural-sounding testimonial for a luxury jewelry brand called Luster Legacy. Make it sound like a real person talking about their experience, not like marketing copy.
       
       Customer info:
       - Name: ${inputData.name}
@@ -124,21 +124,21 @@ export async function generateAITestimonial(
       
       Create TWO distinct versions of a testimonial:
       
-      1. A brief testimonial (2-3 sentences) that captures the essence of the customer's experience, suitable for display in a testimonial card.
+      1. A brief testimonial (2-3 sentences) that captures the person's genuine feelings in a conversational tone.
       
-      2. A detailed story (2-3 paragraphs) that elaborates on their experience with the jewelry, the emotional connection, and the quality of the craftsmanship.
+      2. A detailed story (2-3 paragraphs) that sounds like someone naturally telling a friend about their experience.
       
       Both versions should:
-      - Be in first person, as if spoken by the customer
-      - Emphasize the luxury nature of the jewelry
-      - Highlight the emotional connection to the piece
-      - Mention the craftsmanship of Luster Legacy
-      - Be authentic and not overly promotional
+      - Use casual, conversational language with occasional filler words or natural speech patterns
+      - Include natural human imperfections in speech (like starting sentences with "And" or using contractions)
+      - Avoid marketing buzzwords or overly formal language
+      - Sound like a real person would talk, not like an advertisement
+      - Include personal details and specific reactions to make it feel authentic
+      - Mention the recipient's genuine reaction if it was a gift
       
-      If images were uploaded, make a subtle reference to the visual beauty of the piece, using phrases like
-      "as you can see in the photos" or "the craftsmanship is evident in every detail".
+      If images were uploaded, reference them naturally, like "I had to share a pic of this gorgeous piece" or "The photo doesn't even do it justice, honestly."
       
-      If the original testimonial is already well-written, maintain its voice and style while enhancing it.
+      If the original testimonial is already well-written, preserve its casual voice and personal style.
       Do not invent specific product details that weren't mentioned.
       
       Format your response exactly like this:
