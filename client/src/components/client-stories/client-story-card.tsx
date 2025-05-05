@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ReliableImage } from "@/components/ui/reliable-image";
 
 interface ClientStoryCardProps {
   story: Testimonial;
@@ -23,7 +24,9 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   
-  const hasImages = story.imageUrls && story.imageUrls.length > 0;
+  // Safely handle imageUrls which might be null
+  const imageUrls = story.imageUrls || [];
+  const hasImages = imageUrls.length > 0;
   
   return (
     <>
@@ -34,8 +37,8 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
               {/* User image or initials in a circle */}
               <div className="h-10 w-10 rounded-full overflow-hidden bg-primary flex items-center justify-center text-white font-semibold mr-3">
                 {hasImages ? (
-                  <ReliableProductImage 
-                    src={story.imageUrls[0]} 
+                  <ReliableImage 
+                    src={imageUrls[0]} 
                     alt={story.name}
                     fallback={story.initials} 
                     className="h-full w-full object-cover" 
@@ -85,7 +88,7 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
           {/* Images, if any */}
           {hasImages && (
             <div className="mt-4 flex flex-wrap gap-2">
-              {story.imageUrls.map((url, index) => (
+              {imageUrls.map((url, index) => (
                 <div 
                   key={index}
                   className="h-20 w-20 rounded-md overflow-hidden border border-muted cursor-pointer hover:opacity-90 transition-opacity"
@@ -94,7 +97,7 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
                     setIsImageDialogOpen(true);
                   }}
                 >
-                  <ReliableProductImage
+                  <ReliableImage
                     src={url}
                     alt={`${story.name}'s jewelry ${index + 1}`}
                     className="h-full w-full object-cover"
@@ -111,7 +114,7 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
         </CardContent>
         
         <CardFooter className="pt-2 flex items-center justify-between border-t">
-          <RatingDisplay rating={story.rating} showCount={true} />
+          <RatingDisplay value={story.rating} showText={true} />
           
           <div className="text-xs text-muted-foreground">
             {formattedDate}
@@ -144,7 +147,7 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
       <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
         <DialogContent className="max-w-3xl flex items-center justify-center">
           <div className="relative max-h-[70vh] overflow-hidden rounded-md">
-            <ReliableProductImage
+            <ReliableImage
               src={selectedImage}
               alt={`${story.name}'s jewelry`}
               className="max-h-[70vh] w-auto object-contain"
