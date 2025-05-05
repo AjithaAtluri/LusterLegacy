@@ -256,6 +256,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
   
   /**
+   * Generic File Upload Endpoint
+   */
+  app.post('/api/upload', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file provided' });
+      }
+      
+      const fileUrl = `/uploads/${req.file.filename}`;
+      
+      console.log(`File uploaded successfully: ${fileUrl}`);
+      res.status(200).json({ 
+        success: true, 
+        url: fileUrl,
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        size: req.file.size
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to upload file',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  /**
    * AI Testimonial Generation
    */
   app.post('/api/generate-testimonial', upload.array('images', 5), async (req, res) => {
