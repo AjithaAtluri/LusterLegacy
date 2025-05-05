@@ -1021,9 +1021,9 @@ export class DatabaseStorage implements IStorage {
       // Begin transaction
       await db.transaction(async (tx) => {
         // 1. Delete all designRequest comments
-        const designRequests = await tx.select().from(designRequests).where(eq(designRequests.userId, userId));
+        const userDesignRequests = await tx.select().from(designRequests).where(eq(designRequests.userId, userId));
         
-        for (const dr of designRequests) {
+        for (const dr of userDesignRequests) {
           await tx.delete(designRequestComments).where(eq(designRequestComments.designRequestId, dr.id));
           await tx.delete(designFeedback).where(eq(designFeedback.designRequestId, dr.id));
           await tx.delete(designPayments).where(eq(designPayments.designRequestId, dr.id));
@@ -1036,7 +1036,7 @@ export class DatabaseStorage implements IStorage {
         const custRequests = await tx.select().from(customizationRequests).where(eq(customizationRequests.userId, userId));
         
         for (const cr of custRequests) {
-          await tx.delete(customizationRequestComments).where(eq(customizationRequestComments.requestId, cr.id));
+          await tx.delete(customizationRequestComments).where(eq(customizationRequestComments.customizationRequestId, cr.id));
         }
         
         // 4. Delete all customization requests
@@ -1046,16 +1046,16 @@ export class DatabaseStorage implements IStorage {
         const quoteReqs = await tx.select().from(quoteRequests).where(eq(quoteRequests.userId, userId));
         
         for (const qr of quoteReqs) {
-          await tx.delete(quoteRequestComments).where(eq(quoteRequestComments.requestId, qr.id));
+          await tx.delete(quoteRequestComments).where(eq(quoteRequestComments.quoteRequestId, qr.id));
         }
         
         // 6. Delete all quote requests
         await tx.delete(quoteRequests).where(eq(quoteRequests.userId, userId));
         
         // 7. Delete all order items
-        const orders = await tx.select().from(orders).where(eq(orders.userId, userId));
+        const userOrders = await tx.select().from(orders).where(eq(orders.userId, userId));
         
-        for (const order of orders) {
+        for (const order of userOrders) {
           await tx.delete(orderItems).where(eq(orderItems.orderId, order.id));
         }
         

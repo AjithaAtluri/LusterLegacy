@@ -2564,6 +2564,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get user orders
+  // Delete a user and all their associated data (admin only)
+  app.delete('/api/users/:usernameOrId', validateAdmin, async (req, res) => {
+    try {
+      const usernameOrId = req.params.usernameOrId;
+      
+      // If the identifier is numeric, treat as ID
+      const id = !isNaN(Number(usernameOrId)) ? Number(usernameOrId) : usernameOrId;
+      
+      console.log(`Attempting to delete user: ${usernameOrId}`);
+      const success = await storage.deleteUser(id);
+      
+      if (success) {
+        res.json({ success: true, message: 'User and associated data deleted successfully' });
+      } else {
+        res.status(404).json({ success: false, message: 'User not found or delete operation failed' });
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ success: false, message: 'Failed to delete user', error: error.message });
+    }
+  });
+  
   app.get('/api/user/orders', async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
