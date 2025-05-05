@@ -519,18 +519,9 @@ export default function ProductDetail() {
                         console.error("Error parsing product details:", e);
                       }
                       
-                      // Specific ID exception for product 48
-                      if (product.id === 48) {
-                        return false;
-                      }
-                      
-                      // Check product type - Beads & Gems
-                      if (
-                        productTypeId === "19" || // Product type ID 19 is Beads & Gems
-                        product.productType === "Beads & Gems" || 
-                        additionalData.productType === "Beads & Gems"
-                      ) {
-                        return false; // Don't show customization button
+                      // Only check if the product type is "Beads & Gems"
+                      if (product.productType === "Beads & Gems") {
+                        return false; // Don't show customization button for Beads & Gems
                       }
                       
                       return true; // Show customization button for all other products
