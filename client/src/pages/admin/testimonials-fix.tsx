@@ -191,13 +191,18 @@ export default function AdminTestimonials() {
     }
   });
 
-  // Filter testimonials by approval status
+  // Filter testimonials by approval status and status field
   const pendingTestimonials = Array.isArray(testimonials) 
-    ? testimonials.filter(t => !t.isApproved)
+    ? testimonials.filter(t => !t.isApproved && t.status === 'pending')
     : [];
     
   const approvedTestimonials = Array.isArray(testimonials) 
     ? testimonials.filter(t => t.isApproved)
+    : [];
+    
+  // Add a third category for rejected testimonials (if needed in the future)
+  const rejectedTestimonials = Array.isArray(testimonials) 
+    ? testimonials.filter(t => !t.isApproved && t.status === 'rejected')
     : [];
     
   // Debug testimonial images if available
