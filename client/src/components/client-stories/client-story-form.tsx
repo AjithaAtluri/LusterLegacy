@@ -433,9 +433,6 @@ export function ClientStoryForm() {
                     <FormControl>
                       <Input placeholder="Partner, parent, friend, etc." {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Tell us who received this special gift.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -452,9 +449,6 @@ export function ClientStoryForm() {
                     <FormControl>
                       <Input placeholder="Partner, parent, friend, etc." {...field} />
                     </FormControl>
-                    <FormDescription>
-                      Tell us who gifted this special piece to you.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -512,9 +506,7 @@ export function ClientStoryForm() {
                       <SelectItem value="did_not">Not satisfied</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    Your level of satisfaction with your purchase.
-                  </FormDescription>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -541,9 +533,7 @@ export function ClientStoryForm() {
                       <SelectItem value="as_is">Standard product (no customization)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    Let us know if this was a custom design, customization, or standard product.
-                  </FormDescription>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -572,9 +562,7 @@ export function ClientStoryForm() {
                         <SelectItem value="poor">Poor - did not meet expectations</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormDescription>
-                      Tell us about your experience working with our design team.
-                    </FormDescription>
+
                     <FormMessage />
                   </FormItem>
                 )}
@@ -637,9 +625,7 @@ export function ClientStoryForm() {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
-                    This will be the main testimonial displayed in featured areas.
-                  </FormDescription>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -658,9 +644,7 @@ export function ClientStoryForm() {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
-                    Tell us the full story behind your piece for our detailed client story section.
-                  </FormDescription>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -681,9 +665,7 @@ export function ClientStoryForm() {
                     <FormLabel>
                       Would you consider Luster Legacy for your next custom design?
                     </FormLabel>
-                    <FormDescription>
-                      Let us know if you'd consider returning to us for future jewelry designs.
-                    </FormDescription>
+
                   </div>
                 </FormItem>
               )}
