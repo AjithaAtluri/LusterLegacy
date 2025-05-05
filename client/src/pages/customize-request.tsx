@@ -79,6 +79,18 @@ export default function CustomizeRequest() {
     queryKey: ['/api/metal-types'],
   });
   
+  // Redirect back to product page if product is in Beads & Gems category
+  useEffect(() => {
+    if (product && (product.category === "Beads & Gems" || product.productType === "Beads & Gems")) {
+      toast({
+        title: "Customization Unavailable",
+        description: "Beads & Gems products cannot be customized. Redirecting to product page.",
+        variant: "destructive"
+      });
+      navigate(`/products/${id}`);
+    }
+  }, [product, id]);
+  
   // Fetch stone types for dropdown
   const { data: stoneTypes, isLoading: isLoadingStoneTypes } = useQuery({
     queryKey: ['/api/stone-types'],
