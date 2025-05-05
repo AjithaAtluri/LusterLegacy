@@ -168,9 +168,11 @@ export interface IStorage {
   getOrderItemsByOrder(orderId: number): Promise<OrderItem[]>;
   createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem>;
 
-  // Testimonial methods
+  // Client Stories (Testimonial) methods
   getAllTestimonials(): Promise<Testimonial[]>;
   getApprovedTestimonials(): Promise<Testimonial[]>;
+  getTestimonials(options?: { userId?: number, status?: string, limit?: number, approved?: boolean }): Promise<Testimonial[]>;
+  getTestimonialById(id: number): Promise<Testimonial | undefined>;
   createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
   updateTestimonial(id: number, testimonial: Partial<Testimonial>): Promise<Testimonial | undefined>;
   deleteTestimonial(id: number): Promise<boolean>;
