@@ -299,9 +299,13 @@ export function ClientStoryForm() {
           <CardDescription>
             Tell us about your Luster Legacy jewelry and help others discover the perfect piece.
           </CardDescription>
-          <div className="mt-4 p-3 bg-primary/10 rounded-md border border-primary/20">
+          <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20 shadow-sm">
+            <h3 className="font-medium text-primary mb-2 flex items-center">
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI Testimonial Assistant
+            </h3>
             <p className="text-sm">
-              <span className="font-semibold">Let AI help you craft your story!</span> Simply fill in the form details, upload a photo of your jewelry, and click "Generate AI Testimonial" - it's that easy! Our AI will create both a brief testimonial and a full story based on your inputs.
+              Our AI can help craft a compelling testimonial based on your experience. Simply fill in your details, upload photos if available, and click the "Generate AI Testimonial" button to create both a brief testimonial and a detailed story that highlights your unique experience.
             </p>
           </div>
         </CardHeader>
@@ -586,25 +590,31 @@ export function ClientStoryForm() {
 
             {/* Move AI testimonial generation button higher up */}
             <div className="space-y-4 py-4">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={generateAITestimonial}
-                disabled={isGeneratingAI || storyMutation.isPending}
-                className="w-full flex items-center justify-center"
-              >
-                {isGeneratingAI ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating AI Testimonial...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate AI Testimonial
-                  </>
-                )}
-              </Button>
+              <div className="bg-primary/5 p-4 rounded-lg border border-primary/20 shadow-sm">
+                <Button 
+                  type="button" 
+                  variant="default" 
+                  size="lg"
+                  onClick={generateAITestimonial}
+                  disabled={isGeneratingAI || storyMutation.isPending}
+                  className="w-full flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 transition-all"
+                >
+                  {isGeneratingAI ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Generating AI Testimonial...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Generate AI Testimonial
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-center mt-2 text-muted-foreground">
+                  Let AI help you create the perfect testimonial based on your inputs
+                </p>
+              </div>
               
               {aiErrorMessage && (
                 <p className="text-sm text-red-500">{aiErrorMessage}</p>
