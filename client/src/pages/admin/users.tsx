@@ -15,10 +15,11 @@ import {
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, UserCircle } from "lucide-react";
+import { Loader2, Trash2, UserCircle, UserPlus, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -30,6 +31,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
@@ -42,9 +61,24 @@ interface User {
   createdAt: string;
 }
 
+// New admin user form state interface
+interface NewAdminFormState {
+  username: string;
+  email: string;
+  password: string;
+  role: "admin" | "limited-admin";
+}
+
 export default function AdminUsersPage() {
   const { toast } = useToast();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newAdminForm, setNewAdminForm] = useState<NewAdminFormState>({
+    username: "",
+    email: "",
+    password: "",
+    role: "limited-admin"
+  });
   
   // Fetch all users
   const { data: users, isLoading, error } = useQuery({
@@ -83,6 +117,65 @@ export default function AdminUsersPage() {
     }
   });
   
+  // Mutation for creating admin user
+  const createAdminMutation = useMutation({
+    mutationFn: async (formData: NewAdminFormState) => {
+      const response = await apiRequest("POST", "/api/admin/create-user", formData);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Admin user created",
+        description: `${newAdminForm.role === "admin" ? "Admin" : "Limited-access admin"} user has been successfully created`,
+        variant: "default"
+      });
+      
+      // Reset form
+      setNewAdminForm({
+        username: "",
+        email: "",
+        password: "",
+        role: "limited-admin"
+      });
+      
+      // Close dialog
+      setIsCreateDialogOpen(false);
+      
+      // Invalidate and refetch users
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create admin user: " + (error instanceof Error ? error.message : "Unknown error"),
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Handle input changes in the form
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewAdminForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Handle role selection
+  const handleRoleChange = (value: string) => {
+    setNewAdminForm(prev => ({
+      ...prev,
+      role: value as "admin" | "limited-admin"
+    }));
+  };
+  
+  // Handle form submission
+  const handleCreateAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    createAdminMutation.mutate(newAdminForm);
+  };
+  
   // Format date for display
   const formatDate = (dateString: string) => {
     try {
@@ -96,11 +189,117 @@ export default function AdminUsersPage() {
     <AdminLayout title="User Management">
       <div className="space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Users</CardTitle>
-            <CardDescription>
-              Manage user accounts in your system. You can delete user accounts, which will also remove all their associated data.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle>Users</CardTitle>
+              <CardDescription>
+                Manage user accounts in your system.
+              </CardDescription>
+            </div>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Admin User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Admin User</DialogTitle>
+                  <DialogDescription>
+                    Add a new administrator or limited-access admin to the system.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleCreateAdmin}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        placeholder="Username"
+                        value={newAdminForm.username}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="Email"
+                        value={newAdminForm.email}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        placeholder="Password"
+                        value={newAdminForm.password}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="role">Admin Role</Label>
+                      <Select value={newAdminForm.role} onValueChange={handleRoleChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="h-4 w-4" />
+                              <span>Full Administrator</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="limited-admin">
+                            <div className="flex items-center gap-2">
+                              <UserCircle className="h-4 w-4" />
+                              <span>Limited-Access Admin</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      {newAdminForm.role === "limited-admin" && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          <p>Limited-access admins can:</p>
+                          <ul className="list-disc ml-5 mt-2">
+                            <li>Manage customer request chats</li>
+                            <li>Update order statuses</li>
+                            <li>Add new products</li>
+                          </ul>
+                          <p className="mt-2">They cannot access product types, stone types, metal types, or user management.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createAdminMutation.isPending}>
+                      {createAdminMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>Create</>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -136,7 +335,7 @@ export default function AdminUsersPage() {
                         </TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
-                          <Badge variant={user.role === "admin" ? "secondary" : "outline"}>
+                          <Badge variant={user.role === "admin" ? "secondary" : user.role === "limited-admin" ? "default" : "outline"}>
                             {user.role || "user"}
                           </Badge>
                         </TableCell>

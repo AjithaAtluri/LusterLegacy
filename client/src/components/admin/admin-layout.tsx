@@ -305,11 +305,28 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     ? testimonials.filter((t: any) => !t.isApproved).length 
     : 0;
     
+  // Define TypeScript interfaces for nav items
+  interface NavSubItem {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    badge?: number;
+  }
+  
+  interface NavItem {
+    title: string;
+    icon: React.ReactNode;
+    href?: string;
+    badge?: number;
+    isGroup?: boolean;
+    items?: NavSubItem[];
+  }
+  
   // Determine navigation items based on user role
   const isLimitedAdmin = user?.role === "limited-admin";
   
   // Base navigation items for all admin roles
-  const baseNavItems = [
+  const baseNavItems: NavItem[] = [
     { 
       title: "Dashboard", 
       icon: <LayoutDashboard className="h-5 w-5" />, 
@@ -354,7 +371,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   ];
   
   // Additional navigation items for full admin
-  const fullAdminItems = [
+  const fullAdminItems: NavItem[] = [
     {
       title: "Product Types",
       icon: <Package className="h-5 w-5" />,
@@ -389,7 +406,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   ];
   
   // Combine navigation items based on user role
-  const navItems = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
+  const navItems: NavItem[] = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
   
   // Current location for determining active route
   const [location] = useLocation();
@@ -417,9 +434,14 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               <SheetContent side="left" className="p-0">
                 <div className="flex flex-col h-full">
                   <div className="flex items-center p-4 border-b">
-                    <a href="/admin/dashboard" className="font-playfair text-xl font-bold">
-                      Luster<span className="text-primary">Legacy</span> Admin
-                    </a>
+                    <div>
+                      <a href="/admin/dashboard" className="font-playfair text-xl font-bold">
+                        Luster<span className="text-primary">Legacy</span> Admin
+                      </a>
+                      {user?.role === "limited-admin" && (
+                        <Badge variant="outline" className="ml-2">Limited Access</Badge>
+                      )}
+                    </div>
                     <Button variant="ghost" size="icon" className="ml-auto" onClick={() => setIsMobileMenuOpen(false)}>
                       <X className="h-5 w-5" />
                     </Button>
@@ -501,6 +523,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             <div className="hidden md:flex items-center">
               <UserCircle className="h-5 w-5 mr-2 text-muted-foreground" />
               <span className="text-sm font-medium">{user?.username}</span>
+              {user?.role === "limited-admin" && (
+                <Badge variant="outline" className="ml-2">Limited Access</Badge>
+              )}
             </div>
             <Button variant="outline" size="sm" onClick={handleLogout} className="hidden md:flex">
               <LogOut className="mr-2 h-4 w-4" />
