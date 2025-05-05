@@ -61,7 +61,8 @@ export function FileUploader({
       // Upload each file
       const uploadPromises = acceptedFiles.map(async (file, index) => {
         const formData = new FormData();
-        formData.append("file", file);
+        // Use 'image' as field name for testimonial endpoints, but allow 'file' for generic uploads
+        formData.append(endpoint.includes('testimonial') ? "image" : "file", file);
 
         try {
           const xhr = new XMLHttpRequest();

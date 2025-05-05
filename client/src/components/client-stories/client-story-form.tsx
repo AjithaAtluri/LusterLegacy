@@ -580,7 +580,7 @@ export function ClientStoryForm() {
                 maxFiles={3}
                 acceptedFileTypes={["image/jpeg", "image/png", "image/jpg"]}
                 maxSizeMB={5}
-                endpoint="/api/upload"
+                endpoint="/api/process-testimonial-image"
                 onUploadsComplete={handleImageUploads}
               />
               <p className="text-sm text-muted-foreground">
