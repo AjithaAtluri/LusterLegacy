@@ -25,10 +25,24 @@ import {
 // Helper function to format image URLs
 const formatImageUrl = (url: string) => {
   if (!url) return "";
-  if (url.startsWith('/') || url.startsWith('http')) {
+  
+  // If path already has http or starts with /, leave it as is
+  if (url.startsWith('http')) {
     return url;
   }
-  return `/${url}`;
+  
+  // If path doesn't start with /, add it
+  if (!url.startsWith('/')) {
+    url = `/${url}`;
+  }
+  
+  // Make sure uploads folder is in the path
+  if (!url.includes('/uploads/') && !url.startsWith('/uploads/')) {
+    url = url.replace('/', '/uploads/');
+  }
+  
+  console.log("Formatted image URL:", url);
+  return url;
 };
 
 export default function AdminTestimonials() {
@@ -40,7 +54,13 @@ export default function AdminTestimonials() {
 
   // Fetch testimonials data
   const { data: testimonials, isLoading: isLoadingTestimonials } = useQuery({
-    queryKey: ['/api/admin/testimonials']
+    queryKey: ['/api/admin/testimonials'],
+    onSuccess: (data) => {
+      console.log("Testimonials data:", data);
+      if (data && data.length > 0 && data[0].imageUrls) {
+        console.log("First testimonial image URLs:", data[0].imageUrls);
+      }
+    }
   });
 
   // Approve testimonial mutation
