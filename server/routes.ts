@@ -38,7 +38,8 @@ import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
-import { generateAITestimonial, processImageForTestimonial } from "./openai-service";
+import { generateAITestimonial } from "./openai-service";
+// We don't import processImageForTestimonial because it fails with local image paths
 import { getGoldPrice, fetchGoldPrice } from "./services/gold-price-service";
 
 // USD to INR conversion rate - must match the rate in price-calculator.ts
@@ -363,22 +364,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ success: false, message: 'No image provided' });
       }
       
+      console.log(`Successfully uploaded image: ${req.file.filename}`);
+      
       const imageUrl = `/uploads/${req.file.filename}`;
       
-      // Skip OpenAI processing to avoid errors with local image paths
-      // If description is needed, we can generate it later when displaying testimonials
+      // Note: This is a completely rewritten endpoint - NO OpenAI calls at all
+      // We previously tried to call processImageForTestimonial here but it's failing with local paths
+      // So we're just returning a success response with the image URL instead
       
-      res.json({
+      return res.json({
         success: true,
-        url: imageUrl, // Match the field name expected by the FileUploader component
-        imageUrl: imageUrl,
+        url: imageUrl, // Field expected by FileUploader
+        imageUrl,
         description: "Jewelry image uploaded successfully"
       });
     } catch (error) {
-      console.error('Error processing testimonial image:', error);
-      res.status(500).json({ 
+      console.error('Error in testimonial image upload endpoint:', error);
+      return res.status(500).json({ 
         success: false, 
-        message: 'Failed to process image',
+        message: 'Failed to process image upload',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
