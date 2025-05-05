@@ -543,7 +543,7 @@ export class MemStorage implements IStorage {
     return orderItem;
   }
 
-  // Testimonial methods
+  // Client Stories (Testimonial) methods
   async getAllTestimonials(): Promise<Testimonial[]> {
     return Array.from(this.testimonials.values());
   }
@@ -553,10 +553,60 @@ export class MemStorage implements IStorage {
       (testimonial) => testimonial.isApproved
     );
   }
+  
+  async getTestimonials(options?: { userId?: number, status?: string, limit?: number, approved?: boolean }): Promise<Testimonial[]> {
+    let result = Array.from(this.testimonials.values());
+    
+    // Apply filters based on options
+    if (options) {
+      if (options.userId !== undefined) {
+        result = result.filter(t => t.userId === options.userId);
+      }
+      
+      if (options.status) {
+        result = result.filter(t => t.status === options.status);
+      }
+      
+      if (options.approved !== undefined) {
+        result = result.filter(t => t.isApproved === options.approved);
+      }
+    }
+    
+    // Order by created date, newest first
+    result.sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt || 0);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt || 0);
+      return dateB.getTime() - dateA.getTime();
+    });
+    
+    // Apply limit if specified
+    if (options?.limit && options.limit > 0) {
+      result = result.slice(0, options.limit);
+    }
+    
+    return result;
+  }
+  
+  async getTestimonialById(id: number): Promise<Testimonial | undefined> {
+    return this.testimonials.get(id);
+  }
 
   async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
     const id = this.currentTestimonialId++;
-    const testimonial: Testimonial = { ...insertTestimonial, id };
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    
+    // Set default values if not provided
+    const testimonial: Testimonial = { 
+      ...insertTestimonial, 
+      id, 
+      createdAt, 
+      updatedAt,
+      status: insertTestimonial.status || 'pending',
+      isApproved: insertTestimonial.isApproved || false,
+      imageUrls: insertTestimonial.imageUrls || []
+    };
+    
     this.testimonials.set(id, testimonial);
     return testimonial;
   }
@@ -565,7 +615,15 @@ export class MemStorage implements IStorage {
     const testimonial = this.testimonials.get(id);
     if (!testimonial) return undefined;
     
-    const updatedTestimonial = { ...testimonial, ...testimonialUpdate };
+    // Update the timestamp
+    const updatedAt = new Date();
+    
+    const updatedTestimonial = { 
+      ...testimonial, 
+      ...testimonialUpdate,
+      updatedAt
+    };
+    
     this.testimonials.set(id, updatedTestimonial);
     return updatedTestimonial;
   }
@@ -1436,23 +1494,69 @@ export class DatabaseStorage implements IStorage {
     return item;
   }
 
-  // Testimonial methods
+  // Client Stories (Testimonial) methods
   async getAllTestimonials(): Promise<Testimonial[]> {
-    return await db.select().from(testimonials);
+    return await db.select().from(testimonials).orderBy(desc(testimonials.createdAt));
   }
 
   async getApprovedTestimonials(): Promise<Testimonial[]> {
-    return await db.select().from(testimonials).where(eq(testimonials.isApproved, true));
+    return await db.select().from(testimonials).where(eq(testimonials.isApproved, true)).orderBy(desc(testimonials.createdAt));
+  }
+  
+  async getTestimonials(options?: { userId?: number, status?: string, limit?: number, approved?: boolean }): Promise<Testimonial[]> {
+    let query = db.select().from(testimonials);
+    
+    // Apply filters
+    if (options) {
+      if (options.userId !== undefined) {
+        query = query.where(eq(testimonials.userId, options.userId));
+      }
+      
+      if (options.status) {
+        query = query.where(eq(testimonials.status, options.status));
+      }
+      
+      if (options.approved !== undefined) {
+        query = query.where(eq(testimonials.isApproved, options.approved));
+      }
+    }
+    
+    // Always sort by newest first
+    query = query.orderBy(desc(testimonials.createdAt));
+    
+    // Apply limit if specified
+    if (options?.limit && options.limit > 0) {
+      query = query.limit(options.limit);
+    }
+    
+    return await query;
+  }
+  
+  async getTestimonialById(id: number): Promise<Testimonial | undefined> {
+    const [testimonial] = await db.select().from(testimonials).where(eq(testimonials.id, id));
+    return testimonial || undefined;
   }
 
   async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
-    const [testimonial] = await db.insert(testimonials).values(insertTestimonial).returning();
+    const values = {
+      ...insertTestimonial,
+      status: insertTestimonial.status || 'pending',
+      isApproved: insertTestimonial.isApproved || false,
+      imageUrls: insertTestimonial.imageUrls || []
+    };
+    
+    const [testimonial] = await db.insert(testimonials).values(values).returning();
     return testimonial;
   }
 
   async updateTestimonial(id: number, testimonialUpdate: Partial<Testimonial>): Promise<Testimonial | undefined> {
+    const values = {
+      ...testimonialUpdate,
+      updatedAt: new Date()
+    };
+    
     const [testimonial] = await db.update(testimonials)
-      .set(testimonialUpdate)
+      .set(values)
       .where(eq(testimonials.id, id))
       .returning();
     return testimonial || undefined;

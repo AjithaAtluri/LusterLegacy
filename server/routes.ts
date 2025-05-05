@@ -2779,9 +2779,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   /**
-   * Testimonial routes
+   * Client Stories (Testimonial) routes
    */
-  // Get approved testimonials
+  // Get approved testimonials for public display
   app.get('/api/testimonials', async (_req, res) => {
     try {
       const testimonials = await storage.getApprovedTestimonials();
@@ -2789,6 +2789,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching testimonials:', error);
       res.status(500).json({ message: 'Error fetching testimonials' });
+    }
+  });
+  
+  // Get testimonials with filtering
+  app.get('/api/testimonials/filter', async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const status = req.query.status as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const approved = req.query.approved === 'true' ? true : 
+                      req.query.approved === 'false' ? false : undefined;
+      
+      const options = { userId, status, limit, approved };
+      const testimonials = await storage.getTestimonials(options);
+      res.json(testimonials);
+    } catch (error) {
+      console.error('Error fetching filtered testimonials:', error);
+      res.status(500).json({ message: 'Error fetching testimonials' });
+    }
+  });
+  
+  // Get single testimonial by ID
+  app.get('/api/testimonials/:id', async (req, res) => {
+    try {
+      const testimonialId = parseInt(req.params.id);
+      if (isNaN(testimonialId)) {
+        return res.status(400).json({ message: 'Invalid testimonial ID' });
+      }
+      
+      const testimonial = await storage.getTestimonialById(testimonialId);
+      if (!testimonial) {
+        return res.status(404).json({ message: 'Testimonial not found' });
+      }
+      
+      res.json(testimonial);
+    } catch (error) {
+      console.error('Error fetching testimonial:', error);
+      res.status(500).json({ message: 'Error fetching testimonial' });
+    }
+  });
+  
+  // Create a new testimonial/client story
+  app.post('/api/testimonials', async (req, res) => {
+    try {
+      const newTestimonial = req.body;
+      
+      // Set user ID if authenticated
+      if (req.isAuthenticated()) {
+        newTestimonial.userId = req.user.id;
+      }
+      
+      // Default status is pending
+      newTestimonial.status = 'pending';
+      newTestimonial.isApproved = false;
+      
+      const testimonial = await storage.createTestimonial(newTestimonial);
+      res.status(201).json(testimonial);
+    } catch (error) {
+      console.error('Error creating testimonial:', error);
+      res.status(500).json({ message: 'Error creating testimonial' });
     }
   });
 
@@ -2803,7 +2863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update testimonial approval status (admin only)
+  // Update testimonial status and approval (admin only)
   app.put('/api/admin/testimonials/:id', validateAdmin, async (req, res) => {
     try {
       const testimonialId = parseInt(req.params.id);
@@ -2811,8 +2871,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid testimonial ID' });
       }
 
-      const { isApproved } = req.body;
-      const updatedTestimonial = await storage.updateTestimonial(testimonialId, { isApproved });
+      const { isApproved, status, adminComments } = req.body;
+      const updateData: Partial<Testimonial> = {};
+      
+      if (isApproved !== undefined) updateData.isApproved = isApproved;
+      if (status) updateData.status = status;
+      if (adminComments) updateData.adminComments = adminComments;
+      
+      const updatedTestimonial = await storage.updateTestimonial(testimonialId, updateData);
 
       if (!updatedTestimonial) {
         return res.status(404).json({ message: 'Testimonial not found' });
@@ -2822,6 +2888,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating testimonial:', error);
       res.status(500).json({ message: 'Error updating testimonial' });
+    }
+  });
+  
+  // Delete testimonial (admin only)
+  app.delete('/api/admin/testimonials/:id', validateAdmin, async (req, res) => {
+    try {
+      const testimonialId = parseInt(req.params.id);
+      if (isNaN(testimonialId)) {
+        return res.status(400).json({ message: 'Invalid testimonial ID' });
+      }
+      
+      const success = await storage.deleteTestimonial(testimonialId);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Testimonial not found or could not be deleted' });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting testimonial:', error);
+      res.status(500).json({ message: 'Error deleting testimonial' });
     }
   });
 
