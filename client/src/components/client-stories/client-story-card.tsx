@@ -99,20 +99,20 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
           </div>
           
           <div className="flex flex-col items-end">
-            <Rating value={story.rating || 5} readOnly size="sm" />
+            <Rating value={story.rating || 5} readOnly size="sm" onChange={() => {}} />
             <div className="text-xs text-gray-400 mt-1">{timeAgo}</div>
           </div>
         </div>
         
         <div className="relative text-gray-600">
           <Quote className="absolute -left-1 -top-1 h-6 w-6 text-gray-200 transform -scale-x-100" />
-          <p className="pl-5 pr-5 italic">{story.content}</p>
+          <p className="pl-5 pr-5 italic">{story.story || story.text}</p>
           <Quote className="absolute -right-1 bottom-0 h-6 w-6 text-gray-200" />
         </div>
         
-        {story.productName && (
+        {story.productType && (
           <div className="mt-auto pt-2 text-sm text-gray-500">
-            <span className="font-medium">Purchased:</span> {story.productName}
+            <span className="font-medium">Product Type:</span> {story.productType}
           </div>
         )}
       </div>

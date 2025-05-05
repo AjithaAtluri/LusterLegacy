@@ -16,6 +16,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Rating } from "./rating";
@@ -25,9 +32,13 @@ import { Spinner } from "../ui/spinner";
 const clientStorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
   location: z.string().max(100).optional(),
+  productType: z.string().min(2, "Please select a product type"),
   rating: z.number().min(1).max(5),
-  content: z.string().min(10, "Your story must be at least 10 characters"),
+  text: z.string().min(10, "Your testimonial must be at least 10 characters"),
+  story: z.string().min(20, "Your story must be at least 20 characters"),
+  initials: z.string().min(1, "Please enter your initials"),
   orderId: z.number().optional(),
+  productId: z.number().optional(),
   imageUrls: z.array(z.string()).optional(),
 });
 
@@ -42,8 +53,11 @@ export function ClientStoryForm() {
     defaultValues: {
       name: "",
       location: "",
+      productType: "",
       rating: 5,
-      content: "",
+      text: "",
+      story: "",
+      initials: "",
       imageUrls: [],
     },
   });
@@ -52,6 +66,8 @@ export function ClientStoryForm() {
     mutationFn: async (data: ClientStoryFormData) => {
       const response = await apiRequest("POST", "/api/testimonials", {
         ...data,
+        status: "pending", // New testimonials always start as pending
+        isApproved: false, // Default to not approved
         imageUrls: uploadedFiles.length > 0 ? uploadedFiles : undefined,
       });
       return await response.json();
@@ -77,6 +93,18 @@ export function ClientStoryForm() {
   });
 
   function onSubmit(data: ClientStoryFormData) {
+    // Automatically generate initials if not provided
+    if (!data.initials || data.initials.trim() === "") {
+      const nameParts = data.name.split(" ");
+      let initials = "";
+      if (nameParts.length >= 2) {
+        initials = `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+      } else if (nameParts.length === 1) {
+        initials = nameParts[0].substring(0, 2).toUpperCase();
+      }
+      data.initials = initials;
+    }
+    
     submitMutation.mutate(data);
   }
 
@@ -121,6 +149,39 @@ export function ClientStoryForm() {
               </FormItem>
             )}
           />
+          
+          <FormField
+            control={form.control}
+            name="productType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Product Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select product type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Necklace">Necklace</SelectItem>
+                    <SelectItem value="Earrings">Earrings</SelectItem>
+                    <SelectItem value="Ring">Ring</SelectItem>
+                    <SelectItem value="Bracelet">Bracelet</SelectItem>
+                    <SelectItem value="Pendant">Pendant</SelectItem>
+                    <SelectItem value="Set">Jewelry Set</SelectItem>
+                    <SelectItem value="Custom">Custom Piece</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the type of jewelry you purchased
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}
@@ -141,19 +202,61 @@ export function ClientStoryForm() {
           
           <FormField
             control={form.control}
-            name="content"
+            name="text"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Your Story</FormLabel>
+                <FormLabel>Brief Testimonial</FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="Tell us about your experience with Luster Legacy..." 
+                    placeholder="A short testimonial about your experience..." 
+                    className="min-h-[80px]"
+                    {...field} 
+                  />
+                </FormControl>
+                <FormDescription>
+                  This shorter testimonial may be featured on our homepage
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="story"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Your Full Story</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Tell us more about your experience with Luster Legacy..." 
                     className="min-h-[150px]"
                     {...field} 
                   />
                 </FormControl>
                 <FormDescription>
-                  Share your journey and experience with our jewelry
+                  Share your detailed journey and experience with our jewelry
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="initials"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Your Initials (Optional)</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="J.D." 
+                    maxLength={3} 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormDescription>
+                  We'll use these if you prefer not to display your full name
                 </FormDescription>
                 <FormMessage />
               </FormItem>
