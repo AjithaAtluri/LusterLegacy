@@ -21,9 +21,13 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            {/* User initials in a circle */}
-            <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold mr-3">
-              {story.initials}
+            {/* User image or initials in a circle */}
+            <div className="h-10 w-10 rounded-full overflow-hidden bg-primary flex items-center justify-center text-white font-semibold mr-3">
+              {story.imageUrls && story.imageUrls.length > 0 ? (
+                <img src={story.imageUrls[0]} alt={story.name} className="h-full w-full object-cover" />
+              ) : (
+                <span>{story.initials}</span>
+              )}
             </div>
             
             <div>
