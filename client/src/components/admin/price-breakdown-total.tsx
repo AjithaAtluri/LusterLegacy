@@ -51,14 +51,19 @@ export function PriceBreakdownTotal({
   });
   
   // Calculate the total of all cost components to verify it matches the returned price
-  const totalCost = breakdown.metalCost + 
+  const calculatedTotalCost = breakdown.metalCost + 
                     breakdown.primaryStoneCost + 
                     breakdown.secondaryStoneCost + 
                     breakdown.otherStoneCost +
                     breakdown.overhead;
   
   // The price from the API should match this total (with possible small rounding differences)
-  const isConsistent = Math.abs(totalCost - priceUSD) < 5; // Allow for small rounding differences
+  const isConsistent = Math.abs(calculatedTotalCost - priceUSD) < 5; // Allow for small rounding differences
+  
+  // Use the calculated total if it's significantly different from the API total
+  // This ensures the breakdown components add up correctly to the displayed total
+  const displayTotalUSD = !isConsistent && calculatedTotalCost > 5 ? calculatedTotalCost : priceUSD;
+  const displayTotalINR = !isConsistent && calculatedTotalCost > 5 ? Math.round(calculatedTotalCost * (exchangeRate || 83)) : priceINR;
   
   // Function to format dual currency prices
   const formatDualCurrency = (usdAmount: number) => {
@@ -197,8 +202,13 @@ export function PriceBreakdownTotal({
           <Skeleton className="h-5 w-28" />
         ) : (
           <div className="flex flex-col items-end">
-            <span className="text-base">{formatCurrency(priceUSD)}</span>
-            <span className="text-sm">₹{priceINR.toLocaleString('en-IN')}</span>
+            <span className="text-base">{formatCurrency(displayTotalUSD)}</span>
+            <span className="text-sm">₹{displayTotalINR.toLocaleString('en-IN')}</span>
+            {!isConsistent && (
+              <span className="text-xs text-amber-500 mt-1">
+                Using calculated total (API total: {formatCurrency(priceUSD)})
+              </span>
+            )}
           </div>
         )}
       </div>
