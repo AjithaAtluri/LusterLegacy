@@ -265,14 +265,16 @@ export default function ContactSection() {
   return (
     <section id="contact" className="py-20 px-4 md:px-8 bg-charcoal">
       <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-pearl mb-4">Contact Us</h2>
+          <div className="w-24 h-1 bg-primary mx-auto mb-6"></div>
+          <p className="font-montserrat text-pearl/80 max-w-2xl mx-auto">
+            Have questions about our pieces or the custom design process? Reach out to our team for personalized assistance.
+          </p>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div>
-            <h2 className="font-playfair text-3xl md:text-4xl font-bold text-pearl mb-4">Contact Us</h2>
-            <div className="w-24 h-1 bg-primary mb-8"></div>
-            
-            <p className="font-montserrat text-pearl/80 mb-8">
-              Have questions about our pieces or the custom design process? Reach out to our team for personalized assistance.
-            </p>
             
             <div className="space-y-8">
               {/* Email */}

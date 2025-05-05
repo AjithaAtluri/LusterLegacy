@@ -6,11 +6,13 @@ export default function StorySection() {
   return (
     <section id="story" className="py-20 px-4 md:px-8 bg-charcoal text-pearl">
       <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="font-playfair text-3xl md:text-4xl font-bold text-pearl mb-4">Founder's Story</h2>
+          <div className="w-24 h-1 bg-primary mx-auto mb-6"></div>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="font-playfair text-3xl md:text-4xl font-bold text-pearl mb-4">Founder's Story</h2>
-            <div className="w-24 h-1 bg-primary mb-8"></div>
-            
             <blockquote className="font-cormorant text-2xl italic text-pearl/90 mb-8">
               "Every jewel begins with a spark — mine began with passion."
             </blockquote>
