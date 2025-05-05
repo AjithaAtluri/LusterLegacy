@@ -519,8 +519,21 @@ export default function ProductDetail() {
                         console.error("Error parsing product details:", e);
                       }
                       
-                      // Only check if the product type is "Beads & Gems"
-                      if (product.productType === "Beads & Gems") {
+                      // Debug
+                      console.log("Product type check:", {
+                        id: product.id,
+                        productType: product.productType,
+                        additionalDataType: additionalData.productType, 
+                        typeId: productTypeId
+                      });
+                      
+                      // Check if product type is "Beads & Gems" in any of the possible locations
+                      if (
+                        product.productType === "Beads & Gems" || 
+                        additionalData.productType === "Beads & Gems" ||
+                        productTypeId === "19" // Type ID 19 is Beads & Gems
+                      ) {
+                        console.log("Hiding customization button for Beads & Gems product:", product.id);
                         return false; // Don't show customization button for Beads & Gems
                       }
                       
