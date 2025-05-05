@@ -499,36 +499,71 @@ export default function ProductDetail() {
                       <Info className="mr-2 h-4 w-4" />
                       Request Final Quote
                     </Button>
-                    {/* Debug logs to examine product data */}
-                    {console.log("Product category:", product.category)}
-                    {console.log("Product type:", product.productType)}
-                    {console.log("Product details:", product.details)}
-                    {console.log("Product name:", product.name)}
-                    
-                    {/* Check product details for deeper gem or bead references */}
+                    {/* Comprehensive check to determine if product is in Beads & Gems category */}
                     {(() => {
-                      // Check if this is a beads or gems product based on various indicators
-                      const productName = product.name?.toLowerCase() || "";
-                      const productDesc = product.description?.toLowerCase() || "";
-                      const productDetails = typeof product.details === 'string' 
-                        ? product.details.toLowerCase() 
-                        : JSON.stringify(product.details).toLowerCase();
+                      // Safely get product details if they exist
+                      let productDetails = {};
+                      let additionalData = {};
+                      let aiInputs = {};
                       
-                      // Check for bead or pearl keywords in various product data
-                      const hasBeadsOrPearlsKeywords = 
-                        productName.includes("bead") || 
-                        productName.includes("pearl") ||
-                        productDesc.includes("pearl") ||
-                        productDetails.includes("pearl") ||
-                        productDetails.includes("bead");
+                      try {
+                        if (product.details) {
+                          if (typeof product.details === 'string') {
+                            productDetails = JSON.parse(product.details);
+                          } else {
+                            productDetails = product.details;
+                          }
+                          
+                          additionalData = productDetails.additionalData || {};
+                          aiInputs = additionalData.aiInputs || {};
+                        }
+                      } catch (e) {
+                        // Safely handle parsing errors
+                        console.error("Error parsing product details:", e);
+                      }
                       
-                      console.log("Product contains beads/pearls keywords:", hasBeadsOrPearlsKeywords);
+                      // Check for productTypeId === "19" which is Beads & Gems
+                      const productTypeIdMatch = additionalData.productTypeId === "19" || 
+                                                 aiInputs.productType === "19" || 
+                                                 product.productTypeId === 19;
+                                                 
+                      // Check if mainStoneType contains "Beads" or "Pearl"
+                      const mainStoneMatch = 
+                        (additionalData.mainStoneType && 
+                         (additionalData.mainStoneType.includes("Bead") || 
+                          additionalData.mainStoneType.includes("Pearl"))) ||
+                        (aiInputs.mainStoneType && 
+                         (aiInputs.mainStoneType.includes("Bead") || 
+                          aiInputs.mainStoneType.includes("Pearl")));
+                          
+                      // Check if secondaryStoneType contains "Beads" or "Pearl"  
+                      const secondaryStoneMatch = 
+                        (additionalData.secondaryStoneType && 
+                         (additionalData.secondaryStoneType.includes("Bead") || 
+                          additionalData.secondaryStoneType.includes("Pearl"))) ||
+                        (aiInputs.secondaryStoneType && 
+                         (aiInputs.secondaryStoneType.includes("Bead") || 
+                          aiInputs.secondaryStoneType.includes("Pearl")));
                       
-                      return !hasBeadsOrPearlsKeywords && (
-                        // Also check legacy fields
-                        (!product.category || product.category !== "Beads & Gems") && 
-                        (!product.productType || product.productType !== "Beads & Gems")
-                      );
+                      // Check product name and description
+                      const nameDescMatch = 
+                        (product.name && 
+                         (product.name.toLowerCase().includes("bead") || 
+                          product.name.toLowerCase().includes("pearl"))) ||
+                        (product.description && 
+                         (product.description.toLowerCase().includes("bead") || 
+                          product.description.toLowerCase().includes("pearl")));
+                      
+                      // Final determination - is this a Beads & Gems product?
+                      const isBeadsAndGemsProduct = productTypeIdMatch || 
+                                                   mainStoneMatch || 
+                                                   secondaryStoneMatch || 
+                                                   nameDescMatch ||
+                                                   product.category === "Beads & Gems" || 
+                                                   product.productType === "Beads & Gems";
+                      
+                      // Only show the button if it's NOT a Beads & Gems product
+                      return !isBeadsAndGemsProduct;
                     })() && (
                       <Button 
                         variant="default" 
