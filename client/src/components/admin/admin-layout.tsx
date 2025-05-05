@@ -435,12 +435,17 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                             key={item.href || `mobile-nav-item-${idx}`}
                             href={item.href}
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
+                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
                               location === item.href ? "bg-accent/50 font-medium" : ""
                             }`}
                           >
-                            {item.icon}
-                            {item.title}
+                            <div className="flex items-center gap-3">
+                              {item.icon}
+                              {item.title}
+                            </div>
+                            {item.badge && (
+                              <Badge variant="destructive" className="ml-2">{item.badge}</Badge>
+                            )}
                           </a>
                         )
                       ))}
@@ -521,12 +526,17 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <a
                   key={item.href || `nav-item-${idx}`}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
+                  className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
                     location === item.href ? "bg-accent/50 font-medium" : ""
                   }`}
                 >
-                  {item.icon}
-                  {item.title}
+                  <div className="flex items-center gap-3">
+                    {item.icon}
+                    {item.title}
+                  </div>
+                  {item.badge && (
+                    <Badge variant="destructive" className="ml-2">{item.badge}</Badge>
+                  )}
                 </a>
               )
             ))}
