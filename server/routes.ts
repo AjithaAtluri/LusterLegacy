@@ -2891,6 +2891,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Convenience endpoints for approval/rejection
+  app.put('/api/admin/testimonials/:id/approve', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid testimonial ID' });
+      }
+      
+      const updatedTestimonial = await storage.updateTestimonial(id, { 
+        isApproved: true,
+        status: 'approved'
+      });
+      
+      if (!updatedTestimonial) {
+        return res.status(404).json({ message: 'Testimonial not found' });
+      }
+      
+      res.json(updatedTestimonial);
+    } catch (error) {
+      console.error('Error approving testimonial:', error);
+      res.status(500).json({ message: 'Error approving testimonial' });
+    }
+  });
+  
+  app.put('/api/admin/testimonials/:id/reject', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid testimonial ID' });
+      }
+      
+      const updatedTestimonial = await storage.updateTestimonial(id, { 
+        isApproved: false,
+        status: 'rejected'
+      });
+      
+      if (!updatedTestimonial) {
+        return res.status(404).json({ message: 'Testimonial not found' });
+      }
+      
+      res.json(updatedTestimonial);
+    } catch (error) {
+      console.error('Error rejecting testimonial:', error);
+      res.status(500).json({ message: 'Error rejecting testimonial' });
+    }
+  });
+  
   // Delete testimonial (admin only)
   app.delete('/api/admin/testimonials/:id', validateAdmin, async (req, res) => {
     try {
