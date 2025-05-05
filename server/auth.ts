@@ -232,6 +232,47 @@ export function setupAuth(app: Express): void {
   });
 
   // Add middleware to protect admin routes
+  // Create a new admin or limited-admin user (only accessible to full admins)
+  app.post("/api/admin/create-user", async (req, res) => {
+    try {
+      // Only full admins can create other admin users
+      if (!req.isAuthenticated() || req.user.role !== "admin") {
+        return res.status(403).json({ message: "Only administrators can create admin accounts" });
+      }
+      
+      const { username, password, email, role } = req.body;
+      
+      // Validate role - only "admin" or "limited-admin" allowed for this endpoint
+      if (role !== "admin" && role !== "limited-admin") {
+        return res.status(400).json({ message: "Invalid role. Must be 'admin' or 'limited-admin'." });
+      }
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Create new admin user with hashed password
+      const newAdmin = await storage.createUser({
+        username,
+        password: await hashPassword(password),
+        email,
+        role
+      });
+      
+      // Return user without the password
+      const { password: _, ...adminWithoutPassword } = newAdmin;
+      res.status(201).json({
+        message: `${role === "limited-admin" ? "Limited access admin" : "Admin"} created successfully`,
+        user: adminWithoutPassword
+      });
+    } catch (error) {
+      console.error("Error creating admin user:", error);
+      res.status(500).json({ message: "Error creating admin user" });
+    }
+  });
+
   app.use("/api/admin/*", (req, res, next) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
