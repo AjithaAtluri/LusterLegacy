@@ -23,11 +23,12 @@ export function ProtectedRoute({
     '/';
   
   // For debugging
+  const isAdminUser = user?.role === "admin" || user?.role === "limited-admin";
   console.log(`Protected Route: ${pathString}`, { 
     isLoading, 
     user, 
     adminOnly,
-    isAdmin: user?.role === "admin"
+    isAdmin: isAdminUser
   });
   
   // When accessing admin routes, verify auth state more aggressively
@@ -69,13 +70,13 @@ export function ProtectedRoute({
         }
 
         // Check for admin role if specified
-        if (adminOnly && user.role !== "admin") {
-          console.log("Admin access required but user is not admin, redirecting to home");
+        if (adminOnly && user.role !== "admin" && user.role !== "limited-admin") {
+          console.log("Admin access required but user is not admin or limited-admin, redirecting to home");
           return <Redirect to="/" />;
         }
 
         // Special case for admin dashboard direct access
-        if (adminOnly && user.role === "admin" && 
+        if (adminOnly && (user.role === "admin" || user.role === "limited-admin") && 
             (pathString === "/admin" || pathString === "/admin/dashboard" || pathString === "/admin/direct-dashboard")) {
           console.log("Admin user accessing dashboard");
           

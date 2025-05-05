@@ -172,26 +172,30 @@ function App() {
                 {/* Admin routes - All routes have both regular protected access and direct access */}
                 <Route path="/admin/login" component={AdminLogin} />
                 
-                {/* Direct Access Dashboard - Now using regular dashboard */}
-                <Route path="/admin/direct-dashboard" component={AdminDashboard} />
+                {/* Direct Access Dashboard - Now using protected routes */}
+                <ProtectedRoute path="/admin/direct-dashboard" component={AdminDashboard} adminOnly />
                 
-                {/* Direct access to all admin pages */}
-                <Route path="/admin/ai-generator" component={AIContentGenerator} />
-                <Route path="/admin/products" component={AdminProducts} />
-                <Route path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} />
-                <Route path="/admin/edit-product/:id" component={AdminEditProductNew} />
-                <Route path="/admin/metal-types" component={AdminMetalTypes} />
-                <Route path="/admin/stone-types" component={AdminStoneTypes} />
-                <Route path="/admin/product-types" component={AdminProductTypes} />
-                <Route path="/admin/designs" component={AdminDesigns} />
-                <Route path="/admin/designs/:id" component={lazy(() => import("@/pages/admin/design-detail/[id]"))} />
-                <Route path="/admin/customizations" component={AdminCustomizations} />
-                <Route path="/admin/customizations/:id" component={AdminCustomizationDetail} />
-                <Route path="/admin/quotes" component={AdminQuotes} />
-                <Route path="/admin/quotes/:id" component={AdminQuoteDetail} />
-                <Route path="/admin/contact-messages" component={AdminContactMessages} />
-                <Route path="/admin/users" component={lazy(() => import("@/pages/admin/users"))} />
-                <Route path="/admin/testimonials" component={AdminTestimonials} />
+                {/* Admin pages - using protected routes */}
+                <ProtectedRoute path="/admin/ai-generator" component={AIContentGenerator} adminOnly />
+                <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
+                <ProtectedRoute path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} adminOnly />
+                <ProtectedRoute path="/admin/edit-product/:id" component={AdminEditProductNew} adminOnly />
+                
+                {/* Full admin only pages */}
+                <ProtectedRoute path="/admin/metal-types" component={AdminMetalTypes} adminOnly />
+                <ProtectedRoute path="/admin/stone-types" component={AdminStoneTypes} adminOnly />
+                <ProtectedRoute path="/admin/product-types" component={AdminProductTypes} adminOnly />
+                
+                {/* Pages accessible to both admin types */}
+                <ProtectedRoute path="/admin/designs" component={AdminDesigns} adminOnly />
+                <ProtectedRoute path="/admin/designs/:id" component={lazy(() => import("@/pages/admin/design-detail/[id]"))} adminOnly />
+                <ProtectedRoute path="/admin/customizations" component={AdminCustomizations} adminOnly />
+                <ProtectedRoute path="/admin/customizations/:id" component={AdminCustomizationDetail} adminOnly />
+                <ProtectedRoute path="/admin/quotes" component={AdminQuotes} adminOnly />
+                <ProtectedRoute path="/admin/quotes/:id" component={AdminQuoteDetail} adminOnly />
+                <ProtectedRoute path="/admin/contact-messages" component={AdminContactMessages} adminOnly />
+                <ProtectedRoute path="/admin/users" component={lazy(() => import("@/pages/admin/users"))} adminOnly />
+                <ProtectedRoute path="/admin/testimonials" component={AdminTestimonials} adminOnly />
                 
                 {/* Redirect old add-product URL to the AI generator */}
                 <Route path="/admin/add-product">
