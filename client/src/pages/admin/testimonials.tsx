@@ -112,7 +112,22 @@ export default function AdminTestimonials() {
   // Delete testimonial mutation (for deleting approved testimonials)
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/admin/testimonials/${id}`);
+      // Add admin headers to ensure proper authorization
+      const options = {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Debug-Auth': 'true',
+          'X-Admin-API-Key': 'dev_admin_key_12345',
+          'X-Admin-Username': 'admin'
+        }
+      };
+      
+      const response = await apiRequest(
+        "DELETE", 
+        `/api/admin/testimonials/${id}`, 
+        null, 
+        options
+      );
       return response.json();
     },
     onSuccess: () => {

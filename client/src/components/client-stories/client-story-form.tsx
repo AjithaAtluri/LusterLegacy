@@ -168,8 +168,40 @@ export function ClientStoryForm() {
         title: "Success!",
         description: "Your story has been submitted for review.",
       });
-      form.reset(defaultValues);
+      
+      // Create a completely fresh set of default values
+      const freshDefaults: Partial<StoryFormValues> = {
+        userId: user?.id || null,
+        rating: 0,
+        name: user?.username || "",
+        email: user?.email || "",
+        text: "",
+        story: "",
+        productType: "",
+        location: "",
+        imageUrls: [],
+        purchaseType: undefined,
+        giftGiver: "",
+        occasion: undefined,
+        satisfaction: undefined,
+        wouldReturn: true,
+        orderType: undefined,
+        designTeamExperience: undefined,
+        status: "pending",
+        isApproved: false,
+      };
+      
+      // Properly reset the form, then clear any generated testimonials
+      form.reset(freshDefaults);
+      setGeneratedTestimonial("");
       setUploadedImages([]);
+      
+      // Reset all the React state
+      setIsGeneratingAI(false);
+      setIsDialogOpen(false);
+      setAiErrorMessage("");
+      
+      // Invalidate queries to refresh the testimonials list
       queryClient.invalidateQueries({ queryKey: ["/api/testimonials"] });
     },
     onError: (error: Error) => {
