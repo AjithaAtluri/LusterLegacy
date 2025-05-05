@@ -22,10 +22,21 @@ import {
   MessageSquare
 } from "lucide-react";
 
+// Helper function to format image URLs
+const formatImageUrl = (url: string) => {
+  if (!url) return "";
+  if (url.startsWith('/') || url.startsWith('http')) {
+    return url;
+  }
+  return `/${url}`;
+};
+
 export default function AdminTestimonials() {
   const { toast } = useToast();
   const [selectedTestimonial, setSelectedTestimonial] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
 
   // Fetch testimonials data
   const { data: testimonials, isLoading: isLoadingTestimonials } = useQuery({
@@ -163,6 +174,12 @@ export default function AdminTestimonials() {
     setDialogOpen(true);
   };
 
+  const handleOpenImageDialog = (imageUrl: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedImage(formatImageUrl(imageUrl));
+    setImageDialogOpen(true);
+  };
+
   const handleApprove = () => {
     if (selectedTestimonial) {
       approveMutation.mutate(selectedTestimonial.id);
@@ -243,10 +260,11 @@ export default function AdminTestimonials() {
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
                               {testimonial.imageUrls && testimonial.imageUrls.length > 0 ? (
-                                <img 
-                                  src={testimonial.imageUrls[0]} 
+                                <ReliableImage 
+                                  src={formatImageUrl(testimonial.imageUrls[0])} 
                                   alt="Customer" 
                                   className="h-full w-full object-cover"
+                                  fallback={<UserCircle className="h-8 w-8 text-muted-foreground" />}
                                 />
                               ) : (
                                 <UserCircle className="h-8 w-8 text-muted-foreground" />
@@ -327,7 +345,7 @@ export default function AdminTestimonials() {
                 {approvedTestimonials.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <MessageSquare className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                    <p>No approved testimonials yet</p>
+                    <p>No approved testimonials found</p>
                   </div>
                 ) : (
                   <div className="grid gap-4">
@@ -341,10 +359,11 @@ export default function AdminTestimonials() {
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
                               {testimonial.imageUrls && testimonial.imageUrls.length > 0 ? (
-                                <img 
-                                  src={testimonial.imageUrls[0]} 
+                                <ReliableImage 
+                                  src={formatImageUrl(testimonial.imageUrls[0])} 
                                   alt="Customer" 
                                   className="h-full w-full object-cover"
+                                  fallback={<UserCircle className="h-8 w-8 text-muted-foreground" />}
                                 />
                               ) : (
                                 <UserCircle className="h-8 w-8 text-muted-foreground" />
@@ -384,12 +403,25 @@ export default function AdminTestimonials() {
                             )}
                             <Badge variant="outline" className="gap-1 bg-green-50">
                               <CheckCircle2 className="h-3 w-3 text-green-500" />
-                              Approved
+                              Published
                             </Badge>
                           </div>
                         </div>
                         <div className="mt-3 text-sm line-clamp-2">
                           {testimonial.text || testimonial.story || "No testimonial content"}
+                        </div>
+                        <div className="flex justify-end mt-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDialog(testimonial);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -401,185 +433,219 @@ export default function AdminTestimonials() {
         </Tabs>
       </div>
       
-      {/* Detail Dialog */}
+      {/* Testimonial Detail Dialog */}
       {selectedTestimonial && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Client Story Review</DialogTitle>
+              <DialogTitle className="text-xl flex items-center gap-2">
+                Client Story from {selectedTestimonial.name}
+                {selectedTestimonial.isApproved ? (
+                  <Badge className="ml-2 bg-green-500 text-white">Approved</Badge>
+                ) : (
+                  <Badge className="ml-2 bg-orange-500 text-white">Pending</Badge>
+                )}
+              </DialogTitle>
               <DialogDescription>
-                Review this client's testimonial before approving or rejecting it.
+                Review and manage this client story
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-6 py-4">
+            <div className="space-y-6 pt-4">
               {/* Customer Info */}
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                  {selectedTestimonial.imageUrls && selectedTestimonial.imageUrls.length > 0 ? (
-                    <img 
-                      src={selectedTestimonial.imageUrls[0]} 
-                      alt="Customer" 
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <UserCircle className="h-12 w-12 text-muted-foreground" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium">{selectedTestimonial.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedTestimonial.location || "Unknown location"}
-                  </p>
-                  <div className="flex items-center mt-1">
-                    <span className="text-sm mr-1">Rating: {selectedTestimonial.rating}/5</span>
-                    <div className="flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${
-                            i < selectedTestimonial.rating
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
+              <div className="flex flex-col sm:flex-row gap-4 items-start pb-4 border-b">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                    {selectedTestimonial.imageUrls && selectedTestimonial.imageUrls.length > 0 ? (
+                      <ReliableImage 
+                        src={formatImageUrl(selectedTestimonial.imageUrls[0])} 
+                        alt="Customer" 
+                        className="h-full w-full object-cover"
+                        fallback={<UserCircle className="h-12 w-12 text-muted-foreground" />}
+                      />
+                    ) : (
+                      <UserCircle className="h-12 w-12 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-medium text-lg">{selectedTestimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {selectedTestimonial.email || "No email provided"}
                     </div>
+                    <div className="text-sm text-muted-foreground">
+                      {selectedTestimonial.location || "Unknown location"}
+                    </div>
+                    <div className="flex items-center mt-1">
+                      <span className="text-sm mr-1">Rating: {selectedTestimonial.rating}/5</span>
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < selectedTestimonial.rating
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="sm:ml-auto flex flex-col gap-2">
+                  <div className="text-sm font-medium">
+                    Product: <span className="font-normal">{selectedTestimonial.productType || "General"}</span>
+                  </div>
+                  <div className="text-sm font-medium">
+                    Submitted: <span className="font-normal">{new Date(selectedTestimonial.createdAt).toLocaleString()}</span>
+                  </div>
+                  <div className="text-sm font-medium">
+                    Status: <span className="font-normal">{selectedTestimonial.status || "pending"}</span>
                   </div>
                 </div>
               </div>
               
-              {/* Product Information */}
-              <div>
-                <h4 className="text-sm font-medium mb-1">Product Information</h4>
-                <div className="text-sm bg-muted p-2 rounded">
-                  <div><span className="font-medium">Product Type:</span> {selectedTestimonial.productType || "Not specified"}</div>
-                  <div><span className="font-medium">Purchase Type:</span> {selectedTestimonial.purchaseType === "self" ? "For myself" : 
-                    selectedTestimonial.purchaseType === "gift_for" ? "As a gift for someone" : 
-                    selectedTestimonial.purchaseType === "gift_from" ? "As a gift from someone" : 
-                    "Not specified"}
+              {/* Testimonial Content */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-base font-medium mb-2">Brief Testimonial</h3>
+                  <div className="bg-muted p-4 rounded-md italic">
+                    "{selectedTestimonial.text || "No brief testimonial provided"}"
                   </div>
-                  {selectedTestimonial.occasion && (
-                    <div><span className="font-medium">Occasion:</span> {selectedTestimonial.occasion}</div>
-                  )}
                 </div>
+                
+                {selectedTestimonial.story && (
+                  <div>
+                    <h3 className="text-base font-medium mb-2">Full Story</h3>
+                    <div className="bg-muted/50 p-4 rounded-md whitespace-pre-line">
+                      {selectedTestimonial.story}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Purchase details */}
+                {selectedTestimonial.purchaseType && (
+                  <div>
+                    <h3 className="text-base font-medium mb-2">Purchase Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm font-medium">
+                          Purchase Type: <span className="font-normal">{selectedTestimonial.purchaseType}</span>
+                        </div>
+                        {selectedTestimonial.giftGiver && (
+                          <div className="text-sm font-medium">
+                            Gift From: <span className="font-normal">{selectedTestimonial.giftGiver}</span>
+                          </div>
+                        )}
+                        {selectedTestimonial.occasion && (
+                          <div className="text-sm font-medium">
+                            Occasion: <span className="font-normal">{selectedTestimonial.occasion}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        {selectedTestimonial.satisfaction && (
+                          <div className="text-sm font-medium">
+                            Satisfaction: <span className="font-normal">{selectedTestimonial.satisfaction}</span>
+                          </div>
+                        )}
+                        <div className="text-sm font-medium">
+                          Would Return: <span className="font-normal">{selectedTestimonial.wouldReturn ? "Yes" : "No"}</span>
+                        </div>
+                        {selectedTestimonial.orderType && (
+                          <div className="text-sm font-medium">
+                            Order Type: <span className="font-normal">{selectedTestimonial.orderType}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Images */}
               {selectedTestimonial.imageUrls && selectedTestimonial.imageUrls.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Uploaded Images</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {selectedTestimonial.imageUrls.map((imageUrl: string, idx: number) => (
-                      <div key={idx} className="aspect-square rounded-md overflow-hidden border">
-                        <img 
-                          src={imageUrl} 
-                          alt={`Customer upload ${idx + 1}`} 
+                  <h3 className="text-base font-medium mb-2">Customer Images</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTestimonial.imageUrls.map((url: string, index: number) => (
+                      <div
+                        key={index}
+                        className="h-24 w-24 rounded-md overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={(e) => handleOpenImageDialog(url, e)}
+                      >
+                        <ReliableImage
+                          src={formatImageUrl(url)}
+                          alt={`${selectedTestimonial.name}'s jewelry ${index + 1}`}
                           className="h-full w-full object-cover"
+                          fallback={
+                            <div className="h-full w-full flex items-center justify-center bg-muted">
+                              <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                          }
                         />
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              
-              {/* Generated Testimonials */}
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Brief Testimonial</h4>
-                  <div className="bg-accent/20 p-3 rounded-md text-sm">
-                    {selectedTestimonial.text || "No brief testimonial available"}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Full Testimonial</h4>
-                  <div className="bg-accent/20 p-3 rounded-md text-sm">
-                    {selectedTestimonial.story || "No full testimonial available"}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Original Inputs */}
-              <div className="border-t pt-4">
-                <h4 className="text-sm font-medium mb-2">Customer Original Inputs</h4>
-                <div className="space-y-2 text-sm">
-                  {selectedTestimonial.designExperience && (
-                    <div>
-                      <span className="font-medium">Design Team Experience:</span> {selectedTestimonial.designExperience}
-                    </div>
-                  )}
-                  {selectedTestimonial.overallExperience && (
-                    <div>
-                      <span className="font-medium">Overall Experience:</span> {selectedTestimonial.overallExperience}
-                    </div>
-                  )}
-                  {selectedTestimonial.giftRecipient && (
-                    <div>
-                      <span className="font-medium">Gift Recipient:</span> {selectedTestimonial.giftRecipient}
-                    </div>
-                  )}
-                  {selectedTestimonial.giftReaction && (
-                    <div>
-                      <span className="font-medium">Gift Reaction:</span> {selectedTestimonial.giftReaction}
-                    </div>
-                  )}
-                  {selectedTestimonial.storyBehind && (
-                    <div>
-                      <span className="font-medium">Story Behind Purchase:</span> {selectedTestimonial.storyBehind}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-2 mt-6">
-                {!selectedTestimonial.isApproved ? (
-                  <>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleReject}
-                      disabled={rejectMutation.isPending}
-                    >
-                      {rejectMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <X className="h-4 w-4 mr-2" />
-                      )}
-                      Reject
-                    </Button>
-                    <Button 
-                      variant="default" 
-                      onClick={handleApprove}
-                      disabled={approveMutation.isPending}
-                    >
-                      {approveMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <Check className="h-4 w-4 mr-2" />
-                      )}
-                      Approve
-                    </Button>
-                  </>
-                ) : (
-                  <Button 
-                    variant="destructive" 
-                    onClick={handleDelete}
-                    disabled={deleteMutation.isPending}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 mt-4">
+              {!selectedTestimonial.isApproved ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="gap-1"
+                    onClick={handleReject}
+                    disabled={rejectMutation.isPending}
                   >
-                    {deleteMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <X className="h-4 w-4 mr-2" />
-                    )}
-                    Delete Testimonial
+                    {rejectMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                    Reject
                   </Button>
-                )}
-              </div>
+                  <Button
+                    className="gap-1"
+                    onClick={handleApprove}
+                    disabled={approveMutation.isPending}
+                  >
+                    {approveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    Approve
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="destructive"
+                  className="gap-1"
+                  onClick={handleDelete}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                  Delete
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Image Full Size Dialog */}
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="max-w-3xl flex items-center justify-center">
+          <div className="relative max-h-[70vh] overflow-hidden rounded-md">
+            <ReliableImage
+              src={selectedImage}
+              alt="Customer jewelry"
+              className="max-h-[70vh] w-auto object-contain"
+              fallback={
+                <div className="h-40 w-40 flex items-center justify-center bg-muted">
+                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
+                </div>
+              }
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

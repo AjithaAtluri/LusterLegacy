@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ImageOff } from "lucide-react";
 
@@ -6,6 +6,19 @@ interface ReliableImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallback?: React.ReactNode;
   fallbackClassName?: string;
 }
+
+// Helper function to normalize image URLs
+const normalizeImagePath = (src: string | undefined): string => {
+  if (!src) return "";
+  
+  // If path already has http or starts with /, leave it as is
+  if (src.startsWith("http") || src.startsWith("/")) {
+    return src;
+  }
+  
+  // Otherwise, assume it's a relative path to /uploads directory and prepend /
+  return `/${src}`;
+};
 
 export function ReliableImage({ 
   src, 
@@ -16,6 +29,21 @@ export function ReliableImage({
   ...props 
 }: ReliableImageProps) {
   const [error, setError] = useState(false);
+  const [normalizedSrc, setNormalizedSrc] = useState<string>("");
+  
+  useEffect(() => {
+    // Normalize the image path when src changes
+    setNormalizedSrc(normalizeImagePath(src));
+    // Reset error state when src changes
+    setError(false);
+  }, [src]);
+  
+  // Log image loading for debugging purposes
+  useEffect(() => {
+    if (normalizedSrc) {
+      console.log(`Loading image from path: ${normalizedSrc}`);
+    }
+  }, [normalizedSrc]);
   
   // If there's an error loading the image, show fallback content
   if (error) {
@@ -52,13 +80,16 @@ export function ReliableImage({
     }
   }
   
-  // Otherwise, render the image
+  // Otherwise, render the image with the normalized path
   return (
     <img
-      src={src}
+      src={normalizedSrc}
       alt={alt}
       className={className}
-      onError={() => setError(true)}
+      onError={(e) => {
+        console.error(`Failed to load image: ${normalizedSrc}`);
+        setError(true);
+      }}
       {...props}
     />
   );

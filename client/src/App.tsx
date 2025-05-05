@@ -59,7 +59,7 @@ const AdminQuotes = lazy(() => import("@/pages/admin/quotes"));
 const AdminQuoteDetail = lazy(() => import("@/pages/admin/quote-detail"));
 const AdminContactMessages = lazy(() => import("@/pages/admin/contact-messages"));
 // Client Stories/Testimonials management
-const AdminTestimonials = lazy(() => import("@/pages/admin/testimonials"));
+const AdminTestimonials = lazy(() => import("@/pages/admin/testimonials-fix"));
 // AI Content Generator
 const AIContentGenerator = lazy(() => import("@/pages/admin/ai-content-generator-page"));
 
