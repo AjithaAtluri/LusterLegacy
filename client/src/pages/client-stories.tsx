@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { PenLine, Star, Heart } from "lucide-react";
+import { PenLine, Star, Heart, User } from "lucide-react";
 import { ClientStoryGrid } from "@/components/client-stories/client-story-grid";
 import { ClientStoryForm } from "@/components/client-stories/client-story-form";
 import { useAuth } from "@/hooks/use-auth";
@@ -47,15 +47,17 @@ export default function ClientStories() {
           className="max-w-5xl mx-auto"
         >
           <div className="flex justify-center mb-8">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className={`grid w-full max-w-md ${user ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <TabsTrigger value="view" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
                 <span>View Stories</span>
               </TabsTrigger>
-              <TabsTrigger value="share" className="flex items-center gap-2">
-                <PenLine className="h-4 w-4" />
-                <span>Share Your Story</span>
-              </TabsTrigger>
+              {user && (
+                <TabsTrigger value="share" className="flex items-center gap-2">
+                  <PenLine className="h-4 w-4" />
+                  <span>Share Your Story</span>
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
           
@@ -79,6 +81,17 @@ export default function ClientStories() {
                 <p className="text-muted-foreground mb-4">
                   Have a Luster Legacy piece you'd like to share about?
                 </p>
+                <Button 
+                  onClick={() => window.location.href = "/auth"}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Login to Share Your Story</span>
+                </Button>
+              </div>
+            )}
+            {user && (
+              <div className="mt-12 text-center">
                 <Button 
                   onClick={() => setActiveTab("share")}
                   className="flex items-center gap-2"
