@@ -231,14 +231,15 @@ export function ClientStoryForm() {
       }
 
       const result = await response.json();
+      console.log("AI testimonial generation response:", result);
       
-      // Set the generated testimonial in form
-      setGeneratedTestimonial(result.testimonial);
-      form.setValue("text", result.testimonial, { shouldValidate: true });
+      // Set the generated testimonial in form - using the correct field name from the server response
+      setGeneratedTestimonial(result.generatedTestimonial);
+      form.setValue("text", result.generatedTestimonial, { shouldValidate: true });
       
-      // If a longer story was generated, set that too
-      if (result.story) {
-        form.setValue("story", result.story, { shouldValidate: true });
+      // If a longer story was generated, set that too (currently not supported)
+      if (result.aiInputData && result.aiInputData.originalStory) {
+        form.setValue("story", result.aiInputData.originalStory, { shouldValidate: true });
       }
       
       // Store the AI input data for reference (will be saved with testimonial)
