@@ -157,9 +157,24 @@ export default function ReliableProductImage({
       {!allowDownload && (
         <div className="absolute inset-0 bg-transparent cursor-not-allowed" />
       )}
-      <div className="absolute bottom-0 right-0 p-1 text-xs text-slate-50 bg-black/30 opacity-70 rounded-tl-md">
-        © Luster Legacy
-      </div>
+      {/* Apply watermark only when download is not allowed (typically for non-admin users) */}
+      {!allowDownload && (
+        <>
+          {/* Bottom right corner watermark */}
+          <div className="absolute bottom-0 right-0 p-1 text-xs text-slate-50 bg-black/40 opacity-80 rounded-tl-md">
+            © lusterlegacy.com
+          </div>
+          {/* Diagonal watermark across image */}
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
+            <div 
+              className="text-slate-50/15 font-medium whitespace-nowrap"
+              style={{ fontSize: '1.5rem', transform: 'rotate(-30deg)', letterSpacing: '3px' }}
+            >
+              lusterlegacy.com
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
