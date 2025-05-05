@@ -298,6 +298,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Contact Messages",
       icon: <MessageSquare className="h-5 w-5" />,
       href: "/admin/contact-messages"
+    },
+    {
+      title: "User Management",
+      icon: <Users className="h-5 w-5" />,
+      href: "/admin/users"
     }
   ];
   

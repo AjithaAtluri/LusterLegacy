@@ -6504,6 +6504,82 @@ Respond in JSON format:
       });
     }
   });
+  
+  /**
+   * User Management API Endpoints (Admin only)
+   */
+  // Get all users
+  app.get('/api/admin/users', validateAdmin, async (_req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      
+      // Remove sensitive fields (password)
+      const sanitizedUsers = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(sanitizedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error fetching users', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+  
+  // Delete a user
+  app.delete('/api/admin/users/:id', validateAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Invalid user ID' 
+        });
+      }
+      
+      // Prevent deleting the admin user
+      const userToDelete = await storage.getUser(userId);
+      if (!userToDelete) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'User not found' 
+        });
+      }
+      
+      if (userToDelete.role === 'admin') {
+        return res.status(403).json({ 
+          success: false,
+          message: 'Cannot delete admin users' 
+        });
+      }
+      
+      // Proceed with deletion
+      const success = await storage.deleteUser(userId);
+      if (!success) {
+        return res.status(500).json({ 
+          success: false,
+          message: 'Failed to delete user' 
+        });
+      }
+      
+      res.json({ 
+        success: true,
+        message: 'User deleted successfully',
+        userId
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error deleting user', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
 
   return httpServer;
 }
