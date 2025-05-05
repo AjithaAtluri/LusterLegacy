@@ -101,8 +101,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         // Check 1: First check the cached user from React Query
         if (!user) {
           console.log("Admin layout - no user in cache, will verify with API");
-        } else if (user.role !== "admin") {
-          console.log("Admin layout - user is not admin, redirecting to home page");
+        } else if (user.role !== "admin" && user.role !== "limited-admin") {
+          console.log("Admin layout - user is not admin or limited-admin, redirecting to home page");
           toast({
             title: "Access restricted",
             description: "You don't have permission to access the admin dashboard",
@@ -130,19 +130,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           const adminData = await adminAuthResponse.json();
           console.log("Admin layout - admin auth check successful:", adminData);
           
-          // Make sure it's still an admin account
-          if (adminData.role === "admin") {
-            console.log("Admin layout - user is verified admin via /api/auth/me");
+          // Make sure it's still an admin or limited-admin account
+          if (adminData.role === "admin" || adminData.role === "limited-admin") {
+            console.log(`Admin layout - user is verified ${adminData.role} via /api/auth/me`);
             // Update the cache with this fresh data
             import("@/lib/queryClient").then(({queryClient}) => {
               queryClient.setQueryData(["/api/user"], adminData);
             });
             return; // Allow access
           } else {
-            console.log("User is authenticated but admin role missing in admin auth check");
+            console.log("User is authenticated but admin/limited-admin role missing in admin auth check");
             toast({
               title: "Access restricted",
-              description: "Admin role not found in authentication data",
+              description: "Admin privileges not found in authentication data",
               variant: "destructive"
             });
             window.location.href = "/admin/login";
@@ -165,8 +165,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           const userData = await userResponse.json();
           console.log("Admin layout - regular auth check successful:", userData);
           
-          if (userData.role === "admin") {
-            console.log("Admin layout - user is verified admin via /api/user");
+          if (userData.role === "admin" || userData.role === "limited-admin") {
+            console.log(`Admin layout - user is verified ${userData.role} via /api/user`);
             // Update the cache with this fresh data
             import("@/lib/queryClient").then(({queryClient}) => {
               queryClient.setQueryData(["/api/user"], userData);
@@ -198,8 +198,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             
             return; // Allow access
           } else {
-            // User is authenticated but not an admin
-            console.log("User is authenticated but not an admin");
+            // User is authenticated but not an admin or limited-admin
+            console.log("User is authenticated but doesn't have admin privileges");
             toast({
               title: "Access restricted",
               description: "You don't have permission to access the admin dashboard",
@@ -226,12 +226,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           console.log("Error in auth check and no cached user - redirecting to login");
           window.location.href = "/admin/login";
           return;
-        } else if (user.role !== "admin") {
-          console.log("Error in auth check and cached user is not admin - redirecting home");
+        } else if (user.role !== "admin" && user.role !== "limited-admin") {
+          console.log("Error in auth check and cached user is not admin or limited-admin - redirecting home");
           window.location.href = "/";
           return;
         } else {
-          console.log("Error in auth check but cached user is admin - allowing access but may encounter further issues");
+          console.log(`Error in auth check but cached user is ${user.role} - allowing access but may encounter further issues`);
           // Continue with access and hope for the best
           return;
         }
