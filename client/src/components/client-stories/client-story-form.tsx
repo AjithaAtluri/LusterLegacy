@@ -200,15 +200,24 @@ export function ClientStoryForm() {
     setAiErrorMessage("");
 
     try {
-      // Get current form data
+      // Get current form data (raw)
       const formData = form.getValues();
       
-      // Debug form data
-      console.log("FORM DATA FOR AI GENERATION:", {
+      // Force purchaseType from the UI if it's not set 
+      // This ensures the explicitly selected value is used
+      const currentPurchaseType = form.watch("purchaseType");
+      
+      // Debug form data with special emphasis on purchaseType
+      console.log("FORM DATA DIRECTLY FROM FORM WATCH:", {
+        purchaseType: currentPurchaseType,
+        giftGiver: form.watch("giftGiver"),
+      });
+      
+      console.log("FORM DATA FROM getValues():", {
         name: formData.name,
         productType: formData.productType,
         rating: formData.rating,
-        purchaseType: formData.purchaseType,
+        purchaseType: formData.purchaseType, // May be undefined
         giftGiver: formData.giftGiver,
         occasion: formData.occasion,
       });
@@ -219,15 +228,19 @@ export function ClientStoryForm() {
         setIsGeneratingAI(false);
         return;
       }
+      
+      // WORKAROUND: Manually enforce the purchaseType from what's visible in the UI
+      // This fixes the issue with purchaseType not being properly set
+      const enforcedPurchaseType = currentPurchaseType || "self";
+      console.log("USING ENFORCED PURCHASE TYPE:", enforcedPurchaseType);
 
-      // Build AI input data with careful defaults
-      // Only use defaults if the field is actually undefined or null, not for user selections
+      // Build AI input data with careful defaults and enforced purchase type
       const aiInputData = {
         name: formData.name,
         productType: formData.productType,
         rating: formData.rating,
-        // Only default purchaseType if it's completely missing
-        purchaseType: formData.purchaseType !== undefined ? formData.purchaseType : "self",
+        // Use the enforced purchase type to ensure it's always correct
+        purchaseType: enforcedPurchaseType,
         // Only include giftGiver if it was provided
         giftGiver: formData.giftGiver || "",
         occasion: formData.occasion || "casual",
@@ -240,7 +253,7 @@ export function ClientStoryForm() {
       };
       
       // Debug data being sent to API
-      console.log("SENDING TO API:", aiInputData);
+      console.log("FINAL DATA SENDING TO API:", aiInputData);
 
       // Call the AI generation endpoint
       const response = await apiRequest(
