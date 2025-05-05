@@ -16,7 +16,7 @@ export async function generateAITestimonial(
     rating: number;
     text: string;
     story?: string;
-    purchaseType?: "self" | "gift";
+    purchaseType?: "self" | "gift_for" | "gift_from";
     giftGiver?: string;
     occasion?: string;
     satisfaction?: "very_much" | "ok" | "did_not";
@@ -26,16 +26,21 @@ export async function generateAITestimonial(
 ): Promise<{ generatedTestimonial: string; generatedStory: string; aiInputData: any }> {
   try {
     // Build the prompt based on the available data
-    const purchaseContext = inputData.purchaseType === "gift" 
-      ? `This was purchased as a gift for ${inputData.giftGiver || "someone special"}.`
-      : "This was purchased for themselves.";
+    let purchaseContext = "This was purchased for themselves.";
+    
+    // Handle different purchase types properly
+    if (inputData.purchaseType === "gift_for") {
+      purchaseContext = `This was purchased as a gift for ${inputData.giftGiver || "someone special"}.`;
+    } else if (inputData.purchaseType === "gift_from") {
+      purchaseContext = `This was received as a gift from ${inputData.giftGiver || "someone special"}.`;
+    }
 
     const occasionContext = inputData.occasion 
-      ? `The occasion was ${inputData.occasion.replace('_', ' ')}.` 
+      ? `The occasion was ${inputData.occasion.replace(/_/g, ' ')}.` 
       : "";
       
     const satisfactionContext = inputData.satisfaction 
-      ? `The customer was ${inputData.satisfaction.replace('_', ' ')} satisfied with the purchase.` 
+      ? `The customer was ${inputData.satisfaction.replace(/_/g, ' ')} satisfied with the purchase.` 
       : "";
       
     const returnContext = inputData.wouldReturn !== undefined 
