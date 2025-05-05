@@ -34,7 +34,7 @@ export default function AdminTestimonials() {
   // Approve testimonial mutation
   const approveMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("PATCH", `/api/admin/testimonials/${id}/approve`);
+      const response = await apiRequest("PUT", `/api/admin/testimonials/${id}/approve`);
       return response.json();
     },
     onSuccess: () => {
@@ -58,7 +58,7 @@ export default function AdminTestimonials() {
   // Reject testimonial mutation
   const rejectMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/admin/testimonials/${id}`);
+      const response = await apiRequest("PUT", `/api/admin/testimonials/${id}/reject`);
       return response.json();
     },
     onSuccess: () => {
