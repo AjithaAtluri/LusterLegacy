@@ -164,6 +164,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <ReliableProductImage 
             productId={product.id}
             imageUrl={product.imageUrl}
+            image_url={product.image_url}
             alt={product.name}
             className="max-w-full max-h-[380px] object-contain group-hover:scale-105 transition duration-500 cursor-pointer"
           />

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 interface ReliableProductImageProps {
   productId: number;
   imageUrl?: string;
+  image_url?: string; // Add support for snake_case field naming from database
   alt: string;
   className?: string;
   fallbackSrc?: string;
@@ -32,6 +33,7 @@ const getImagePath = (imageUrl: string | null | undefined): string => {
 export default function ReliableProductImage({ 
   productId, 
   imageUrl,
+  image_url, // Accept both camelCase and snake_case
   alt, 
   className = "",
   fallbackSrc = "", // Empty default, we'll show a loading state instead
@@ -43,23 +45,25 @@ export default function ReliableProductImage({
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  // First try to use the directly provided imageUrl
+  // First try to use the directly provided imageUrl (support both formats)
   useEffect(() => {
     setIsLoading(true);
-    if (imageUrl) {
-      setImageSrc(getImagePath(imageUrl));
+    const effectiveImageUrl = imageUrl || image_url;
+    
+    if (effectiveImageUrl) {
+      setImageSrc(getImagePath(effectiveImageUrl));
       setIsLoading(false);
       return;
     }
     
-    // Only if imageUrl is not provided directly, try to fetch product data
-    if (!imageUrl && productId > 0) {
+    // Only if no image URL is provided, try to fetch product data
+    if (!effectiveImageUrl && productId > 0) {
       // Keep the existing API fetching logic as a fallback
       fetchProductImage();
     } else {
       setIsLoading(false);
     }
-  }, [imageUrl, productId]);
+  }, [imageUrl, image_url, productId]);
   
   // Fetch product image only when necessary
   const fetchProductImage = async () => {
@@ -71,6 +75,9 @@ export default function ReliableProductImage({
         const productImageUrl = product.imageUrl || product.image_url;
         if (productImageUrl) {
           setImageSrc(getImagePath(productImageUrl));
+        } else {
+          console.error(`No image URL found for product ${productId}`);
+          setHasError(true);
         }
       }
     } catch (error) {
