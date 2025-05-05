@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
   Package,
@@ -22,9 +23,13 @@ import {
   Wand2,
   PlusCircle,
   MessageSquare,
-  Users
+  Users,
+  MessageCircle,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -34,10 +39,40 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCustomerRequestsOpen, setIsCustomerRequestsOpen] = useState(true);
   const { toast } = useToast();
   
   // Use the main auth hook for authentication
   const { user, isLoading, error, logoutMutation } = useAuth();
+  
+  // Fetch data for pending request counts
+  const { data: customDesigns } = useQuery({
+    queryKey: ['/api/custom-designs'],
+    enabled: !!user?.id
+  });
+  
+  const { data: customizationRequests } = useQuery({
+    queryKey: ['/api/customization-requests'],
+    enabled: !!user?.id
+  });
+  
+  const { data: quoteRequests } = useQuery({
+    queryKey: ['/api/quote-requests'],
+    enabled: !!user?.id
+  });
+  
+  // Count pending requests
+  const pendingDesigns = Array.isArray(customDesigns) 
+    ? customDesigns.filter((design: any) => design.status === "pending").length 
+    : 0;
+    
+  const pendingCustomizations = Array.isArray(customizationRequests) 
+    ? customizationRequests.filter((req: any) => req.status === "pending").length 
+    : 0;
+    
+  const pendingQuotes = Array.isArray(quoteRequests) 
+    ? quoteRequests.filter((req: any) => req.status === "pending").length 
+    : 0;
   
   // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
@@ -280,20 +315,30 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       icon: <Wand2 className="h-5 w-5" />, 
       href: "/admin/ai-generator" 
     },
-    { 
-      title: "Custom Designs", 
-      icon: <Package className="h-5 w-5" />, 
-      href: "/admin/designs" 
-    },
     {
-      title: "Product Customizations",
-      icon: <Paintbrush className="h-5 w-5" />,
-      href: "/admin/customizations"
-    },
-    {
-      title: "Quote Requests",
-      icon: <Receipt className="h-5 w-5" />,
-      href: "/admin/quotes"
+      title: "Customer Requests",
+      icon: <MessageCircle className="h-5 w-5" />,
+      isGroup: true,
+      items: [
+        { 
+          title: "Custom Design Requests", 
+          icon: <Package className="h-5 w-5" />, 
+          href: "/admin/designs",
+          badge: pendingDesigns > 0 ? pendingDesigns : undefined
+        },
+        {
+          title: "Product Customization Requests",
+          icon: <Paintbrush className="h-5 w-5" />,
+          href: "/admin/customizations",
+          badge: pendingCustomizations > 0 ? pendingCustomizations : undefined
+        },
+        {
+          title: "Quote Requests",
+          icon: <Receipt className="h-5 w-5" />,
+          href: "/admin/quotes",
+          badge: pendingQuotes > 0 ? pendingQuotes : undefined
+        },
+      ]
     },
     {
       title: "Contact Messages",
@@ -342,18 +387,50 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                   </div>
                   <div className="flex-1 overflow-auto py-2">
                     <nav className="flex flex-col gap-1 px-2">
-                      {navItems.map((item) => (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
-                            location === item.href ? "bg-accent/50 font-medium" : ""
-                          }`}
-                        >
-                          {item.icon}
-                          {item.title}
-                        </a>
+                      {navItems.map((item, idx) => (
+                        item.isGroup ? (
+                          <Collapsible key={`group-${idx}`} defaultOpen={isCustomerRequestsOpen}>
+                            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                              <div className="flex items-center gap-3">
+                                {item.icon}
+                                {item.title}
+                              </div>
+                              {isCustomerRequestsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="pl-4">
+                              {item.items?.map((subItem) => (
+                                <a
+                                  key={subItem.href}
+                                  href={subItem.href}
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
+                                    location === subItem.href ? "bg-accent/50 font-medium" : ""
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {subItem.icon}
+                                    {subItem.title}
+                                  </div>
+                                  {subItem.badge && (
+                                    <Badge variant="destructive" className="ml-2">{subItem.badge}</Badge>
+                                  )}
+                                </a>
+                              ))}
+                            </CollapsibleContent>
+                          </Collapsible>
+                        ) : (
+                          <a
+                            key={item.href || `mobile-nav-item-${idx}`}
+                            href={item.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
+                              location === item.href ? "bg-accent/50 font-medium" : ""
+                            }`}
+                          >
+                            {item.icon}
+                            {item.title}
+                          </a>
+                        )
                       ))}
                     </nav>
                   </div>
@@ -398,17 +475,48 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             </a>
           </div>
           <nav className="flex flex-col gap-1 p-4">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
-                  location === item.href ? "bg-accent/50 font-medium" : ""
-                }`}
-              >
-                {item.icon}
-                {item.title}
-              </a>
+            {navItems.map((item, idx) => (
+              item.isGroup ? (
+                <Collapsible key={`desktop-group-${idx}`} defaultOpen={isCustomerRequestsOpen} onOpenChange={setIsCustomerRequestsOpen}>
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                    <div className="flex items-center gap-3">
+                      {item.icon}
+                      {item.title}
+                    </div>
+                    {isCustomerRequestsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-4">
+                    {item.items?.map((subItem) => (
+                      <a
+                        key={subItem.href}
+                        href={subItem.href}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
+                          location === subItem.href ? "bg-accent/50 font-medium" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {subItem.icon}
+                          {subItem.title}
+                        </div>
+                        {subItem.badge && (
+                          <Badge variant="destructive" className="ml-2">{subItem.badge}</Badge>
+                        )}
+                      </a>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ) : (
+                <a
+                  key={item.href || `nav-item-${idx}`}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
+                    location === item.href ? "bg-accent/50 font-medium" : ""
+                  }`}
+                >
+                  {item.icon}
+                  {item.title}
+                </a>
+              )
             ))}
           </nav>
         </div>

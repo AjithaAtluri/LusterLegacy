@@ -519,26 +519,13 @@ export default function ProductDetail() {
                         console.error("Error parsing product details:", e);
                       }
                       
-                      // Comprehensive debug - print all product data
-                      console.log(`Product ID ${product.id} full data:`, product);
-                      console.log(`Product ID ${product.id} parsed details:`, {
-                        id: product.id,
-                        name: product.name,
-                        productType: product.productType,
-                        productTypeId: productTypeId,
-                        additionalData: additionalData
-                      });
-                      
                       // Check if product is in the Beads & Gems category
                       const isBeadsAndGems = 
                         product.productType === "Beads & Gems" || 
                         additionalData.productType === "Beads & Gems" ||
                         productTypeId === "19"; // Type ID 19 is Beads & Gems
                       
-                      console.log(`Product ID ${product.id} - Is Beads & Gems:`, isBeadsAndGems);
-                      
                       if (isBeadsAndGems) {
-                        console.log("Hiding customization button for Beads & Gems product:", product.id);
                         return false; // Don't show customization button for Beads & Gems
                       }
                       
