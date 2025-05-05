@@ -65,7 +65,7 @@ const storyFormSchema = insertTestimonialSchema.extend({
   location: z.string().optional(),
   imageUrls: z.array(z.string()).default([]),
   // New fields for expanded form
-  purchaseType: z.enum(["self", "gift"]).optional(),
+  purchaseType: z.enum(["self", "gift_for", "gift_from"]).optional(),
   giftGiver: z.string().optional(),
   occasion: z.enum(["casual", "birthday", "wedding", "anniversary", "special_occasion", "other"]).optional(),
   satisfaction: z.enum(["very_much", "ok", "did_not"]).optional(),
