@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -270,6 +271,134 @@ export function ClientStoryForm() {
                     How would you rate your jewelry from 1 to 5 stars?
                   </FormDescription>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="purchaseType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Was this purchase for yourself or a gift?</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select purchase type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="self">For myself</SelectItem>
+                      <SelectItem value="gift">As a gift for someone</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {form.watch("purchaseType") === "gift" && (
+              <FormField
+                control={form.control}
+                name="giftGiver"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Who was this gift for?</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Partner, parent, friend, etc." {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Tell us who received this special gift.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="occasion"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>What was the occasion?</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select occasion" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="casual">Casual/Everyday</SelectItem>
+                      <SelectItem value="birthday">Birthday</SelectItem>
+                      <SelectItem value="wedding">Wedding</SelectItem>
+                      <SelectItem value="anniversary">Anniversary</SelectItem>
+                      <SelectItem value="special_occasion">Special Occasion</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    The occasion this jewelry was purchased for.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="satisfaction"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>How satisfied were you with this purchase?</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select satisfaction level" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="very_much">Very satisfied</SelectItem>
+                      <SelectItem value="ok">Somewhat satisfied</SelectItem>
+                      <SelectItem value="did_not">Not satisfied</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Your level of satisfaction with your purchase.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="wouldReturn"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Would you return for more designs from Luster Legacy?
+                    </FormLabel>
+                    <FormDescription>
+                      Let us know if you'd consider purchasing from us again.
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />
