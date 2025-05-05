@@ -16,7 +16,8 @@ export const users = pgTable("users", {
 export const usersRelations = relations(users, ({ many }) => ({
   designRequests: many(designRequests),
   cartItems: many(cartItems),
-  orders: many(orders)
+  orders: many(orders),
+  testimonials: many(testimonials)
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -492,23 +493,55 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).pick({
   designRequestId: true,
 });
 
-// Testimonials schema
+// Testimonials & Client Stories schema
 export const testimonials = pgTable("testimonials", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   name: text("name").notNull(),
   productType: text("product_type").notNull(),
   rating: integer("rating").notNull(),
   text: text("text").notNull(),
+  story: text("story"), // Longer client story content
   initials: text("initials").notNull(),
-  isApproved: boolean("is_approved").default(false)
+  location: text("location"), // Client's city/country
+  imageUrls: text("image_urls").array().default([]), // Up to 3 images from the client
+  orderId: integer("order_id").references(() => orders.id, { onDelete: 'set null' }), // Optional link to the order/purchase
+  productId: integer("product_id").references(() => products.id, { onDelete: 'set null' }), // Optional link to specific product
+  adminNotes: text("admin_notes"), // Private admin notes about the testimonial
+  status: text("status").notNull().default("pending"), // 'pending', 'approved', 'rejected'
+  isApproved: boolean("is_approved").default(false), // Keeping for backward compatibility
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
+export const testimonialsRelations = relations(testimonials, ({ one }) => ({
+  user: one(users, {
+    fields: [testimonials.userId],
+    references: [users.id]
+  }),
+  order: one(orders, {
+    fields: [testimonials.orderId],
+    references: [orders.id]
+  }),
+  product: one(products, {
+    fields: [testimonials.productId],
+    references: [products.id]
+  })
+}));
+
 export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
+  userId: true,
   name: true,
   productType: true,
   rating: true,
   text: true,
+  story: true,
   initials: true,
+  location: true,
+  imageUrls: true,
+  orderId: true,
+  productId: true,
+  status: true,
   isApproved: true,
 });
 

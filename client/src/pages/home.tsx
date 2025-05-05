@@ -21,7 +21,8 @@ export default function Home() {
       <CustomDesignSection />
       <HowItWorks />
       <StorySection />
-      <Testimonials />
+      {/* Testimonials section temporarily hidden until client stories feature is implemented */}
+      {/* <Testimonials /> */}
       <ContactSection />
       <CTASection />
     </>
