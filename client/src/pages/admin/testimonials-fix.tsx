@@ -26,9 +26,18 @@ import {
 const formatImageUrl = (url: string) => {
   if (!url) return "";
   
-  // If path already has http or starts with /, leave it as is
+  // If path already has http, leave it as is
   if (url.startsWith('http')) {
     return url;
+  }
+  
+  // Clear any double slashes that might exist
+  url = url.replace(/\/\//g, '/');
+  
+  // If the path is just a filename (like "abcd1234.jpg"), 
+  // add the /uploads/ prefix
+  if (!url.includes('/')) {
+    return `/uploads/${url}`;
   }
   
   // If path doesn't start with /, add it
@@ -36,9 +45,13 @@ const formatImageUrl = (url: string) => {
     url = `/${url}`;
   }
   
-  // Make sure uploads folder is in the path
-  if (!url.includes('/uploads/') && !url.startsWith('/uploads/')) {
-    url = url.replace('/', '/uploads/');
+  // Make sure uploads folder is in the path for image filenames
+  if (!url.includes('/uploads/')) {
+    // Only add uploads if it looks like a filename path and not a different path
+    const lastSegment = url.split('/').pop();
+    if (lastSegment && lastSegment.includes('.')) {
+      url = `/uploads/${lastSegment}`;
+    }
   }
   
   console.log("Formatted image URL:", url);
@@ -54,13 +67,7 @@ export default function AdminTestimonials() {
 
   // Fetch testimonials data
   const { data: testimonials, isLoading: isLoadingTestimonials } = useQuery({
-    queryKey: ['/api/admin/testimonials'],
-    onSuccess: (data) => {
-      console.log("Testimonials data:", data);
-      if (data && data.length > 0 && data[0].imageUrls) {
-        console.log("First testimonial image URLs:", data[0].imageUrls);
-      }
-    }
+    queryKey: ['/api/admin/testimonials']
   });
 
   // Approve testimonial mutation
@@ -192,6 +199,19 @@ export default function AdminTestimonials() {
   const approvedTestimonials = Array.isArray(testimonials) 
     ? testimonials.filter(t => t.isApproved)
     : [];
+    
+  // Debug testimonial images if available
+  if (Array.isArray(testimonials) && testimonials.length > 0) {
+    console.log("All testimonials:", testimonials);
+    testimonials.forEach((testimonial: any, index: number) => {
+      if (testimonial.imageUrls && testimonial.imageUrls.length > 0) {
+        console.log(`Testimonial ${index} (${testimonial.name}) image URLs:`, testimonial.imageUrls);
+        testimonial.imageUrls.forEach((url: string, i: number) => {
+          console.log(`  URL ${i} formatted:`, formatImageUrl(url));
+        });
+      }
+    });
+  }
 
   const handleOpenDialog = (testimonial: any) => {
     setSelectedTestimonial(testimonial);

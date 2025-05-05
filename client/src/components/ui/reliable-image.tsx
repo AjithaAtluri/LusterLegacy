@@ -11,13 +11,35 @@ interface ReliableImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 const normalizeImagePath = (src: string | undefined): string => {
   if (!src) return "";
   
-  // If path already has http or starts with /, leave it as is
-  if (src.startsWith("http") || src.startsWith("/")) {
+  // If path already has http, leave it as is
+  if (src.startsWith("http")) {
     return src;
   }
   
-  // Otherwise, assume it's a relative path to /uploads directory and prepend /
-  return `/${src}`;
+  // Clear any double slashes that might exist
+  let normalizedSrc = src.replace(/\/\//g, '/');
+  
+  // If the path is just a filename (like "abcd1234.jpg"), 
+  // add the /uploads/ prefix
+  if (!normalizedSrc.includes('/')) {
+    return `/uploads/${normalizedSrc}`;
+  }
+  
+  // If path doesn't start with /, add it
+  if (!normalizedSrc.startsWith('/')) {
+    normalizedSrc = `/${normalizedSrc}`;
+  }
+  
+  // Make sure uploads folder is in the path for image filenames
+  if (!normalizedSrc.includes('/uploads/')) {
+    // Only add uploads if it looks like a filename path and not a different path
+    const lastSegment = normalizedSrc.split('/').pop();
+    if (lastSegment && lastSegment.includes('.')) {
+      normalizedSrc = `/uploads/${lastSegment}`;
+    }
+  }
+  
+  return normalizedSrc;
 };
 
 export function ReliableImage({ 
