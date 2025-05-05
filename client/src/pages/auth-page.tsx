@@ -233,6 +233,34 @@ export default function AuthPage() {
   // We'll handle redirects in a separate useEffect to avoid the "rendered fewer hooks" error
   useEffect(() => {
     if (user) {
+      // Check again for any saved form data in case it was added after initial page load
+      const currentParams = new URLSearchParams(window.location.search);
+      let redirectTarget = currentParams.get("returnTo") || returnPath;
+      
+      // If we don't have a returnTo and there's saved form data, let's set it now
+      if (!currentParams.get("returnTo")) {
+        const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
+        const hasSavedCustomizationForm = sessionStorage.getItem('customizationFormData') !== null;
+        const hasSavedQuoteForm = sessionStorage.getItem('quoteFormData') !== null;
+        
+        if (hasSavedDesignForm) {
+          redirectTarget = "/custom-design";
+          console.log("Auth redirect - found saved design data, redirecting to:", redirectTarget);
+        } else if (hasSavedCustomizationForm) {
+          const savedData = JSON.parse(sessionStorage.getItem('customizationFormData') || '{}');
+          if (savedData.productId) {
+            redirectTarget = `/customize-request/${savedData.productId}`;
+            console.log("Auth redirect - found saved customization data, redirecting to:", redirectTarget);
+          }
+        } else if (hasSavedQuoteForm) {
+          const savedData = JSON.parse(sessionStorage.getItem('quoteFormData') || '{}');
+          if (savedData.productId) {
+            redirectTarget = `/place-order/${savedData.productId}`;
+            console.log("Auth redirect - found saved quote data, redirecting to:", redirectTarget);
+          }
+        }
+      }
+      
       // If admin, redirect to admin dashboard
       if (user.role === "admin") {
         console.log("Admin user detected, redirecting to admin direct dashboard");
@@ -243,11 +271,11 @@ export default function AuthPage() {
         }, 100);
       } else {
         // Otherwise go to return path or home
-        console.log("Customer user detected, redirecting to:", returnPath);
+        console.log("Customer user detected, redirecting to:", redirectTarget);
         
         // For customer users, also use direct navigation to be consistent
         setTimeout(() => {
-          window.location.href = window.location.origin + returnPath;
+          window.location.href = window.location.origin + redirectTarget;
         }, 100);
       }
     }

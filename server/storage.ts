@@ -1931,6 +1931,21 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  async updateCustomizationRequest(id: number, requestData: Partial<CustomizationRequest>): Promise<CustomizationRequest | undefined> {
+    try {
+      console.log("Updating customization request:", id, requestData);
+      const [updatedRequest] = await db
+        .update(customizationRequests)
+        .set(requestData)
+        .where(eq(customizationRequests.id, id))
+        .returning();
+      return updatedRequest;
+    } catch (error) {
+      console.error("Error updating customization request:", error);
+      return undefined;
+    }
+  }
+  
   // Quote Request methods
   async getAllQuoteRequests(): Promise<QuoteRequest[]> {
     try {
