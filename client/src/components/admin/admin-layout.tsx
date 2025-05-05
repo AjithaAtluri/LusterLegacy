@@ -305,8 +305,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     ? testimonials.filter((t: any) => !t.isApproved).length 
     : 0;
     
-  // Navigation items - all pointing to direct path routes
-  const navItems = [
+  // Determine navigation items based on user role
+  const isLimitedAdmin = user?.role === "limited-admin";
+  
+  // Base navigation items for all admin roles
+  const baseNavItems = [
     { 
       title: "Dashboard", 
       icon: <LayoutDashboard className="h-5 w-5" />, 
@@ -316,32 +319,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Products", 
       icon: <GalleryHorizontal className="h-5 w-5" />, 
       href: "/admin/products" 
-    },
-    {
-      title: "Product Types",
-      icon: <Package className="h-5 w-5" />,
-      href: "/admin/product-types"
-    },
-    { 
-      title: "Metal Types", 
-      icon: <Diamond className="h-5 w-5" />, 
-      href: "/admin/metal-types" 
-    },
-    { 
-      title: "Stone Types", 
-      icon: <Gem className="h-5 w-5" />, 
-      href: "/admin/stone-types" 
-    },
-    {
-      title: "Client Stories",
-      icon: <MessageSquare className="h-5 w-5" />,
-      href: "/admin/testimonials",
-      badge: pendingTestimonials > 0 ? pendingTestimonials : undefined
-    },
-    { 
-      title: "AI Content Generator(For new Products)", 
-      icon: <Wand2 className="h-5 w-5" />, 
-      href: "/admin/ai-generator" 
     },
     {
       title: "Customer Requests",
@@ -373,6 +350,36 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       icon: <MessageSquare className="h-5 w-5" />,
       href: "/admin/contact-messages",
       badge: unreadMessages > 0 ? unreadMessages : undefined
+    }
+  ];
+  
+  // Additional navigation items for full admin
+  const fullAdminItems = [
+    {
+      title: "Product Types",
+      icon: <Package className="h-5 w-5" />,
+      href: "/admin/product-types"
+    },
+    { 
+      title: "Metal Types", 
+      icon: <Diamond className="h-5 w-5" />, 
+      href: "/admin/metal-types" 
+    },
+    { 
+      title: "Stone Types", 
+      icon: <Gem className="h-5 w-5" />, 
+      href: "/admin/stone-types" 
+    },
+    {
+      title: "Client Stories",
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: "/admin/testimonials",
+      badge: pendingTestimonials > 0 ? pendingTestimonials : undefined
+    },
+    { 
+      title: "AI Content Generator(For new Products)", 
+      icon: <Wand2 className="h-5 w-5" />, 
+      href: "/admin/ai-generator" 
     },
     {
       title: "User Management",
@@ -380,6 +387,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       href: "/admin/users"
     }
   ];
+  
+  // Combine navigation items based on user role
+  const navItems = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
   
   // Current location for determining active route
   const [location] = useLocation();

@@ -237,8 +237,32 @@ export function setupAuth(app: Express): void {
       return res.status(401).json({ message: "Authentication required" });
     }
     
-    if (req.user.role !== "admin") {
+    if (req.user.role !== "admin" && req.user.role !== "limited-admin") {
       return res.status(403).json({ message: "Admin privileges required" });
+    }
+    
+    // For limited-admin, restrict access to certain routes
+    if (req.user.role === "limited-admin") {
+      // Restrict access to configuration-related endpoints
+      const restrictedEndpoints = [
+        "/api/admin/product-types",
+        "/api/admin/stone-types",
+        "/api/admin/metal-types",
+        "/api/admin/user",
+        "/api/admin/users",
+        "/api/admin/testimonials/delete"
+      ];
+      
+      // Check if the current path matches any restricted endpoint
+      const isRestricted = restrictedEndpoints.some(endpoint => 
+        req.path.startsWith(endpoint) || req.path === endpoint
+      );
+      
+      if (isRestricted) {
+        return res.status(403).json({ 
+          message: "This action is not allowed for limited-access admin accounts" 
+        });
+      }
     }
     
     next();
