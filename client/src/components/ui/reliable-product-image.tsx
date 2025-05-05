@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, MouseEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReliableProductImageProps {
   productId: number;
@@ -8,6 +9,7 @@ interface ReliableProductImageProps {
   alt: string;
   className?: string;
   fallbackSrc?: string;
+  allowDownload?: boolean; // Added option to explicitly allow downloading
 }
 
 // Function to get the image path based on the server structure
@@ -32,11 +34,14 @@ export default function ReliableProductImage({
   imageUrl,
   alt, 
   className = "",
-  fallbackSrc = "" // Empty default, we'll show a loading state instead
+  fallbackSrc = "", // Empty default, we'll show a loading state instead
+  allowDownload = false // Default to not allowing downloads
 }: ReliableProductImageProps) {
   const [imageSrc, setImageSrc] = useState<string>("");
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   
   // First try to use the directly provided imageUrl
   useEffect(() => {
@@ -87,6 +92,27 @@ export default function ReliableProductImage({
     setIsLoading(false);
   };
   
+  // Prevent right click on image
+  const handleContextMenu = (e: MouseEvent) => {
+    if (!allowDownload) {
+      e.preventDefault();
+      toast({
+        title: "Copyright Protected",
+        description: "These images are protected by copyright law. Please contact us to inquire about custom jewelry designs.",
+        variant: "default"
+      });
+      return false;
+    }
+  };
+  
+  // Prevent drag and drop
+  const handleDragStart = (e: MouseEvent) => {
+    if (!allowDownload) {
+      e.preventDefault();
+      return false;
+    }
+  };
+  
   if (isLoading) {
     return (
       <div className={`flex flex-col items-center justify-center w-full h-full ${className}`}>
@@ -99,18 +125,34 @@ export default function ReliableProductImage({
   if (hasError || !imageSrc) {
     return (
       <div className={`flex flex-col items-center justify-center w-full h-full ${className}`}>
+        <AlertCircle className="w-8 h-8 text-accent mb-2" />
         <p className="text-sm text-muted-foreground">Image Not Available</p>
       </div>
     );
   }
   
   return (
-    <img 
-      src={imageSrc}
-      alt={alt}
-      className={className}
-      onError={handleImageError}
-      onLoad={handleImageLoad}
-    />
+    <div 
+      ref={containerRef}
+      className="relative group"
+      style={{ userSelect: 'none' }}
+    >
+      <img 
+        src={imageSrc}
+        alt={alt}
+        className={`${className} ${!allowDownload ? 'select-none pointer-events-none' : ''}`}
+        onError={handleImageError}
+        onLoad={handleImageLoad}
+        onContextMenu={handleContextMenu}
+        onDragStart={handleDragStart}
+        draggable={allowDownload}
+      />
+      {!allowDownload && (
+        <div className="absolute inset-0 bg-transparent cursor-not-allowed" />
+      )}
+      <div className="absolute bottom-0 right-0 p-1 text-xs text-slate-50 bg-black/30 opacity-70 rounded-tl-md">
+        © Luster Legacy
+      </div>
+    </div>
   );
 }

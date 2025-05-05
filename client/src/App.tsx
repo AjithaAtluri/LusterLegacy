@@ -1,5 +1,5 @@
 import { Switch, Route } from "wouter";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import WhatsAppButton from "@/components/ui/whatsapp-button";
@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ThemeProvider } from "@/components/theme-provider";
+import { useToast } from "@/hooks/use-toast";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("@/pages/home"));
@@ -68,6 +69,65 @@ const PageLoader = () => (
 );
 
 function App() {
+  const { toast } = useToast();
+  
+  // Add global event listeners to prevent image saving
+  useEffect(() => {
+    // Prevent keyboard shortcuts (Ctrl+S, Ctrl+P, etc.)
+    const preventImageSaving = (e: KeyboardEvent) => {
+      // Prevent Ctrl+S, Ctrl+P and other common save/print shortcuts
+      if ((e.ctrlKey || e.metaKey) && 
+          (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        toast({
+          title: "Action Restricted",
+          description: "Saving or printing images is restricted due to copyright protection.",
+          variant: "default",
+        });
+        return false;
+      }
+    };
+
+    // Prevent context menu on right-click for images
+    const preventContextMenu = (e: MouseEvent) => {
+      // Check if the target is an image
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'IMG' || target.closest('img'))) {
+        e.preventDefault();
+        toast({
+          title: "Copyright Protected",
+          description: "These images are protected by copyright law. Please contact us to inquire about custom jewelry designs.",
+          variant: "default"
+        });
+        return false;
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('keydown', preventImageSaving);
+    document.addEventListener('contextmenu', preventContextMenu);
+    
+    // Add CSS to prevent image dragging
+    const style = document.createElement('style');
+    style.innerHTML = `
+      img {
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Cleanup function
+    return () => {
+      document.removeEventListener('keydown', preventImageSaving);
+      document.removeEventListener('contextmenu', preventContextMenu);
+      document.head.removeChild(style);
+    };
+  }, [toast]);
+  
   return (
     <ThemeProvider defaultTheme="dark">
       <AuthProvider>
