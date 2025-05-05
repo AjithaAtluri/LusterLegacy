@@ -364,15 +364,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const imageUrl = `/uploads/${req.file.filename}`;
-      const description = await processImageForTestimonial(imageUrl);
+      
+      // Skip OpenAI processing to avoid errors with local image paths
+      // If description is needed, we can generate it later when displaying testimonials
       
       res.json({
         success: true,
-        imageUrl,
-        description
+        url: imageUrl, // Match the field name expected by the FileUploader component
+        imageUrl: imageUrl,
+        description: "Jewelry image uploaded successfully"
       });
     } catch (error) {
-      console.error('Error processing image:', error);
+      console.error('Error processing testimonial image:', error);
       res.status(500).json({ 
         success: false, 
         message: 'Failed to process image',
