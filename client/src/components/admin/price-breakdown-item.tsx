@@ -42,7 +42,14 @@ export function PriceBreakdownItem({
           // Estimate metal cost based on gold price and type
           let purityFactor = 0.75; // Default to 18K (75% purity)
           
-          if (metalType.includes("24K")) purityFactor = 1.0;
+          // Special case: Commercial Metal should have zero cost
+          if (metalType.toLowerCase().includes('commercial') || metalType.toLowerCase() === 'commercial metal') {
+            purityFactor = 0;
+            setDescription(`${weightNum}g of Commercial Metal (No Value)`);
+            setCost(0);
+            return;
+          }
+          else if (metalType.includes("24K")) purityFactor = 1.0;
           else if (metalType.includes("22K")) purityFactor = 0.916;
           else if (metalType.includes("18K")) purityFactor = 0.75;
           else if (metalType.includes("14K")) purityFactor = 0.585;

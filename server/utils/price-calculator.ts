@@ -69,7 +69,11 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     
     // Fallback: If no modifier found, estimate based on name
     if (!metalPriceModifier) {
-      if (metalType.toLowerCase().includes('24k') || metalType.toLowerCase().includes('24 k')) {
+      // Special case: Commercial Metal should have zero cost
+      if (metalType.toLowerCase().includes('commercial') || metalType.toLowerCase() === 'commercial metal') {
+        metalPriceModifier = 0; // Set to zero for no cost
+        console.log('Commercial Metal detected - setting price modifier to 0');
+      } else if (metalType.toLowerCase().includes('24k') || metalType.toLowerCase().includes('24 k')) {
         metalPriceModifier = 1.0;
       } else if (metalType.toLowerCase().includes('22k') || metalType.toLowerCase().includes('22 k')) {
         metalPriceModifier = 0.91;
