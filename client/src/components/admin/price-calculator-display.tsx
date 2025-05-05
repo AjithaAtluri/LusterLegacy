@@ -33,6 +33,7 @@ export function PriceCalculatorDisplay({
     isCalculating,
     breakdown,
     goldPrice,
+    exchangeRate,
     goldPriceLocation,
     goldPriceTimestamp,
     isGoldPriceLoading
@@ -46,6 +47,25 @@ export function PriceCalculatorDisplay({
     otherStoneType,
     otherStoneWeight
   });
+  
+  // Calculate the base cost (materials only)
+  const baseCost = breakdown.metalCost + 
+                 breakdown.primaryStoneCost + 
+                 breakdown.secondaryStoneCost + 
+                 breakdown.otherStoneCost;
+                 
+  // Calculate the correct 25% overhead
+  const correctOverhead = baseCost * 0.25;
+  
+  // Calculate the total with the correct overhead
+  const calculatedTotalCost = baseCost + correctOverhead;
+  
+  // The price from the API should match this total (with possible small rounding differences)
+  const isConsistent = Math.abs(calculatedTotalCost - priceUSD) < 5; // Allow for small rounding differences
+  
+  // Use the calculated total if it's significantly different from the API total
+  const displayTotalUSD = !isConsistent && calculatedTotalCost > 5 ? calculatedTotalCost : priceUSD;
+  const displayTotalINR = !isConsistent && calculatedTotalCost > 5 ? Math.round(calculatedTotalCost * (exchangeRate || 83)) : priceINR;
 
   // Render a compact version with just the price info
   if (compact) {
@@ -56,7 +76,7 @@ export function PriceCalculatorDisplay({
           {isCalculating ? (
             <Skeleton className="h-6 w-20" />
           ) : (
-            <span className="font-medium">{formatCurrency(priceUSD)}</span>
+            <span className="font-medium">{formatCurrency(displayTotalUSD)}</span>
           )}
         </div>
         <div className="flex justify-between items-center">
@@ -64,9 +84,14 @@ export function PriceCalculatorDisplay({
           {isCalculating ? (
             <Skeleton className="h-6 w-20" />
           ) : (
-            <span className="font-medium">₹{priceINR.toLocaleString('en-IN')}</span>
+            <span className="font-medium">₹{displayTotalINR.toLocaleString('en-IN')}</span>
           )}
         </div>
+        {!isConsistent && !isCalculating && (
+          <div className="text-xs text-amber-500">
+            Recalculated for accuracy
+          </div>
+        )}
         <div className="text-xs pt-2 text-muted-foreground flex items-center gap-1">
           <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
           <span>Based on live gold price: ₹{goldPrice?.toLocaleString('en-IN') || "---"}/g</span>
@@ -127,7 +152,12 @@ export function PriceCalculatorDisplay({
               {isCalculating ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
-                <p className="text-2xl font-bold">{formatCurrency(priceUSD)}</p>
+                <div>
+                  <p className="text-2xl font-bold">{formatCurrency(displayTotalUSD)}</p>
+                  {!isConsistent && (
+                    <p className="text-xs text-amber-500">Recalculated for accuracy</p>
+                  )}
+                </div>
               )}
             </div>
             <div className="space-y-1">
@@ -135,7 +165,12 @@ export function PriceCalculatorDisplay({
               {isCalculating ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
-                <p className="text-2xl font-bold">₹{priceINR.toLocaleString('en-IN')}</p>
+                <div>
+                  <p className="text-2xl font-bold">₹{displayTotalINR.toLocaleString('en-IN')}</p>
+                  {!isConsistent && (
+                    <p className="text-xs text-amber-500">(API: ₹{priceINR.toLocaleString('en-IN')})</p>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -218,7 +253,14 @@ export function PriceCalculatorDisplay({
                 {isCalculating ? (
                   <Skeleton className="h-4 w-16" />
                 ) : (
-                  <span>{formatCurrency(breakdown.overhead)}</span>
+                  <div>
+                    <span>{formatCurrency(correctOverhead)}</span>
+                    {Math.abs(correctOverhead - breakdown.overhead) > 5 && (
+                      <div className="text-xs text-amber-500 mt-0.5">
+                        Recalculated (API: {formatCurrency(breakdown.overhead)})
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
