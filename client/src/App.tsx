@@ -16,6 +16,7 @@ const Collections = lazy(() => import("@/pages/collections"));
 const CustomDesign = lazy(() => import("@/pages/custom-design"));
 const About = lazy(() => import("@/pages/about"));
 const Contact = lazy(() => import("@/pages/contact"));
+const ClientStories = lazy(() => import("@/pages/client-stories"));
 const Product = lazy(() => import("@/pages/product"));
 const ProductDetail = lazy(() => import("@/pages/product-detail"));
 const Checkout = lazy(() => import("@/pages/checkout"));
@@ -140,6 +141,7 @@ function App() {
                 <Route path="/custom-design" component={CustomDesign} />
                 <Route path="/about" component={About} />
                 <Route path="/contact" component={Contact} />
+                <Route path="/client-stories" component={ClientStories} />
                 <Route path="/product/:id" component={Product} />
                 <Route path="/product-detail/:id" component={ProductDetail} />
                 <Route path="/checkout" component={Checkout} />

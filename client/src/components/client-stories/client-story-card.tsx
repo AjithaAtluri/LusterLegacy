@@ -1,121 +1,76 @@
-import { useState } from "react";
-import { formatDistance } from "date-fns";
-import { ChevronLeft, ChevronRight, MapPin, Quote } from "lucide-react";
-import { Rating } from "./rating";
 import { Testimonial } from "@shared/schema";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatDate } from "@/lib/utils";
+import { RatingDisplay } from "./rating-display";
 
 interface ClientStoryCardProps {
   story: Testimonial;
-  className?: string;
 }
 
-export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const hasImages = story.imageUrls && story.imageUrls.length > 0;
+export function ClientStoryCard({ story }: ClientStoryCardProps) {
+  const { customerName, location, productType, story: content, imageUrls, rating, purchaseDate } = story;
   
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? (story.imageUrls?.length || 1) - 1 : prev - 1
-    );
-  };
+  // Use the first image if available
+  const imageUrl = imageUrls && imageUrls.length > 0 ? imageUrls[0] : null;
   
-  const handleNextImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === (story.imageUrls?.length || 1) - 1 ? 0 : prev + 1
-    );
-  };
-  
-  const timeAgo = story.createdAt 
-    ? formatDistance(new Date(story.createdAt), new Date(), { addSuffix: true })
-    : '';
+  // Format date
+  const formattedDate = purchaseDate ? formatDate(new Date(purchaseDate)) : null;
   
   return (
-    <div 
-      className={cn(
-        "bg-white rounded-lg shadow-md overflow-hidden flex flex-col md:flex-row",
-        className
-      )}
-    >
-      {/* Image Section (if there are images) */}
-      {hasImages && (
-        <div className="relative w-full md:w-2/5 h-64 md:h-auto">
-          <img 
-            src={story.imageUrls?.[currentImageIndex]} 
-            alt={`${story.name}'s story`}
-            className="w-full h-full object-cover"
-          />
-          
-          {/* Image navigation (only show if multiple images) */}
-          {(story.imageUrls?.length || 0) > 1 && (
-            <div className="absolute inset-0 flex items-center justify-between px-2">
-              <Button 
-                size="icon"
-                variant="ghost"
-                className="rounded-full bg-black/30 text-white hover:bg-black/50"
-                onClick={handlePrevImage}
-              >
-                <ChevronLeft className="h-5 w-5" />
-                <span className="sr-only">Previous image</span>
-              </Button>
-              
-              <Button 
-                size="icon"
-                variant="ghost"
-                className="rounded-full bg-black/30 text-white hover:bg-black/50"
-                onClick={handleNextImage}
-              >
-                <ChevronRight className="h-5 w-5" />
-                <span className="sr-only">Next image</span>
-              </Button>
-            </div>
-          )}
-          
-          {/* Image counter (only show if multiple images) */}
-          {(story.imageUrls?.length || 0) > 1 && (
-            <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-              {currentImageIndex + 1} / {story.imageUrls?.length}
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Content Section */}
-      <div className={cn(
-        "p-6 flex flex-col space-y-4",
-        hasImages ? "md:w-3/5" : "w-full"
-      )}>
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="font-semibold text-lg">{story.name}</h3>
-            
-            {story.location && (
-              <div className="flex items-center text-sm text-gray-500 mt-1">
-                <MapPin className="w-3.5 h-3.5 mr-1" />
-                <span>{story.location}</span>
-              </div>
-            )}
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+      <div className="flex flex-col md:flex-row">
+        {/* Image section */}
+        {imageUrl ? (
+          <div className="w-full md:w-2/5 h-64 md:h-auto relative">
+            <img 
+              src={imageUrl} 
+              alt={`${customerName}'s ${productType}`} 
+              className="w-full h-full object-cover object-center" 
+            />
           </div>
-          
-          <div className="flex flex-col items-end">
-            <Rating value={story.rating || 5} readOnly size="sm" onChange={() => {}} />
-            <div className="text-xs text-gray-400 mt-1">{timeAgo}</div>
-          </div>
-        </div>
-        
-        <div className="relative text-gray-600">
-          <Quote className="absolute -left-1 -top-1 h-6 w-6 text-gray-200 transform -scale-x-100" />
-          <p className="pl-5 pr-5 italic">{story.story || story.text}</p>
-          <Quote className="absolute -right-1 bottom-0 h-6 w-6 text-gray-200" />
-        </div>
-        
-        {story.productType && (
-          <div className="mt-auto pt-2 text-sm text-gray-500">
-            <span className="font-medium">Product Type:</span> {story.productType}
+        ) : (
+          <div className="w-full md:w-2/5 h-64 md:h-auto bg-gray-200 flex items-center justify-center">
+            <p className="text-gray-500 italic px-6 text-center">No image available</p>
           </div>
         )}
+        
+        {/* Content section */}
+        <CardContent className="flex-1 p-6">
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="mb-4 flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-semibold">{customerName}</h3>
+                {location && (
+                  <p className="text-sm text-gray-500">{location}</p>
+                )}
+              </div>
+              {rating && <RatingDisplay rating={rating} />}
+            </div>
+            
+            {/* Product type badge */}
+            {productType && (
+              <div className="mb-4">
+                <span className="inline-block bg-primary/10 text-primary text-sm px-3 py-1 rounded-full">
+                  {productType}
+                </span>
+              </div>
+            )}
+            
+            {/* Story content */}
+            <p className="text-gray-700 flex-grow mb-4">{content}</p>
+            
+            {/* Footer */}
+            <div className="mt-auto pt-4 border-t border-gray-200">
+              {formattedDate && (
+                <p className="text-sm text-gray-500">
+                  <span className="font-medium">Purchase Date:</span> {formattedDate}
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
       </div>
-    </div>
+    </Card>
   );
 }
