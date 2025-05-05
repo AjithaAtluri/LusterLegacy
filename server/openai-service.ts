@@ -25,6 +25,13 @@ export async function generateAITestimonial(
   }
 ): Promise<{ generatedTestimonial: string; generatedStory: string; aiInputData: any }> {
   try {
+    // Log the raw input data for debugging
+    console.log("DEBUG - OpenAI testimonial input data:", {
+      purchaseType: inputData.purchaseType,
+      giftGiver: inputData.giftGiver,
+      occasion: inputData.occasion
+    });
+    
     // Build the prompt based on the available data
     let purchaseContext = "This was purchased for themselves.";
     
@@ -34,6 +41,8 @@ export async function generateAITestimonial(
     } else if (inputData.purchaseType === "gift_from") {
       purchaseContext = `This was received as a gift from ${inputData.giftGiver || "someone special"}.`;
     }
+    
+    console.log("DEBUG - Generated purchase context:", purchaseContext);
 
     const occasionContext = inputData.occasion 
       ? `The occasion was ${inputData.occasion.replace(/_/g, ' ')}.` 
