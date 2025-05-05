@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -79,6 +79,28 @@ export function ClientStoryForm() {
     resolver: zodResolver(storyFormSchema),
     defaultValues,
   });
+  
+  // Auto-fill user data when component loads
+  useEffect(() => {
+    if (user) {
+      // Extract user's name from username or use username directly
+      let userName = user.username;
+      // If username follows common patterns like FirstLast123, try to extract a proper name
+      const nameParts = user.username.match(/^([A-Z][a-z]+)([A-Z][a-z]+)\d*$/);
+      if (nameParts) {
+        userName = `${nameParts[1]} ${nameParts[2]}`;
+      }
+      
+      // Set form values
+      form.setValue("name", userName);
+      form.setValue("userId", user.id);
+      
+      // Set email to hidden field if exists in schema
+      if (user.email) {
+        form.setValue("email", user.email);
+      }
+    }
+  }, [user, form]);
 
   const storyMutation = useMutation({
     mutationFn: async (data: StoryFormValues) => {

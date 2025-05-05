@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,15 @@ import { useAuth } from "@/hooks/use-auth";
 export default function ClientStories() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("view");
+  
+  // Check URL parameters for initial tab setting
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "share" && user) {
+      setActiveTab("share");
+    }
+  }, [user]);
   
   // Fetch approved testimonials
   const { data: testimonials, isLoading } = useQuery({
@@ -82,7 +91,7 @@ export default function ClientStories() {
                   Have a Luster Legacy piece you'd like to share about?
                 </p>
                 <Button 
-                  onClick={() => window.location.href = "/auth"}
+                  onClick={() => window.location.href = "/auth?returnTo=/client-stories&shareStory=true"}
                   className="flex items-center gap-2"
                 >
                   <User className="h-4 w-4" />

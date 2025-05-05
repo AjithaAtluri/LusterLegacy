@@ -58,8 +58,15 @@ export default function AuthPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get("returnTo");
+    const shareStory = params.get("shareStory") === "true";
+    
     if (returnTo) {
-      setReturnPath(returnTo);
+      // For client stories page with share=true, we want to redirect to the share tab
+      if (returnTo === '/client-stories' && shareStory) {
+        setReturnPath(returnTo + "?tab=share");
+      } else {
+        setReturnPath(returnTo);
+      }
       
       // Check for saved form data based on the return path
       if (returnTo === '/custom-design') {
