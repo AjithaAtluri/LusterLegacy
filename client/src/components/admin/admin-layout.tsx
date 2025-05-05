@@ -311,7 +311,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       href: "/admin/stone-types" 
     },
     { 
-      title: "AI Generator", 
+      title: "AI Content Generator(For new Products)", 
       icon: <Wand2 className="h-5 w-5" />, 
       href: "/admin/ai-generator" 
     },
