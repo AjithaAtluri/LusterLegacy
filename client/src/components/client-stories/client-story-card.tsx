@@ -25,7 +25,18 @@ export function ClientStoryCard({ story, className }: ClientStoryCardProps) {
   const [selectedImage, setSelectedImage] = useState("");
   
   // Safely handle imageUrls which might be null
-  const imageUrls = story.imageUrls || [];
+  // Ensure all image URLs have the correct format
+  const imageUrls = Array.isArray(story.imageUrls) 
+    ? story.imageUrls.map(url => {
+        // If the URL doesn't start with http or /, add the / prefix
+        if (!url.startsWith('http') && !url.startsWith('/')) {
+          return `/${url}`;
+        }
+        return url;
+      })
+    : [];
+  
+  console.log('Image URLs in card:', imageUrls);
   const hasImages = imageUrls.length > 0;
   
   return (
