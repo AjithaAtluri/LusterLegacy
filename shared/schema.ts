@@ -498,13 +498,24 @@ export const testimonials = pgTable("testimonials", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
   name: text("name").notNull(),
+  email: text("email"),
   productType: text("product_type").notNull(),
   rating: integer("rating").notNull(),
-  text: text("text").notNull(),
-  story: text("story"), // Longer client story content
+  text: text("text").notNull(), // Brief testimonial (AI-generated)
+  story: text("story"), // Longer client story content (AI-generated)
   initials: text("initials").notNull(),
   location: text("location"), // Client's city/country
   imageUrls: text("image_urls").array().default([]), // Up to 3 images from the client
+  // New fields for expanded form
+  purchaseType: text("purchase_type"), // 'self', 'gift'
+  giftGiver: text("gift_giver"), // Who gave the gift, if not self-purchase
+  occasion: text("occasion"), // 'casual', 'birthday', 'wedding', 'special_occasion'
+  satisfaction: text("satisfaction"), // 'very_much', 'ok', 'did_not'
+  wouldReturn: boolean("would_return").default(true), // Whether they would return for more designs
+  // AI generation params/data - stored for reference
+  aiInputData: json("ai_input_data"), // Store the inputs that were sent to the AI
+  aiGenerationDate: timestamp("ai_generation_date"),
+  // Original fields
   orderId: integer("order_id").references(() => orders.id, { onDelete: 'set null' }), // Optional link to the order/purchase
   productId: integer("product_id").references(() => products.id, { onDelete: 'set null' }), // Optional link to specific product
   adminNotes: text("admin_notes"), // Private admin notes about the testimonial
@@ -532,6 +543,7 @@ export const testimonialsRelations = relations(testimonials, ({ one }) => ({
 export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
   userId: true,
   name: true,
+  email: true,
   productType: true,
   rating: true,
   text: true,
@@ -539,6 +551,14 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
   initials: true,
   location: true,
   imageUrls: true,
+  // New fields
+  purchaseType: true,
+  giftGiver: true,
+  occasion: true,
+  satisfaction: true,
+  wouldReturn: true,
+  aiInputData: true,
+  // Original fields
   orderId: true,
   productId: true,
   status: true,

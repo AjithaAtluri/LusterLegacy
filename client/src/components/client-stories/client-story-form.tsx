@@ -37,6 +37,9 @@ const storyFormSchema = insertTestimonialSchema.extend({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
   }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }).optional(),
   text: z.string().min(10, {
     message: "Please provide a brief testimonial (at least 10 characters).",
   }),
@@ -49,6 +52,13 @@ const storyFormSchema = insertTestimonialSchema.extend({
   }),
   location: z.string().optional(),
   imageUrls: z.array(z.string()).default([]),
+  // New fields for expanded form
+  purchaseType: z.enum(["self", "gift"]).optional(),
+  giftGiver: z.string().optional(),
+  occasion: z.enum(["casual", "birthday", "wedding", "anniversary", "special_occasion", "other"]).optional(),
+  satisfaction: z.enum(["very_much", "ok", "did_not"]).optional(),
+  wouldReturn: z.boolean().default(true),
+  // AI generation fields will be handled on the server side
   // Generate initials from name
   initials: z.string().optional(),
 });
@@ -66,11 +76,19 @@ export function ClientStoryForm() {
     userId: user?.id || null,
     rating: 0,
     name: "",
+    email: user?.email || "",
     text: "",
     story: "",
     productType: "",
     location: "",
     imageUrls: [],
+    // New fields
+    purchaseType: undefined,
+    giftGiver: "",
+    occasion: undefined,
+    satisfaction: undefined,
+    wouldReturn: true,
+    // Original fields
     status: "pending",
     isApproved: false,
   };
