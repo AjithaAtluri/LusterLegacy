@@ -70,6 +70,9 @@ const storyFormSchema = insertTestimonialSchema.extend({
   occasion: z.enum(["casual", "birthday", "wedding", "anniversary", "special_occasion", "other"]).optional(),
   satisfaction: z.enum(["very_much", "ok", "did_not"]).optional(),
   wouldReturn: z.boolean().default(true),
+  // Additional questions from the latest requirements
+  orderType: z.enum(["custom_design", "customization", "as_is"]).optional(),
+  designTeamExperience: z.enum(["excellent", "good", "fair", "poor"]).optional(),
   // AI generation fields will be handled on the server side
   // Generate initials from name
   initials: z.string().optional(),
@@ -104,6 +107,9 @@ export function ClientStoryForm() {
     occasion: undefined,
     satisfaction: undefined,
     wouldReturn: true,
+    // Additional questions
+    orderType: undefined,
+    designTeamExperience: undefined,
     // Original fields
     status: "pending",
     isApproved: false,
@@ -215,6 +221,8 @@ export function ClientStoryForm() {
         satisfaction: formData.satisfaction || "very_much",
         wouldReturn: formData.wouldReturn,
         location: formData.location || "",
+        orderType: formData.orderType || "as_is",
+        designTeamExperience: formData.designTeamExperience || "good",
         imageUrls: uploadedImages,
       };
 
@@ -291,6 +299,11 @@ export function ClientStoryForm() {
           <CardDescription>
             Tell us about your Luster Legacy jewelry and help others discover the perfect piece.
           </CardDescription>
+          <div className="mt-4 p-3 bg-primary/10 rounded-md border border-primary/20">
+            <p className="text-sm">
+              <span className="font-semibold">Let AI help you craft your story!</span> Simply fill in the form details, upload a photo of your jewelry, and click "Generate AI Testimonial" - it's that easy! Our AI will create both a brief testimonial and a full story based on your inputs.
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -513,27 +526,108 @@ export function ClientStoryForm() {
 
             <FormField
               control={form.control}
-              name="wouldReturn"
+              name="orderType"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Would you consider Luster Legacy for your next custom design?
-                    </FormLabel>
-                    <FormDescription>
-                      Let us know if you'd consider returning to us for future jewelry designs.
-                    </FormDescription>
-                  </div>
+                <FormItem>
+                  <FormLabel>What type of order was this?</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select order type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="custom_design">Custom design (created from scratch)</SelectItem>
+                      <SelectItem value="customization">Customization of existing product</SelectItem>
+                      <SelectItem value="as_is">Standard product (no customization)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Let us know if this was a custom design, customization, or standard product.
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
+            
+            {(form.watch("orderType") === "custom_design" || form.watch("orderType") === "customization") && (
+              <FormField
+                control={form.control}
+                name="designTeamExperience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>How was your experience with our design team?</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select experience with design team" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="excellent">Excellent - exceeded expectations</SelectItem>
+                        <SelectItem value="good">Good - met expectations</SelectItem>
+                        <SelectItem value="fair">Fair - some issues but resolved</SelectItem>
+                        <SelectItem value="poor">Poor - did not meet expectations</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Tell us about your experience working with our design team.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
+            {/* Move image upload higher up in the form */}
+            <div className="space-y-2">
+              <Label>Images of Your Jewelry (Optional)</Label>
+              <FileUploader
+                maxFiles={3}
+                acceptedFileTypes={["image/jpeg", "image/png", "image/jpg"]}
+                maxSizeMB={5}
+                endpoint="/api/process-testimonial-image"
+                onUploadsComplete={handleImageUploads}
+              />
+              <p className="text-sm text-muted-foreground">
+                Share up to 3 images of your jewelry. Max 5MB per image.
+              </p>
+            </div>
+
+            {/* Move AI testimonial generation button higher up */}
+            <div className="space-y-4 py-4">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={generateAITestimonial}
+                disabled={isGeneratingAI || storyMutation.isPending}
+                className="w-full flex items-center justify-center"
+              >
+                {isGeneratingAI ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating AI Testimonial...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate AI Testimonial
+                  </>
+                )}
+              </Button>
+              
+              {aiErrorMessage && (
+                <p className="text-sm text-red-500">{aiErrorMessage}</p>
+              )}
+            </div>
+
+            {/* Place testimonial fields below AI generation */}
             <FormField
               control={form.control}
               name="text"
@@ -576,45 +670,31 @@ export function ClientStoryForm() {
               )}
             />
 
-            <div className="space-y-2">
-              <Label>Images of Your Jewelry (Optional)</Label>
-              <FileUploader
-                maxFiles={3}
-                acceptedFileTypes={["image/jpeg", "image/png", "image/jpg"]}
-                maxSizeMB={5}
-                endpoint="/api/process-testimonial-image"
-                onUploadsComplete={handleImageUploads}
-              />
-              <p className="text-sm text-muted-foreground">
-                Share up to 3 images of your jewelry. Max 5MB per image.
-              </p>
-            </div>
-
-            <div className="space-y-4 pt-2">
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={generateAITestimonial}
-                disabled={isGeneratingAI || storyMutation.isPending}
-                className="w-full flex items-center justify-center"
-              >
-                {isGeneratingAI ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating AI Testimonial...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Generate AI Testimonial
-                  </>
-                )}
-              </Button>
-              
-              {aiErrorMessage && (
-                <p className="text-sm text-red-500">{aiErrorMessage}</p>
+            <FormField
+              control={form.control}
+              name="wouldReturn"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Would you consider Luster Legacy for your next custom design?
+                    </FormLabel>
+                    <FormDescription>
+                      Let us know if you'd consider returning to us for future jewelry designs.
+                    </FormDescription>
+                  </div>
+                </FormItem>
               )}
-              
+            />
+
+            {/* Update button text to "Share Your Story" */}
+            <div className="space-y-4 pt-4">
               <Button 
                 type="submit" 
                 disabled={storyMutation.isPending}
@@ -626,7 +706,7 @@ export function ClientStoryForm() {
                     Submitting...
                   </>
                 ) : (
-                  "Submit Your Story"
+                  "Share Your Story"
                 )}
               </Button>
             </div>
