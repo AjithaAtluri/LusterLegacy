@@ -86,12 +86,12 @@ export default function Header() {
         </div>
         
         {/* Desktop navigation */}
-        <div className="hidden md:flex space-x-4 items-center flex-grow justify-end">
+        <div className="hidden md:flex items-center flex-grow justify-end">
           {navItems.map((item) => (
             <Link 
               key={item.path}
               href={item.path}
-              className={`font-montserrat transition duration-300 ${
+              className={`font-montserrat transition duration-300 mx-5 ${
                 isActive(item.path)
                   ? "text-primary font-medium"
                   : "text-foreground hover:text-primary"
@@ -102,7 +102,7 @@ export default function Header() {
           ))}
           
           {user || isAdmin ? (
-            <div className="flex space-x-2">
+            <div className="flex space-x-3 ml-5">
               {isAdmin ? (
                 <Link href="/admin/dashboard" className="font-montserrat text-background bg-rose-600 px-4 py-2 rounded hover:bg-rose-700 transition duration-300 flex items-center">
                   <User className="h-4 w-4 mr-2" />
@@ -126,7 +126,7 @@ export default function Header() {
               <ThemeToggle />
             </div>
           ) : (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3 ml-5">
               <Link href="/auth" className="font-montserrat text-background bg-primary px-4 py-2 rounded hover:bg-accent transition duration-300 flex items-center">
                 <User className="h-4 w-4 mr-2" />
                 Sign Up/Login
