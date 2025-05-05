@@ -1,49 +1,47 @@
-import React from "react";
-import { Star } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface RatingDisplayProps {
-  rating: number;
-  showCount?: boolean;
-  size?: "sm" | "md" | "lg";
+export interface RatingDisplayProps {
+  value: number;
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
+  showText?: boolean;
 }
 
-const sizeClasses = {
-  sm: "h-3 w-3",
-  md: "h-4 w-4",
-  lg: "h-5 w-5",
-};
-
-export function RatingDisplay({ 
-  rating,
-  showCount = false,
-  size = "md",
-  className
+export function RatingDisplay({
+  value,
+  size = 'sm',
+  className,
+  showText = false
 }: RatingDisplayProps) {
-  const maxRating = 5;
-  const stars = Array.from({ length: maxRating }, (_, i) => i + 1);
-
+  // Calculate size based on the prop
+  const starSize = size === 'sm' ? 16 : size === 'md' ? 20 : 24;
+  
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn('flex items-center gap-1', className)}>
       <div className="flex">
-        {stars.map((star) => (
+        {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
+            size={starSize}
             className={cn(
-              sizeClasses[size],
-              star <= rating
-                ? "text-yellow-400 fill-yellow-400"
-                : "text-muted-foreground"
+              'transition-colors',
+              value >= star 
+                ? 'fill-yellow-400 text-yellow-400' 
+                : 'text-gray-300'
             )}
           />
         ))}
       </div>
-      {showCount && (
-        <span className="text-sm text-muted-foreground ml-1">
-          ({rating.toFixed(1)})
+      
+      {showText && (
+        <span className="ml-1 text-sm font-medium text-gray-600">
+          {value.toFixed(1)}
         </span>
       )}
     </div>
   );
 }
+
+export default RatingDisplay;

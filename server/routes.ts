@@ -255,6 +255,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Directly serve files from attached_assets folder
   app.use('/attached_assets', express.static(path.join(process.cwd(), 'attached_assets')));
   
+  /**
+   * AI Testimonial Generation
+   */
+  app.post('/api/generate-testimonial', upload.array('images', 5), async (req, res) => {
+    try {
+      // Validate if user is authenticated
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ success: false, message: 'Authentication required' });
+      }
+      
+      // Extract input data
+      const { 
+        name, 
+        productType, 
+        rating, 
+        text, 
+        story,
+        purchaseType,
+        giftGiver,
+        occasion,
+        satisfaction,
+        wouldReturn
+      } = req.body;
+      
+      // Basic validation
+      if (!name || !productType || !rating) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Name, product type, and rating are required' 
+        });
+      }
+      
+      // Handle uploaded images if any
+      const imageUrls: string[] = [];
+      if (req.files && Array.isArray(req.files)) {
+        for (const file of req.files) {
+          imageUrls.push(`/uploads/${file.filename}`);
+        }
+      }
+      
+      // Generate AI testimonial
+      const inputData = {
+        name,
+        productType,
+        rating: parseInt(rating),
+        text,
+        story,
+        purchaseType,
+        giftGiver,
+        occasion,
+        satisfaction,
+        wouldReturn: wouldReturn === 'true',
+        imageUrls
+      };
+      
+      const { generatedTestimonial, aiInputData } = await generateAITestimonial(inputData);
+      
+      // Return the generated testimonial
+      res.json({
+        success: true,
+        generatedTestimonial,
+        aiInputData
+      });
+    } catch (error) {
+      console.error('Error generating testimonial:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to generate testimonial',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  app.post('/api/process-testimonial-image', upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No image provided' });
+      }
+      
+      const imageUrl = `/uploads/${req.file.filename}`;
+      const description = await processImageForTestimonial(imageUrl);
+      
+      res.json({
+        success: true,
+        imageUrl,
+        description
+      });
+    } catch (error) {
+      console.error('Error processing image:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to process image',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
   // Special fallback route for handling image requests that can't be found
   app.use('/api/image-fallback/:filename', (req, res) => {
     const filename = req.params.filename;
