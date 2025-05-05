@@ -15,7 +15,9 @@ import {
   TrendingUp, 
   Calendar,
   ExternalLink,
-  Loader2
+  Loader2,
+  Star,
+  UserCircle
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -208,6 +210,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="designs">Custom Design Requests</TabsTrigger>
             <TabsTrigger value="customizations">Customization Requests</TabsTrigger>
             <TabsTrigger value="quotes">Quote Requests</TabsTrigger>
+            <TabsTrigger value="testimonials">Client Stories</TabsTrigger>
           </TabsList>
           
           {/* Custom Design Requests Tab */}
@@ -422,6 +425,106 @@ export default function AdminDashboard() {
                     </Link>
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Client Stories Tab */}
+          <TabsContent value="testimonials" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Client Stories</CardTitle>
+                <CardDescription>
+                  Customer testimonials waiting for your approval
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {/* Fetch testimonials data */}
+                {(() => {
+                  const { data: testimonials, isLoading: isLoadingTestimonials } = useQuery({
+                    queryKey: ['/api/admin/testimonials']
+                  });
+                  
+                  const pendingTestimonials = Array.isArray(testimonials) 
+                    ? testimonials.filter((t: any) => !t.isApproved).slice(0, 5)
+                    : [];
+                    
+                  if (isLoadingTestimonials) {
+                    return (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    );
+                  }
+                  
+                  if (pendingTestimonials.length === 0) {
+                    return (
+                      <div className="text-center py-4 text-muted-foreground">
+                        No pending client stories to display
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div className="space-y-4">
+                      {pendingTestimonials.map((testimonial: any) => (
+                        <div key={testimonial.id} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 p-4 border rounded-lg">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                              {testimonial.imageUrls && testimonial.imageUrls.length > 0 ? (
+                                <img 
+                                  src={testimonial.imageUrls[0]} 
+                                  alt="Customer story" 
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <UserCircle className="h-8 w-8 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {testimonial.name}
+                                <Badge className="ml-2 bg-orange-500 text-white">Pending</Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {testimonial.productType || "General"} • {new Date(testimonial.createdAt).toLocaleDateString()}
+                              </div>
+                              <div className="text-xs flex items-center mt-1">
+                                Rating: {testimonial.rating}/5
+                                <div className="flex ml-1">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`h-3 w-3 ${
+                                        i < testimonial.rating
+                                          ? "text-yellow-400 fill-yellow-400"
+                                          : "text-gray-300"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/admin/testimonials`}>
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Review
+                            </Link>
+                          </Button>
+                        </div>
+                      ))}
+                      
+                      <div className="mt-4 text-center">
+                        <Button asChild variant="outline">
+                          <Link href="/admin/testimonials">
+                            Manage All Client Stories
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>

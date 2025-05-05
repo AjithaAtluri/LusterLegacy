@@ -294,6 +294,17 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   };
   
+  // Fetch pending testimonials count
+  const { data: testimonials } = useQuery({
+    queryKey: ['/api/admin/testimonials'],
+    enabled: !!user?.id
+  });
+  
+  // Count pending testimonials
+  const pendingTestimonials = Array.isArray(testimonials) 
+    ? testimonials.filter((t: any) => !t.isApproved).length 
+    : 0;
+    
   // Navigation items - all pointing to direct path routes
   const navItems = [
     { 
@@ -320,6 +331,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "Stone Types", 
       icon: <Gem className="h-5 w-5" />, 
       href: "/admin/stone-types" 
+    },
+    {
+      title: "Client Stories",
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: "/admin/testimonials",
+      badge: pendingTestimonials > 0 ? pendingTestimonials : undefined
     },
     { 
       title: "AI Content Generator(For new Products)", 
