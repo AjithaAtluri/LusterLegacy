@@ -79,17 +79,27 @@ export default function CustomizeRequest() {
     queryKey: ['/api/metal-types'],
   });
   
+  // Get navigate function from wouter
+  const [, navigate] = useLocation();
+  
   // Redirect back to product page if product is in Beads & Gems category
   useEffect(() => {
-    if (product && (product.category === "Beads & Gems" || product.productType === "Beads & Gems")) {
-      toast({
-        title: "Customization Unavailable",
-        description: "Beads & Gems products cannot be customized. Redirecting to product page.",
-        variant: "destructive"
-      });
-      navigate(`/products/${id}`);
+    if (product) {
+      // Check if product type or category is "Beads & Gems"
+      const isBeadsAndGems = 
+        (typeof product === 'object' && 'category' in product && product.category === "Beads & Gems") || 
+        (typeof product === 'object' && 'productType' in product && product.productType === "Beads & Gems");
+      
+      if (isBeadsAndGems) {
+        toast({
+          title: "Customization Unavailable",
+          description: "Beads & Gems products cannot be customized. Redirecting to product page.",
+          variant: "destructive"
+        });
+        navigate(`/products/${id}`);
+      }
     }
-  }, [product, id]);
+  }, [product, id, navigate]);
   
   // Fetch stone types for dropdown
   const { data: stoneTypes, isLoading: isLoadingStoneTypes } = useQuery({
