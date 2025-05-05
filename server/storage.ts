@@ -79,6 +79,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUser(usernameOrId: string | number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   
   // Customization request methods
@@ -312,6 +313,28 @@ export class MemStorage implements IStorage {
   
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
+  }
+  
+  async deleteUser(usernameOrId: string | number): Promise<boolean> {
+    let userId: number | undefined;
+    
+    if (typeof usernameOrId === 'string') {
+      // Find user by username
+      const user = await this.getUserByUsername(usernameOrId);
+      if (!user) return false;
+      userId = user.id;
+    } else {
+      // User ID provided directly
+      userId = usernameOrId;
+      const user = await this.getUser(userId);
+      if (!user) return false;
+    }
+    
+    // Delete related data (in a real app, this would be more complex)
+    // Delete customization requests, quote requests, orders, cart items
+    
+    // Delete the user
+    return this.users.delete(userId);
   }
 
   // Product methods
@@ -968,6 +991,89 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error fetching all users:", error);
       return [];
+    }
+  }
+  
+  async deleteUser(usernameOrId: string | number): Promise<boolean> {
+    try {
+      let userId: number;
+      
+      // Find the user ID based on input
+      if (typeof usernameOrId === 'string') {
+        const user = await this.getUserByUsername(usernameOrId);
+        if (!user) {
+          console.error(`User with username ${usernameOrId} not found`);
+          return false;
+        }
+        userId = user.id;
+      } else {
+        const user = await this.getUser(usernameOrId);
+        if (!user) {
+          console.error(`User with ID ${usernameOrId} not found`);
+          return false;
+        }
+        userId = usernameOrId;
+      }
+      
+      // Delete related data in order to maintain referential integrity
+      console.log(`Deleting all data for user ID ${userId}`);
+      
+      // Begin transaction
+      await db.transaction(async (tx) => {
+        // 1. Delete all designRequest comments
+        const designRequests = await tx.select().from(designRequests).where(eq(designRequests.userId, userId));
+        
+        for (const dr of designRequests) {
+          await tx.delete(designRequestComments).where(eq(designRequestComments.designRequestId, dr.id));
+          await tx.delete(designFeedback).where(eq(designFeedback.designRequestId, dr.id));
+          await tx.delete(designPayments).where(eq(designPayments.designRequestId, dr.id));
+        }
+        
+        // 2. Delete all design requests
+        await tx.delete(designRequests).where(eq(designRequests.userId, userId));
+        
+        // 3. Delete all customization request comments
+        const custRequests = await tx.select().from(customizationRequests).where(eq(customizationRequests.userId, userId));
+        
+        for (const cr of custRequests) {
+          await tx.delete(customizationRequestComments).where(eq(customizationRequestComments.requestId, cr.id));
+        }
+        
+        // 4. Delete all customization requests
+        await tx.delete(customizationRequests).where(eq(customizationRequests.userId, userId));
+        
+        // 5. Delete all quote request comments
+        const quoteReqs = await tx.select().from(quoteRequests).where(eq(quoteRequests.userId, userId));
+        
+        for (const qr of quoteReqs) {
+          await tx.delete(quoteRequestComments).where(eq(quoteRequestComments.requestId, qr.id));
+        }
+        
+        // 6. Delete all quote requests
+        await tx.delete(quoteRequests).where(eq(quoteRequests.userId, userId));
+        
+        // 7. Delete all order items
+        const orders = await tx.select().from(orders).where(eq(orders.userId, userId));
+        
+        for (const order of orders) {
+          await tx.delete(orderItems).where(eq(orderItems.orderId, order.id));
+        }
+        
+        // 8. Delete all orders
+        await tx.delete(orders).where(eq(orders.userId, userId));
+        
+        // 9. Delete all cart items
+        await tx.delete(cartItems).where(eq(cartItems.userId, userId));
+        
+        // 10. Finally, delete the user
+        await tx.delete(users).where(eq(users.id, userId));
+      });
+      
+      console.log(`Successfully deleted user ID ${userId} and all related data`);
+      return true;
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return false;
     }
   }
 
