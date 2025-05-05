@@ -500,7 +500,11 @@ export default function ProductDetail() {
                       Request Final Quote
                     </Button>
                     {/* Only show customization button if product is NOT in "Beads & Gems" category */}
-                    {(!product.productType || product.productType !== "Beads & Gems") && (
+                    {(
+                      // Check both category and productType fields
+                      (!product.category || product.category !== "Beads & Gems") && 
+                      (!product.productType || product.productType !== "Beads & Gems")
+                    ) && (
                       <Button 
                         variant="default" 
                         className="font-montserrat flex-1 bg-primary text-background hover:bg-primary/90"
