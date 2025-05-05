@@ -32,6 +32,17 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { FileUploader } from "@/components/ui/file-uploader";
 import { Rating } from "./rating";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2, Sparkles } from "lucide-react";
 
 // Extend the insert schema with additional validations
 const storyFormSchema = insertTestimonialSchema.extend({
@@ -71,7 +82,11 @@ export function ClientStoryForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
-
+  const [generatedTestimonial, setGeneratedTestimonial] = useState<string>("");
+  const [isGeneratingAI, setIsGeneratingAI] = useState<boolean>(false);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [aiErrorMessage, setAiErrorMessage] = useState<string>("");
+  
   // Default values for the form
   const defaultValues: Partial<StoryFormValues> = {
     userId: user?.id || null,
@@ -173,33 +188,127 @@ export function ClientStoryForm() {
     form.setValue("imageUrls", urls, { shouldValidate: true });
   };
 
+  // AI testimonial generation
+  const generateAITestimonial = async () => {
+    setIsGeneratingAI(true);
+    setAiErrorMessage("");
+
+    try {
+      // Get current form data
+      const formData = form.getValues();
+      
+      // Validate required fields for AI generation
+      if (!formData.name || !formData.productType || formData.rating === 0) {
+        setAiErrorMessage("Please fill in your name, product type, and rating before generating AI testimonial");
+        setIsGeneratingAI(false);
+        return;
+      }
+
+      // Build AI input data
+      const aiInputData = {
+        name: formData.name,
+        productType: formData.productType,
+        rating: formData.rating,
+        purchaseType: formData.purchaseType || "self",
+        giftGiver: formData.giftGiver || "",
+        occasion: formData.occasion || "casual",
+        satisfaction: formData.satisfaction || "very_much",
+        wouldReturn: formData.wouldReturn,
+        location: formData.location || "",
+        imageUrls: uploadedImages,
+      };
+
+      // Call the AI generation endpoint
+      const response = await apiRequest(
+        "POST", 
+        "/api/generate-testimonial",
+        aiInputData
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate AI testimonial");
+      }
+
+      const result = await response.json();
+      
+      // Set the generated testimonial in form
+      setGeneratedTestimonial(result.testimonial);
+      form.setValue("text", result.testimonial, { shouldValidate: true });
+      
+      // If a longer story was generated, set that too
+      if (result.story) {
+        form.setValue("story", result.story, { shouldValidate: true });
+      }
+      
+      // Store the AI input data for reference (will be saved with testimonial)
+      form.setValue("aiInputData", aiInputData);
+      
+      // Open dialog to preview the generated testimonial
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error("Error generating AI testimonial:", error);
+      setAiErrorMessage(error instanceof Error ? error.message : "Failed to generate AI testimonial");
+      toast({
+        title: "AI Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate AI testimonial",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  // Accept AI generated testimonial
+  const acceptAITestimonial = () => {
+    setIsDialogOpen(false);
+    toast({
+      title: "AI Testimonial Applied",
+      description: "You can still edit it before submitting your story.",
+    });
+  };
+
+  // Reject and try again
+  const rejectAITestimonial = () => {
+    setIsDialogOpen(false);
+    form.setValue("text", "", { shouldValidate: true });
+    form.setValue("story", "", { shouldValidate: true });
+    setGeneratedTestimonial("");
+    toast({
+      title: "AI Testimonial Rejected",
+      description: "Please try again or write your own testimonial.",
+      variant: "destructive",
+    });
+  };
+
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Share Your Experience</CardTitle>
-        <CardDescription>
-          Tell us about your Luster Legacy jewelry and help others discover the perfect piece.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Your name will be displayed with your story.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <>
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Share Your Experience</CardTitle>
+          <CardDescription>
+            Tell us about your Luster Legacy jewelry and help others discover the perfect piece.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Your name will be displayed with your story.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
             <FormField
               control={form.control}
@@ -292,7 +401,8 @@ export function ClientStoryForm() {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="self">For myself</SelectItem>
-                      <SelectItem value="gift">As a gift for someone</SelectItem>
+                      <SelectItem value="gift_for">As a gift for someone</SelectItem>
+                      <SelectItem value="gift_from">As a gift from someone</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -300,7 +410,7 @@ export function ClientStoryForm() {
               )}
             />
 
-            {form.watch("purchaseType") === "gift" && (
+            {form.watch("purchaseType") === "gift_for" && (
               <FormField
                 control={form.control}
                 name="giftGiver"
@@ -312,6 +422,25 @@ export function ClientStoryForm() {
                     </FormControl>
                     <FormDescription>
                       Tell us who received this special gift.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            {form.watch("purchaseType") === "gift_from" && (
+              <FormField
+                control={form.control}
+                name="giftGiver"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Who gave you this gift?</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Partner, parent, friend, etc." {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Tell us who gifted this special piece to you.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -393,10 +522,10 @@ export function ClientStoryForm() {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Would you return for more designs from Luster Legacy?
+                      Would you consider Luster Legacy for your next custom design?
                     </FormLabel>
                     <FormDescription>
-                      Let us know if you'd consider purchasing from us again.
+                      Let us know if you'd consider returning to us for future jewelry designs.
                     </FormDescription>
                   </div>
                 </FormItem>
@@ -459,7 +588,31 @@ export function ClientStoryForm() {
               </p>
             </div>
 
-            <div className="pt-2">
+            <div className="space-y-4 pt-2">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={generateAITestimonial}
+                disabled={isGeneratingAI || storyMutation.isPending}
+                className="w-full flex items-center justify-center"
+              >
+                {isGeneratingAI ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating AI Testimonial...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate AI Testimonial
+                  </>
+                )}
+              </Button>
+              
+              {aiErrorMessage && (
+                <p className="text-sm text-red-500">{aiErrorMessage}</p>
+              )}
+              
               <Button 
                 type="submit" 
                 disabled={storyMutation.isPending}
@@ -485,5 +638,29 @@ export function ClientStoryForm() {
         </p>
       </CardFooter>
     </Card>
+    
+    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Your AI-Generated Testimonial</AlertDialogTitle>
+          <AlertDialogDescription>
+            <div className="space-y-4">
+              <p>Based on your inputs, we've generated the following testimonial:</p>
+              
+              <div className="bg-muted p-4 rounded-md">
+                <p className="italic text-sm font-medium">{generatedTestimonial}</p>
+              </div>
+              
+              <p>Does this capture your experience with Luster Legacy?</p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={rejectAITestimonial}>Try Again</AlertDialogCancel>
+          <AlertDialogAction onClick={acceptAITestimonial}>It's Perfect</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
