@@ -233,13 +233,14 @@ export function ClientStoryForm() {
       const result = await response.json();
       console.log("AI testimonial generation response:", result);
       
-      // Set the generated testimonial in form - using the correct field name from the server response
+      // Set the generated brief testimonial in form
       setGeneratedTestimonial(result.generatedTestimonial);
       form.setValue("text", result.generatedTestimonial, { shouldValidate: true });
       
-      // If a longer story was generated, set that too (currently not supported)
-      if (result.aiInputData && result.aiInputData.originalStory) {
-        form.setValue("story", result.aiInputData.originalStory, { shouldValidate: true });
+      // Set the longer detailed story if available
+      if (result.generatedStory) {
+        console.log("Setting generated story:", result.generatedStory);
+        form.setValue("story", result.generatedStory, { shouldValidate: true });
       }
       
       // Store the AI input data for reference (will be saved with testimonial)
@@ -646,13 +647,23 @@ export function ClientStoryForm() {
           <AlertDialogTitle>Your AI-Generated Testimonial</AlertDialogTitle>
           <AlertDialogDescription>
             <div className="space-y-4">
-              <p>Based on your inputs, we've generated the following testimonial:</p>
+              <p>Based on your inputs, we've generated two versions of your testimonial:</p>
               
-              <div className="bg-muted p-4 rounded-md">
-                <p className="italic text-sm font-medium">{generatedTestimonial}</p>
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Brief Testimonial (for testimonial cards):</h4>
+                <div className="bg-muted p-4 rounded-md">
+                  <p className="italic text-sm font-medium">{generatedTestimonial}</p>
+                </div>
               </div>
               
-              <p>Does this capture your experience with Luster Legacy?</p>
+              <div className="space-y-2">
+                <h4 className="font-semibold text-sm">Detailed Story (for your profile):</h4>
+                <div className="bg-muted p-4 rounded-md max-h-[200px] overflow-y-auto">
+                  <p className="italic text-sm">{form.watch("story") || "No detailed story was generated."}</p>
+                </div>
+              </div>
+              
+              <p>Do these capture your experience with Luster Legacy?</p>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>

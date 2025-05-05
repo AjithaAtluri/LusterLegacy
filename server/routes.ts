@@ -340,12 +340,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrls
       };
       
-      const { generatedTestimonial, aiInputData } = await generateAITestimonial(inputData);
+      const { generatedTestimonial, generatedStory, aiInputData } = await generateAITestimonial(inputData);
       
-      // Return the generated testimonial
+      // Return both the brief testimonial and the full story
       res.json({
         success: true,
         generatedTestimonial,
+        generatedStory,
         aiInputData
       });
     } catch (error) {

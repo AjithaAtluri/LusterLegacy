@@ -23,7 +23,7 @@ export async function generateAITestimonial(
     wouldReturn?: boolean;
     imageUrls?: string[];
   }
-): Promise<{ generatedTestimonial: string; aiInputData: any }> {
+): Promise<{ generatedTestimonial: string; generatedStory: string; aiInputData: any }> {
   try {
     // Build the prompt based on the available data
     const purchaseContext = inputData.purchaseType === "gift" 
@@ -108,16 +108,32 @@ export async function generateAITestimonial(
       
       ${imageDescriptions}
       
-      Create an enhanced, natural-sounding testimonial that captures the essence of the customer's feedback,
-      emphasizes the luxury nature of the jewelry, the customer's emotional connection to the piece,
-      and the craftsmanship of Luster Legacy. The testimonial should be in first person, as if spoken by the customer.
-      It should be 2-3 paragraphs long, authentic, and not overly promotional.
+      Create TWO distinct versions of a testimonial:
+      
+      1. A brief testimonial (2-3 sentences) that captures the essence of the customer's experience, suitable for display in a testimonial card.
+      
+      2. A detailed story (2-3 paragraphs) that elaborates on their experience with the jewelry, the emotional connection, and the quality of the craftsmanship.
+      
+      Both versions should:
+      - Be in first person, as if spoken by the customer
+      - Emphasize the luxury nature of the jewelry
+      - Highlight the emotional connection to the piece
+      - Mention the craftsmanship of Luster Legacy
+      - Be authentic and not overly promotional
       
       If images were uploaded, make a subtle reference to the visual beauty of the piece, using phrases like
       "as you can see in the photos" or "the craftsmanship is evident in every detail".
       
       If the original testimonial is already well-written, maintain its voice and style while enhancing it.
       Do not invent specific product details that weren't mentioned.
+      
+      Format your response exactly like this:
+      
+      BRIEF:
+      [brief testimonial here]
+      
+      STORY:
+      [detailed story here]
     `;
 
     const response = await openai.chat.completions.create({
@@ -126,7 +142,18 @@ export async function generateAITestimonial(
       temperature: 0.7,
     });
 
-    const generatedTestimonial = response.choices[0].message.content?.trim() || "";
+    const fullContent = response.choices[0].message.content?.trim() || "";
+    console.log("Raw AI response:", fullContent);
+    
+    // Extract brief testimonial and full story from the formatted response
+    const briefMatch = fullContent.match(/BRIEF:\s*([\s\S]*?)(?=\s*STORY:|$)/i);
+    const storyMatch = fullContent.match(/STORY:\s*([\s\S]*?)$/i);
+    
+    const briefTestimonial = briefMatch ? briefMatch[1].trim() : fullContent;
+    const detailedStory = storyMatch ? storyMatch[1].trim() : "";
+    
+    console.log("Extracted brief testimonial:", briefTestimonial);
+    console.log("Extracted detailed story:", detailedStory ? "Found" : "Not found");
 
     // Return both the generated testimonial and the data used for the generation
     const aiInputData = {
@@ -146,7 +173,8 @@ export async function generateAITestimonial(
     };
 
     return {
-      generatedTestimonial,
+      generatedTestimonial: briefTestimonial,
+      generatedStory: detailedStory,
       aiInputData
     };
   } catch (error) {
