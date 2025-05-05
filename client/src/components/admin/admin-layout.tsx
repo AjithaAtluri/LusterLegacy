@@ -60,6 +60,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     queryKey: ['/api/quote-requests'],
     enabled: !!user?.id
   });
+
+  // Fetch contact messages to count unread ones
+  const { data: contactMessages } = useQuery({
+    queryKey: ['/api/admin/contact'],
+    enabled: !!user?.id
+  });
   
   // Count pending requests
   const pendingDesigns = Array.isArray(customDesigns) 
@@ -72,6 +78,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     
   const pendingQuotes = Array.isArray(quoteRequests) 
     ? quoteRequests.filter((req: any) => req.status === "pending").length 
+    : 0;
+
+  // Count unread messages
+  const unreadMessages = Array.isArray(contactMessages)
+    ? contactMessages.filter((message: any) => message.isRead === false).length
     : 0;
   
   // Redirect to login page if not authenticated or not an admin
@@ -333,7 +344,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           badge: pendingCustomizations > 0 ? pendingCustomizations : undefined
         },
         {
-          title: "Quote Requests",
+          title: "Product Quote Requests",
           icon: <Receipt className="h-5 w-5" />,
           href: "/admin/quotes",
           badge: pendingQuotes > 0 ? pendingQuotes : undefined
@@ -343,7 +354,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     {
       title: "Contact Messages",
       icon: <MessageSquare className="h-5 w-5" />,
-      href: "/admin/contact-messages"
+      href: "/admin/contact-messages",
+      badge: unreadMessages > 0 ? unreadMessages : undefined
     },
     {
       title: "User Management",
