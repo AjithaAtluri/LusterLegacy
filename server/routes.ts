@@ -38,6 +38,7 @@ import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
+import { generateAITestimonial, processImageForTestimonial } from "./openai-service";
 import { getGoldPrice, fetchGoldPrice } from "./services/gold-price-service";
 
 // USD to INR conversion rate - must match the rate in price-calculator.ts
