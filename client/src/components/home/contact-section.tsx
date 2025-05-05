@@ -1,4 +1,4 @@
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Instagram } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -259,9 +259,8 @@ export default function ContactSection() {
     }
   };
   
-  const handleWhatsApp = () => {
-    window.open(`https://wa.me/${COMPANY.whatsapp}`, "_blank");
-  };
+  // We've simplified the Contact component to only have the form, Email and Instagram
+  // Removed previous Phone, WhatsApp, and Address sections
   
   return (
     <section id="contact" className="py-20 px-4 md:px-8 bg-charcoal">
@@ -275,7 +274,7 @@ export default function ContactSection() {
               Have questions about our pieces or the custom design process? Reach out to our team for personalized assistance.
             </p>
             
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Email */}
               <div className="flex items-start">
                 <div className="flex-shrink-0 mr-4">
@@ -293,56 +292,24 @@ export default function ContactSection() {
                 </div>
               </div>
               
-              {/* Phone */}
+              {/* Instagram */}
               <div className="flex items-start">
                 <div className="flex-shrink-0 mr-4">
                   <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                    <Phone className="h-5 w-5 text-background" />
+                    <Instagram className="h-5 w-5 text-background" />
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-playfair text-lg font-semibold text-pearl mb-1">Call Us</h4>
+                  <h4 className="font-playfair text-lg font-semibold text-pearl mb-1">Follow Us</h4>
                   <p className="font-montserrat text-pearl/80">
-                    <a href={`tel:${COMPANY.phone}`} className="hover:text-primary transition duration-300">
-                      {COMPANY.phone}
-                    </a>
-                  </p>
-                </div>
-              </div>
-              
-              {/* WhatsApp */}
-              <div className="flex items-start">
-                <div className="flex-shrink-0 mr-4">
-                  <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                    <i className="fab fa-whatsapp text-background text-xl"></i>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-playfair text-lg font-semibold text-pearl mb-1">WhatsApp Consultation</h4>
-                  <p className="font-montserrat text-pearl/80">
-                    <Button 
-                      onClick={handleWhatsApp}
-                      className="text-background bg-[#25D366] hover:bg-[#128C7E] px-4 py-2 rounded inline-flex items-center mt-2 transition duration-300 h-auto"
+                    <a 
+                      href="https://www.instagram.com/lusterlegacy" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition duration-300"
                     >
-                      <i className="fab fa-whatsapp mr-2"></i> Start Chat
-                    </Button>
-                  </p>
-                </div>
-              </div>
-              
-              {/* Address */}
-              <div className="flex items-start">
-                <div className="flex-shrink-0 mr-4">
-                  <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                    <MapPin className="h-5 w-5 text-background" />
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-playfair text-lg font-semibold text-pearl mb-1">Visit By Appointment</h4>
-                  <p className="font-montserrat text-pearl/80">
-                    {COMPANY.address.line1}<br />
-                    {COMPANY.address.line2}<br />
-                    {COMPANY.address.city}, {COMPANY.address.state} {COMPANY.address.postalCode}
+                      @lusterlegacy
+                    </a>
                   </p>
                 </div>
               </div>
