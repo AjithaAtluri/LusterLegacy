@@ -36,7 +36,7 @@ export default function ReliableProductImage({
   image_url, // Accept both camelCase and snake_case
   alt, 
   className = "",
-  fallbackSrc = "", // Empty default, we'll show a loading state instead
+  fallbackSrc = "", // Unused parameter, kept for compatibility
   allowDownload = false // Default to not allowing downloads
 }: ReliableProductImageProps) {
   const [imageSrc, setImageSrc] = useState<string>("");
