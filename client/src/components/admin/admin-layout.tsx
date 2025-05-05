@@ -39,7 +39,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCustomerRequestsOpen, setIsCustomerRequestsOpen] = useState(true);
+  const [isCustomerRequestsOpen, setIsCustomerRequestsOpen] = useState(true); // Always expanded by default
   const { toast } = useToast();
   
   // Use the main auth hook for authentication
