@@ -6375,8 +6375,8 @@ Respond in JSON format:
             // Try to get admin user by ID from cookie
             const adminUser = await storage.getUser(parsedAdminId);
             
-            if (adminUser && adminUser.role === 'admin') {
-              console.log("Admin auth check - verified admin user from cookie:", adminUser.username);
+            if (adminUser && (adminUser.role === 'admin' || adminUser.role === 'limited-admin')) {
+              console.log(`Admin auth check - verified ${adminUser.role} user from cookie:`, adminUser.username);
               
               // Return sanitized user data
               const { password, ...userWithoutPassword } = adminUser;
@@ -6454,8 +6454,8 @@ Respond in JSON format:
             console.log("Admin auth check - found legacy userId cookie:", parsedUserId);
             
             const legacyUser = await storage.getUser(parsedUserId);
-            if (legacyUser && legacyUser.role === 'admin') {
-              console.log("Admin auth check - verified admin via legacy cookie:", legacyUser.username);
+            if (legacyUser && (legacyUser.role === 'admin' || legacyUser.role === 'limited-admin')) {
+              console.log(`Admin auth check - verified ${legacyUser.role} via legacy cookie:`, legacyUser.username);
               
               // Set the new admin cookies for future requests
               console.log("Admin auth check - upgrading to dedicated admin cookies");
@@ -6500,7 +6500,7 @@ Respond in JSON format:
                 upgraded: true
               });
             } else if (legacyUser) {
-              console.log("Admin auth check - legacy user found but not admin, role:", legacyUser.role);
+              console.log("Admin auth check - legacy user found but not admin or limited-admin, role:", legacyUser.role);
               // Clear invalid cookie
               res.clearCookie('userId', { path: '/' });
             } else {
@@ -6516,8 +6516,8 @@ Respond in JSON format:
       
       // Finally check passport session auth
       if (req.isAuthenticated && req.isAuthenticated()) {
-        if (req.user && req.user.role === 'admin') {
-          console.log("Admin auth check - verified admin via passport session:", req.user.username);
+        if (req.user && (req.user.role === 'admin' || req.user.role === 'limited-admin')) {
+          console.log(`Admin auth check - verified ${req.user.role} via passport session:`, req.user.username);
           
           // Set admin cookies for future requests (making auth more robust)
           console.log("Admin auth check - setting admin cookies from passport session");
@@ -6555,7 +6555,7 @@ Respond in JSON format:
             authSource: 'passport'
           });
         } else {
-          console.log("Admin auth check - passport user found but not admin, role:", req.user?.role);
+          console.log("Admin auth check - passport user found but not admin or limited-admin, role:", req.user?.role);
         }
       } else {
         console.log("Admin auth check - no passport authentication found");
@@ -6564,7 +6564,7 @@ Respond in JSON format:
       // No authenticated admin user found with any method
       console.log("Admin auth check - no admin authentication found via any method");
       return res.status(401).json({ 
-        message: 'Not authenticated as admin',
+        message: 'Not authenticated as admin or limited-admin',
         authenticated: false,
         timestamp: Date.now()
       });
