@@ -499,71 +499,31 @@ export default function ProductDetail() {
                       <Info className="mr-2 h-4 w-4" />
                       Request Final Quote
                     </Button>
-                    {/* Comprehensive check to determine if product is in Beads & Gems category */}
+                    {/* Only check the exact product type fields for "Beads & Gems" as requested */}
                     {(() => {
                       // Safely get product details if they exist
-                      let productDetails = {};
                       let additionalData = {};
-                      let aiInputs = {};
                       
                       try {
                         if (product.details) {
-                          if (typeof product.details === 'string') {
-                            productDetails = JSON.parse(product.details);
-                          } else {
-                            productDetails = product.details;
-                          }
+                          const productDetails = typeof product.details === 'string' 
+                            ? JSON.parse(product.details) 
+                            : product.details;
                           
                           additionalData = productDetails.additionalData || {};
-                          aiInputs = additionalData.aiInputs || {};
                         }
                       } catch (e) {
                         // Safely handle parsing errors
                         console.error("Error parsing product details:", e);
                       }
                       
-                      // Check for productTypeId === "19" which is Beads & Gems
-                      const productTypeIdMatch = additionalData.productTypeId === "19" || 
-                                                 aiInputs.productType === "19" || 
-                                                 product.productTypeId === 19;
-                                                 
-                      // Check if mainStoneType contains "Beads" or "Pearl"
-                      const mainStoneMatch = 
-                        (additionalData.mainStoneType && 
-                         (additionalData.mainStoneType.includes("Bead") || 
-                          additionalData.mainStoneType.includes("Pearl"))) ||
-                        (aiInputs.mainStoneType && 
-                         (aiInputs.mainStoneType.includes("Bead") || 
-                          aiInputs.mainStoneType.includes("Pearl")));
-                          
-                      // Check if secondaryStoneType contains "Beads" or "Pearl"  
-                      const secondaryStoneMatch = 
-                        (additionalData.secondaryStoneType && 
-                         (additionalData.secondaryStoneType.includes("Bead") || 
-                          additionalData.secondaryStoneType.includes("Pearl"))) ||
-                        (aiInputs.secondaryStoneType && 
-                         (aiInputs.secondaryStoneType.includes("Bead") || 
-                          aiInputs.secondaryStoneType.includes("Pearl")));
+                      // Only check for exact product type "Beads & Gems" (not stone types, names, etc)
+                      const isBeadsAndGemsProductType = 
+                        product.productType === "Beads & Gems" || 
+                        additionalData.productType === "Beads & Gems";
                       
-                      // Check product name and description
-                      const nameDescMatch = 
-                        (product.name && 
-                         (product.name.toLowerCase().includes("bead") || 
-                          product.name.toLowerCase().includes("pearl"))) ||
-                        (product.description && 
-                         (product.description.toLowerCase().includes("bead") || 
-                          product.description.toLowerCase().includes("pearl")));
-                      
-                      // Final determination - is this a Beads & Gems product?
-                      const isBeadsAndGemsProduct = productTypeIdMatch || 
-                                                   mainStoneMatch || 
-                                                   secondaryStoneMatch || 
-                                                   nameDescMatch ||
-                                                   product.category === "Beads & Gems" || 
-                                                   product.productType === "Beads & Gems";
-                      
-                      // Only show the button if it's NOT a Beads & Gems product
-                      return !isBeadsAndGemsProduct;
+                      // Only show the button if it's NOT a Beads & Gems product type
+                      return !isBeadsAndGemsProductType;
                     })() && (
                       <Button 
                         variant="default" 
