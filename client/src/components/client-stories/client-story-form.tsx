@@ -203,6 +203,16 @@ export function ClientStoryForm() {
       // Get current form data
       const formData = form.getValues();
       
+      // Debug form data
+      console.log("FORM DATA FOR AI GENERATION:", {
+        name: formData.name,
+        productType: formData.productType,
+        rating: formData.rating,
+        purchaseType: formData.purchaseType,
+        giftGiver: formData.giftGiver,
+        occasion: formData.occasion,
+      });
+      
       // Validate required fields for AI generation
       if (!formData.name || !formData.productType || formData.rating === 0) {
         setAiErrorMessage("Please fill in your name, product type, and rating before generating AI testimonial");
@@ -210,21 +220,27 @@ export function ClientStoryForm() {
         return;
       }
 
-      // Build AI input data
+      // Build AI input data with careful defaults
+      // Only use defaults if the field is actually undefined or null, not for user selections
       const aiInputData = {
         name: formData.name,
         productType: formData.productType,
         rating: formData.rating,
-        purchaseType: formData.purchaseType || "self",
+        // Only default purchaseType if it's completely missing
+        purchaseType: formData.purchaseType !== undefined ? formData.purchaseType : "self",
+        // Only include giftGiver if it was provided
         giftGiver: formData.giftGiver || "",
         occasion: formData.occasion || "casual",
         satisfaction: formData.satisfaction || "very_much",
-        wouldReturn: formData.wouldReturn,
+        wouldReturn: formData.wouldReturn !== undefined ? formData.wouldReturn : true,
         location: formData.location || "",
         orderType: formData.orderType || "as_is",
         designTeamExperience: formData.designTeamExperience || "good",
         imageUrls: uploadedImages,
       };
+      
+      // Debug data being sent to API
+      console.log("SENDING TO API:", aiInputData);
 
       // Call the AI generation endpoint
       const response = await apiRequest(

@@ -26,23 +26,38 @@ export async function generateAITestimonial(
 ): Promise<{ generatedTestimonial: string; generatedStory: string; aiInputData: any }> {
   try {
     // Log the raw input data for debugging
-    console.log("DEBUG - OpenAI testimonial input data:", {
+    console.log("DEBUG - OpenAI testimonial input data:", JSON.stringify({
       purchaseType: inputData.purchaseType,
       giftGiver: inputData.giftGiver,
       occasion: inputData.occasion
-    });
+    }, null, 2));
     
-    // Build the prompt based on the available data
+    // Build the prompt based on the available data - with stricter checking
     let purchaseContext = "This was purchased for themselves.";
     
-    // Handle different purchase types properly
+    // Explicitly check each purchase type to ensure correct context
     if (inputData.purchaseType === "gift_for") {
+      // Gift FOR someone (user bought it as a gift)
       purchaseContext = `This was purchased as a gift for ${inputData.giftGiver || "someone special"}.`;
-    } else if (inputData.purchaseType === "gift_from") {
+      console.log("Using GIFT FOR context");
+    } 
+    else if (inputData.purchaseType === "gift_from") {
+      // Gift FROM someone (user received it as a gift)
       purchaseContext = `This was received as a gift from ${inputData.giftGiver || "someone special"}.`;
+      console.log("Using GIFT FROM context");
+    }
+    else if (inputData.purchaseType === "self") {
+      // Self purchase (default)
+      purchaseContext = "This was purchased for themselves.";
+      console.log("Using SELF PURCHASE context");
+    }
+    else {
+      // If for some reason purchaseType is invalid or missing
+      console.log("WARNING: Unknown purchase type:", inputData.purchaseType);
+      purchaseContext = "This was purchased for themselves.";
     }
     
-    console.log("DEBUG - Generated purchase context:", purchaseContext);
+    console.log("DEBUG - Final purchase context:", purchaseContext);
 
     const occasionContext = inputData.occasion 
       ? `The occasion was ${inputData.occasion.replace(/_/g, ' ')}.` 
