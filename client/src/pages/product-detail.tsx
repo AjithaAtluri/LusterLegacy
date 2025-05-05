@@ -489,7 +489,7 @@ export default function ProductDetail() {
                 
                 {/* Call-To-Action Buttons */}
                 <div className="flex flex-col space-y-3 mb-8 w-full">
-                  {/* Two main buttons - side by side */}
+                  {/* Two main buttons - side by side - hide customization for Beads & Gems */}
                   <div className="flex gap-3 w-full">
                     <Button 
                       variant="outline" 
@@ -499,14 +499,17 @@ export default function ProductDetail() {
                       <Info className="mr-2 h-4 w-4" />
                       Request Final Quote
                     </Button>
-                    <Button 
-                      variant="default" 
-                      className="font-montserrat flex-1 bg-primary text-background hover:bg-primary/90"
-                      onClick={handleCustomizationRequest}
-                    >
-                      <Package className="mr-2 h-4 w-4" />
-                      Customize & Get Estimate
-                    </Button>
+                    {/* Only show customization button if product is NOT in "Beads & Gems" category */}
+                    {(!product.productType || product.productType !== "Beads & Gems") && (
+                      <Button 
+                        variant="default" 
+                        className="font-montserrat flex-1 bg-primary text-background hover:bg-primary/90"
+                        onClick={handleCustomizationRequest}
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        Customize & Get Estimate
+                      </Button>
+                    )}
                   </div>
                 </div>
                 
