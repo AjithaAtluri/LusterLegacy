@@ -880,9 +880,10 @@ export default function EditProductNew() {
 
       // Log form data entries for debugging
       console.log("FormData keys being sent:");
-      for (const pair of formData.entries()) {
+      // Use Array.from to convert the iterator to an array for better compatibility
+      Array.from(formData.entries()).forEach(pair => {
         console.log(`- ${pair[0]}: ${pair[0] === 'data' ? '[Product JSON data]' : pair[1]}`);
-      }
+      });
 
       // Submit the form with increased timeout
       console.log("Submitting product update to API...");

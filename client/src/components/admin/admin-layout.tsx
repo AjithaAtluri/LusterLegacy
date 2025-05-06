@@ -180,7 +180,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             toast({
               title: "Limited admin access",
               description: "You're authenticated but some admin features might be restricted",
-              variant: "warning"
+              // Using default variant since "warning" is not available in this component
+              variant: "default"
             });
             
             return; // Allow access
