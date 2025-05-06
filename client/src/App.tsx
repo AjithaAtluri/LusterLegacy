@@ -215,7 +215,8 @@ function App() {
             </Suspense>
           </main>
           <Footer />
-          <WhatsAppButton />
+          {/* WhatsApp button hidden for now */}
+          {/* <WhatsAppButton /> */}
         </div>
       </AuthProvider>
     </ThemeProvider>

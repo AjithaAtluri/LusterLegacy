@@ -15,7 +15,8 @@ export function Layout({ children }: LayoutProps) {
         {children}
       </main>
       <Footer />
-      <WhatsAppButton />
+      {/* WhatsApp button hidden for now */}
+      {/* <WhatsAppButton /> */}
     </div>
   );
 }
