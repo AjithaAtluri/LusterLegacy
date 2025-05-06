@@ -40,26 +40,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCustomerRequestsOpen, setIsCustomerRequestsOpen] = useState(true); // Always expanded by default
-  const [stableLoading, setStableLoading] = useState(true);
   const { toast } = useToast();
   
-  // Use the main auth hook for authentication
-  const { user, isLoading, error, logoutMutation } = useAuth();
-  
-  // Better loading state management to prevent flickering
-  useEffect(() => {
-    if (isLoading) {
-      setStableLoading(true);
-      return;
-    }
-    
-    // Small delay to prevent flickering during transitional states
-    const timer = setTimeout(() => {
-      setStableLoading(false);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [isLoading]);
+  // Use the main auth hook for authentication including stable loading state
+  const { user, isLoading, stableLoading, error, logoutMutation } = useAuth();
   
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({

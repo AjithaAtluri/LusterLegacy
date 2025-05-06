@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
+  stableLoading: boolean;  // Added for more stable UI transitions
   error: Error | null;
   loginMutation: UseMutationResult<Omit<User, "password">, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
@@ -473,12 +474,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Log both loading states for debugging
+  console.log("Auth Context - Raw Loading:", isLoading);
+  console.log("Auth Context - Stable Loading:", stableLoading);
+  
   return (
     <AuthContext.Provider
       value={{
         user: user || null,
-        // Use stable loading state to prevent UI flickering
-        isLoading: stableLoading,
+        isLoading, // Keep the original isLoading state
+        stableLoading, // Expose the stable loading state for UI components
         error,
         loginMutation,
         logoutMutation,

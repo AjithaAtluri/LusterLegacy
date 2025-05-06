@@ -15,7 +15,7 @@ export function ProtectedRoute({
   adminOnly = false,
   ...rest
 }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, stableLoading } = useAuth();
   
   // Get the path as string for return URL
   const pathString = path !== undefined ? 
