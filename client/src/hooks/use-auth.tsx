@@ -60,10 +60,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    // Add a small delay before showing content to prevent flickering
+    // Increased delay to ensure all network requests finish before showing UI
+    // This helps prevent flickering in admin dashboard and product pages
     const timer = setTimeout(() => {
       setStableLoading(false);
-    }, 200);
+    }, 800);  // Increased from 200ms to 800ms
     
     return () => clearTimeout(timer);
   }, [isLoading]);
