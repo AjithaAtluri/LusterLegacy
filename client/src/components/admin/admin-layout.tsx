@@ -300,9 +300,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     enabled: !!user?.id
   });
   
-  // Count pending testimonials
+  // Count pending testimonials (only count unapproved ones)
   const pendingTestimonials = Array.isArray(testimonials) 
-    ? testimonials.filter((t: any) => !t.isApproved).length 
+    ? testimonials.filter((t: any) => t.status === 'pending' || !t.isApproved).length 
     : 0;
     
   // Define TypeScript interfaces for nav items
