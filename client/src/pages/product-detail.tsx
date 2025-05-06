@@ -399,11 +399,9 @@ export default function ProductDetail() {
           
           {/* Additional Product Information */}
           {product.calculatedPriceUSD && (
-            <>
-              <meta property="product:price:amount" content={product.calculatedPriceUSD.toString()} />
-              <meta property="product:price:currency" content="USD" />
-            </>
+            <meta property="product:price:amount" content={product.calculatedPriceUSD.toString()} />
           )}
+          <meta property="product:price:currency" content="USD" />
         </Helmet>
       )}
 
