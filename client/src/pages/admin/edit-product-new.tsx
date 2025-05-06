@@ -722,32 +722,62 @@ export default function EditProductNew() {
   // Update product mutation
   const updateProductMutation = useMutation({
     mutationFn: async (formData: FormData) => {
+      console.log("Starting update product mutation");
+      
+      // Enhanced logging for API request
+      console.log(`Sending PUT request to /api/admin/products/${params.id}`);
+      
       const response = await apiRequest(
         "PUT", 
         `/api/admin/products/${params.id}`, 
         formData,
-        { isFormData: true }  // Fixed to use options object
+        { 
+          isFormData: true,
+          headers: {
+            // Add debugging headers
+            'X-Request-Source': 'product-edit-form',
+            'X-Admin-Username': user?.username || 'unknown',
+          }
+        }
       );
+      
+      console.log(`API Response status: ${response.status}`);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update product");
+        let errorMessage = "Failed to update product";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error("API Error Response:", errorData);
+        } catch (e) {
+          console.error("Could not parse error response:", e);
+        }
+        throw new Error(errorMessage);
       }
 
-      return await response.json();
+      const responseData = await response.json();
+      console.log("Product update API response:", responseData);
+      return responseData;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Product update successful, invalidating queries");
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products', params.id] });
+      
       toast({
         title: "Product Updated",
-        description: "Your product has been updated successfully."
+        description: "Your product has been updated successfully!"
       });
-      setLocation('/admin/products');
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        setLocation('/admin/products');
+      }, 1000);
     },
     onError: (error: Error) => {
+      console.error("Product update mutation error:", error);
       toast({
-        title: "Error",
+        title: "Update Failed",
         description: error.message || "Failed to update product. Please try again.",
         variant: "destructive"
       });
@@ -832,10 +862,21 @@ export default function EditProductNew() {
         console.log("Adding existing main image URL to form data:", mainImagePreview);
       }
 
-      additionalImagePreviews.forEach((url, index) => {
-        formData.append(`existingAdditionalImage${index + 1}`, url);
-        console.log(`Adding existing additional image ${index + 1} URL:`, url);
-      });
+      // Special care for additional images - make sure to always include them in the right order
+      if (additionalImagePreviews.length > 0) {
+        console.log(`Adding ${additionalImagePreviews.length} existing additional images`);
+        
+        additionalImagePreviews.forEach((url, index) => {
+          if (url) {
+            formData.append(`existingAdditionalImage${index + 1}`, url);
+            console.log(`Adding existing additional image ${index + 1} URL:`, url);
+          }
+        });
+      } else {
+        console.log("No additional images found");
+        // Add an empty additional image array to ensure the server knows there are no images
+        formData.append('emptyAdditionalImages', 'true');
+      }
 
       // Log form data entries for debugging
       console.log("FormData keys being sent:");

@@ -5682,19 +5682,26 @@ Respond in JSON format:
           updateData.additionalImages = [...updatedImages, ...newAdditionalImages];
           console.log("Final additional images:", updateData.additionalImages);
         }
-      } else if (req.body.existingAdditionalImage1) {
-        // No new images, but we have existing ones from form data
+      } else if (req.body.existingAdditionalImage1 || req.body.emptyAdditionalImages === 'true') {
+        // No new images, but we have existing ones from form data or a flag to set empty images
         console.log("No new images, using existing images from form data");
         
         const updatedImages = [];
-        for (let i = 1; i <= 4; i++) {
-          const fieldName = `existingAdditionalImage${i}`;
-          if (req.body[fieldName]) {
-            updatedImages.push(req.body[fieldName]);
-            console.log(`Added existing image from form: ${req.body[fieldName]}`);
+        // If we have the empty flag and no existing images, we want an empty array
+        if (req.body.emptyAdditionalImages === 'true' && !req.body.existingAdditionalImage1) {
+          console.log("Setting additional images to empty array as requested");
+        } else {
+          // Otherwise collect all the existing image values
+          for (let i = 1; i <= 4; i++) {
+            const fieldName = `existingAdditionalImage${i}`;
+            if (req.body[fieldName]) {
+              updatedImages.push(req.body[fieldName]);
+              console.log(`Added existing image from form: ${req.body[fieldName]}`);
+            }
           }
         }
         
+        // Always explicitly set the additional images array
         updateData.additionalImages = updatedImages;
         console.log("Final existing images from form:", updateData.additionalImages);
       }
@@ -5710,12 +5717,23 @@ Respond in JSON format:
         }
       }
       
+      // Log the final data being sent to storage
+      console.log("Final update data being sent to storage:", JSON.stringify(updateData, null, 2));
+
       // Update the product
       const updatedProduct = await storage.updateProduct(id, updateData);
+      
+      if (!updatedProduct) {
+        console.error(`Failed to update product ${id} - storage.updateProduct returned no data`);
+        return res.status(500).json({ message: 'Failed to update product in database' });
+      }
+      
+      console.log(`Successfully updated product ${id} in database`);
       
       // Update product stone associations
       if (stoneTypeIds.length > 0 || req.body.updateStoneTypes === 'true') {
         await storage.updateProductStones(id, stoneTypeIds);
+        console.log(`Updated stone associations for product ${id}`);
       }
       
       // Get the updated product with stone types
@@ -5723,6 +5741,12 @@ Respond in JSON format:
         ...updatedProduct,
         stoneTypes: await storage.getProductStones(id)
       };
+      
+      console.log(`Sending updated product back to client:`, {
+        id: productWithStones.id,
+        name: productWithStones.name,
+        fields: Object.keys(productWithStones)
+      });
       
       res.json(productWithStones);
     } catch (error) {
