@@ -399,7 +399,26 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Current location for determining active route
   const [location] = useLocation();
   
-  if (isLoading) {
+  // Use a stable loading state with a minimum display time to prevent flickering
+  const [stableLoading, setStableLoading] = useState(true);
+  
+  useEffect(() => {
+    // If we're still loading, maintain the loading state
+    if (isLoading) {
+      setStableLoading(true);
+      return;
+    }
+    
+    // When loading finishes, add a slight delay before hiding loader
+    // This prevents rapid flashing between states
+    const timer = setTimeout(() => {
+      setStableLoading(false);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+  
+  if (stableLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
