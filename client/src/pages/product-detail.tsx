@@ -93,10 +93,13 @@ export default function ProductDetail() {
   // dimensions state removed as requested
   const [userDescription, setUserDescription] = useState<string>("");
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [stableLoading, setStableLoading] = useState<boolean>(true);
   
-  // Fetch product data
+  // Fetch product data with improved error handling
   const { data: product, isLoading, error } = useQuery<Product>({
-    queryKey: [`/api/products/${id}`]
+    queryKey: [`/api/products/${id}`],
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });
   
   // Fetch related products data (will only run when product.id is available)
@@ -104,6 +107,21 @@ export default function ProductDetail() {
     queryKey: [`/api/products/${id}/related`],
     enabled: !!id, // Only fetch when id is available
   });
+  
+  // Stabilize loading state to prevent flickering
+  useEffect(() => {
+    if (isLoading) {
+      setStableLoading(true);
+      return;
+    }
+    
+    // Add a delay to prevent flickering when content changes
+    const timer = setTimeout(() => {
+      setStableLoading(false);
+    }, 800); // Match the delay in useAuth hook
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
   
   // Update related products state when data is fetched
   useEffect(() => {
