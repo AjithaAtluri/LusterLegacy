@@ -392,7 +392,7 @@ export default function ProductDetail() {
   
   return (
     <>
-      {product && (
+      {!stableLoading && product && (
         <Helmet>
           <title>{product.name} | Luster Legacy</title>
           <meta name="description" content={product.description} />
@@ -424,7 +424,7 @@ export default function ProductDetail() {
       )}
 
       {/* Hero Section with Full-Width Image */}
-      {product && (
+      {!stableLoading && product && (
         <div className="relative w-full h-[50vh] md:h-[60vh] bg-gradient-to-r from-charcoal to-black overflow-hidden">
           <div className="absolute inset-0 opacity-40">
             <ReliableProductImage 
@@ -449,7 +449,7 @@ export default function ProductDetail() {
       
       {/* Product Details Section */}
       <div className="container mx-auto px-4 md:px-8 py-16">
-        {product ? (
+        {!stableLoading && product ? (
           <div className="flex flex-col lg:flex-row gap-10">
             {/* Left Column: Product Images */}
             <div className="w-full lg:w-1/2">
@@ -671,7 +671,7 @@ export default function ProductDetail() {
       </div>
       
       {/* Related products section */}
-      {product && (
+      {!stableLoading && product && (
         <>
           {/* Check if we have related products to show */}
           {relatedProducts && relatedProducts.length > 0 ? (
