@@ -40,6 +40,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCustomerRequestsOpen, setIsCustomerRequestsOpen] = useState(true); // Always expanded by default
+  const [stableLoading, setStableLoading] = useState(true);
   const { toast } = useToast();
   
   // Use the main auth hook for authentication

@@ -34,6 +34,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [stableLoading, setStableLoading] = useState(true);
   
   // Query to get the current user (if logged in)
   const {
@@ -50,6 +51,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchInterval: 10000, // Refetch every 10 seconds (helpful for debugging sessions)
     staleTime: 0, // Always refetch to ensure latest authentication state
   });
+  
+  // Stabilize loading state to prevent flickering
+  useEffect(() => {
+    if (isLoading) {
+      setStableLoading(true);
+      return;
+    }
+    
+    // Add a small delay before showing content to prevent flickering
+    const timer = setTimeout(() => {
+      setStableLoading(false);
+    }, 200);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
   
   console.log("Auth Context - User data:", user);
   console.log("Auth Context - Loading:", isLoading);
@@ -461,7 +477,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user: user || null,
-        isLoading,
+        // Use stable loading state to prevent UI flickering
+        isLoading: stableLoading,
         error,
         loginMutation,
         logoutMutation,
