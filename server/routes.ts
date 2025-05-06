@@ -690,12 +690,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get comments for this customization request
       const comments = await storage.getCustomizationRequestComments(id);
       
+      // Extract metal and stone types from product details if available
+      let productDetails = {
+        metalType: "Unknown",
+        mainStoneType: "Unknown",
+        secondaryStoneType: null
+      };
+      
+      if (product && product.details) {
+        try {
+          const details = JSON.parse(product.details);
+          if (details.additionalData) {
+            productDetails = {
+              metalType: details.additionalData.metalType || "Unknown",
+              mainStoneType: details.additionalData.mainStoneType || "Unknown",
+              secondaryStoneType: details.additionalData.secondaryStoneType || null
+            };
+          }
+        } catch (e) {
+          console.error('Error parsing product details:', e);
+        }
+      }
+      
       // Return enriched request
       const enrichedRequest = {
         ...customizationRequest,
         productName: product ? product.name : "Unknown Product",
         productImageUrl: product ? product.imageUrl : null,
         product: product || null, // Include full product data
+        originalMetalType: productDetails.metalType, // Override with extracted metal type
+        originalStoneType: productDetails.mainStoneType, // Override with extracted stone type
         customizationType: customizationRequest.requestedMetalType !== customizationRequest.originalMetalType && 
                          customizationRequest.requestedStoneType !== customizationRequest.originalStoneType
           ? "metal_and_stone"

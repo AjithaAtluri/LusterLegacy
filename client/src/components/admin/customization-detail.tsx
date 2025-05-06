@@ -35,6 +35,7 @@ interface CustomizationDetailProps {
     quotedPrice: number | null;
     currency: string | null;
     imageUrls: string[] | null;
+    productImageUrl?: string | null;
     createdAt: string;
     comments?: Array<{
       id: number;
