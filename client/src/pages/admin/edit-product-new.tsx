@@ -922,33 +922,24 @@ export default function EditProductNew() {
   // Loading state - using state to prevent blinking
   const [stableLoading, setStableLoading] = useState(true); // Start with loading true
   
-  // Set a minimum loading time to improve production performance
+  // Better loading state management
   useEffect(() => {
-    // Always show loading for at least 1.5 seconds to prevent UI jitter
-    const minLoadTimer = setTimeout(() => {
-      // After minimum loading time, check if we're actually done loading
-      if (!isLoading && !isAuthLoading && step !== "loading") {
-        setStableLoading(false);
-      }
-    }, 1500);
-    
-    return () => clearTimeout(minLoadTimer);
-  }, [isLoading, isAuthLoading, step]);
-  
-  // Add effect to stabilize loading state and prevent flickering
-  useEffect(() => {
-    // If any loading condition becomes true, set loading state immediately
+    // If there's any loading activity, set to loading
     if (isLoading || isAuthLoading || step === "loading") {
       setStableLoading(true);
       return;
     }
+
+    // Set a very short timeout to check if we're still loading
+    const quickCheck = setTimeout(() => {
+      // If no user is found after auth loading completes, we'll handle it in the redirect effect
+      if (!isLoading && !isAuthLoading && step !== "loading") {
+        console.log("All loading complete, should show content now");
+        setStableLoading(false);
+      }
+    }, 200); 
     
-    // When loading finishes, wait a bit before updating UI to prevent flickering
-    const delayedStateChange = setTimeout(() => {
-      setStableLoading(false);
-    }, 500); // Longer delay for production
-    
-    return () => clearTimeout(delayedStateChange);
+    return () => clearTimeout(quickCheck);
   }, [isLoading, isAuthLoading, step]);
   
   // If still loading authentication or product data, show loading state
