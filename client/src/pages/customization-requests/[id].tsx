@@ -439,17 +439,41 @@ export default function CustomizationRequestDetail() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-foreground/70">Preferred Metal</h3>
-                <p className="font-medium">{customizationRequest.preferredMetal || customizationRequest.requestedMetalType || customizationRequest.originalMetalType || 'Not specified'}</p>
+                <h3 className="text-sm font-medium text-foreground/70">Metal Type</h3>
+                <div className="flex items-center mt-1">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Original:</span>
+                    <p className="font-medium">{customizationRequest.originalMetalType || 'Not specified'}</p>
+                  </div>
+                  
+                  <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                  
+                  <div>
+                    <span className="text-xs text-muted-foreground">Requested:</span>
+                    <p className="font-medium text-primary">{customizationRequest.preferredMetal || customizationRequest.requestedMetalType || 'Same as original'}</p>
+                  </div>
+                </div>
               </div>
               
               <div>
-                <h3 className="text-sm font-medium text-foreground/70">Preferred Stone</h3>
-                {customizationRequest.preferredStones && customizationRequest.preferredStones.length > 0 ? (
-                  <p className="font-medium">{customizationRequest.preferredStones.join(', ')}</p>
-                ) : (
-                  <p className="font-medium">{customizationRequest.requestedStoneType || customizationRequest.originalStoneType || 'Not specified'}</p>
-                )}
+                <h3 className="text-sm font-medium text-foreground/70">Stone Type</h3>
+                <div className="flex items-center mt-1">
+                  <div>
+                    <span className="text-xs text-muted-foreground">Original:</span>
+                    <p className="font-medium">{customizationRequest.originalStoneType || 'Not specified'}</p>
+                  </div>
+                  
+                  <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                  
+                  <div>
+                    <span className="text-xs text-muted-foreground">Requested:</span>
+                    <p className="font-medium text-primary">
+                      {customizationRequest.preferredStones && customizationRequest.preferredStones.length > 0 
+                        ? customizationRequest.preferredStones.join(', ') 
+                        : (customizationRequest.requestedStoneType || 'Same as original')}
+                    </p>
+                  </div>
+                </div>
               </div>
               
               {(customizationRequest.additionalNotes || customizationRequest.customizationDetails) && (
