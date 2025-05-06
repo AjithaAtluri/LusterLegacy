@@ -156,9 +156,11 @@ export default function EditProductNew() {
     queryKey: ['/api/admin/products', params.id],
     queryFn: fetchProduct,
     enabled: !!params.id,
-    retry: 3,
+    retry: 1, // Reduce retries to prevent excessive loading states
+    retryDelay: 1000, // Add 1 second delay between retries
     refetchOnWindowFocus: false,
-    staleTime: 0 // Force fresh data
+    staleTime: 1000 * 60 * 5, // Keep data fresh for 5 minutes
+    refetchInterval: false // Disable automatic refetching
   });
 
   // Fetch product types with custom query function
@@ -590,13 +592,13 @@ export default function EditProductNew() {
         setAdditionalImagePreviews(productData.additionalImages);
       }
 
-      // Move to the form step
-      setStep("form");
-
-      // Force an update after a small delay to ensure form is populated
+      // Move to the form step with a slight delay to ensure the form data is populated
+      // This delay helps prevent flickering between loading and form states
       setTimeout(() => {
+        setStep("form");
+        // Reset form again to ensure all fields are populated correctly
         form.reset(formValues);
-      }, 100);
+      }, 300);
     }
   }, [productData, form]);
 
@@ -724,7 +726,7 @@ export default function EditProductNew() {
         "PUT", 
         `/api/admin/products/${params.id}`, 
         formData,
-        true  // isFormData flag
+        { isFormData: true }  // Fixed to use options object
       );
 
       if (!response.ok) {
@@ -850,8 +852,24 @@ export default function EditProductNew() {
     }
   };
 
-  // Loading state
-  if (isLoading || step === "loading") {
+  // Loading state - using a ref to prevent blinking
+  const [stableLoading, setStableLoading] = useState(isLoading || step === "loading");
+  
+  // Add effect to stabilize loading state and prevent flickering
+  useEffect(() => {
+    // Only update loading state after a small delay to prevent flickering
+    if (isLoading || step === "loading") {
+      setStableLoading(true);
+    } else {
+      // Add small timeout to prevent flickering when loading completes
+      const timer = setTimeout(() => {
+        setStableLoading(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, step]);
+  
+  if (stableLoading) {
     return (
       <AdminLayout title="Edit Product">
         <div className="flex items-center justify-center min-h-[70vh]">
