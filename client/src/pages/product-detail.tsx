@@ -383,7 +383,7 @@ export default function ProductDetail() {
           <meta property="og:title" content={`${product.name} | Luster Legacy`} />
           <meta property="og:description" content={product.description} />
           <meta property="og:type" content="product" />
-          <meta property="og:url" content={`${window.location.origin}/products/${product.id}`} />
+          <meta property="og:url" content={`${window.location.origin}/product-detail/${product.id}`} />
           <meta property="og:image" content={product.imageUrl?.startsWith('http') 
             ? product.imageUrl 
             : `${window.location.origin}${product.imageUrl}`} />
@@ -577,7 +577,7 @@ export default function ProductDetail() {
                   <SocialShare 
                     productName={product.name}
                     productDescription={product.description}
-                    productUrl={`${window.location.origin}/products/${product.id}`}
+                    productUrl={`${window.location.origin}/product-detail/${product.id}`}
                     imageUrl={product.imageUrl?.startsWith('http') 
                       ? product.imageUrl 
                       : `${window.location.origin}${product.imageUrl}`}
