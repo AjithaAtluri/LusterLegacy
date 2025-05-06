@@ -759,17 +759,25 @@ export default function EditProductNew() {
   const onSubmit = async (values: FormValues) => {
     try {
       setIsSubmitting(true);
+      
+      // Show toast notification about update in progress
+      toast({
+        title: "Updating product",
+        description: "Please wait while we save your changes...",
+      });
 
       const formData = new FormData();
 
       // Add main image if there's a new file
       if (mainImageFile) {
         formData.append('mainImage', mainImageFile);
+        console.log("Adding main image file to form data");
       }
 
       // Add additional images if there are new files
       additionalImageFiles.forEach((file, index) => {
         formData.append(`additionalImage${index + 1}`, file);
+        console.log(`Adding additional image ${index + 1} to form data`);
       });
 
       // Prepare product data with same structure as creation
@@ -796,8 +804,6 @@ export default function EditProductNew() {
             otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
             otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
             productTypeId: values.productType || '',
-            // userDescription removed
-            // dimensions removed as requested
             // Save all AI generator inputs as a dedicated structure for easier retrieval
             aiInputs: {
               metalType: values.metalType,
@@ -808,20 +814,14 @@ export default function EditProductNew() {
               secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0,
               otherStoneType: values.otherStoneType === "none_selected" ? "" : values.otherStoneType,
               otherStoneWeight: parseFloat(values.otherStoneWeight) || 0,
-              // userDescription removed
               productType: values.productType || '',
             }
           }
         }),
       };
 
-      // Debug the product data object and specifically the secondary stone info
-      console.log("Submitting product update with data:", productData);
-      console.log("Secondary stone values being sent:", {
-        secondaryStoneType: values.secondaryStoneType,
-        parsed: values.secondaryStoneType === "none_selected" ? "" : values.secondaryStoneType,
-        secondaryStoneWeight: parseFloat(values.secondaryStoneWeight) || 0
-      });
+      // Debug the product data object with enhanced logging
+      console.log("Submitting product update with data:", JSON.stringify(productData, null, 2));
       
       // Add product data to form
       formData.append('data', JSON.stringify(productData));
@@ -829,17 +829,35 @@ export default function EditProductNew() {
       // Add existing image URLs for preservation
       if (mainImagePreview && !mainImageFile) {
         formData.append('existingMainImage', mainImagePreview);
+        console.log("Adding existing main image URL to form data:", mainImagePreview);
       }
 
       additionalImagePreviews.forEach((url, index) => {
-        // Only include URLs for images that weren't replaced with new files
-        if (index >= additionalImageFiles.length) {
-          formData.append(`existingAdditionalImage${index + 1}`, url);
-        }
+        formData.append(`existingAdditionalImage${index + 1}`, url);
+        console.log(`Adding existing additional image ${index + 1} URL:`, url);
       });
 
-      // Submit the form
-      await updateProductMutation.mutateAsync(formData);
+      // Log form data entries for debugging
+      console.log("FormData keys being sent:");
+      for (const pair of formData.entries()) {
+        console.log(`- ${pair[0]}: ${pair[0] === 'data' ? '[Product JSON data]' : pair[1]}`);
+      }
+
+      // Submit the form with increased timeout
+      console.log("Submitting product update to API...");
+      const result = await updateProductMutation.mutateAsync(formData);
+      console.log("Product update API response:", result);
+
+      // Show success toast
+      toast({
+        title: "Product Updated",
+        description: "Your product has been updated successfully!",
+      });
+
+      // Redirect after a short delay to ensure user sees the success message
+      setTimeout(() => {
+        setLocation('/admin/products');
+      }, 1500);
 
     } catch (error) {
       console.error("Form submission error:", error);

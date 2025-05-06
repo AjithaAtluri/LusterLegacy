@@ -5563,10 +5563,21 @@ Respond in JSON format:
   ]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Processing update for product ID: ${id}`);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
+      // Log the received files
+      if (files) {
+        console.log("Received files:", Object.keys(files).map(key => `${key}: ${files[key]?.length || 0} file(s)`));
+      } else {
+        console.log("No files received with update request");
+      }
+      
+      // Log the raw body keys (debug)
+      console.log("Raw request body keys:", Object.keys(req.body));
+      
       // Create an updated data object from request body
-      let updateData = {};
+      let updateData: any = {};
       
       // Check if data is sent in the 'data' field (FormData approach)
       if (req.body.data) {
@@ -5574,7 +5585,7 @@ Respond in JSON format:
           // Parse the JSON data from the 'data' field
           const parsedData = JSON.parse(req.body.data);
           updateData = { ...parsedData };
-          console.log("Parsed product data from FormData:", updateData);
+          console.log("Parsed product data from FormData - fields:", Object.keys(updateData));
         } catch (e) {
           console.error("Error parsing JSON data from request:", e);
           return res.status(400).json({ message: 'Invalid product data format' });
@@ -5582,12 +5593,13 @@ Respond in JSON format:
       } else {
         // Fallback to legacy approach
         updateData = { ...req.body };
-        console.log("Using direct request body for product update");
+        console.log("Using direct request body for product update - fields:", Object.keys(updateData));
       }
       
       // Handle productTypeId parsing to integer if present
       if (updateData.productTypeId) {
         updateData.productTypeId = parseInt(updateData.productTypeId);
+        console.log(`Parsed productTypeId to number: ${updateData.productTypeId}`);
       }
       
       // Get existing product for old image cleanup
