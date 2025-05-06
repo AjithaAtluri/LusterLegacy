@@ -7,7 +7,7 @@ import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Save, Upload, X, PiggyBank, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Upload, X, PiggyBank, Trash2, ShieldAlert } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -152,14 +152,14 @@ export default function EditProductNew() {
   };
 
   // Fetch product data with custom query function
-  const { data: productData, isLoading, error } = useQuery<any>({
+  const { data: productData, isLoading, error, isError } = useQuery<any>({
     queryKey: ['/api/admin/products', params.id],
     queryFn: fetchProduct,
-    enabled: !!params.id,
-    retry: 1, // Reduce retries to prevent excessive loading states
+    enabled: !!params.id, // Enable query when ID exists - we handle auth separately
+    retry: 3, // Allow several retries to handle flaky connections in production
     retryDelay: 1000, // Add 1 second delay between retries
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // Keep data fresh for 5 minutes
+    staleTime: 1000 * 60 * 10, // Keep data fresh for 10 minutes in production to reduce flickering
     refetchInterval: false // Disable automatic refetching
   });
 
@@ -852,23 +852,47 @@ export default function EditProductNew() {
     }
   };
 
-  // Loading state - using a ref to prevent blinking
-  const [stableLoading, setStableLoading] = useState(isLoading || step === "loading");
+  // Authentication check - redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      console.log("User not authenticated, redirecting to login");
+      setLocation('/admin/login');
+    }
+  }, [user, isAuthLoading, setLocation]);
+  
+  // Loading state - using state to prevent blinking
+  const [stableLoading, setStableLoading] = useState(true); // Start with loading true
+  
+  // Set a minimum loading time to improve production performance
+  useEffect(() => {
+    // Always show loading for at least 1.5 seconds to prevent UI jitter
+    const minLoadTimer = setTimeout(() => {
+      // After minimum loading time, check if we're actually done loading
+      if (!isLoading && !isAuthLoading && step !== "loading") {
+        setStableLoading(false);
+      }
+    }, 1500);
+    
+    return () => clearTimeout(minLoadTimer);
+  }, [isLoading, isAuthLoading, step]);
   
   // Add effect to stabilize loading state and prevent flickering
   useEffect(() => {
-    // Only update loading state after a small delay to prevent flickering
-    if (isLoading || step === "loading") {
+    // If any loading condition becomes true, set loading state immediately
+    if (isLoading || isAuthLoading || step === "loading") {
       setStableLoading(true);
-    } else {
-      // Add small timeout to prevent flickering when loading completes
-      const timer = setTimeout(() => {
-        setStableLoading(false);
-      }, 300);
-      return () => clearTimeout(timer);
+      return;
     }
-  }, [isLoading, step]);
+    
+    // When loading finishes, wait a bit before updating UI to prevent flickering
+    const delayedStateChange = setTimeout(() => {
+      setStableLoading(false);
+    }, 500); // Longer delay for production
+    
+    return () => clearTimeout(delayedStateChange);
+  }, [isLoading, isAuthLoading, step]);
   
+  // If still loading authentication or product data, show loading state
   if (stableLoading) {
     return (
       <AdminLayout title="Edit Product">
@@ -876,6 +900,26 @@ export default function EditProductNew() {
           <div className="text-center">
             <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
             <p className="text-lg text-muted-foreground">Loading product data...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+  
+  // If not authenticated, show authentication required message
+  if (!user) {
+    return (
+      <AdminLayout title="Authentication Required">
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <div className="text-center">
+            <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+            <p className="text-muted-foreground mb-6">
+              You must be logged in as an admin to edit products.
+            </p>
+            <Button onClick={() => setLocation('/admin/login')}>
+              Go to Login
+            </Button>
           </div>
         </div>
       </AdminLayout>
