@@ -16,6 +16,7 @@ import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
 import { RelatedProducts } from "@/components/products/related-products";
 import { ProductSpecifications } from "@/components/products/product-specifications";
+import { SocialShare } from "@/components/products/social-share";
 
 // Extended product details interface
 interface ProductDetails {
@@ -377,6 +378,32 @@ export default function ProductDetail() {
         <Helmet>
           <title>{product.name} | Luster Legacy</title>
           <meta name="description" content={product.description} />
+          
+          {/* Open Graph Meta Tags for Facebook and general social sharing */}
+          <meta property="og:title" content={`${product.name} | Luster Legacy`} />
+          <meta property="og:description" content={product.description} />
+          <meta property="og:type" content="product" />
+          <meta property="og:url" content={`${window.location.origin}/products/${product.id}`} />
+          <meta property="og:image" content={product.imageUrl?.startsWith('http') 
+            ? product.imageUrl 
+            : `${window.location.origin}${product.imageUrl}`} />
+          <meta property="og:site_name" content="Luster Legacy" />
+          
+          {/* Twitter Card Meta Tags */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${product.name} | Luster Legacy`} />
+          <meta name="twitter:description" content={product.description} />
+          <meta name="twitter:image" content={product.imageUrl?.startsWith('http') 
+            ? product.imageUrl 
+            : `${window.location.origin}${product.imageUrl}`} />
+          
+          {/* Additional Product Information */}
+          {product.calculatedPriceUSD && (
+            <>
+              <meta property="product:price:amount" content={product.calculatedPriceUSD.toString()} />
+              <meta property="product:price:currency" content="USD" />
+            </>
+          )}
         </Helmet>
       )}
 
@@ -502,7 +529,11 @@ export default function ProductDetail() {
                     {/* Customization button - hidden for product ID 48 and Beads & Gems products */}
                     {(() => {
                       // Safely get product details if they exist
-                      let additionalData = {};
+                      let additionalData: {
+                        productTypeId?: string;
+                        productType?: string;
+                        [key: string]: any;
+                      } = {};
                       let productTypeId = "";
                       
                       try {
@@ -541,6 +572,18 @@ export default function ProductDetail() {
                       </Button>
                     )}
                   </div>
+                </div>
+                
+                {/* Social Share Component */}
+                <div className="mb-6">
+                  <SocialShare 
+                    productName={product.name}
+                    productDescription={product.description}
+                    productUrl={`${window.location.origin}/products/${product.id}`}
+                    imageUrl={product.imageUrl?.startsWith('http') 
+                      ? product.imageUrl 
+                      : `${window.location.origin}${product.imageUrl}`}
+                  />
                 </div>
                 
                 {/* Product Highlights */}
