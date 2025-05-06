@@ -46,6 +46,21 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Use the main auth hook for authentication
   const { user, isLoading, error, logoutMutation } = useAuth();
   
+  // Better loading state management to prevent flickering
+  useEffect(() => {
+    if (isLoading) {
+      setStableLoading(true);
+      return;
+    }
+    
+    // Small delay to prevent flickering during transitional states
+    const timer = setTimeout(() => {
+      setStableLoading(false);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+  
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({
     queryKey: ['/api/custom-designs'],
@@ -86,13 +101,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     ? contactMessages.filter((message: any) => message.isRead === false).length
     : 0;
   
+
+  
   // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
     const checkAdminAuth = async () => {
-      console.log("Admin layout - checking auth state:", { user, isLoading });
+      console.log("Admin layout - checking auth state:", { user, isLoading, stableLoading });
       
       // First check if currently loading
-      if (isLoading) {
+      if (isLoading || stableLoading) {
         console.log("Admin layout - still loading auth state...");
         return; // Wait for loading to complete
       }
@@ -229,7 +246,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     
     // Run the check immediately
     checkAdminAuth();
-  }, [user, isLoading, toast]);
+  }, [user, isLoading, stableLoading, toast]);
   
   // Handle logout from both auth systems
   const handleLogout = async () => {
@@ -399,25 +416,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   
   // Current location for determining active route
   const [location] = useLocation();
-  
-  // Use a stable loading state with a minimum display time to prevent flickering
-  const [stableLoading, setStableLoading] = useState(true);
-  
-  useEffect(() => {
-    // If we're still loading, maintain the loading state
-    if (isLoading) {
-      setStableLoading(true);
-      return;
-    }
-    
-    // When loading finishes, add a slight delay before hiding loader
-    // This prevents rapid flashing between states
-    const timer = setTimeout(() => {
-      setStableLoading(false);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [isLoading]);
   
   if (stableLoading) {
     return (
