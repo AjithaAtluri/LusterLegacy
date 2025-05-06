@@ -279,6 +279,11 @@ export default function CustomizationRequestDetail() {
                   <PenTool className="h-16 w-16 text-foreground/20" />
                 </div>
               )}
+              
+              {/* Add debugging info */}
+              <div className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded-md">
+                {customizationRequest.productId ? `Product ID: ${customizationRequest.productId}` : 'No Product ID'}
+              </div>
             </div>
             
             {/* Show product name and details */}

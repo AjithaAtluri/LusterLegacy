@@ -290,9 +290,30 @@ export default function CustomizationDetail({ customization }: CustomizationDeta
             <CardTitle>Customization Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {/* Add product image at the top */}
+            <div className="mb-4 border rounded-md overflow-hidden relative">
+              {/* Display product image if available */}
+              {customization.productId && (
+                <div className="aspect-square w-full h-64 relative">
+                  <img 
+                    src={customization.productImageUrl || `/api/products/${customization.productId}/image`} 
+                    alt={customization.productName}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/src/assets/product-placeholder.png";
+                    }}
+                  />
+                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                    Product ID: {customization.productId}
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <div className="grid grid-cols-3 gap-2">
               <div className="font-medium">Product:</div>
-              <div className="col-span-2">{customization.productName}</div>
+              <div className="col-span-2 font-semibold text-primary">{customization.productName}</div>
               
               <div className="font-medium">Original Metal:</div>
               <div className="col-span-2 flex items-center">
