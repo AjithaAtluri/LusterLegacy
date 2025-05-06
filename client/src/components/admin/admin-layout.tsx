@@ -172,29 +172,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               queryClient.setQueryData(["/api/user"], userData);
             });
             
-            // Since admin auth failed but regular auth succeeded, try to fix admin auth
-            try {
-              const username = userData.username;
-              const fixAdminAuthResult = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Cache-Control": "no-cache, no-store, must-revalidate",
-                  "Pragma": "no-cache",
-                  "Expires": "0"
-                },
-                credentials: "include",
-                body: JSON.stringify({ username, password: "admin123" })
-              });
-              
-              if (fixAdminAuthResult.ok) {
-                console.log("Successfully fixed admin auth");
-              } else {
-                console.warn("Could not fix admin auth, but continuing anyway");
-              }
-            } catch (fixError) {
-              console.warn("Error trying to fix admin auth:", fixError);
-            }
+            // Since admin auth failed but regular auth succeeded, let's continue anyway
+            // The user is authenticated as admin in the main system
+            console.log("User has admin privileges but admin-specific endpoint failed - using regular auth");
+            
+            // Display a warning toast that some admin features might be limited
+            toast({
+              title: "Limited admin access",
+              description: "You're authenticated but some admin features might be restricted",
+              variant: "warning"
+            });
             
             return; // Allow access
           } else {

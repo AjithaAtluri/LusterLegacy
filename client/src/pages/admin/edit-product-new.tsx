@@ -922,7 +922,7 @@ export default function EditProductNew() {
   // Loading state - using state to prevent blinking
   const [stableLoading, setStableLoading] = useState(true); // Start with loading true
   
-  // Better loading state management
+  // Better loading state management with type safety
   useEffect(() => {
     // If there's any loading activity, set to loading
     if (isLoading || isAuthLoading || step === "loading") {
@@ -933,8 +933,8 @@ export default function EditProductNew() {
     // Set a very short timeout to check if we're still loading
     const quickCheck = setTimeout(() => {
       // If no user is found after auth loading completes, we'll handle it in the redirect effect
-      if (!isLoading && !isAuthLoading && step !== "loading") {
-        console.log("All loading complete, should show content now");
+      if (!isLoading && !isAuthLoading && (step === "form" || step === "ai-generator")) {
+        console.log("All loading complete, showing content with step:", step);
         setStableLoading(false);
       }
     }, 200); 
