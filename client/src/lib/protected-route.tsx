@@ -25,7 +25,8 @@ export function ProtectedRoute({
   // For debugging
   const isAdminUser = user?.role === "admin" || user?.role === "limited-admin";
   console.log(`Protected Route: ${pathString}`, { 
-    isLoading, 
+    isLoading,
+    stableLoading, 
     user, 
     adminOnly,
     isAdmin: isAdminUser
@@ -33,11 +34,12 @@ export function ProtectedRoute({
   
   // When accessing admin routes, verify auth state more aggressively
   useEffect(() => {
-    if (pathString.startsWith('/admin') && !isLoading) {
+    if (pathString.startsWith('/admin') && !stableLoading) {
       // Force a refetch of the user data to ensure we have the latest state
+      // Only do this after stable loading is complete to prevent query loops
       queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     }
-  }, [pathString, isLoading]);
+  }, [pathString, stableLoading]);
   
   return (
     <Route
@@ -45,7 +47,8 @@ export function ProtectedRoute({
       {...rest}
       component={() => {
         // Show loading spinner while authentication status is being determined
-        if (isLoading) {
+        // Use stableLoading for smoother UI transitions
+        if (stableLoading) {
           return (
             <div className="flex items-center justify-center min-h-screen">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
