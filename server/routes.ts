@@ -550,6 +550,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add user ID if authenticated
       if (req.isAuthenticated() && req.user) {
         validatedData.userId = req.user.id;
+        
+        // Try to fill in country from user's previous customization requests if not provided
+        if (!validatedData.country || validatedData.country === "Unknown") {
+          try {
+            const previousRequests = await storage.getCustomizationRequestsByUserId(req.user.id);
+            if (previousRequests.length > 0) {
+              const previousCountry = previousRequests[0].country;
+              if (previousCountry && previousCountry !== "Unknown") {
+                validatedData.country = previousCountry;
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching previous requests for country:", err);
+            // Continue without country
+          }
+        }
+      }
+      
+      // Set default country if still not available
+      if (!validatedData.country || validatedData.country === "Unknown") {
+        validatedData.country = "India"; // Default country based on most of our customers
       }
       
       // Create customization request
