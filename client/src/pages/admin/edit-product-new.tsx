@@ -108,43 +108,82 @@ export default function EditProductNew() {
 
     try {
       console.log(`Fetching product data for ID: ${params.id}`);
-      console.log(`Current authenticated user:`, user);
-
-      // Make sure cookies are included for authentication
-      const response = await fetch(`/api/admin/products/${params.id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        credentials: 'include', // Important for authentication cookies
-      });
-
-      console.log(`Product fetch response status: ${response.status}`);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Server error response: ${errorText}`);
-
-        // If authentication error, redirect to login
-        if (response.status === 401) {
-          toast({
-            title: "Authentication Required",
-            description: "Please log in to access this product",
-            variant: "destructive"
-          });
-          setLocation('/admin');
-          throw new Error('Authentication required');
-        }
-
-        throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
+      
+      // In production, we need to ensure we're authenticated before fetching
+      if (!user && !isAuthLoading) {
+        console.log("No authenticated user found - redirecting to login");
+        setTimeout(() => {
+          setLocation('/admin/login');
+        }, 100);
+        throw new Error('Not authenticated');
       }
-
-      const data = await response.json();
-      console.log(`Product data retrieved successfully:`, data);
-      return data;
+      
+      // Make multiple retry attempts with exponential backoff
+      let attempts = 0;
+      const maxAttempts = 3;
+      let lastError = null;
+      
+      while (attempts < maxAttempts) {
+        try {
+          attempts++;
+          console.log(`Fetch attempt ${attempts} for product ${params.id}`);
+          
+          // Make sure cookies are included for authentication
+          const response = await fetch(`/api/admin/products/${params.id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache', 
+              'Expires': '0'
+            },
+            credentials: 'include', // Important for authentication cookies
+          });
+          
+          console.log(`Product fetch response status: ${response.status}`);
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Server error response: ${errorText}`);
+            
+            // If authentication error, redirect to login immediately
+            if (response.status === 401 || response.status === 403) {
+              toast({
+                title: "Authentication Required",
+                description: "Please log in to access this product",
+                variant: "destructive"
+              });
+              setLocation('/admin/login');
+              throw new Error('Authentication required');
+            }
+            
+            throw new Error(`Failed to fetch product: ${response.status} ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          console.log(`Product data retrieved successfully:`, data);
+          return data;
+        } catch (error) {
+          lastError = error;
+          console.error(`Attempt ${attempts} failed:`, error);
+          
+          // If it's an auth error, no need to retry
+          if (error.message.includes('Authentication required') || 
+              error.message.includes('Not authenticated')) {
+            throw error;
+          }
+          
+          // Wait before retrying (exponential backoff)
+          if (attempts < maxAttempts) {
+            const delay = Math.pow(2, attempts) * 500; // 1s, 2s, 4s
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+      
+      // If we get here, all attempts failed
+      throw lastError || new Error('Failed to fetch product after multiple attempts');
     } catch (error) {
       console.error('Error fetching product data:', error);
       throw error;
