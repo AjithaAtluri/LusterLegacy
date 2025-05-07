@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -68,7 +68,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Add timeout detection for API checks that might get stuck
   const [isApiCheckTimedOut, setIsApiCheckTimedOut] = useState(false);
   
-  // Store a persistent copy of nav items in ref to prevent flickering
+  // Store navigation state in sessionStorage to prevent flickering
   const [hasCachedNav, setHasCachedNav] = useState(() => {
     try {
       // Check if we have previously cached nav items
@@ -467,13 +467,14 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Determine if this is a limited admin or full admin
   const isLimitedAdmin = user?.role === "limited-admin";
   
-  // Update navItems directly with badge counts instead of mutating the ref
+  // Update badges in a separate effect that runs after initial build
   useEffect(() => {
-    // Only run if we have nav items
-    if (navItems.length === 0) return;
+    // Only run if we have nav items and badge counts
+    if (!navItems.length || pendingDesigns === undefined) return;
     
     // Create a deep copy to avoid mutations
     const updatedNavItems = JSON.parse(JSON.stringify(navItems));
+    let hasChanges = false;
     
     // Update Customer Requests group badges
     const customerRequestsGroup = updatedNavItems.find((item: NavItem) => item.title === "Customer Requests");
@@ -481,38 +482,61 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       // Update Custom Design Requests badge
       const designsItem = customerRequestsGroup.items.find((item: NavSubItem) => item.title === "Custom Design Requests");
       if (designsItem) {
-        designsItem.badge = pendingDesigns > 0 ? pendingDesigns : undefined;
+        const newBadge = pendingDesigns > 0 ? pendingDesigns : undefined;
+        if (designsItem.badge !== newBadge) {
+          designsItem.badge = newBadge;
+          hasChanges = true;
+        }
       }
       
       // Update Product Customization Requests badge
       const customizationsItem = customerRequestsGroup.items.find((item: NavSubItem) => item.title === "Product Customization Requests");
       if (customizationsItem) {
-        customizationsItem.badge = pendingCustomizations > 0 ? pendingCustomizations : undefined;
+        const newBadge = pendingCustomizations > 0 ? pendingCustomizations : undefined;
+        if (customizationsItem.badge !== newBadge) {
+          customizationsItem.badge = newBadge;
+          hasChanges = true;
+        }
       }
       
       // Update Product Quote Requests badge
       const quotesItem = customerRequestsGroup.items.find((item: NavSubItem) => item.title === "Product Quote Requests");
       if (quotesItem) {
-        quotesItem.badge = pendingQuotes > 0 ? pendingQuotes : undefined;
+        const newBadge = pendingQuotes > 0 ? pendingQuotes : undefined;
+        if (quotesItem.badge !== newBadge) {
+          quotesItem.badge = newBadge;
+          hasChanges = true;
+        }
       }
     }
     
     // Update Contact Messages badge
     const contactMessagesItem = updatedNavItems.find((item: NavItem) => item.title === "Contact Messages");
     if (contactMessagesItem) {
-      contactMessagesItem.badge = unreadMessages > 0 ? unreadMessages : undefined;
+      const newBadge = unreadMessages > 0 ? unreadMessages : undefined;
+      if (contactMessagesItem.badge !== newBadge) {
+        contactMessagesItem.badge = newBadge;
+        hasChanges = true;
+      }
     }
     
     // Update Client Stories badge (only for full admin)
     if (!isLimitedAdmin) {
       const testimonialItem = updatedNavItems.find((item: NavItem) => item.title === "Client Stories");
       if (testimonialItem) {
-        testimonialItem.badge = pendingTestimonials > 0 ? pendingTestimonials : undefined;
+        const newBadge = pendingTestimonials > 0 ? pendingTestimonials : undefined;
+        if (testimonialItem.badge !== newBadge) {
+          testimonialItem.badge = newBadge;
+          hasChanges = true;
+        }
       }
     }
     
-    // Set the updated items
-    setNavItems(updatedNavItems);
+    // Only update state if there were actual changes to prevent loops
+    if (hasChanges) {
+      console.log("Admin layout - updating badges");
+      setNavItems(updatedNavItems);
+    }
   }, [navItems, pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials, isLimitedAdmin]);
   
   // Build nav items from scratch when role changes
