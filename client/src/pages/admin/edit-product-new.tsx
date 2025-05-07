@@ -7,7 +7,7 @@ import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Loader2, Save, Upload, X, PiggyBank, Trash2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Upload, X, PiggyBank, Trash2, ShieldAlert, RefreshCcw } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -1331,6 +1331,77 @@ export default function EditProductNew() {
   
   // Show a partial UI if loading timed out but we don't have product data yet
   if (loadingTimedOut && !productData) {
+    // Define a function to try direct loading
+    const tryDirectLoad = async () => {
+      try {
+        console.log(`Making direct product fetch for ID ${params.id}`);
+        
+        // Try using the direct product endpoint first
+        const response = await fetch(`/api/direct-product/${params.id}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Direct product fetch succeeded:`, data);
+          
+          // Use the data directly
+          setManuallyFetchedProduct(data);
+          setManualFetchLoading(false);
+          
+          // Cache for future use
+          try {
+            sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+          } catch (e) {
+            console.warn("Failed to cache product data:", e);
+          }
+          
+          toast({
+            title: "Product Loaded",
+            description: "Successfully loaded product data using alternative method",
+          });
+          
+          return true;
+        } else {
+          console.log("Direct endpoint failed, trying public endpoint");
+          
+          // Try the public endpoint as fallback
+          const publicResponse = await fetch(`/api/products/${params.id}`);
+          
+          if (publicResponse.ok) {
+            const publicData = await publicResponse.json();
+            console.log(`Public product fetch succeeded:`, publicData);
+            
+            // Use the data directly
+            setManuallyFetchedProduct(publicData);
+            setManualFetchLoading(false);
+            
+            // Cache for future use
+            try {
+              sessionStorage.setItem(`product_${params.id}`, JSON.stringify(publicData));
+            } catch (e) {
+              console.warn("Failed to cache product data:", e);
+            }
+            
+            toast({
+              title: "Product Loaded",
+              description: "Successfully loaded product data using alternative method",
+            });
+            
+            return true;
+          }
+        }
+        
+        throw new Error("All direct loading attempts failed");
+      } catch (error) {
+        console.error("Direct loading failed:", error);
+        toast({
+          title: "Loading Failed",
+          description: "Could not load product data directly. Please try refreshing the page.",
+          variant: "destructive"
+        });
+        return false;
+      }
+    };
+    
     return (
       <AdminLayout title="Edit Product">
         <div className="flex flex-col items-center p-6 bg-card rounded-lg shadow-sm mb-6">
@@ -1341,14 +1412,18 @@ export default function EditProductNew() {
                 We couldn't load the product data in a reasonable time. You can try the following:
               </p>
               <ul className="list-disc ml-6 mt-2 text-muted-foreground">
+                <li>Click "Try Alternative Loading" to attempt a direct fetch</li>
                 <li>Refresh the page to try again</li>
-                <li>Try again in a few moments</li>
                 <li>Return to the products list and try a different product</li>
               </ul>
             </div>
           </div>
           
           <div className="flex gap-4 mt-4">
+            <Button variant="default" onClick={tryDirectLoad}>
+              <Loader2 className="mr-2 h-4 w-4" />
+              Try Alternative Loading
+            </Button>
             <Button variant="outline" onClick={() => window.location.reload()}>
               <RefreshCcw className="mr-2 h-4 w-4" />
               Refresh Page
