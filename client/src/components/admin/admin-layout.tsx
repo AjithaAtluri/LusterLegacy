@@ -511,8 +511,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     // Only run if we have nav items and badge counts
     if (!navItems.length || pendingDesigns === undefined) return;
     
-    // Create a deep copy to avoid mutations
-    const updatedNavItems = JSON.parse(JSON.stringify(navItems));
+    // Create a deep copy to avoid mutations, using our safe stringify to handle any circular references
+    const updatedNavItems = JSON.parse(safeJsonStringify(navItems));
     let hasChanges = false;
     
     // Update Customer Requests group badges
@@ -580,12 +580,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   
   // Build nav items from scratch when role changes
   useEffect(() => {
-    // Initialize with base items
-    let compiledNavItems = JSON.parse(JSON.stringify(baseItems)); 
+    // Initialize with base items - use safe stringify to avoid circular references
+    let compiledNavItems = JSON.parse(safeJsonStringify(baseItems)); 
     
     // Add admin-only items if not limited admin
     if (!isLimitedAdmin && user?.role === "admin") {
-      const adminOnlyItems = JSON.parse(JSON.stringify(fullAdminItems));
+      const adminOnlyItems = JSON.parse(safeJsonStringify(fullAdminItems));
       compiledNavItems = [...compiledNavItems, ...adminOnlyItems];
     }
     
@@ -611,7 +611,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       
       // Store cache marker and safe data
       sessionStorage.setItem('cached_admin_nav_built', 'true');
-      sessionStorage.setItem('cached_admin_nav_data', JSON.stringify(safeNavData));
+      sessionStorage.setItem('cached_admin_nav_data', safeJsonStringify(safeNavData));
       setHasCachedNav(true);
     } catch (e) {
       console.warn("Error caching nav state:", e);
