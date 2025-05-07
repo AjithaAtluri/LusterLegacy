@@ -541,10 +541,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   }, [pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials]);
   
   // Get the nav items for rendering
-  // Use useMemo to prevent unnecessary re-renders caused by reference changes
-  const navItems = useMemo<NavItem[]>(() => {
-    return navItemsRef.current.cachedNavItems || [];
-  }, [user?.role]); // Only regenerate when user role changes
+  // Use useState + useEffect pattern instead of ref mutation pattern
+  const [navItems, setNavItems] = useState<NavItem[]>([]);
+  
+  // Use effect to update navItems when user role changes
+  useEffect(() => {
+    if (navItemsRef.current.cachedNavItems) {
+      setNavItems(navItemsRef.current.cachedNavItems);
+    }
+  }, [user?.role, navItemsRef.current.cachedNavItems]); // Update when role or items change
   
   // Production environment detection (use the existing isProduction value from earlier)
   
