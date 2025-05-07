@@ -214,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             secondaryStoneWeight
           });
           
-          // Calculate prices
+          // Calculate prices - legacy/compatibility function call
           const prices = await calculateJewelryPrice(
             product.basePrice,
             metalType, 

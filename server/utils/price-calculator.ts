@@ -31,6 +31,32 @@ interface PriceCalculationParams {
 // Fallback price of 24k gold per gram in INR (2025 rates) - will be replaced with real value
 const DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR = 9800; // Consistent with gold-price-service.ts fallback
 
+/**
+ * Calculate jewelry price based on individual parameters (legacy/compatibility method)
+ */
+export async function calculateJewelryPrice(
+  basePrice: number,
+  metalType: string,
+  metalWeight: string | number,
+  mainStoneType?: string,
+  mainStoneWeight?: string | number,
+  secondaryStoneType?: string,
+  secondaryStoneWeight?: string | number
+): Promise<{
+  priceUSD: number;
+  priceINR: number;
+  exchangeRate?: number;
+  breakdown?: {
+    metalCost: number;
+    stoneCost: number;
+    overhead: number;
+    stones?: Array<{name: string, carats: number, price: number, totalCost: number}>;
+  };
+}>;
+
+/**
+ * Calculate jewelry price based on PriceCalculationParams object (main implementation)
+ */
 export async function calculateJewelryPrice(params: PriceCalculationParams): Promise<{
   priceUSD: number;
   priceINR: number;
@@ -41,7 +67,85 @@ export async function calculateJewelryPrice(params: PriceCalculationParams): Pro
     overhead: number;
     stones?: Array<{name: string, carats: number, price: number, totalCost: number}>;
   };
+}>;
+
+// Implementation
+export async function calculateJewelryPrice(
+  paramsOrBasePrice: PriceCalculationParams | number,
+  metalType?: string,
+  metalWeight?: string | number,
+  mainStoneType?: string,
+  mainStoneWeight?: string | number,
+  secondaryStoneType?: string,
+  secondaryStoneWeight?: string | number
+): Promise<{
+  priceUSD: number;
+  priceINR: number;
+  exchangeRate?: number;
+  breakdown?: {
+    metalCost: number;
+    stoneCost: number;
+    overhead: number;
+    stones?: Array<{name: string, carats: number, price: number, totalCost: number}>;
+  };
 }> {
+  // Convert legacy parameters to PriceCalculationParams object if needed
+  let params: PriceCalculationParams;
+  
+  if (typeof paramsOrBasePrice === 'number') {
+    // Handle legacy parameter format
+    console.log('Using legacy parameter format for calculateJewelryPrice');
+    
+    // Parse metal weight
+    const numericMetalWeight = typeof metalWeight === 'string' 
+      ? parseFloat(metalWeight) || 0 
+      : (metalWeight || 0);
+      
+    // Calculate based on individual parameters
+    params = {
+      productType: "jewelry", // Default product type
+      metalType: metalType || "",
+      metalWeight: numericMetalWeight,
+      primaryGems: [] // Initialize as empty array
+    };
+    
+    // Add main stone if available
+    if (mainStoneType) {
+      const mainStoneCarat = typeof mainStoneWeight === 'string'
+        ? parseFloat(mainStoneWeight) || 0
+        : (mainStoneWeight || 0);
+        
+      // Ensure primaryGems array exists before pushing
+      if (!params.primaryGems) {
+        params.primaryGems = [];
+      }
+      params.primaryGems.push({
+        name: mainStoneType,
+        carats: mainStoneCarat
+      });
+    }
+    
+    // Add secondary stone if available
+    if (secondaryStoneType) {
+      const secondaryStoneCarat = typeof secondaryStoneWeight === 'string'
+        ? parseFloat(secondaryStoneWeight) || 0
+        : (secondaryStoneWeight || 0);
+        
+      // Ensure primaryGems array exists before pushing
+      if (!params.primaryGems) {
+        params.primaryGems = [];
+      }
+      params.primaryGems.push({
+        name: secondaryStoneType,
+        carats: secondaryStoneCarat
+      });
+    }
+  } else {
+    // Use provided PriceCalculationParams object
+    params = paramsOrBasePrice;
+  }
+  
+  // Main implementation continues below
   try {
     const { metalType, metalWeight, primaryGems = [] } = params;
     
