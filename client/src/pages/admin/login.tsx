@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Helmet } from "react-helmet";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const loginSchema = z.object({
@@ -22,8 +22,25 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { user, loginMutation } = useAuth();
+  const { user, isLoading: authLoading, stableLoading, loginMutation } = useAuth();
   const isLoading = loginMutation.isPending;
+  const [showAuthLoading, setShowAuthLoading] = useState(false);
+  
+  // If stable loading is active, show a delayed auth check message
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (authLoading || stableLoading) {
+      // Set a delay before showing the auth checking message to avoid flicker
+      timer = setTimeout(() => {
+        setShowAuthLoading(true);
+      }, 800);
+    } else {
+      setShowAuthLoading(false);
+    }
+    
+    return () => clearTimeout(timer);
+  }, [authLoading, stableLoading]);
   
   // Redirect if already logged in as admin
   useEffect(() => {
@@ -78,6 +95,22 @@ export default function AdminLogin() {
     });
   };
   
+  // If we're checking auth status, show the loading UI
+  if (showAuthLoading) {
+    return (
+      <>
+        <Helmet>
+          <title>Checking Auth | Luster Legacy</title>
+        </Helmet>
+        
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-4"></div>
+          <p className="text-foreground/70 text-sm font-montserrat">Verifying authentication status...</p>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>
@@ -85,15 +118,15 @@ export default function AdminLogin() {
         <meta name="description" content="Administrator login for Luster Legacy jewelry management system." />
       </Helmet>
       
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md shadow-lg border-border/50">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-              <Lock className="h-6 w-6 text-background" />
+            <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-primary flex items-center justify-center">
+              <ShieldCheck className="h-7 w-7 text-background" />
             </div>
-            <CardTitle className="font-playfair text-2xl">Admin Login</CardTitle>
+            <CardTitle className="font-playfair text-2xl">Admin Dashboard</CardTitle>
             <CardDescription>
-              Sign in to access the administrator dashboard
+              Sign in with your administrative credentials
             </CardDescription>
           </CardHeader>
           
@@ -107,7 +140,7 @@ export default function AdminLogin() {
                     <FormItem>
                       <FormLabel>Username</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} className="font-montserrat" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -121,7 +154,7 @@ export default function AdminLogin() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} />
+                        <Input type="password" {...field} className="font-montserrat" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -129,21 +162,26 @@ export default function AdminLogin() {
                 />
               </CardContent>
               
-              <CardFooter>
+              <CardFooter className="flex-col gap-2">
                 <Button 
                   type="submit" 
-                  className="w-full font-montserrat bg-primary text-background hover:bg-accent" 
+                  className="w-full font-montserrat bg-primary text-background hover:bg-primary/90" 
                   disabled={isLoading}
+                  size="lg"
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      Authenticating...
                     </>
                   ) : (
-                    "Sign In"
+                    "Sign In to Dashboard"
                   )}
                 </Button>
+                
+                <div className="text-xs text-muted-foreground mt-2 text-center">
+                  Access restricted to authorized administrators only
+                </div>
               </CardFooter>
             </form>
           </Form>

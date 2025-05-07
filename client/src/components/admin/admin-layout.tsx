@@ -49,8 +49,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [adminLoadingState, setAdminLoadingState] = useState<'initial' | 'checking' | 'success' | 'error'>('initial');
   const [isAdminLoading, setIsAdminLoading] = useState(true); // Start with loading enabled
   
+  // Add timeout detection for API checks that might get stuck
+  const [isApiCheckTimedOut, setIsApiCheckTimedOut] = useState(false);
+  
   // Combined loading state for admin dashboard to prevent flickering
-  const isGlobalLoading = isLoading || stableLoading || isAdminLoading;
+  const isGlobalLoading = (isLoading || stableLoading || isAdminLoading) && !isApiCheckTimedOut;
   
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({
@@ -94,6 +97,27 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   
 
   
+  // Add a timeout effect to prevent infinite loading
+  useEffect(() => {
+    // If loading is active, set a timeout to prevent getting stuck
+    if (isGlobalLoading) {
+      const timeoutId = setTimeout(() => {
+        console.log("Admin layout - API check timed out after 15 seconds");
+        setIsApiCheckTimedOut(true);
+        setIsAdminLoading(false);
+        setAdminLoadingState('error');
+        
+        toast({
+          title: "Loading timed out",
+          description: "Unable to verify admin access. Please try refreshing the page.",
+          variant: "destructive"
+        });
+      }, 15000); // 15 second timeout
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isGlobalLoading, toast]);
+
   // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
     const checkAdminAuth = async () => {
@@ -113,8 +137,21 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         // Check 1: First check the cached user from React Query
         if (!user) {
           console.log("Admin layout - no user in cache, will verify with API");
+          
+          // If no user in the cache, immediately end loading and redirect to login
+          setAdminLoadingState('error');
+          setIsAdminLoading(false);
+          toast({
+            title: "Authentication required",
+            description: "Please log in to access the admin dashboard",
+            variant: "destructive"
+          });
+          window.location.href = "/admin/login";
+          return;
         } else if (user.role !== "admin" && user.role !== "limited-admin") {
           console.log("Admin layout - user is not admin or limited-admin, redirecting to home page");
+          setAdminLoadingState('error');
+          setIsAdminLoading(false);
           toast({
             title: "Access restricted",
             description: "You don't have permission to access the admin dashboard",
@@ -123,12 +160,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           window.location.href = "/";
           return;
         } else {
-          console.log("Admin layout - cached user appears to be admin, verifying with direct API call");
+          console.log("Admin layout - cached user appears to be admin, proceeding with admin auth");
+          // Since user is already confirmed as admin in the cache, we'll trust that
+          // but still try the API call with a safety mechanism
+          setAdminLoadingState('success');
+          setIsAdminLoading(false);
         }
 
-        // Check 2: Check admin-specific auth API
-        console.log("Admin layout - checking admin auth endpoint...");
-        const adminAuthResponse = await fetch("/api/auth/me", { 
+        // Check 2: Try admin-specific auth API as a background verification
+        console.log("Admin layout - checking admin auth endpoint (background verification)...");
+        const adminAuthPromise = fetch("/api/auth/me", { 
           credentials: "include",
           headers: {
             "Cache-Control": "no-cache, no-store, must-revalidate",
