@@ -460,85 +460,89 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   ];
   
-  // Get the nav items for rendering
-  // Use useState + useEffect pattern instead of ref mutation pattern
-  const [navItems, setNavItems] = useState<NavItem[]>([]);
-  
   // Determine if this is a limited admin or full admin
   const isLimitedAdmin = user?.role === "limited-admin";
   
-  // Update navItems directly with badge counts instead of mutating the ref
-  useEffect(() => {
-    // Only run if we have nav items
-    if (navItems.length === 0) return;
+  // Get a stable reference to the nav items based on role
+  // Only rebuild if role changes to prevent unnecessary re-renders
+  if (navItemsRef.current.cachedRole !== user?.role || !navItemsRef.current.cachedNavItems) {
+    // Store the role for future comparison
+    navItemsRef.current.cachedRole = user?.role || null;
     
-    // Create a deep copy to avoid mutations
-    const updatedNavItems = JSON.parse(JSON.stringify(navItems));
+    // Build a new nav items array (this happens only when role changes)
+    navItemsRef.current.cachedNavItems = 
+      isLimitedAdmin ? 
+      [...navItemsRef.current.baseItems] : 
+      [...navItemsRef.current.baseItems, ...navItemsRef.current.fullAdminItems];
     
-    // Update Customer Requests group badges
-    const customerRequestsGroup = updatedNavItems.find((item: NavItem) => item.title === "Customer Requests");
-    if (customerRequestsGroup && customerRequestsGroup.items) {
-      // Update Custom Design Requests badge
-      const designsItem = customerRequestsGroup.items.find((item: NavSubItem) => item.title === "Custom Design Requests");
-      if (designsItem) {
-        designsItem.badge = pendingDesigns > 0 ? pendingDesigns : undefined;
-      }
-      
-      // Update Product Customization Requests badge
-      const customizationsItem = customerRequestsGroup.items.find((item: NavSubItem) => item.title === "Product Customization Requests");
-      if (customizationsItem) {
-        customizationsItem.badge = pendingCustomizations > 0 ? pendingCustomizations : undefined;
-      }
-      
-      // Update Product Quote Requests badge
-      const quotesItem = customerRequestsGroup.items.find((item: NavSubItem) => item.title === "Product Quote Requests");
-      if (quotesItem) {
-        quotesItem.badge = pendingQuotes > 0 ? pendingQuotes : undefined;
-      }
-    }
+    console.log("Admin layout - rebuilding nav items for role:", user?.role);
     
-    // Update Contact Messages badge
-    const contactMessagesItem = updatedNavItems.find((item: NavItem) => item.title === "Contact Messages");
-    if (contactMessagesItem) {
-      contactMessagesItem.badge = unreadMessages > 0 ? unreadMessages : undefined;
-    }
-    
-    // Update Client Stories badge (only for full admin)
-    if (!isLimitedAdmin) {
-      const testimonialItem = updatedNavItems.find((item: NavItem) => item.title === "Client Stories");
-      if (testimonialItem) {
-        testimonialItem.badge = pendingTestimonials > 0 ? pendingTestimonials : undefined;
-      }
-    }
-    
-    // Set the updated items
-    setNavItems(updatedNavItems);
-  }, [navItems, pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials, isLimitedAdmin]);
-  
-  // Build nav items from scratch when role changes
-  useEffect(() => {
-    // Initialize with base items
-    let compiledNavItems = JSON.parse(JSON.stringify(baseItems)); 
-    
-    // Add admin-only items if not limited admin
-    if (!isLimitedAdmin && user?.role === "admin") {
-      const adminOnlyItems = JSON.parse(JSON.stringify(fullAdminItems));
-      compiledNavItems = [...compiledNavItems, ...adminOnlyItems];
-    }
-    
-    // Cache built navigation for future use
+    // Mark that we've built the navigation at least once
+    // This helps us avoid unnecessary loading states in production
     try {
       sessionStorage.setItem('cached_admin_nav_built', 'true');
       setHasCachedNav(true);
     } catch (e) {
       console.warn("Error caching nav state:", e);
     }
-    
-    // Set the items to state
-    setNavItems(compiledNavItems);
-    
-    console.log("Admin layout - REBUILT nav items for role:", user?.role);
-  }, [user?.role, isLimitedAdmin, baseItems, fullAdminItems]); // Full dependency array
+  }
+  
+  // Function to update badges on nav items without rebuilding entire structure
+  const updateNavBadges = () => {
+    if (navItemsRef.current.cachedNavItems) {
+      // Update Customer Requests group badges
+      const customerRequestsGroup = navItemsRef.current.cachedNavItems.find(item => item.title === "Customer Requests");
+      if (customerRequestsGroup && customerRequestsGroup.items) {
+        // Update Custom Design Requests badge
+        const designsItem = customerRequestsGroup.items.find(item => item.title === "Custom Design Requests");
+        if (designsItem) {
+          designsItem.badge = pendingDesigns > 0 ? pendingDesigns : undefined;
+        }
+        
+        // Update Product Customization Requests badge
+        const customizationsItem = customerRequestsGroup.items.find(item => item.title === "Product Customization Requests");
+        if (customizationsItem) {
+          customizationsItem.badge = pendingCustomizations > 0 ? pendingCustomizations : undefined;
+        }
+        
+        // Update Product Quote Requests badge
+        const quotesItem = customerRequestsGroup.items.find(item => item.title === "Product Quote Requests");
+        if (quotesItem) {
+          quotesItem.badge = pendingQuotes > 0 ? pendingQuotes : undefined;
+        }
+      }
+      
+      // Update Contact Messages badge
+      const contactMessagesItem = navItemsRef.current.cachedNavItems.find(item => item.title === "Contact Messages");
+      if (contactMessagesItem) {
+        contactMessagesItem.badge = unreadMessages > 0 ? unreadMessages : undefined;
+      }
+      
+      // Update Client Stories badge (only for full admin)
+      if (!isLimitedAdmin) {
+        const testimonialItem = navItemsRef.current.cachedNavItems.find(item => item.title === "Client Stories");
+        if (testimonialItem) {
+          testimonialItem.badge = pendingTestimonials > 0 ? pendingTestimonials : undefined;
+        }
+      }
+    }
+  };
+  
+  // Update the badges whenever counts change
+  useEffect(() => {
+    updateNavBadges();
+  }, [pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials]);
+  
+  // Get the nav items for rendering
+  // Use useState + useEffect pattern instead of ref mutation pattern
+  const [navItems, setNavItems] = useState<NavItem[]>([]);
+  
+  // Use effect to update navItems when user role changes
+  useEffect(() => {
+    if (navItemsRef.current.cachedNavItems) {
+      setNavItems(navItemsRef.current.cachedNavItems);
+    }
+  }, [user?.role, navItemsRef.current.cachedNavItems]); // Update when role or items change
   
   // Production environment detection (use the existing isProduction value from earlier)
   
