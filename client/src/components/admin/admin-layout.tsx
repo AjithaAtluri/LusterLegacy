@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -30,6 +30,22 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+interface NavSubItem {
+  title: string;
+  icon: React.ReactNode;
+  href: string;
+  badge?: number;
+}
+
+interface NavItem {
+  title: string;
+  icon: React.ReactNode;
+  href?: string;
+  badge?: number;
+  isGroup?: boolean;
+  items?: NavSubItem[];
+}
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -525,7 +541,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   }, [pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials]);
   
   // Get the nav items for rendering
-  const navItems: NavItem[] = navItemsRef.current.cachedNavItems || [];
+  // Use useMemo to prevent unnecessary re-renders caused by reference changes
+  const navItems = useMemo<NavItem[]>(() => {
+    return navItemsRef.current.cachedNavItems || [];
+  }, [user?.role]); // Only regenerate when user role changes
   
   // Production environment detection (use the existing isProduction value from earlier)
   
@@ -626,7 +645,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                   </div>
                   <div className="flex-1 overflow-auto py-2">
                     <nav className="flex flex-col gap-1 px-2">
-                      {navItems.map((item, idx) => (
+                      {navItems.map((item: NavItem, idx: number) => (
                         item.isGroup ? (
                           <Collapsible key={`group-${idx}`} defaultOpen={isCustomerRequestsOpen}>
                             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
@@ -637,7 +656,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                               {isCustomerRequestsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                             </CollapsibleTrigger>
                             <CollapsibleContent className="pl-4">
-                              {item.items?.map((subItem) => (
+                              {item.items?.map((subItem: NavSubItem) => (
                                 <a
                                   key={subItem.href}
                                   href={subItem.href}
@@ -722,7 +741,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             </a>
           </div>
           <nav className="flex flex-col gap-1 p-4">
-            {navItems.map((item, idx) => (
+            {navItems.map((item: NavItem, idx: number) => (
               item.isGroup ? (
                 <Collapsible key={`desktop-group-${idx}`} defaultOpen={isCustomerRequestsOpen} onOpenChange={setIsCustomerRequestsOpen}>
                   <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
@@ -733,7 +752,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                     {isCustomerRequestsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pl-4">
-                    {item.items?.map((subItem) => (
+                    {item.items?.map((subItem: NavSubItem) => (
                       <a
                         key={subItem.href}
                         href={subItem.href}
