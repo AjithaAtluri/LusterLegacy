@@ -6,6 +6,26 @@ import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+
+// Safe stringify function to handle circular references
+function safeJsonStringify(obj: any): string {
+  const cache = new Set();
+  return JSON.stringify(obj, (key, value) => {
+    // Handle circular references
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return '[Circular]';
+      }
+      cache.add(value);
+    }
+    // Skip React nodes, functions, and other problematic fields
+    if (key === '_context' || key === 'Provider' || key === 'Consumer' || 
+        key === '_owner' || typeof value === 'function') {
+      return undefined;
+    }
+    return value;
+  })
+}
 import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
@@ -234,9 +254,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         } else {
           console.log("Admin layout - cached user appears to be admin, proceeding with admin auth");
           
-          // Cache admin session data for future use
+          // Cache admin session data for future use, but only store essential properties
+          // to avoid circular reference errors when stringifying
           try {
-            sessionStorage.setItem('cached_admin_session', JSON.stringify(user));
+            // Create a safe copy with only the data we need
+            const safeUserData = {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              role: user.role,
+              // Add other essential properties as needed, but avoid complex objects
+            };
+            
+            sessionStorage.setItem('cached_admin_session', safeJsonStringify(safeUserData));
             console.log("Admin layout - cached admin session data updated");
           } catch (cacheError) {
             console.warn("Could not cache admin session:", cacheError);
@@ -559,9 +589,29 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       compiledNavItems = [...compiledNavItems, ...adminOnlyItems];
     }
     
-    // Cache built navigation for future use
+    // Cache built navigation for future use - create safe serializable version
     try {
+      // Create a copy without React nodes to avoid circular references
+      const safeNavData = compiledNavItems.map((item: NavItem) => {
+        // Replace React nodes with placeholders
+        return {
+          title: item.title,
+          href: item.href,
+          badge: item.badge,
+          isGroup: item.isGroup,
+          items: item.items ? item.items.map((subItem: NavSubItem) => ({
+            title: subItem.title,
+            href: subItem.href,
+            badge: subItem.badge
+            // Skip the icon which is a React node
+          })) : undefined
+          // Skip the icon which is a React node
+        };
+      });
+      
+      // Store cache marker and safe data
       sessionStorage.setItem('cached_admin_nav_built', 'true');
+      sessionStorage.setItem('cached_admin_nav_data', JSON.stringify(safeNavData));
       setHasCachedNav(true);
     } catch (e) {
       console.warn("Error caching nav state:", e);
@@ -596,6 +646,25 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   
   // Initialize the two-phase rendering system
   useEffect(() => {
+    // First clear any potentially corrupted caches to start fresh
+    try {
+      // Check if this is the first run after our fix
+      const cacheFixApplied = sessionStorage.getItem('cache_fix_v1');
+      if (!cacheFixApplied) {
+        console.log("Admin layout - applying cache fix, clearing all potentially corrupted caches");
+        // Clear all session storage items that could have circular references
+        sessionStorage.removeItem('cached_admin_session');
+        sessionStorage.removeItem('cached_admin_nav_built');
+        sessionStorage.removeItem('cached_admin_nav_data');
+        sessionStorage.removeItem('admin_ui_stable');
+        
+        // Mark that we've applied the fix to avoid clearing again
+        sessionStorage.setItem('cache_fix_v1', 'true');
+      }
+    } catch (e) {
+      console.warn("Could not clear caches:", e);
+    }
+    
     // Phase 1: Initial data load completed marker
     const initialRenderTimer = setTimeout(() => {
       console.log("Admin layout - marking initial render as complete");
