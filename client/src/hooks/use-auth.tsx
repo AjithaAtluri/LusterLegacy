@@ -36,6 +36,43 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [stableLoading, setStableLoading] = useState(true);
+  const [cachedUser, setCachedUser] = useState<User | null>(null);
+  const [isProductionEnv, setIsProductionEnv] = useState(false);
+  
+  // Detect production environment for special optimizations
+  useEffect(() => {
+    const isProduction = window.location.hostname.includes('.replit.app') || 
+                      !window.location.hostname.includes('localhost');
+    setIsProductionEnv(isProduction);
+    console.log(`Environment detected: ${isProduction ? 'Production' : 'Development'}`);
+  }, []);
+  
+  // Load cached auth data on first render for immediate UI stability
+  useEffect(() => {
+    try {
+      // First try session storage (more secure)
+      const cachedUserData = sessionStorage.getItem('cached_user_data');
+      if (cachedUserData) {
+        const userData = JSON.parse(cachedUserData);
+        // Set the cached data immediately to prevent initial flashing
+        setCachedUser(userData);
+        // Also populate React Query cache for consistency
+        queryClient.setQueryData(["/api/user"], userData);
+        console.log("Loaded cached user data from session storage:", userData);
+      } else {
+        // Fall back to localStorage as a secondary option
+        const localUserData = localStorage.getItem('cached_user_data');
+        if (localUserData) {
+          const userData = JSON.parse(localUserData);
+          setCachedUser(userData);
+          queryClient.setQueryData(["/api/user"], userData);
+          console.log("Loaded cached user data from local storage:", userData);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading cached auth data:", error);
+    }
+  }, []);
   
   // Query to get the current user (if logged in)
   const {
@@ -46,28 +83,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: 1, // Try once more to handle potential session rehydration
-    refetchOnWindowFocus: true, // Allow refetching when focus returns to window
-    refetchOnMount: true,
-    refetchInterval: 10000, // Refetch every 10 seconds (helpful for debugging sessions)
-    staleTime: 0, // Always refetch to ensure latest authentication state
+    retry: isProductionEnv ? 3 : 1, // More retries in production
+    refetchOnWindowFocus: !isProductionEnv, // Don't refetch on window focus in production
+    refetchOnMount: !isProductionEnv, // More aggressive caching in production
+    refetchInterval: isProductionEnv ? false : 10000, // Disable interval in production
+    staleTime: isProductionEnv ? 1000 * 60 * 30 : 0, // 30 minute cache in production
+    gcTime: isProductionEnv ? 1000 * 60 * 60 : 1000 * 60 * 5, // Longer cache in production
+    // Critical optimization: use cached data while revalidating in background
+    // This prevents the UI from showing loading state during revalidation
+    placeholderData: cachedUser
   });
+  
+  // Cache freshly loaded user data for future use
+  useEffect(() => {
+    if (user && !isLoading) {
+      try {
+        const userData = JSON.stringify(user);
+        sessionStorage.setItem('cached_user_data', userData);
+        localStorage.setItem('cached_user_data', userData);
+        console.log("Updated cached user data in storage");
+      } catch (error) {
+        console.warn("Failed to cache user data:", error);
+      }
+    }
+  }, [user, isLoading]);
   
   // Stabilize loading state to prevent flickering
   useEffect(() => {
+    // In production with cached data, skip loading state entirely
+    if (isProductionEnv && cachedUser) {
+      console.log("Production environment with cached data - bypassing loading state");
+      setStableLoading(false);
+      return;
+    }
+    
     if (isLoading) {
       setStableLoading(true);
       return;
     }
     
-    // Increased delay to ensure all network requests finish before showing UI
-    // This helps prevent flickering in admin dashboard and product pages
+    // Adjust delay based on environment
+    const delay = isProductionEnv ? 400 : 800;
+    console.log(`Using ${delay}ms delay for loading state stabilization`);
+    
+    // Delayed state update to prevent UI flickering
     const timer = setTimeout(() => {
       setStableLoading(false);
-    }, 800);  // Increased from 200ms to 800ms
+    }, delay);
     
     return () => clearTimeout(timer);
-  }, [isLoading]);
+  }, [isLoading, cachedUser, isProductionEnv]);
   
   console.log("Auth Context - User data:", user);
   console.log("Auth Context - Loading:", isLoading);

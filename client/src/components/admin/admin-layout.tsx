@@ -118,6 +118,35 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   }, [isGlobalLoading, toast]);
 
+  // Detect production environment for optimized checks
+  const [isProduction, setIsProduction] = useState(false);
+  
+  useEffect(() => {
+    const isProd = window.location.hostname.includes('.replit.app') || 
+                  !window.location.hostname.includes('localhost');
+    setIsProduction(isProd);
+    console.log(`Admin Layout - Environment detected: ${isProd ? 'Production' : 'Development'}`);
+  }, []);
+  
+  // Check for cached admin data in sessionStorage
+  useEffect(() => {
+    try {
+      // Quick check for cached admin session to prevent flickering
+      const cachedAdminSession = sessionStorage.getItem('cached_admin_session');
+      if (cachedAdminSession && isProduction) {
+        const adminData = JSON.parse(cachedAdminSession);
+        if (adminData && (adminData.role === 'admin' || adminData.role === 'limited-admin')) {
+          console.log("Admin layout - found cached admin session data");
+          // We have a valid cached admin session so we can skip the loading state
+          setAdminLoadingState('success');
+          setIsAdminLoading(false);
+        }
+      }
+    } catch (error) {
+      console.warn("Error checking cached admin session:", error);
+    }
+  }, [isProduction]);
+  
   // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
     const checkAdminAuth = async () => {
@@ -161,6 +190,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           return;
         } else {
           console.log("Admin layout - cached user appears to be admin, proceeding with admin auth");
+          
+          // Cache admin session data for future use
+          try {
+            sessionStorage.setItem('cached_admin_session', JSON.stringify(user));
+            console.log("Admin layout - cached admin session data updated");
+          } catch (cacheError) {
+            console.warn("Could not cache admin session:", cacheError);
+          }
+          
           // Since user is already confirmed as admin in the cache, we'll trust that
           // but still try the API call with a safety mechanism
           setAdminLoadingState('success');
