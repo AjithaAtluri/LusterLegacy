@@ -167,130 +167,64 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           setIsAdminLoading(false);
         }
 
-        // Check 2: Try admin-specific auth API as a background verification
+        // Do background verification for logs only, but don't block UI
         console.log("Admin layout - checking admin auth endpoint (background verification)...");
-        const adminAuthPromise = fetch("/api/auth/me", { 
-          credentials: "include",
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-          }
-        });
         
-        // If admin auth succeeded, we're definitely authenticated properly
-        if (adminAuthResponse.ok) {
-          const adminData = await adminAuthResponse.json();
-          console.log("Admin layout - admin auth check successful:", adminData);
-          
-          // Make sure it's still an admin or limited-admin account
-          if (adminData.role === "admin" || adminData.role === "limited-admin") {
-            console.log(`Admin layout - user is verified ${adminData.role} via /api/auth/me`);
-            // Update the cache with this fresh data
-            import("@/lib/queryClient").then(({queryClient}) => {
-              queryClient.setQueryData(["/api/user"], adminData);
-            });
-            // Mark admin auth as successful
-            setAdminLoadingState('success');
-            return; // Allow access
-          } else {
-            console.log("User is authenticated but admin/limited-admin role missing in admin auth check");
-            toast({
-              title: "Access restricted",
-              description: "Admin privileges not found in authentication data",
-              variant: "destructive"
-            });
-            window.location.href = "/admin/login";
-            return;
-          }
-        }
-        
-        // Check 3: Try regular auth endpoint as fallback
-        console.log("Admin layout - admin auth check failed, trying regular user endpoint...");
-        const userResponse = await fetch("/api/user", { 
-          credentials: "include",
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-          }
-        });
-        
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          console.log("Admin layout - regular auth check successful:", userData);
-          
-          if (userData.role === "admin" || userData.role === "limited-admin") {
-            console.log(`Admin layout - user is verified ${userData.role} via /api/user`);
-            // Update the cache with this fresh data
-            import("@/lib/queryClient").then(({queryClient}) => {
-              queryClient.setQueryData(["/api/user"], userData);
+        // Background verification - doesn't affect loading state since we already passed auth from cache
+        setTimeout(async () => {
+          try {
+            // Check admin auth
+            const adminResponse = await fetch("/api/auth/me", { 
+              credentials: "include",
+              headers: { "Cache-Control": "no-cache" }
             });
             
-            // Since admin auth failed but regular auth succeeded, let's continue anyway
-            // The user is authenticated as admin in the main system
-            console.log("User has admin privileges but admin-specific endpoint failed - using regular auth");
-            
-            // Display a warning toast that some admin features might be limited
-            toast({
-              title: "Limited admin access",
-              description: "You're authenticated but some admin features might be restricted",
-              // Using default variant since "warning" is not available in this component
-              variant: "default"
-            });
-            
-            // Mark admin auth as successful, but with limitations
-            setAdminLoadingState('success');
-            
-            return; // Allow access
-          } else {
-            // User is authenticated but not an admin or limited-admin
-            console.log("User is authenticated but doesn't have admin privileges");
-            toast({
-              title: "Access restricted",
-              description: "You don't have permission to access the admin dashboard",
-              variant: "destructive"
-            });
-            window.location.href = "/";
-            return;
+            if (adminResponse.ok) {
+              const adminData = await adminResponse.json();
+              console.log("Background verification - admin auth check successful:", adminData);
+              
+              // Update the cache with this fresh data
+              import("@/lib/queryClient").then(({queryClient}) => {
+                queryClient.setQueryData(["/api/user"], adminData);
+              });
+            } else {
+              console.log("Background verification - admin auth check failed");
+              
+              // Try regular user endpoint
+              const userResponse = await fetch("/api/user", { 
+                credentials: "include",
+                headers: { "Cache-Control": "no-cache" }
+              });
+              
+              if (userResponse.ok) {
+                const userData = await userResponse.json();
+                console.log("Background verification - user auth check successful:", userData);
+              } else {
+                console.log("Background verification - both auth checks failed");
+              }
+            }
+          } catch (error) {
+            console.log("Error in background auth verification:", error);
           }
-        }
+        }, 100);
         
-        // If we reach here, both auth checks failed
-        console.log("Both auth checks failed - user is not authenticated");
-        // Mark loading as complete so we can show the error toast
-        setAdminLoadingState('error');
-        setIsAdminLoading(false);
-        
-        toast({
-          title: "Authentication required",
-          description: "Please log in to access the admin dashboard",
-          variant: "destructive"
-        });
-        window.location.href = "/admin/login";
+        // Since the user is already authenticated via cache, continue with the UI
         return;
       } catch (error) {
         console.error("Error during auth check:", error);
         // Mark as error state
         setAdminLoadingState('error');
+        setIsAdminLoading(false);
         
-        // Fall back to React Query state only if an exception occurred
-        if (!user) {
-          console.log("Error in auth check and no cached user - redirecting to login");
-          setIsAdminLoading(false); // Stop loading to show proper errors
-          window.location.href = "/admin/login";
-          return;
-        } else if (user.role !== "admin" && user.role !== "limited-admin") {
-          console.log("Error in auth check and cached user is not admin or limited-admin - redirecting home");
-          setIsAdminLoading(false); // Stop loading to show proper errors
-          window.location.href = "/";
-          return;
-        } else {
-          console.log(`Error in auth check but cached user is ${user.role} - allowing access but may encounter further issues`);
-          // Continue with access and hope for the best, but still mark loading as done
-          setIsAdminLoading(false);
-          return;
-        }
+        // Show error toast and redirect to login page
+        toast({
+          title: "Authentication error",
+          description: "There was an error verifying your admin access. Please log in again.",
+          variant: "destructive"
+        });
+        
+        window.location.href = "/admin/login";
+        return;
       }
     };
     
