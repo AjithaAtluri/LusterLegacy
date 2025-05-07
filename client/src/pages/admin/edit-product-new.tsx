@@ -307,6 +307,71 @@ export default function EditProductNew() {
     return window.location.hostname.includes('.replit.app') || 
           !window.location.hostname.includes('localhost');
   }, []);
+  
+  // Direct API access bypassing React Query entirely - most reliable method
+  const [directProductData, setDirectProductData] = useState<any>(null);
+  
+  // Execute this immediately on page load for production to avoid any loading delays
+  useEffect(() => {
+    // Only run in production and when we have a product ID
+    if (isProduction() && params.id) {
+      console.log("QUICK LOAD: Attempting immediate direct product fetch");
+      
+      // First check session storage
+      try {
+        const cachedData = sessionStorage.getItem(`product_${params.id}`);
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          console.log("QUICK LOAD: Found product in session storage", parsed);
+          setDirectProductData(parsed);
+        }
+      } catch (err) {
+        console.error("QUICK LOAD: Error reading from session storage", err);
+      }
+      
+      // Regardless of cache, attempt a direct fetch
+      fetch(`/api/products/${params.id}`)
+        .then(response => {
+          if (response.ok) return response.json();
+          throw new Error(`Product fetch failed with status ${response.status}`);
+        })
+        .then(data => {
+          console.log("QUICK LOAD: Direct product fetch successful", data);
+          setDirectProductData(data);
+          
+          // Cache for future use
+          try {
+            sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+          } catch (err) {
+            console.error("QUICK LOAD: Error writing to session storage", err);
+          }
+        })
+        .catch(err => {
+          console.error("QUICK LOAD: Direct fetch failed", err);
+          
+          // Try the direct endpoint as fallback
+          fetch(`/api/direct-product/${params.id}`)
+            .then(response => {
+              if (response.ok) return response.json();
+              throw new Error(`Direct product fetch failed with status ${response.status}`);
+            })
+            .then(data => {
+              console.log("QUICK LOAD: Fallback fetch successful", data);
+              setDirectProductData(data);
+              
+              // Cache for future use
+              try {
+                sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+              } catch (err) {
+                console.error("QUICK LOAD: Error writing to session storage", err);
+              }
+            })
+            .catch(fallbackErr => {
+              console.error("QUICK LOAD: All direct fetches failed", fallbackErr);
+            });
+        });
+    }
+  }, [params.id, isProduction]);
 
   // For production environments, we'll use a special hardened data fetching approach
   const [manuallyFetchedProduct, setManuallyFetchedProduct] = useState<any>(null);
@@ -527,13 +592,28 @@ export default function EditProductNew() {
     }
   }, [manualFetchLoading, tanstackLoading, loadingTimedOut, params.id]);
   
-  // Combined data from both approaches
-  const productData = isProduction() ? manuallyFetchedProduct || tanstackProductData : tanstackProductData;
+  // Combined data from all approaches, prioritizing direct fetch
+  const productData = isProduction() 
+    ? directProductData || manuallyFetchedProduct || tanstackProductData 
+    : tanstackProductData;
+    
+  // Loading state is false if we have direct product data
   const isLoading = isProduction() 
-    ? ((manualFetchLoading || (tanstackLoading && !manuallyFetchedProduct)) && !loadingTimedOut)
+    ? ((manualFetchLoading || (tanstackLoading && !manuallyFetchedProduct && !directProductData)) && !loadingTimedOut)
     : (tanstackLoading && !loadingTimedOut);
+    
   const error = isProduction() ? (manualFetchError || tanstackError) : tanstackError;
   const isError = isProduction() ? !!(manualFetchError || isTanstackError) : isTanstackError;
+  
+  // Log effective product data source for debugging
+  useEffect(() => {
+    if (productData) {
+      const source = directProductData ? "direct fetch" 
+                   : manuallyFetchedProduct ? "manual fetch" 
+                   : "tanstack query";
+      console.log(`Using product data from: ${source}`);
+    }
+  }, [productData, directProductData, manuallyFetchedProduct]);
 
   // Fetch product types with custom query function
   const fetchProductTypes = async () => {
