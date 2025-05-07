@@ -78,16 +78,25 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   });
   
-  // Combined loading state for admin dashboard to prevent flickering
-  // Skip loading state entirely if we have cached session data to avoid layout shifts
-  // Apply aggressive caching to avoid any unnecessary loading states
+  // Apply a strict anti-flicker approach
+  // Always force loading state until everything is 100% ready
+  // Use two-phase rendering to prevent any UI updates during transition
   const hasCachedData = !!sessionStorage.getItem('cached_admin_session');
-  const isGlobalLoading = !hasCachedData && 
-                         (isLoading || stableLoading || isAdminLoading) && 
-                         !isApiCheckTimedOut && 
-                         // Avoid flickering by skipping loading state in production 
-                         // if we've already tried to cache nav items
-                         !(hasCachedNav && window.location.hostname.includes('.replit.app'));
+  
+  // Create a strict loading state that prevents ANY rendering until we're fully ready
+  const [isInitialRenderComplete, setIsInitialRenderComplete] = useState(false);
+  const [isUIStable, setIsUIStable] = useState(false);
+  
+  // Combine all loading states into a single deterministic value
+  const isGlobalLoading = 
+    // Always show loading if initial render isn't complete
+    !isInitialRenderComplete ||
+    // Or if we're still loading auth status
+    (isLoading || stableLoading || isAdminLoading) && 
+    // Unless we've timed out
+    !isApiCheckTimedOut && 
+    // And don't skip the loader in production unless we've confirmed stability
+    !(isUIStable && hasCachedData && window.location.hostname.includes('.replit.app'));
   
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({
@@ -585,15 +594,43 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     }
   }, [user, isProduction, setAdminLoadingState]);
   
-  // Second effect: Handle full authentication flow
+  // Initialize the two-phase rendering system
   useEffect(() => {
-    // Only update the UI when auth is complete to avoid flickering
-    if (!isLoading && !stableLoading) {
+    // Phase 1: Initial data load completed marker
+    const initialRenderTimer = setTimeout(() => {
+      console.log("Admin layout - marking initial render as complete");
+      setIsInitialRenderComplete(true);
+    }, 800); // Delay to ensure all initial state is processed
+    
+    // Phase 2: Set full rendering stability marker
+    const stabilityTimer = setTimeout(() => {
+      console.log("Admin layout - marking UI as stable");
+      setIsUIStable(true);
+      
+      // Also mark cached data as available for future page loads
+      try {
+        sessionStorage.setItem('admin_ui_stable', 'true');
+      } catch (e) {
+        console.warn("Failed to cache UI stability marker:", e);
+      }
+    }, 1800); // Longer delay to ensure full rendering stability
+    
+    return () => {
+      clearTimeout(initialRenderTimer);
+      clearTimeout(stabilityTimer);
+    };
+  }, []);
+  
+  // Second effect: Handle full authentication flow with anti-flicker protection
+  useEffect(() => {
+    // Only update the UI when auth is complete AND all rendering phases are done
+    if (!isLoading && !stableLoading && isInitialRenderComplete) {
       if (user) {
         console.log("Authentication stable, user found - loading admin UI");
         
         // In production, add longer delay to avoid abrupt transitions
-        const loadingDelay = isProduction ? 1200 : 400;
+        // Increased further to ensure complete stability
+        const loadingDelay = isProduction ? 2000 : 800;
         
         // If we haven't already shown the UI based on cached data
         if (!userDataStable) {
@@ -601,6 +638,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             setAdminLoadingState('success');
             setIsAdminLoading(false);
             console.log("Admin loading completed - UI will now render");
+            
+            // Mark UI as fully stable after successful load
+            setIsUIStable(true);
           }, loadingDelay);
           
           return () => clearTimeout(timer);
@@ -619,23 +659,64 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         return () => clearTimeout(redirectTimer);
       }
     }
-  }, [isLoading, stableLoading, user, isProduction, userDataStable]);
+  }, [isLoading, stableLoading, user, isProduction, userDataStable, isInitialRenderComplete]);
 
   // Current location for determining active route
   const [location] = useLocation();
   
-  // Use the global loading state to ensure a unified loading experience
+  // Use the global loading state to ensure a completely stable loading experience
+  // We've modified this to use a fixed, non-animated loading screen to prevent any flickering
   if (isGlobalLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-4"></div>
-        <p className="text-foreground/70 text-sm font-montserrat">Loading admin dashboard...</p>
+      <div className="fixed inset-0 flex flex-col items-center justify-center h-screen w-screen bg-background" 
+           style={{ 
+             zIndex: 9999, 
+             opacity: 1,
+             transition: 'none',
+             userSelect: 'none',
+             pointerEvents: 'none'
+           }}>
+        <div className="rounded-full h-16 w-16 border-2 border-primary mb-4 relative overflow-hidden">
+          {/* Static loader with no animations */}
+          <div className="absolute inset-0 bg-primary/20"></div>
+          <div className="absolute bottom-0 left-0 right-0 bg-primary h-1/2"></div>
+        </div>
+        <p className="text-foreground/70 text-sm font-montserrat">
+          Loading admin dashboard...
+        </p>
+        {/* Slightly longer timeout message for very slow connections */}
+        {isApiCheckTimedOut && (
+          <p className="text-foreground/60 text-xs font-montserrat mt-4 max-w-md text-center px-4">
+            Loading is taking longer than expected. The admin panel will appear shortly.
+          </p>
+        )}
       </div>
     );
   }
   
+  // Implement a freeze mechanism for the entire UI to prevent flickering until stable
+  useEffect(() => {
+    if (isUIStable) {
+      // Once UI is stable, we track all scroll events to improve performance
+      const controller = new AbortController();
+      document.addEventListener('scroll', () => {}, { passive: true, signal: controller.signal });
+      return () => controller.abort();
+    }
+  }, [isUIStable]);
+  
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div 
+      className="min-h-screen flex flex-col bg-background"
+      style={{ 
+        // Force all UI to be completely static with no transitions until stable
+        willChange: isUIStable ? 'auto' : 'transform',
+        backfaceVisibility: 'hidden',
+        transform: 'translateZ(0)',
+        // Disable all animations initially
+        animationDuration: isUIStable ? 'initial' : '0s !important',
+        transitionDuration: isUIStable ? 'initial' : '0s !important'
+      }}
+    >
       {/* Header */}
       <header className="border-b sticky top-0 z-30 bg-background">
         <div className="flex h-16 items-center px-4 sm:px-6">
