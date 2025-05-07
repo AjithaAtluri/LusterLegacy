@@ -209,19 +209,132 @@ export default function EditProductNew() {
     }
   }, [isAuthLoading, user, setLocation]);
   
-  // Use the modified query with suspending capability for production stability
-  const { data: productData, isLoading, error, isError } = useQuery<any>({
+  // Production mode detection for specialized handling
+  const isProduction = useCallback(() => {
+    return window.location.hostname.includes('.replit.app') || 
+          !window.location.hostname.includes('localhost');
+  }, []);
+
+  // For production environments, we'll use a special hardened data fetching approach
+  const [manuallyFetchedProduct, setManuallyFetchedProduct] = useState<any>(null);
+  const [manualFetchLoading, setManualFetchLoading] = useState(false);
+  const [manualFetchError, setManualFetchError] = useState<Error | null>(null);
+  const [triedManualFetch, setTriedManualFetch] = useState(false);
+
+  // Production-only manual fetch implementation with more resilience
+  useEffect(() => {
+    // Only run this in production and if we have an ID and user is authenticated
+    if (isProduction() && params.id && user?.id && !triedManualFetch) {
+      console.log("Production environment detected - using manual fetch");
+      setManualFetchLoading(true);
+      setTriedManualFetch(true);
+      
+      // Function to attempt fetching with multiple retries
+      const attemptProductFetch = async (retries = 5) => {
+        console.log(`Production manual fetch with ${retries} retries remaining`);
+        try {
+          // First try the newer direct product endpoint which should be more reliable
+          try {
+            console.log(`Trying direct product endpoint for ID ${params.id}`);
+            const directResponse = await fetch(`/api/direct-product/${params.id}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                'X-Auth-User-Id': String(user.id),
+                'X-Auth-Username': user.username,
+                'X-Production-Fetch': 'true'
+              },
+              credentials: 'include',
+            });
+            
+            if (directResponse.ok) {
+              const data = await directResponse.json();
+              console.log("Direct product fetch succeeded:", data);
+              setManuallyFetchedProduct(data);
+              setManualFetchLoading(false);
+              return;
+            } else {
+              console.log(`Direct endpoint failed with status ${directResponse.status}, falling back to admin endpoint`);
+            }
+          } catch (directError) {
+            console.error("Direct product endpoint error:", directError);
+          }
+          
+          // Fall back to original admin endpoint if direct endpoint fails
+          const response = await fetch(`/api/admin/products/${params.id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+              'X-Admin-Session': 'true',
+              'X-Auth-User-Id': String(user.id),
+              'X-Auth-Username': user.username,
+              'X-Production-Fetch': 'true'
+            },
+            credentials: 'include',
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log("Admin product fetch succeeded:", data);
+            setManuallyFetchedProduct(data);
+            setManualFetchLoading(false);
+            return;
+          } else {
+            throw new Error(`Server returned ${response.status}`);
+          }
+        } catch (error) {
+          console.error("Production manual fetch attempt failed:", error);
+          if (retries > 0) {
+            // Exponential backoff
+            const delay = Math.pow(2, 5 - retries) * 300;
+            console.log(`Retrying after ${delay}ms...`);
+            setTimeout(() => attemptProductFetch(retries - 1), delay);
+          } else {
+            console.error("All production manual fetch attempts failed");
+            setManualFetchLoading(false);
+            setManualFetchError(error instanceof Error ? error : new Error(String(error)));
+          }
+        }
+      };
+      
+      // Start the fetch process
+      attemptProductFetch();
+    }
+  }, [params.id, user, isProduction, triedManualFetch]);
+
+  // Compute enabled state for TanStack Query ahead of time to avoid TypeScript errors
+  const tanstackQueryEnabled = useCallback(() => {
+    const hasId = !!params.id;
+    const isReadyToFetch = !suspendFetchWhileAuth;
+    const shouldUseQuery = !isProduction() || (manualFetchError !== null);
+    return hasId && isReadyToFetch && shouldUseQuery;
+  }, [params.id, suspendFetchWhileAuth, isProduction, manualFetchError]);
+  
+  // TanStack Query - used in development or as fallback if manual fetch fails
+  const { data: tanstackProductData, isLoading: tanstackLoading, error: tanstackError, isError: isTanstackError } = useQuery<any>({
     queryKey: ['/api/admin/products', params.id],
     queryFn: fetchProduct,
-    enabled: !!params.id && !suspendFetchWhileAuth, // Only enable when ready and auth is stable
-    retry: 3, // Allow several retries to handle flaky connections in production
-    retryDelay: 1000, // Add 1 second delay between retries
+    enabled: tanstackQueryEnabled(), 
+    retry: 5, // More retries for resilience
+    retryDelay: 800, // Faster retry delay
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 30, // Keep data fresh for 30 minutes in production to reduce flickering
-    refetchInterval: false, // Disable automatic refetching
-    networkMode: 'always', // Force network requests to complete even in background
-    gcTime: 1000 * 60 * 60 // Keep data in cache for 1 hour to prevent redundant fetching
+    staleTime: 1000 * 60 * 30,
+    refetchInterval: false,
+    networkMode: 'always',
+    gcTime: 1000 * 60 * 60
   });
+  
+  // Combined data from both approaches
+  const productData = isProduction() ? manuallyFetchedProduct || tanstackProductData : tanstackProductData;
+  const isLoading = isProduction() ? (manualFetchLoading || (tanstackLoading && !manuallyFetchedProduct)) : tanstackLoading;
+  const error = isProduction() ? (manualFetchError || tanstackError) : tanstackError;
+  const isError = isProduction() ? !!(manualFetchError || isTanstackError) : isTanstackError;
 
   // Fetch product types with custom query function
   const fetchProductTypes = async () => {

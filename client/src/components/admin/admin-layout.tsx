@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -398,43 +398,66 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Combine navigation items based on user role
   const navItems: NavItem[] = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
   
-  // Effect to manage the admin loading state - separate from the auth check
-  // This creates a more stable experience in production by ensuring authentication is fully resolved
+  // Production environment detection
+  const isProduction = useCallback(() => {
+    return window.location.hostname.includes('.replit.app') || 
+           !window.location.hostname.includes('localhost');
+  }, []);
+  
+  // Apply production-specific loading optimizations
+  const [userDataStable, setUserDataStable] = useState(false);
+  
+  // First effect: Trust cached user immediately to avoid flickering
   useEffect(() => {
-    // We want to show/hide the admin UI based on auth state and stability
+    // For production, we prioritize a smooth loading experience
+    if (isProduction()) {
+      // If we already have user data, trust it immediately
+      if (user && user.id) {
+        console.log("Production: Using cached user data immediately");
+        setAdminLoadingState('success');
+        setIsAdminLoading(false);
+        
+        // Mark the user data as stable for other components
+        setUserDataStable(true);
+      }
+    }
+  }, [user, isProduction, setAdminLoadingState]);
+  
+  // Second effect: Handle full authentication flow
+  useEffect(() => {
+    // Only update the UI when auth is complete to avoid flickering
     if (!isLoading && !stableLoading) {
-      // Authentication check is stable (complete)
       if (user) {
-        // Success case - we have a valid user
         console.log("Authentication stable, user found - loading admin UI");
         
-        // Set a production-only additional delay to ensure all resources are loaded
-        // This creates a smoother experience by avoiding multiple re-renders during loading
-        const isProduction = window.location.hostname.includes('.replit.app') || 
-                           !window.location.hostname.includes('localhost');
+        // In production, add longer delay to avoid abrupt transitions
+        const loadingDelay = isProduction() ? 1200 : 400;
         
-        const timer = setTimeout(() => {
-          setAdminLoadingState('success');
-          setIsAdminLoading(false);
-          console.log("Admin loading completed - UI will now render");
-        }, isProduction ? 1500 : 600); // Longer delay in production to ensure complete stability
-        
-        return () => clearTimeout(timer);
+        // If we haven't already shown the UI based on cached data
+        if (!userDataStable) {
+          const timer = setTimeout(() => {
+            setAdminLoadingState('success');
+            setIsAdminLoading(false);
+            console.log("Admin loading completed - UI will now render");
+          }, loadingDelay);
+          
+          return () => clearTimeout(timer);
+        }
       } else {
-        // No user found after auth check is done - redirect to login instead of showing loading
+        // No user found after auth check is done - redirect to login
         console.log("Authentication stable, but no user found - redirecting to login");
         setAdminLoadingState('error');
         setIsAdminLoading(false);
         
-        // Small delay before redirect to avoid potential race conditions
+        // Delay redirect to avoid race conditions
         const redirectTimer = setTimeout(() => {
           window.location.href = "/admin/login";
-        }, 200);
+        }, 300);
         
         return () => clearTimeout(redirectTimer);
       }
     }
-  }, [isLoading, stableLoading, user]);
+  }, [isLoading, stableLoading, user, isProduction, userDataStable]);
 
   // Current location for determining active route
   const [location] = useLocation();
