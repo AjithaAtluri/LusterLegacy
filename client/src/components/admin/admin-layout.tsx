@@ -53,13 +53,25 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [isApiCheckTimedOut, setIsApiCheckTimedOut] = useState(false);
   
   // Store a persistent copy of nav items in ref to prevent flickering
-  const [hasCachedNav, setHasCachedNav] = useState(false);
+  const [hasCachedNav, setHasCachedNav] = useState(() => {
+    try {
+      // Check if we have previously cached nav items
+      return !!sessionStorage.getItem('cached_admin_nav_built');
+    } catch (e) {
+      return false;
+    }
+  });
   
   // Combined loading state for admin dashboard to prevent flickering
   // Skip loading state entirely if we have cached session data to avoid layout shifts
-  const isGlobalLoading = !(sessionStorage.getItem('cached_admin_session')) && 
+  // Apply aggressive caching to avoid any unnecessary loading states
+  const hasCachedData = !!sessionStorage.getItem('cached_admin_session');
+  const isGlobalLoading = !hasCachedData && 
                          (isLoading || stableLoading || isAdminLoading) && 
-                         !isApiCheckTimedOut;
+                         !isApiCheckTimedOut && 
+                         // Avoid flickering by skipping loading state in production 
+                         // if we've already tried to cache nav items
+                         !(hasCachedNav && window.location.hostname.includes('.replit.app'));
   
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({
@@ -455,6 +467,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       [...navItemsRef.current.baseItems, ...navItemsRef.current.fullAdminItems];
     
     console.log("Admin layout - rebuilding nav items for role:", user?.role);
+    
+    // Mark that we've built the navigation at least once
+    // This helps us avoid unnecessary loading states in production
+    try {
+      sessionStorage.setItem('cached_admin_nav_built', 'true');
+      setHasCachedNav(true);
+    } catch (e) {
+      console.warn("Error caching nav state:", e);
+    }
   }
   
   // Function to update badges on nav items without rebuilding entire structure
