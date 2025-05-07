@@ -130,8 +130,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Direct product data endpoint for production reliability
-  // This provides an alternative way to access product data that bypasses the usual auth flow
+  /**
+   * Direct product endpoint (bypasses authentication)
+   * Reliable product data endpoint for production that doesn't require authentication
+   * and provides enhanced caching to avoid flickering issues
+   */
   app.get('/api/direct-product/:id', async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
@@ -139,64 +142,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ success: false, message: 'Invalid product ID' });
       }
       
-      console.log(`Direct product data request for ID: ${productId}`);
+      console.log(`[DIRECT-PRODUCT] Direct product data request for ID: ${productId}`);
       
-      // Allow any auth headers provided
+      // Allow any auth headers that might be provided
       const userIdHeader = req.headers['x-auth-user-id'] as string;
       const usernameHeader = req.headers['x-auth-username'] as string;
       
-      // Log auth context
-      console.log(`Direct product request - Auth context: userId=${userIdHeader}, username=${usernameHeader}`);
-      console.log(`Direct product request - Headers:`, req.headers);
-      
-      // Check if cookie auth is available first
-      if (req.isAuthenticated() && req.user) {
-        console.log(`Direct product request - Authenticated via session as ${req.user.username}`);
-      } else if (userIdHeader && usernameHeader) {
-        console.log(`Direct product request - Using header credentials: ${usernameHeader}`);
-      } else {
-        console.log(`Direct product request - No authentication provided, but proceeding for product ${productId}`);
+      // Log auth context for debugging
+      if (userIdHeader || usernameHeader) {
+        console.log(`[DIRECT-PRODUCT] Auth context headers:`, { 
+          userId: userIdHeader, 
+          username: usernameHeader 
+        });
       }
       
-      // Get the product directly using low-level DB access to ensure it works
+      // Fetch the product data directly from storage
+      const product = await storage.getProduct(productId);
+      
+      if (!product) {
+        console.log(`[DIRECT-PRODUCT] Product ${productId} not found`);
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Product not found'
+        });
+      }
+      
+      console.log(`[DIRECT-PRODUCT] Successfully retrieved product ${productId}`);
+      
+      // Define interface for the enhanced product including calculated prices
+      interface EnhancedProduct {
+        id: number;
+        name: string;
+        description: string;
+        basePrice: number;
+        imageUrl: string;
+        additionalImages: string[] | null;
+        details: any;
+        dimensions: string | null;
+        isNew: boolean | null;
+        category: string | null;
+        createdAt: Date | null;
+        aiInputs: any;
+        calculatedPriceUSD?: number;
+        calculatedPriceINR?: number;
+      }
+      
+      // Add calculated prices to the product
+      let enhancedProduct: EnhancedProduct = { ...product };
+      
       try {
-        const product = await storage.getProduct(productId);
-        
-        if (!product) {
-          return res.status(404).json({ success: false, message: 'Product not found' });
-        }
-        
-        console.log(`Successfully fetched product ${productId} via direct route`);
-        return res.json(product);
-      } catch (dbError) {
-        console.error(`Error fetching product ${productId} from database:`, dbError);
-        
-        // Fall back to direct SQL as a last resort
-        try {
-          const result = await pool.query(`
-            SELECT * FROM products WHERE id = $1
-          `, [productId]);
+        if (product.details) {
+          // Parse product details
+          const details = typeof product.details === 'string' 
+            ? JSON.parse(product.details) 
+            : product.details;
+            
+          // Extract metal and stone details for price calculation
+          const metalType = details.metalType || "";
+          const metalWeight = details.metalWeight || "";
+          const mainStoneType = details.mainStoneType || "";
+          const mainStoneWeight = details.mainStoneWeight || "";
+          const secondaryStoneType = details.secondaryStoneType || "";
+          const secondaryStoneWeight = details.secondaryStoneWeight || "";
           
-          if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'Product not found via SQL' });
-          }
+          console.log(`[DIRECT-PRODUCT] Calculating prices for product ${productId} with:`, {
+            metalType,
+            metalWeight,
+            mainStoneType,
+            mainStoneWeight,
+            secondaryStoneType,
+            secondaryStoneWeight
+          });
           
-          console.log(`Successfully fetched product ${productId} via fallback SQL`);
-          return res.json(result.rows[0]);
-        } catch (sqlError) {
-          console.error(`Fallback SQL also failed for product ${productId}:`, sqlError);
-          throw sqlError;
+          // Calculate prices
+          const prices = await calculateJewelryPrice(
+            product.basePrice,
+            metalType, 
+            metalWeight,
+            mainStoneType,
+            mainStoneWeight,
+            secondaryStoneType,
+            secondaryStoneWeight
+          );
+          
+          // Add calculated prices to the product
+          enhancedProduct = {
+            ...product,
+            calculatedPriceUSD: prices.priceUSD,
+            calculatedPriceINR: prices.priceINR
+          };
+          
+          console.log(`[DIRECT-PRODUCT] Added calculated prices:`, {
+            USD: prices.priceUSD,
+            INR: prices.priceINR
+          });
         }
+      } catch (priceError) {
+        console.error("[DIRECT-PRODUCT] Error calculating prices:", priceError);
+        // Continue with original product if price calculation fails
       }
+      
+      // Set cache control headers for 5 minutes (products don't change often)
+      res.set({
+        'Cache-Control': 'public, max-age=300',
+        'Pragma': 'cache',
+        'Expires': new Date(Date.now() + 300000).toUTCString()
+      });
+      
+      console.log(`[DIRECT-PRODUCT] Successfully served product ${productId}`);
+      res.json(enhancedProduct);
     } catch (error) {
-      console.error('Error in direct product endpoint:', error);
+      console.error("[DIRECT-PRODUCT] Error fetching product:", error);
       res.status(500).json({ 
         success: false, 
-        message: 'Failed to retrieve product data',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: "Server error fetching product data",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
+  
+
   // Create HTTP server
   const httpServer = createServer(app);
 
