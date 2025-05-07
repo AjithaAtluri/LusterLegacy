@@ -52,8 +52,14 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Add timeout detection for API checks that might get stuck
   const [isApiCheckTimedOut, setIsApiCheckTimedOut] = useState(false);
   
+  // Store a persistent copy of nav items in ref to prevent flickering
+  const [hasCachedNav, setHasCachedNav] = useState(false);
+  
   // Combined loading state for admin dashboard to prevent flickering
-  const isGlobalLoading = (isLoading || stableLoading || isAdminLoading) && !isApiCheckTimedOut;
+  // Skip loading state entirely if we have cached session data to avoid layout shifts
+  const isGlobalLoading = !(sessionStorage.getItem('cached_admin_session')) && 
+                         (isLoading || stableLoading || isAdminLoading) && 
+                         !isApiCheckTimedOut;
   
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({
