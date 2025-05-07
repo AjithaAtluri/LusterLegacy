@@ -316,31 +316,82 @@ export default function EditProductNew() {
 
   // Production-only manual fetch implementation with more resilience
   useEffect(() => {
-    // Only run this in production and if we have an ID and user is authenticated
-    if (isProduction() && params.id && user?.id && !triedManualFetch) {
-      console.log("Production environment detected - using manual fetch");
+    // Only run this in production and if we have an ID
+    // We've removed the user?.id check which was causing issues in production
+    if (isProduction() && params.id && !triedManualFetch) {
+      console.log("Production environment detected - using manual fetch for product");
       setManualFetchLoading(true);
       setTriedManualFetch(true);
+      
+      // First try to load from session storage cache
+      try {
+        const cachedProductData = sessionStorage.getItem(`product_${params.id}`);
+        if (cachedProductData) {
+          try {
+            const productData = JSON.parse(cachedProductData);
+            console.log("Using cached product data from session storage:", productData);
+            setManuallyFetchedProduct(productData);
+            setManualFetchLoading(false);
+            
+            // Continue with the fetch in the background to update the cache
+            console.log("Still fetching fresh data in background to update cache");
+          } catch (parseError) {
+            console.error("Error parsing cached product data:", parseError);
+            // Continue with the fetch as normal
+          }
+        }
+      } catch (cacheError) {
+        console.warn("Error reading cache:", cacheError);
+      }
       
       // Function to attempt fetching with multiple retries
       const attemptProductFetch = async (retries = 5) => {
         console.log(`Production manual fetch with ${retries} retries remaining`);
         try {
-          // First try the newer direct product endpoint which should be more reliable
+          // First try the public product endpoint which doesn't require authentication
+          try {
+            console.log(`Trying public product endpoint for ID ${params.id}`);
+            const publicResponse = await fetch(`/api/products/${params.id}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+              },
+              credentials: 'include',
+            });
+            
+            if (publicResponse.ok) {
+              const data = await publicResponse.json();
+              console.log("Public product fetch succeeded:", data);
+              setManuallyFetchedProduct(data);
+              setManualFetchLoading(false);
+              
+              // Store in session storage for future reference
+              try {
+                sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+                console.log("Product data cached in session storage");
+              } catch (cacheError) {
+                console.warn("Error caching product data:", cacheError);
+              }
+              return;
+            } else {
+              console.log(`Public endpoint failed with status ${publicResponse.status}, trying direct endpoint`);
+            }
+          } catch (publicError) {
+            console.error("Public product endpoint error:", publicError);
+          }
+          
+          // Try the direct endpoint next
           try {
             console.log(`Trying direct product endpoint for ID ${params.id}`);
             const directResponse = await fetch(`/api/direct-product/${params.id}`, {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0',
-                'X-Auth-User-Id': String(user.id),
-                'X-Auth-Username': user.username,
-                'X-Production-Fetch': 'true'
-              },
-              credentials: 'include',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              }
             });
             
             if (directResponse.ok) {
@@ -348,38 +399,61 @@ export default function EditProductNew() {
               console.log("Direct product fetch succeeded:", data);
               setManuallyFetchedProduct(data);
               setManualFetchLoading(false);
+              
+              // Store in session storage for future reference
+              try {
+                sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+                console.log("Product data cached in session storage");
+              } catch (cacheError) {
+                console.warn("Error caching product data:", cacheError);
+              }
               return;
             } else {
-              console.log(`Direct endpoint failed with status ${directResponse.status}, falling back to admin endpoint`);
+              console.log(`Direct endpoint failed with status ${directResponse.status}, trying admin endpoint`);
             }
           } catch (directError) {
             console.error("Direct product endpoint error:", directError);
           }
           
-          // Fall back to original admin endpoint if direct endpoint fails
-          const response = await fetch(`/api/admin/products/${params.id}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0',
-              'X-Admin-Session': 'true',
-              'X-Auth-User-Id': String(user.id),
-              'X-Auth-Username': user.username,
-              'X-Production-Fetch': 'true'
-            },
-            credentials: 'include',
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log("Admin product fetch succeeded:", data);
-            setManuallyFetchedProduct(data);
-            setManualFetchLoading(false);
-            return;
+          // Finally, try the admin endpoint if user is authenticated
+          if (user?.id) {
+            try {
+              console.log(`Trying admin product endpoint for ID ${params.id}`);
+              const adminResponse = await fetch(`/api/admin/products/${params.id}`, {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Cache-Control': 'no-cache',
+                  'X-Admin-Session': 'true',
+                  'X-Auth-User-Id': String(user.id),
+                  'X-Auth-Username': user.username || 'admin'
+                },
+                credentials: 'include',
+              });
+              
+              if (adminResponse.ok) {
+                const data = await adminResponse.json();
+                console.log("Admin product fetch succeeded:", data);
+                setManuallyFetchedProduct(data);
+                setManualFetchLoading(false);
+                
+                // Store in session storage for future reference
+                try {
+                  sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+                  console.log("Product data cached in session storage");
+                } catch (cacheError) {
+                  console.warn("Error caching product data:", cacheError);
+                }
+                return;
+              } else {
+                throw new Error(`Admin endpoint returned ${adminResponse.status}`);
+              }
+            } catch (adminError) {
+              console.error("Admin product endpoint error:", adminError);
+              throw adminError; // Let the retry logic handle this
+            }
           } else {
-            throw new Error(`Server returned ${response.status}`);
+            throw new Error("No authenticated user for admin endpoint");
           }
         } catch (error) {
           console.error("Production manual fetch attempt failed:", error);
@@ -396,7 +470,8 @@ export default function EditProductNew() {
         }
       };
       
-      // Start the fetch process
+      // Start the fetch process even if we found cached data
+      // This ensures we eventually get the latest data
       attemptProductFetch();
     }
   }, [params.id, user, isProduction, triedManualFetch]);
@@ -423,9 +498,40 @@ export default function EditProductNew() {
     gcTime: 1000 * 60 * 60
   });
   
+  // Add a timeout for loading state to prevent infinite loading
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  
+  // Set a timeout for loading that will prevent infinite loading
+  useEffect(() => {
+    if ((manualFetchLoading || tanstackLoading) && !loadingTimedOut) {
+      const timeoutId = setTimeout(() => {
+        console.log("Product data loading timed out after 20 seconds");
+        setLoadingTimedOut(true);
+        
+        // If we have any cached data, use it even if incomplete
+        try {
+          const cachedProductData = sessionStorage.getItem(`product_${params.id}`);
+          if (cachedProductData) {
+            const productData = JSON.parse(cachedProductData);
+            console.log("Using cached product data due to timeout:", productData);
+            setManuallyFetchedProduct(productData);
+          }
+        } catch (error) {
+          console.error("Error loading cached product data on timeout:", error);
+        }
+        
+        setManualFetchLoading(false);
+      }, 20000); // 20 second timeout
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [manualFetchLoading, tanstackLoading, loadingTimedOut, params.id]);
+  
   // Combined data from both approaches
   const productData = isProduction() ? manuallyFetchedProduct || tanstackProductData : tanstackProductData;
-  const isLoading = isProduction() ? (manualFetchLoading || (tanstackLoading && !manuallyFetchedProduct)) : tanstackLoading;
+  const isLoading = isProduction() 
+    ? ((manualFetchLoading || (tanstackLoading && !manuallyFetchedProduct)) && !loadingTimedOut)
+    : (tanstackLoading && !loadingTimedOut);
   const error = isProduction() ? (manualFetchError || tanstackError) : tanstackError;
   const isError = isProduction() ? !!(manualFetchError || isTanstackError) : isTanstackError;
 
@@ -1210,13 +1316,47 @@ export default function EditProductNew() {
   }, [isLoading, isAuthLoading, step]);
   
   // If still loading authentication or product data, show loading state
-  if (stableLoading) {
+  if (stableLoading && !loadingTimedOut) {
     return (
       <AdminLayout title="Edit Product">
         <div className="flex items-center justify-center min-h-[70vh]">
           <div className="text-center">
             <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
             <p className="text-lg text-muted-foreground">Loading product data...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+  
+  // Show a partial UI if loading timed out but we don't have product data yet
+  if (loadingTimedOut && !productData) {
+    return (
+      <AdminLayout title="Edit Product">
+        <div className="flex flex-col items-center p-6 bg-card rounded-lg shadow-sm mb-6">
+          <div className="flex items-center justify-between w-full mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold">Product Loading Timed Out</h2>
+              <p className="text-muted-foreground mt-2">
+                We couldn't load the product data in a reasonable time. You can try the following:
+              </p>
+              <ul className="list-disc ml-6 mt-2 text-muted-foreground">
+                <li>Refresh the page to try again</li>
+                <li>Try again in a few moments</li>
+                <li>Return to the products list and try a different product</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="flex gap-4 mt-4">
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Refresh Page
+            </Button>
+            <Button variant="secondary" onClick={() => setLocation('/admin/products')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Products
+            </Button>
           </div>
         </div>
       </AdminLayout>

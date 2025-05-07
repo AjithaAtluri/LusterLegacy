@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -356,91 +356,155 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     items?: NavSubItem[];
   }
   
-  // Determine navigation items based on user role
+  // Use useRef to store stable references to navigation items
+  // This prevents rebuilding the entire navigation structure on every render
+  const navItemsRef = useRef<{
+    baseItems: NavItem[];
+    fullAdminItems: NavItem[];
+    cachedNavItems: NavItem[] | null;
+    cachedRole: string | null;
+  }>({
+    baseItems: [
+      { 
+        title: "Dashboard", 
+        icon: <LayoutDashboard className="h-5 w-5" />, 
+        href: "/admin/dashboard" 
+      },
+      { 
+        title: "Products", 
+        icon: <GalleryHorizontal className="h-5 w-5" />, 
+        href: "/admin/products" 
+      },
+      {
+        title: "Customer Requests",
+        icon: <MessageCircle className="h-5 w-5" />,
+        isGroup: true,
+        items: [
+          { 
+            title: "Custom Design Requests", 
+            icon: <Package className="h-5 w-5" />, 
+            href: "/admin/designs",
+          },
+          {
+            title: "Product Customization Requests",
+            icon: <Paintbrush className="h-5 w-5" />,
+            href: "/admin/customizations",
+          },
+          {
+            title: "Product Quote Requests",
+            icon: <Receipt className="h-5 w-5" />,
+            href: "/admin/quotes",
+          },
+        ]
+      },
+      {
+        title: "Contact Messages",
+        icon: <MessageSquare className="h-5 w-5" />,
+        href: "/admin/contact-messages",
+      }
+    ],
+    fullAdminItems: [
+      {
+        title: "Product Types",
+        icon: <Package className="h-5 w-5" />,
+        href: "/admin/product-types"
+      },
+      { 
+        title: "Metal Types", 
+        icon: <Diamond className="h-5 w-5" />, 
+        href: "/admin/metal-types" 
+      },
+      { 
+        title: "Stone Types", 
+        icon: <Gem className="h-5 w-5" />, 
+        href: "/admin/stone-types" 
+      },
+      {
+        title: "Client Stories",
+        icon: <MessageSquare className="h-5 w-5" />,
+        href: "/admin/testimonials",
+      },
+      { 
+        title: "AI Content Generator(For new Products)", 
+        icon: <Wand2 className="h-5 w-5" />, 
+        href: "/admin/ai-generator" 
+      },
+      {
+        title: "User Management",
+        icon: <Users className="h-5 w-5" />,
+        href: "/admin/users"
+      }
+    ],
+    cachedNavItems: null,
+    cachedRole: null
+  });
+  
+  // Determine if this is a limited admin or full admin
   const isLimitedAdmin = user?.role === "limited-admin";
   
-  // Base navigation items for all admin roles
-  const baseNavItems: NavItem[] = [
-    { 
-      title: "Dashboard", 
-      icon: <LayoutDashboard className="h-5 w-5" />, 
-      href: "/admin/dashboard" 
-    },
-    { 
-      title: "Products", 
-      icon: <GalleryHorizontal className="h-5 w-5" />, 
-      href: "/admin/products" 
-    },
-    {
-      title: "Customer Requests",
-      icon: <MessageCircle className="h-5 w-5" />,
-      isGroup: true,
-      items: [
-        { 
-          title: "Custom Design Requests", 
-          icon: <Package className="h-5 w-5" />, 
-          href: "/admin/designs",
-          badge: pendingDesigns > 0 ? pendingDesigns : undefined
-        },
-        {
-          title: "Product Customization Requests",
-          icon: <Paintbrush className="h-5 w-5" />,
-          href: "/admin/customizations",
-          badge: pendingCustomizations > 0 ? pendingCustomizations : undefined
-        },
-        {
-          title: "Product Quote Requests",
-          icon: <Receipt className="h-5 w-5" />,
-          href: "/admin/quotes",
-          badge: pendingQuotes > 0 ? pendingQuotes : undefined
-        },
-      ]
-    },
-    {
-      title: "Contact Messages",
-      icon: <MessageSquare className="h-5 w-5" />,
-      href: "/admin/contact-messages",
-      badge: unreadMessages > 0 ? unreadMessages : undefined
-    }
-  ];
+  // Get a stable reference to the nav items based on role
+  // Only rebuild if role changes to prevent unnecessary re-renders
+  if (navItemsRef.current.cachedRole !== user?.role || !navItemsRef.current.cachedNavItems) {
+    // Store the role for future comparison
+    navItemsRef.current.cachedRole = user?.role || null;
+    
+    // Build a new nav items array (this happens only when role changes)
+    navItemsRef.current.cachedNavItems = 
+      isLimitedAdmin ? 
+      [...navItemsRef.current.baseItems] : 
+      [...navItemsRef.current.baseItems, ...navItemsRef.current.fullAdminItems];
+    
+    console.log("Admin layout - rebuilding nav items for role:", user?.role);
+  }
   
-  // Additional navigation items for full admin
-  const fullAdminItems: NavItem[] = [
-    {
-      title: "Product Types",
-      icon: <Package className="h-5 w-5" />,
-      href: "/admin/product-types"
-    },
-    { 
-      title: "Metal Types", 
-      icon: <Diamond className="h-5 w-5" />, 
-      href: "/admin/metal-types" 
-    },
-    { 
-      title: "Stone Types", 
-      icon: <Gem className="h-5 w-5" />, 
-      href: "/admin/stone-types" 
-    },
-    {
-      title: "Client Stories",
-      icon: <MessageSquare className="h-5 w-5" />,
-      href: "/admin/testimonials",
-      badge: pendingTestimonials > 0 ? pendingTestimonials : undefined
-    },
-    { 
-      title: "AI Content Generator(For new Products)", 
-      icon: <Wand2 className="h-5 w-5" />, 
-      href: "/admin/ai-generator" 
-    },
-    {
-      title: "User Management",
-      icon: <Users className="h-5 w-5" />,
-      href: "/admin/users"
+  // Function to update badges on nav items without rebuilding entire structure
+  const updateNavBadges = () => {
+    if (navItemsRef.current.cachedNavItems) {
+      // Update Customer Requests group badges
+      const customerRequestsGroup = navItemsRef.current.cachedNavItems.find(item => item.title === "Customer Requests");
+      if (customerRequestsGroup && customerRequestsGroup.items) {
+        // Update Custom Design Requests badge
+        const designsItem = customerRequestsGroup.items.find(item => item.title === "Custom Design Requests");
+        if (designsItem) {
+          designsItem.badge = pendingDesigns > 0 ? pendingDesigns : undefined;
+        }
+        
+        // Update Product Customization Requests badge
+        const customizationsItem = customerRequestsGroup.items.find(item => item.title === "Product Customization Requests");
+        if (customizationsItem) {
+          customizationsItem.badge = pendingCustomizations > 0 ? pendingCustomizations : undefined;
+        }
+        
+        // Update Product Quote Requests badge
+        const quotesItem = customerRequestsGroup.items.find(item => item.title === "Product Quote Requests");
+        if (quotesItem) {
+          quotesItem.badge = pendingQuotes > 0 ? pendingQuotes : undefined;
+        }
+      }
+      
+      // Update Contact Messages badge
+      const contactMessagesItem = navItemsRef.current.cachedNavItems.find(item => item.title === "Contact Messages");
+      if (contactMessagesItem) {
+        contactMessagesItem.badge = unreadMessages > 0 ? unreadMessages : undefined;
+      }
+      
+      // Update Client Stories badge (only for full admin)
+      if (!isLimitedAdmin) {
+        const testimonialItem = navItemsRef.current.cachedNavItems.find(item => item.title === "Client Stories");
+        if (testimonialItem) {
+          testimonialItem.badge = pendingTestimonials > 0 ? pendingTestimonials : undefined;
+        }
+      }
     }
-  ];
+  };
   
-  // Combine navigation items based on user role
-  const navItems: NavItem[] = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
+  // Update the badges whenever counts change
+  useEffect(() => {
+    updateNavBadges();
+  }, [pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials]);
+  
+  // Get the nav items for rendering
+  const navItems: NavItem[] = navItemsRef.current.cachedNavItems || [];
   
   // Production environment detection (use the existing isProduction value from earlier)
   
