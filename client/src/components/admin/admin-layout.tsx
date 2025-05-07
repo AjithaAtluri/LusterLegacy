@@ -45,6 +45,13 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Use the main auth hook for authentication including stable loading state
   const { user, isLoading, stableLoading, error, logoutMutation } = useAuth();
   
+  // Add our own loading state for admin-specific operations
+  const [adminLoadingState, setAdminLoadingState] = useState<'initial' | 'checking' | 'success' | 'error'>('initial');
+  const [isAdminLoading, setIsAdminLoading] = useState(true); // Start with loading enabled
+  
+  // Combined loading state for admin dashboard to prevent flickering
+  const isGlobalLoading = isLoading || stableLoading || isAdminLoading;
+  
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({
     queryKey: ['/api/custom-designs'],
@@ -90,7 +97,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Redirect to login page if not authenticated or not an admin
   useEffect(() => {
     const checkAdminAuth = async () => {
-      console.log("Admin layout - checking auth state:", { user, isLoading, stableLoading });
+      console.log("Admin layout - checking auth state:", { user, isLoading, stableLoading, isAdminLoading });
+      
+      // Start admin auth check process
+      setAdminLoadingState('checking');
       
       // First check if currently loading
       if (isLoading || stableLoading) {
@@ -139,6 +149,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             import("@/lib/queryClient").then(({queryClient}) => {
               queryClient.setQueryData(["/api/user"], adminData);
             });
+            // Mark admin auth as successful
+            setAdminLoadingState('success');
             return; // Allow access
           } else {
             console.log("User is authenticated but admin/limited-admin role missing in admin auth check");
@@ -186,6 +198,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               variant: "default"
             });
             
+            // Mark admin auth as successful, but with limitations
+            setAdminLoadingState('success');
+            
             return; // Allow access
           } else {
             // User is authenticated but not an admin or limited-admin
@@ -202,6 +217,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         
         // If we reach here, both auth checks failed
         console.log("Both auth checks failed - user is not authenticated");
+        // Mark loading as complete so we can show the error toast
+        setAdminLoadingState('error');
+        setIsAdminLoading(false);
+        
         toast({
           title: "Authentication required",
           description: "Please log in to access the admin dashboard",
@@ -211,18 +230,24 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         return;
       } catch (error) {
         console.error("Error during auth check:", error);
+        // Mark as error state
+        setAdminLoadingState('error');
+        
         // Fall back to React Query state only if an exception occurred
         if (!user) {
           console.log("Error in auth check and no cached user - redirecting to login");
+          setIsAdminLoading(false); // Stop loading to show proper errors
           window.location.href = "/admin/login";
           return;
         } else if (user.role !== "admin" && user.role !== "limited-admin") {
           console.log("Error in auth check and cached user is not admin or limited-admin - redirecting home");
+          setIsAdminLoading(false); // Stop loading to show proper errors
           window.location.href = "/";
           return;
         } else {
           console.log(`Error in auth check but cached user is ${user.role} - allowing access but may encounter further issues`);
-          // Continue with access and hope for the best
+          // Continue with access and hope for the best, but still mark loading as done
+          setIsAdminLoading(false);
           return;
         }
       }
@@ -398,13 +423,29 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Combine navigation items based on user role
   const navItems: NavItem[] = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
   
+  // Effect to manage the admin loading state - separate from the auth check
+  useEffect(() => {
+    if (!isLoading && !stableLoading && user) {
+      // After auth is ready and user exists, set a delay before removing admin loading
+      const timer = setTimeout(() => {
+        setAdminLoadingState('success');
+        setIsAdminLoading(false);
+        console.log("Admin loading completed - UI will now render");
+      }, 1200); // Longer delay to ensure complete stability
+
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, stableLoading, user]);
+
   // Current location for determining active route
   const [location] = useLocation();
   
-  if (stableLoading) {
+  // Use the global loading state to ensure a unified loading experience
+  if (isGlobalLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-background">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-4"></div>
+        <p className="text-foreground/70 text-sm font-montserrat">Loading admin dashboard...</p>
       </div>
     );
   }

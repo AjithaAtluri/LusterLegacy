@@ -72,6 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   console.log("Auth Context - User data:", user);
   console.log("Auth Context - Loading:", isLoading);
   console.log("Auth Context - Error:", error);
+  console.log("Auth Context - Raw Loading:", isLoading);
+  console.log("Auth Context - Stable Loading:", stableLoading);
 
   // Mutation for login
   const loginMutation = useMutation<Omit<User, "password">, Error, LoginData>({
