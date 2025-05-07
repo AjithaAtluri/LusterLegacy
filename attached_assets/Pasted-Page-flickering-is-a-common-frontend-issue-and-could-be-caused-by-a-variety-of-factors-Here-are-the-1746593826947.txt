@@ -1,0 +1,62 @@
+Page flickering is a common frontend issue and could be caused by a variety of factors. Here are the most likely reasons and how to troubleshoot each:
+
+🔁 1. CSS/JS Hot Reloading (During Development)
+Cause: If you're using tools like Vite, Webpack (with hot module replacement), or Create React App, flickering can happen due to constant re-rendering or hot updates.
+
+Fix:
+
+Temporarily disable hot reload and see if it persists.
+
+Ensure your component tree is stable and not being re-mounted on every change.
+
+🎨 2. CSS Loading/Flashing Styles (FOUC)
+Cause: Flash of unstyled content (FOUC) happens if styles are loaded after content.
+
+Fix:
+
+Ensure critical CSS is loaded inline or early in the <head>.
+
+Avoid loading styles via JavaScript when possible.
+
+With Tailwind or external stylesheets, preload them properly.
+
+⚛️ 3. React State/Effect Issues
+Cause: If you're using useEffect without proper dependency arrays or toggling state too frequently, your components might unmount/remount, causing flicker.
+
+Fix:
+
+Check if useEffect or useState is causing re-renders unnecessarily.
+
+Use React DevTools to inspect re-renders.
+
+🧱 4. Layout Shifts Due to Images or Fonts
+Cause: Loading images or web fonts without proper sizing can shift layout.
+
+Fix:
+
+Set explicit width and height on all <img> tags.
+
+Use font-display: swap; for web fonts.
+
+Use a loader like next/image (if using Next.js).
+
+🖼️ 5. Animations or Transitions
+Cause: Improper use of animation or transition in CSS can cause flickering.
+
+Fix:
+
+Check if animations have infinite or misconfigured durations.
+
+Try removing animations temporarily to isolate the issue.
+
+🔌 6. Third-Party Scripts
+Cause: Ads, analytics, or tracking scripts can block rendering or inject styles after page load.
+
+Fix:
+
+Defer or async load non-critical scripts.
+
+Use Chrome DevTools to identify blocking scripts.
+
+🧪 Debug Tip
+Open DevTools > Performance tab > Record — look for "Recalculate Style", "Layout", and "Paint" spikes. It will help you pinpoint the flickering source.
