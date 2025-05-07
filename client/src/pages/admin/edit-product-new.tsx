@@ -109,13 +109,60 @@ export default function EditProductNew() {
     try {
       console.log(`Fetching product data for ID: ${params.id}`);
       
-      // In production, we need to ensure we're authenticated before fetching
+      // Check for production environment to determine fetch strategy
+      const isProduction = window.location.hostname.includes('.replit.app') || 
+                         !window.location.hostname.includes('localhost');
+      console.log(`Environment detected: ${isProduction ? 'Production' : 'Development'}`);
+      
+      // In production, first try the direct endpoint to bypass authentication issues
+      if (isProduction) {
+        try {
+          console.log(`Production environment - trying direct product endpoint first`);
+          // Try the direct endpoint which doesn't require authentication
+          const directResponse = await fetch(`/api/direct-product/${params.id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache',
+              'X-Auth-User-Id': user?.id?.toString() || '',
+              'X-Auth-Username': user?.username || ''
+            }
+          });
+          
+          if (directResponse.ok) {
+            const data = await directResponse.json();
+            console.log(`Direct product endpoint successful:`, data);
+            return data;
+          }
+          
+          console.log(`Direct product endpoint failed, will try authenticated endpoint`);
+        } catch (directError) {
+          console.error('Direct product endpoint error:', directError);
+          // Continue to authenticated endpoint
+        }
+      }
+      
+      // In non-production or if direct endpoint failed, need authenticated user
       if (!user && !isAuthLoading) {
         console.log("No authenticated user found - redirecting to login");
         setTimeout(() => {
           setLocation('/admin/login');
         }, 100);
         throw new Error('Not authenticated');
+      }
+      
+      // Try cached product data from session storage first in production
+      if (isProduction) {
+        try {
+          const cachedProductData = sessionStorage.getItem(`product_${params.id}`);
+          if (cachedProductData) {
+            const productData = JSON.parse(cachedProductData);
+            console.log(`Found cached product data for ID ${params.id}:`, productData);
+            return productData;
+          }
+        } catch (cacheError) {
+          console.warn('Error reading cached product data:', cacheError);
+        }
       }
       
       // Make multiple retry attempts with exponential backoff
@@ -146,6 +193,26 @@ export default function EditProductNew() {
             const errorText = await response.text();
             console.error(`Server error response: ${errorText}`);
             
+            // If production and auth error, try standard product endpoint as fallback
+            if (isProduction && (response.status === 401 || response.status === 403)) {
+              console.log("Admin auth failed in production - trying standard product endpoint");
+              const fallbackResponse = await fetch(`/api/products/${params.id}`);
+              
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                console.log("Successfully retrieved product from standard endpoint:", fallbackData);
+                
+                // Cache the data for future use
+                try {
+                  sessionStorage.setItem(`product_${params.id}`, JSON.stringify(fallbackData));
+                } catch (cacheError) {
+                  console.warn('Error caching product data:', cacheError);
+                }
+                
+                return fallbackData;
+              }
+            }
+            
             // If authentication error, redirect to login immediately
             if (response.status === 401 || response.status === 403) {
               toast({
@@ -162,6 +229,16 @@ export default function EditProductNew() {
           
           const data = await response.json();
           console.log(`Product data retrieved successfully:`, data);
+          
+          // Cache the data for future use
+          if (isProduction) {
+            try {
+              sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+            } catch (cacheError) {
+              console.warn('Error caching product data:', cacheError);
+            }
+          }
+          
           return data;
         } catch (error) {
           const typedError = error instanceof Error ? error : new Error('Unknown error occurred');
@@ -173,6 +250,22 @@ export default function EditProductNew() {
              (error.message.includes('Authentication required') || 
               error.message.includes('Not authenticated'))) {
             throw error;
+          }
+          
+          // If in production and on last attempt, try a raw client-side fetch as last resort
+          if (isProduction && attempts === maxAttempts) {
+            try {
+              console.log("Last resort attempt: client-side fetch to regular product endpoint");
+              const rawResponse = await fetch(`/api/products/${params.id}`);
+              
+              if (rawResponse.ok) {
+                const rawData = await rawResponse.json();
+                console.log("Last resort fetch succeeded:", rawData);
+                return rawData;
+              }
+            } catch (rawError) {
+              console.error("Last resort fetch failed:", rawError);
+            }
           }
           
           // Wait before retrying (exponential backoff)

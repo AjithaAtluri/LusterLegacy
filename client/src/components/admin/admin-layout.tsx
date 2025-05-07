@@ -436,11 +436,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Combine navigation items based on user role
   const navItems: NavItem[] = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
   
-  // Production environment detection
-  const isProduction = useCallback(() => {
-    return window.location.hostname.includes('.replit.app') || 
-           !window.location.hostname.includes('localhost');
-  }, []);
+  // Production environment detection (use the existing isProduction value from earlier)
   
   // Apply production-specific loading optimizations
   const [userDataStable, setUserDataStable] = useState(false);
@@ -448,7 +444,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // First effect: Trust cached user immediately to avoid flickering
   useEffect(() => {
     // For production, we prioritize a smooth loading experience
-    if (isProduction()) {
+    if (isProduction) {
       // If we already have user data, trust it immediately
       if (user && user.id) {
         console.log("Production: Using cached user data immediately");
@@ -469,7 +465,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         console.log("Authentication stable, user found - loading admin UI");
         
         // In production, add longer delay to avoid abrupt transitions
-        const loadingDelay = isProduction() ? 1200 : 400;
+        const loadingDelay = isProduction ? 1200 : 400;
         
         // If we haven't already shown the UI based on cached data
         if (!userDataStable) {
