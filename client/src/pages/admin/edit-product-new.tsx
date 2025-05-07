@@ -164,12 +164,14 @@ export default function EditProductNew() {
           console.log(`Product data retrieved successfully:`, data);
           return data;
         } catch (error) {
-          lastError = error;
-          console.error(`Attempt ${attempts} failed:`, error);
+          const typedError = error instanceof Error ? error : new Error('Unknown error occurred');
+          lastError = typedError;
+          console.error(`Attempt ${attempts} failed:`, typedError);
           
           // If it's an auth error, no need to retry
-          if (error.message.includes('Authentication required') || 
-              error.message.includes('Not authenticated')) {
+          if (error instanceof Error && 
+             (error.message.includes('Authentication required') || 
+              error.message.includes('Not authenticated'))) {
             throw error;
           }
           
@@ -191,15 +193,34 @@ export default function EditProductNew() {
   };
 
   // Fetch product data with custom query function
+  // Create a state to track if we should suspend data fetching to prevent flickering
+  const [suspendFetchWhileAuth, setSuspendFetchWhileAuth] = useState(true);
+  
+  // Ensure we only fetch after authentication is stable
+  useEffect(() => {
+    if (!isAuthLoading && user && user.id) {
+      // Authentication is done and user is authenticated
+      console.log("Auth is stable, enabling product fetch");
+      setSuspendFetchWhileAuth(false);
+    } else if (!isAuthLoading && !user) {
+      // Auth check is done but no user found - redirect to login
+      console.log("Auth is done but no user found");
+      setLocation('/admin/login');
+    }
+  }, [isAuthLoading, user, setLocation]);
+  
+  // Use the modified query with suspending capability for production stability
   const { data: productData, isLoading, error, isError } = useQuery<any>({
     queryKey: ['/api/admin/products', params.id],
     queryFn: fetchProduct,
-    enabled: !!params.id, // Enable query when ID exists - we handle auth separately
+    enabled: !!params.id && !suspendFetchWhileAuth, // Only enable when ready and auth is stable
     retry: 3, // Allow several retries to handle flaky connections in production
     retryDelay: 1000, // Add 1 second delay between retries
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 10, // Keep data fresh for 10 minutes in production to reduce flickering
-    refetchInterval: false // Disable automatic refetching
+    staleTime: 1000 * 60 * 30, // Keep data fresh for 30 minutes in production to reduce flickering
+    refetchInterval: false, // Disable automatic refetching
+    networkMode: 'always', // Force network requests to complete even in background
+    gcTime: 1000 * 60 * 60 // Keep data in cache for 1 hour to prevent redundant fetching
   });
 
   // Fetch product types with custom query function

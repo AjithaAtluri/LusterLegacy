@@ -399,16 +399,40 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const navItems: NavItem[] = isLimitedAdmin ? baseNavItems : [...baseNavItems, ...fullAdminItems];
   
   // Effect to manage the admin loading state - separate from the auth check
+  // This creates a more stable experience in production by ensuring authentication is fully resolved
   useEffect(() => {
-    if (!isLoading && !stableLoading && user) {
-      // After auth is ready and user exists, set a delay before removing admin loading
-      const timer = setTimeout(() => {
-        setAdminLoadingState('success');
+    // We want to show/hide the admin UI based on auth state and stability
+    if (!isLoading && !stableLoading) {
+      // Authentication check is stable (complete)
+      if (user) {
+        // Success case - we have a valid user
+        console.log("Authentication stable, user found - loading admin UI");
+        
+        // Set a production-only additional delay to ensure all resources are loaded
+        // This creates a smoother experience by avoiding multiple re-renders during loading
+        const isProduction = window.location.hostname.includes('.replit.app') || 
+                           !window.location.hostname.includes('localhost');
+        
+        const timer = setTimeout(() => {
+          setAdminLoadingState('success');
+          setIsAdminLoading(false);
+          console.log("Admin loading completed - UI will now render");
+        }, isProduction ? 1500 : 600); // Longer delay in production to ensure complete stability
+        
+        return () => clearTimeout(timer);
+      } else {
+        // No user found after auth check is done - redirect to login instead of showing loading
+        console.log("Authentication stable, but no user found - redirecting to login");
+        setAdminLoadingState('error');
         setIsAdminLoading(false);
-        console.log("Admin loading completed - UI will now render");
-      }, 1200); // Longer delay to ensure complete stability
-
-      return () => clearTimeout(timer);
+        
+        // Small delay before redirect to avoid potential race conditions
+        const redirectTimer = setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 200);
+        
+        return () => clearTimeout(redirectTimer);
+      }
     }
   }, [isLoading, stableLoading, user]);
 
