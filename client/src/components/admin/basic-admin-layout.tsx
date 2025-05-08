@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,9 +76,9 @@ export default function BasicAdminLayout({ children, title }: { children: React.
                 <div className="flex flex-col h-full">
                   <div className="flex items-center p-4 border-b">
                     <div>
-                      <a href="/admin/dashboard" className="font-playfair text-xl font-bold">
+                      <Link href="/admin/dashboard" className="font-playfair text-xl font-bold">
                         Luster<span className="text-primary">Legacy</span> Admin
-                      </a>
+                      </Link>
                       {user?.role === "limited-admin" && (
                         <Badge variant="outline" className="ml-2">Limited Access</Badge>
                       )}
@@ -90,7 +90,7 @@ export default function BasicAdminLayout({ children, title }: { children: React.
                   <div className="flex-1 overflow-auto py-2">
                     <nav className="flex flex-col gap-1 px-2">
                       {menuItems.map((item) => (
-                        <a
+                        <Link
                           key={item.href}
                           href={item.href}
                           className={`flex items-center rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
@@ -98,7 +98,7 @@ export default function BasicAdminLayout({ children, title }: { children: React.
                           }`}
                         >
                           {item.label}
-                        </a>
+                        </Link>
                       ))}
                     </nav>
                   </div>
@@ -106,10 +106,12 @@ export default function BasicAdminLayout({ children, title }: { children: React.
                     <Button 
                       variant="ghost" 
                       className="w-full justify-start text-muted-foreground" 
-                      onClick={() => window.location.href = "/admin/login"}
+                      asChild
                     >
-                      <LogOut className="mr-2 h-5 w-5" />
-                      Log out
+                      <Link href="/admin/login">
+                        <LogOut className="mr-2 h-5 w-5" />
+                        Log out
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -132,11 +134,13 @@ export default function BasicAdminLayout({ children, title }: { children: React.
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => window.location.href = "/admin/login"} 
+              asChild
               className="hidden md:flex"
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
+              <Link href="/admin/login">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Link>
             </Button>
           </div>
         </div>
@@ -146,13 +150,13 @@ export default function BasicAdminLayout({ children, title }: { children: React.
         {/* Sidebar (desktop only) */}
         <div className="hidden md:flex w-64 flex-col border-r bg-background z-20">
           <div className="flex h-14 items-center border-b px-4">
-            <a href="/admin/dashboard" className="font-playfair text-xl font-bold">
+            <Link href="/admin/dashboard" className="font-playfair text-xl font-bold">
               Luster<span className="text-primary">Legacy</span>
-            </a>
+            </Link>
           </div>
           <nav className="flex flex-col gap-1 p-4">
             {menuItems.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 className={`flex items-center rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent hover:text-accent-foreground ${
@@ -160,7 +164,7 @@ export default function BasicAdminLayout({ children, title }: { children: React.
                 }`}
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
         </div>
