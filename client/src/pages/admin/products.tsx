@@ -116,7 +116,7 @@ export default function AdminProducts() {
   };
   
   return (
-    <BasicAdminLayout title="Products">
+    <AdminLayout title="Products">
       <Helmet>
         <title>Manage Products | Luster Legacy Admin</title>
       </Helmet>
@@ -311,6 +311,6 @@ export default function AdminProducts() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </BasicAdminLayout>
+    </AdminLayout>
   );
 }
