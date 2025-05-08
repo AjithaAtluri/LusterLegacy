@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -511,6 +511,28 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     // Only run if we have nav items and badge counts
     if (!navItems.length || pendingDesigns === undefined) return;
     
+    // Use a ref to prevent repetitive updates for the same badge counts
+    const prevCountsRef = useRef({
+      designs: pendingDesigns,
+      customizations: pendingCustomizations,
+      quotes: pendingQuotes,
+      messages: unreadMessages,
+      testimonials: pendingTestimonials
+    });
+    
+    // Compare with previous counts to avoid unnecessary updates
+    const prevCounts = prevCountsRef.current;
+    if (
+      prevCounts.designs === pendingDesigns &&
+      prevCounts.customizations === pendingCustomizations &&
+      prevCounts.quotes === pendingQuotes &&
+      prevCounts.messages === unreadMessages &&
+      prevCounts.testimonials === pendingTestimonials
+    ) {
+      // No changes to badge counts, skip the update
+      return;
+    }
+    
     // Create a deep copy to avoid mutations, using our safe stringify to handle any circular references
     const updatedNavItems = JSON.parse(safeJsonStringify(navItems));
     let hasChanges = false;
@@ -575,8 +597,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     if (hasChanges) {
       console.log("Admin layout - updating badges");
       setNavItems(updatedNavItems);
+      
+      // Update the ref to store current counts for future comparisons
+      prevCountsRef.current = {
+        designs: pendingDesigns,
+        customizations: pendingCustomizations,
+        quotes: pendingQuotes, 
+        messages: unreadMessages,
+        testimonials: pendingTestimonials
+      };
     }
-  }, [navItems, pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials, isLimitedAdmin]);
+  // Explicitly remove navItems from the dependency array to prevent render loops
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingDesigns, pendingCustomizations, pendingQuotes, unreadMessages, pendingTestimonials, isLimitedAdmin]);
   
   // Build nav items from scratch when role changes
   useEffect(() => {
@@ -628,21 +661,20 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Apply production-specific loading optimizations
   const [userDataStable, setUserDataStable] = useState(false);
   
-  // First effect: Trust cached user immediately to avoid flickering
+  // First effect: Trust cached user immediately to avoid flickering (only runs once)
   useEffect(() => {
     // For production, we prioritize a smooth loading experience
-    if (isProduction) {
-      // If we already have user data, trust it immediately
-      if (user && user.id) {
-        console.log("Production: Using cached user data immediately");
-        setAdminLoadingState('success');
-        setIsAdminLoading(false);
-        
-        // Mark the user data as stable for other components
-        setUserDataStable(true);
-      }
+    if (isProduction && user && user.id && !userDataStable) {
+      console.log("Production: Using cached user data immediately");
+      setAdminLoadingState('success');
+      setIsAdminLoading(false);
+      
+      // Mark the user data as stable for other components
+      setUserDataStable(true);
     }
-  }, [user, isProduction, setAdminLoadingState]);
+  // Deliberately not including userDataStable in dependencies to prevent loops
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isProduction]);
   
   // Initialize the two-phase rendering system
   useEffect(() => {
@@ -692,8 +724,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   
   // Second effect: Handle full authentication flow with anti-flicker protection
   useEffect(() => {
+    // Only run this effect once per component lifecycle to avoid infinite loops
+    // and handle stable authentication states
+    const authRef = useRef(false);
+    
     // Only update the UI when auth is complete AND all rendering phases are done
-    if (!isLoading && !stableLoading && isInitialRenderComplete) {
+    // AND we haven't already processed this state transition
+    if (!isLoading && !stableLoading && isInitialRenderComplete && !authRef.current) {
+      // Mark that we've processed this auth state to prevent repeated calls
+      authRef.current = true;
+      
       if (user) {
         console.log("Authentication stable, user found - loading admin UI");
         
@@ -728,7 +768,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         return () => clearTimeout(redirectTimer);
       }
     }
-  }, [isLoading, stableLoading, user, isProduction, userDataStable, isInitialRenderComplete]);
+  // Simplified dependency array to prevent rendering loops
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, stableLoading, user, isInitialRenderComplete]);
 
   // Current location for determining active route
   const [location] = useLocation();
