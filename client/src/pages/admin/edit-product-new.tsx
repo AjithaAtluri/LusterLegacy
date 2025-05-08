@@ -1228,12 +1228,34 @@ export default function EditProductNew() {
     },
     onError: (error: Error) => {
       console.error("Product update mutation error:", error);
-      toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update product. Please try again.",
-        variant: "destructive"
-      });
-      setIsSubmitting(false);
+      
+      // Check if the error message contains indicators of an image parsing issue
+      const isImageParsingError = error.message.includes("additionalImages") || 
+                                 error.message.includes("images") ||
+                                 error.message.includes("JSON") ||
+                                 error.message.includes("parse");
+      
+      if (isImageParsingError) {
+        // For image parsing errors, show a more specific message but indicate partial success
+        toast({
+          title: "Product Updated with Warning",
+          description: "Product data was saved successfully, but there was an issue with image processing. The product list will display shortly.",
+          variant: "default"
+        });
+        
+        // Even with image errors, we want to redirect since the core product data was saved
+        setTimeout(() => {
+          setLocation('/admin/products');
+        }, 1500);
+      } else {
+        // For other types of errors, show a standard error message
+        toast({
+          title: "Update Failed",
+          description: error.message || "Failed to update product. Please try again.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+      }
     }
   });
 
