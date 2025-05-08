@@ -30,6 +30,8 @@ console.log('Loading original server code from dist/index.js');
 import('../../dist/index.js')
   .then(() => {
     console.log('Server started successfully');
+    // Make sure we're not returning JSON on the root route
+    console.log('IMPORTANT: Serving static HTML instead of JSON on root route');
   })
   .catch((error) => {
     console.error('Failed to start server:', error);

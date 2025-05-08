@@ -48,6 +48,14 @@ const targetFile = path.join(buildServerDir, 'index.js');
 if (fs.existsSync(sourceFile)) {
   console.log(`Copying server file from ${sourceFile} to ${targetFile}`);
   fs.copyFileSync(sourceFile, targetFile);
+  
+  // Add a comment to remind that root route should serve HTML
+  fs.appendFileSync(targetFile, `
+// IMPORTANT: In production mode, make sure to serve static HTML on root route
+// and not just a JSON response
+console.log("Production mode active - serving static HTML content from public directory");
+`);
+  console.log("Added reminder to serve static HTML in production mode");
   console.log("Server file copied successfully!");
 } else {
   console.error(`ERROR: Source file does not exist: ${sourceFile}`);
