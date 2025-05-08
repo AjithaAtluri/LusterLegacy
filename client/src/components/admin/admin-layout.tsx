@@ -405,23 +405,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const pendingTestimonials = Array.isArray(testimonials) 
     ? testimonials.filter((t: any) => t.status === 'pending' || !t.isApproved).length 
     : 0;
-    
-  // Define TypeScript interfaces for nav items
-  interface NavSubItem {
-    title: string;
-    icon: React.ReactNode;
-    href: string;
-    badge?: number;
-  }
-  
-  interface NavItem {
-    title: string;
-    icon: React.ReactNode;
-    href?: string;
-    badge?: number;
-    isGroup?: boolean;
-    items?: NavSubItem[];
-  }
   
   // Define the base navigation items (available to all admin users) 
   // Using plain constants instead of refs for better stability
@@ -722,11 +705,13 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     };
   }, []);
   
+  // Create the ref at component level, not inside the hook
+  const authRef = useRef(false);
+  
   // Second effect: Handle full authentication flow with anti-flicker protection
   useEffect(() => {
     // Only run this effect once per component lifecycle to avoid infinite loops
     // and handle stable authentication states
-    const authRef = useRef(false);
     
     // Only update the UI when auth is complete AND all rendering phases are done
     // AND we haven't already processed this state transition
