@@ -1929,7 +1929,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update a product (admin only)
+  // Update a product (admin only) - Simple update endpoint
   app.put('/api/products/:id', validateAdmin, async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
@@ -1937,20 +1937,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid product ID' });
       }
 
-      const productData = insertProductSchema.partial().parse(req.body);
+      console.log(`Simple product update API: Updating product ${productId}`);
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+
+      // Make sure additionalImages is correctly formatted as an array
+      const productData = {...req.body};
+      if (productData.additionalImages && !Array.isArray(productData.additionalImages)) {
+        console.log('Converting additionalImages to array:', productData.additionalImages);
+        productData.additionalImages = Array.isArray(productData.additionalImages) 
+          ? productData.additionalImages 
+          : [];
+      }
+      
+      try {
+        // Validate with zod schema
+        insertProductSchema.partial().parse(productData);
+      } catch (zodError) {
+        console.error('Validation error in product update:', zodError);
+        if (zodError instanceof z.ZodError) {
+          return res.status(400).json({ 
+            message: 'Invalid product data', 
+            errors: zodError.errors,
+            received: productData
+          });
+        }
+        throw zodError;
+      }
+      
+      console.log('Validated product data:', {
+        id: productId,
+        fields: Object.keys(productData),
+        hasAdditionalImages: productData.additionalImages !== undefined,
+        additionalImagesType: productData.additionalImages !== undefined 
+          ? (Array.isArray(productData.additionalImages) ? "array" : typeof productData.additionalImages)
+          : "undefined"
+      });
+
       const updatedProduct = await storage.updateProduct(productId, productData);
 
       if (!updatedProduct) {
-        return res.status(404).json({ message: 'Product not found' });
+        console.error(`Product update failed: No product returned for ID ${productId}`);
+        return res.status(404).json({ message: 'Product not found or update failed' });
       }
 
+      console.log(`Successfully updated product ${productId}`, {
+        fields: Object.keys(updatedProduct)
+      });
       res.json(updatedProduct);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: 'Invalid product data', errors: error.errors });
-      }
       console.error('Error updating product:', error);
-      res.status(500).json({ message: 'Error updating product' });
+      res.status(500).json({ 
+        message: 'Error updating product',
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
@@ -5908,15 +5947,34 @@ Respond in JSON format:
         }
       }
       
+      // Ensure additionalImages is always an array
+      if (updateData.additionalImages && !Array.isArray(updateData.additionalImages)) {
+        console.log(`Converting additionalImages from ${typeof updateData.additionalImages} to array:`, updateData.additionalImages);
+        updateData.additionalImages = Array.isArray(updateData.additionalImages) 
+          ? updateData.additionalImages 
+          : [];
+      }
+      
       // Log the final data being sent to storage
-      console.log("Final update data being sent to storage:", JSON.stringify(updateData, null, 2));
+      console.log("Final update data being sent to storage:", {
+        keys: Object.keys(updateData),
+        additionalImagesType: updateData.additionalImages 
+          ? (Array.isArray(updateData.additionalImages) ? "array" : typeof updateData.additionalImages) 
+          : "undefined",
+        additionalImagesLength: updateData.additionalImages && Array.isArray(updateData.additionalImages) 
+          ? updateData.additionalImages.length 
+          : "unknown"
+      });
 
       // Update the product
       const updatedProduct = await storage.updateProduct(id, updateData);
       
       if (!updatedProduct) {
         console.error(`Failed to update product ${id} - storage.updateProduct returned no data`);
-        return res.status(500).json({ message: 'Failed to update product in database' });
+        return res.status(500).json({ 
+          message: 'Failed to update product in database',
+          details: 'The update operation did not return expected data'
+        });
       }
       
       console.log(`Successfully updated product ${id} in database`);
@@ -5942,7 +6000,10 @@ Respond in JSON format:
       res.json(productWithStones);
     } catch (error) {
       console.error('Error updating product:', error);
-      res.status(500).json({ message: 'Failed to update product' });
+      res.status(500).json({ 
+        message: 'Failed to update product', 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
