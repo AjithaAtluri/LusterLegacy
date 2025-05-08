@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import BasicAdminLayout from "@/components/admin/basic-admin-layout";
+import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -1398,14 +1398,14 @@ export default function EditProductNew() {
   // If still loading authentication or product data, show loading state
   if (stableLoading && !loadingTimedOut) {
     return (
-      <BasicAdminLayout title="Edit Product">
+      <AdminLayout title="Edit Product">
         <div className="flex items-center justify-center min-h-[70vh]">
           <div className="text-center">
             <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
             <p className="text-lg text-muted-foreground">Loading product data...</p>
           </div>
         </div>
-      </BasicAdminLayout>
+      </AdminLayout>
     );
   }
   
@@ -1483,7 +1483,7 @@ export default function EditProductNew() {
     };
     
     return (
-      <BasicAdminLayout title="Edit Product">
+      <AdminLayout title="Edit Product">
         <div className="flex flex-col items-center p-6 bg-card rounded-lg shadow-sm mb-6">
           <div className="flex items-center justify-between w-full mb-6">
             <div>
@@ -1514,14 +1514,14 @@ export default function EditProductNew() {
             </Button>
           </div>
         </div>
-      </BasicAdminLayout>
+      </AdminLayout>
     );
   }
   
   // If not authenticated, show authentication required message
   if (!user) {
     return (
-      <BasicAdminLayout title="Authentication Required">
+      <AdminLayout title="Authentication Required">
         <div className="flex items-center justify-center min-h-[70vh]">
           <div className="text-center">
             <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
@@ -1534,14 +1534,14 @@ export default function EditProductNew() {
             </Button>
           </div>
         </div>
-      </BasicAdminLayout>
+      </AdminLayout>
     );
   }
 
   // Error state
   if (error || !params.id) {
     return (
-      <BasicAdminLayout title="Edit Product">
+      <AdminLayout title="Edit Product">
         <div className="container p-6 text-center py-24">
           <h2 className="text-xl font-semibold mb-2">Error Loading Product</h2>
           <p className="text-muted-foreground mb-6">
@@ -1552,14 +1552,14 @@ export default function EditProductNew() {
             Back to Products
           </Button>
         </div>
-      </BasicAdminLayout>
+      </AdminLayout>
     );
   }
 
   // AI Generator step
   if (step === "ai-generator") {
     return (
-      <BasicAdminLayout title="Edit Product - AI Generator">
+      <AdminLayout title="Edit Product - AI Generator">
         <div className="container p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-2">
@@ -1597,13 +1597,13 @@ export default function EditProductNew() {
             }}
           />
         </div>
-      </BasicAdminLayout>
+      </AdminLayout>
     );
   }
 
   // Form step
   return (
-    <BasicAdminLayout title="Edit Product">
+    <AdminLayout title="Edit Product">
       <div className="container p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
@@ -2266,6 +2266,6 @@ export default function EditProductNew() {
           </form>
         </Form>
       </div>
-    </BasicAdminLayout>
+    </AdminLayout>
   );
 }

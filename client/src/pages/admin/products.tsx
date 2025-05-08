@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import BasicAdminLayout from "@/components/admin/basic-admin-layout";
+import AdminLayout from "@/components/admin/admin-layout";
 import ProductForm from "@/components/admin/product-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
