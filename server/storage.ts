@@ -185,6 +185,7 @@ export interface IStorage {
 
   // Metal Type methods
   getMetalType(id: number): Promise<MetalType | undefined>;
+  getMetalTypeById(metalTypeId: string): Promise<MetalType | undefined>;
   getAllMetalTypes(): Promise<MetalType[]>;
   createMetalType(metalType: InsertMetalType): Promise<MetalType>;
   updateMetalType(id: number, metalType: Partial<InsertMetalType>): Promise<MetalType | undefined>;
@@ -192,6 +193,7 @@ export interface IStorage {
 
   // Stone Type methods
   getStoneType(id: number): Promise<StoneType | undefined>;
+  getStoneTypeById(stoneTypeId: string): Promise<StoneType | undefined>;
   getAllStoneTypes(): Promise<StoneType[]>;
   createStoneType(stoneType: InsertStoneType): Promise<StoneType>;
   updateStoneType(id: number, stoneType: Partial<InsertStoneType>): Promise<StoneType | undefined>;
@@ -302,6 +304,27 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(metalTypes).where(eq(metalTypes.id, id));
     return !!result;
   }
+  
+  async getMetalTypeById(metalTypeId: string): Promise<MetalType | undefined> {
+    try {
+      // Try to parse as number first
+      const id = parseInt(metalTypeId);
+      if (!isNaN(id)) {
+        return this.getMetalType(id);
+      }
+      
+      // Otherwise search by name
+      const [metalType] = await db
+        .select()
+        .from(metalTypes)
+        .where(eq(metalTypes.name, metalTypeId))
+        .limit(1);
+      return metalType;
+    } catch (error) {
+      console.error("Error fetching metal type by ID/name:", error);
+      return undefined;
+    }
+  }
 
   // Stone Type methods
   async getStoneType(id: number): Promise<StoneType | undefined> {
@@ -330,6 +353,27 @@ export class DatabaseStorage implements IStorage {
   async deleteStoneType(id: number): Promise<boolean> {
     const result = await db.delete(stoneTypes).where(eq(stoneTypes.id, id));
     return !!result;
+  }
+  
+  async getStoneTypeById(stoneTypeId: string): Promise<StoneType | undefined> {
+    try {
+      // Try to parse as number first
+      const id = parseInt(stoneTypeId);
+      if (!isNaN(id)) {
+        return this.getStoneType(id);
+      }
+      
+      // Otherwise search by name
+      const [stoneType] = await db
+        .select()
+        .from(stoneTypes)
+        .where(eq(stoneTypes.name, stoneTypeId))
+        .limit(1);
+      return stoneType;
+    } catch (error) {
+      console.error("Error fetching stone type by ID/name:", error);
+      return undefined;
+    }
   }
 
   // Product-Stone methods
