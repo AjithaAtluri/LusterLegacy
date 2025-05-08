@@ -463,21 +463,112 @@ export class DatabaseStorage implements IStorage {
     return !!result;
   }
 
-  // Placeholder implementations for all other required methods
+  // Product methods
+  async getProduct(id: number): Promise<Product | undefined> {
+    try {
+      const [product] = await db.select().from(products).where(eq(products.id, id));
+      return product;
+    } catch (error) {
+      console.error("Error fetching product by ID:", error);
+      return undefined;
+    }
+  }
+  
+  async getProductById(id: number): Promise<Product | undefined> { 
+    return this.getProduct(id); 
+  }
+  
+  async getAllProducts(): Promise<Product[]> {
+    try {
+      return await db.select().from(products).orderBy(desc(products.createdAt));
+    } catch (error) {
+      console.error("Error fetching all products:", error);
+      return [];
+    }
+  }
+  
+  async getFeaturedProducts(): Promise<Product[]> {
+    try {
+      return await db
+        .select()
+        .from(products)
+        .where(eq(products.isFeatured, true))
+        .orderBy(desc(products.createdAt))
+        .limit(6);
+    } catch (error) {
+      console.error("Error fetching featured products:", error);
+      return [];
+    }
+  }
+  
+  async getProductsByCategory(category: string): Promise<Product[]> {
+    try {
+      return await db
+        .select()
+        .from(products)
+        .where(eq(products.category, category))
+        .orderBy(desc(products.createdAt));
+    } catch (error) {
+      console.error(`Error fetching products by category ${category}:`, error);
+      return [];
+    }
+  }
+  
+  async createProduct(product: InsertProduct): Promise<Product> {
+    try {
+      const [newProduct] = await db.insert(products).values(product).returning();
+      return newProduct;
+    } catch (error) {
+      console.error("Error creating product:", error);
+      throw error;
+    }
+  }
+  
+  async updateProduct(id: number, productUpdate: Partial<InsertProduct>): Promise<Product | undefined> {
+    try {
+      const [updatedProduct] = await db
+        .update(products)
+        .set(productUpdate)
+        .where(eq(products.id, id))
+        .returning();
+      return updatedProduct;
+    } catch (error) {
+      console.error(`Error updating product with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async updateProductAiInputs(id: number, aiInputs: any): Promise<Product | undefined> {
+    try {
+      const [updatedProduct] = await db
+        .update(products)
+        .set({ aiInputs })
+        .where(eq(products.id, id))
+        .returning();
+      return updatedProduct;
+    } catch (error) {
+      console.error(`Error updating product AI inputs with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async deleteProduct(id: number): Promise<boolean> {
+    try {
+      await db.delete(products).where(eq(products.id, id));
+      return true;
+    } catch (error) {
+      console.error(`Error deleting product with ID ${id}:`, error);
+      return false;
+    }
+  }
+  
+  // Placeholder implementations for other required methods
   // This will be implemented in the real code, we'll just add stubs here to make TypeScript happy
   async createCustomizationRequest(request: any): Promise<any> { return {}; }
   async getCustomizationRequestsByUserId(userId: number): Promise<any[]> { return []; }
   async getAllCustomizationRequests(): Promise<any[]> { return []; }
   async updateCustomizationRequestStatus(id: number, status: string): Promise<any> { return {}; }
   async getOrdersByUserId(userId: number): Promise<any[]> { return []; }
-  async getProductById(id: number): Promise<Product | undefined> { return this.getProduct(id); }
-  async getAllProducts(): Promise<Product[]> { return []; }
-  async getFeaturedProducts(): Promise<Product[]> { return []; }
-  async getProductsByCategory(category: string): Promise<Product[]> { return []; }
-  async createProduct(product: InsertProduct): Promise<Product> { return {} as Product; }
-  async updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined> { return undefined; }
-  async updateProductAiInputs(id: number, aiInputs: any): Promise<Product | undefined> { return undefined; }
-  async deleteProduct(id: number): Promise<boolean> { return true; }
   async getDesignRequest(id: number): Promise<DesignRequest | undefined> { return undefined; }
   async getAllDesignRequests(): Promise<DesignRequest[]> { return []; }
   async getDesignRequestsByEmail(email: string): Promise<DesignRequest[]> { return []; }
