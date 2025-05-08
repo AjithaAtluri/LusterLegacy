@@ -1,5 +1,9 @@
-run = ["npm", "run", "dev"]
-entrypoint = "server/index.ts"
+run = ["npm", "run", "start"]
+entrypoint = "dist/index.js"
+
+# Steps to run before deployment
+[buildCommand]
+command = "npm run build"
 
 # Ensure we hide development warnings in production
 [env]

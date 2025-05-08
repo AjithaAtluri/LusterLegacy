@@ -74,14 +74,13 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // Add health check endpoints for Cloud Run
-    app.get('/', (_req, res) => {
-      res.status(200).json({ status: 'ok' });
-    });
-    
+    // Add health check endpoint for monitoring
     app.get('/health', (_req, res) => {
       res.status(200).json({ status: 'ok', timestamp: Date.now() });
     });
+    
+    // In production, serve static files 
+    log("Serving static files in production mode...");
     serveStatic(app);
   }
 
