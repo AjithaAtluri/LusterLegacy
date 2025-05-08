@@ -7132,6 +7132,8 @@ Respond in JSON format:
     }
   });
   
+
+  
   // Delete a user
   app.delete('/api/admin/users/:id', validateAdmin, async (req, res) => {
     try {

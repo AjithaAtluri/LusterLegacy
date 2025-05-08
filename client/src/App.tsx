@@ -218,6 +218,7 @@ function App() {
           <Footer />
           {/* WhatsApp button hidden for now */}
           {/* <WhatsAppButton /> */}
+          <ImpersonationBanner />
         </div>
       </AuthProvider>
     </ThemeProvider>
