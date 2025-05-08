@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
-import SimpleAdminLayout from "@/components/admin/simple-admin-layout";
+import BasicAdminLayout from "@/components/admin/basic-admin-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -181,19 +181,19 @@ export default function AdminDashboard() {
   
   if (isLoading) {
     return (
-      <SimpleAdminLayout title="Dashboard">
+      <BasicAdminLayout title="Dashboard">
         <Helmet>
           <title>Admin Dashboard | Luster Legacy</title>
         </Helmet>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
-      </SimpleAdminLayout>
+      </BasicAdminLayout>
     );
   }
   
   return (
-    <SimpleAdminLayout title="Dashboard">
+    <BasicAdminLayout title="Dashboard">
       <Helmet>
         <title>Admin Dashboard | Luster Legacy</title>
       </Helmet>
@@ -617,6 +617,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </SimpleAdminLayout>
+    </BasicAdminLayout>
   );
 }
