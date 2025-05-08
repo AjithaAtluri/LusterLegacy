@@ -557,14 +557,52 @@ export class DatabaseStorage implements IStorage {
   
   async updateProduct(id: number, productUpdate: Partial<InsertProduct>): Promise<Product | undefined> {
     try {
+      // Handle additionalImages field if it's present
+      if (productUpdate.additionalImages !== undefined) {
+        // Convert additionalImages to the correct format
+        const additionalImagesJson = Array.isArray(productUpdate.additionalImages) 
+          ? productUpdate.additionalImages 
+          : [];
+          
+        console.log("Processing additionalImages for update:", {
+          originalType: typeof productUpdate.additionalImages,
+          isArray: Array.isArray(productUpdate.additionalImages),
+          value: productUpdate.additionalImages,
+          processed: additionalImagesJson
+        });
+        
+        // Replace the additionalImages with the processed array
+        productUpdate = {
+          ...productUpdate,
+          additionalImages: additionalImagesJson
+        };
+      }
+      
+      // Log the update attempt
+      console.log(`Updating product ${id} with data:`, {
+        keys: Object.keys(productUpdate),
+        hasAdditionalImages: productUpdate.additionalImages !== undefined,
+        additionalImagesType: productUpdate.additionalImages !== undefined 
+          ? (Array.isArray(productUpdate.additionalImages) ? "array" : typeof productUpdate.additionalImages)
+          : "undefined"
+      });
+      
       const [updatedProduct] = await db
         .update(products)
         .set(productUpdate)
         .where(eq(products.id, id))
         .returning();
+        
+      if (!updatedProduct) {
+        console.error(`No product returned after update for ID ${id}`);
+      } else {
+        console.log(`Successfully updated product ${id}, retrieved product with fields:`, Object.keys(updatedProduct));
+      }
+      
       return updatedProduct;
     } catch (error) {
       console.error(`Error updating product with ID ${id}:`, error);
+      console.error("Update error details:", JSON.stringify(productUpdate, null, 2));
       return undefined;
     }
   }
