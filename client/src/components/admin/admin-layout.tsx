@@ -719,6 +719,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       // Mark that we've processed this auth state to prevent repeated calls
       authRef.current = true;
       
+      // Declare timers outside conditionals to avoid hook rule violations
+      let timer: NodeJS.Timeout | null = null;
+      let redirectTimer: NodeJS.Timeout | null = null;
+
       if (user) {
         console.log("Authentication stable, user found - loading admin UI");
         
@@ -728,7 +732,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         
         // If we haven't already shown the UI based on cached data
         if (!userDataStable) {
-          const timer = setTimeout(() => {
+          timer = setTimeout(() => {
             setAdminLoadingState('success');
             setIsAdminLoading(false);
             console.log("Admin loading completed - UI will now render");
@@ -736,8 +740,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             // Mark UI as fully stable after successful load
             setIsUIStable(true);
           }, loadingDelay);
-          
-          return () => clearTimeout(timer);
         }
       } else {
         // No user found after auth check is done - redirect to login
@@ -746,12 +748,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         setIsAdminLoading(false);
         
         // Delay redirect to avoid race conditions
-        const redirectTimer = setTimeout(() => {
+        redirectTimer = setTimeout(() => {
           window.location.href = "/admin/login";
         }, 300);
-        
-        return () => clearTimeout(redirectTimer);
       }
+      
+      // Single cleanup function at the end of the effect
+      return () => {
+        if (timer) clearTimeout(timer);
+        if (redirectTimer) clearTimeout(redirectTimer);
+      };
     }
   // Simplified dependency array to prevent rendering loops
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -792,12 +798,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   
   // Implement a freeze mechanism for the entire UI to prevent flickering until stable
   useEffect(() => {
+    // Once UI is stable, we track all scroll events to improve performance
+    const controller = new AbortController();
+    
+    // Only add event listener if UI is stable
     if (isUIStable) {
-      // Once UI is stable, we track all scroll events to improve performance
-      const controller = new AbortController();
       document.addEventListener('scroll', () => {}, { passive: true, signal: controller.signal });
-      return () => controller.abort();
     }
+    
+    // Always return a cleanup function regardless of condition
+    return () => controller.abort();
   }, [isUIStable]);
   
   return (
