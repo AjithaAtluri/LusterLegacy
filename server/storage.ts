@@ -194,6 +194,7 @@ export interface IStorage {
   // Stone Type methods
   getStoneType(id: number): Promise<StoneType | undefined>;
   getStoneTypeById(stoneTypeId: string): Promise<StoneType | undefined>;
+  getStoneTypeByName(name: string): Promise<StoneType | undefined>;
   getAllStoneTypes(): Promise<StoneType[]>;
   createStoneType(stoneType: InsertStoneType): Promise<StoneType>;
   updateStoneType(id: number, stoneType: Partial<InsertStoneType>): Promise<StoneType | undefined>;
@@ -372,6 +373,36 @@ export class DatabaseStorage implements IStorage {
       return stoneType;
     } catch (error) {
       console.error("Error fetching stone type by ID/name:", error);
+      return undefined;
+    }
+  }
+  
+  async getStoneTypeByName(name: string): Promise<StoneType | undefined> {
+    try {
+      if (!name) {
+        return undefined;
+      }
+      
+      const [stoneType] = await db
+        .select()
+        .from(stoneTypes)
+        .where(eq(stoneTypes.name, name))
+        .limit(1);
+      
+      if (stoneType) {
+        return stoneType;
+      }
+      
+      // Try with case-insensitive search if exact match fails
+      const [stoneTypeCaseInsensitive] = await db
+        .select()
+        .from(stoneTypes)
+        .where(sql`LOWER(${stoneTypes.name}) = LOWER(${name})`)
+        .limit(1);
+        
+      return stoneTypeCaseInsensitive;
+    } catch (error) {
+      console.error(`Error fetching stone type by name "${name}":`, error);
       return undefined;
     }
   }
