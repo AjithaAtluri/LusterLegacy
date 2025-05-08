@@ -74,23 +74,23 @@ const PostgresSessionStore = connectPg(session);
 export interface IStorage {
   // Session store for authentication
   sessionStore: any; // Using any to avoid type issues with express-session
-  
+
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   deleteUser(usernameOrId: string | number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
-  
+
   // Customization request methods
   createCustomizationRequest(request: any): Promise<any>;
   getCustomizationRequestsByUserId(userId: number): Promise<any[]>;
   getAllCustomizationRequests(): Promise<any[]>;
   updateCustomizationRequestStatus(id: number, status: string): Promise<any>;
-  
+
   // Order methods
   getOrdersByUserId(userId: number): Promise<any[]>;
-  
+
   // Product methods
   getProduct(id: number): Promise<Product | undefined>;
   getProductById(id: number): Promise<Product | undefined>; // Alias for getProduct
@@ -109,20 +109,20 @@ export interface IStorage {
   getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]>;
   createDesignRequest(designRequest: InsertDesignRequest): Promise<DesignRequest>;
   updateDesignRequest(id: number, designRequest: Partial<DesignRequest>): Promise<DesignRequest | undefined>;
-  
+
   // Design Request Comment methods
   getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]>;
   addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment>;
-  
+
   // Design Feedback methods (new chat functionality)
   getDesignFeedback(designRequestId: number): Promise<DesignFeedback[]>;
   addDesignFeedback(feedback: InsertDesignFeedback): Promise<DesignFeedback>;
-  
+
   // Design Payment methods
   getDesignPayments(designRequestId: number): Promise<DesignPayment[]>;
   addDesignPayment(payment: InsertDesignPayment): Promise<DesignPayment>;
   updateDesignPaymentStatus(id: number, status: string): Promise<DesignPayment | undefined>;
-  
+
   // Product Customization Request methods
   getCustomizationRequest(id: number): Promise<CustomizationRequest | undefined>;
   getAllCustomizationRequests(): Promise<CustomizationRequest[]>;
@@ -130,11 +130,11 @@ export interface IStorage {
   getCustomizationRequestsByUserId(userId: number): Promise<CustomizationRequest[]>;
   createCustomizationRequest(request: InsertCustomizationRequest): Promise<CustomizationRequest>;
   updateCustomizationRequest(id: number, request: Partial<CustomizationRequest>): Promise<CustomizationRequest | undefined>;
-  
+
   // Customization Request Comment methods
   getCustomizationRequestComments(requestId: number): Promise<CustomizationRequestComment[]>;
   addCustomizationRequestComment(comment: InsertCustomizationRequestComment): Promise<CustomizationRequestComment>;
-  
+
   // Quote Request methods
   getQuoteRequest(id: number): Promise<QuoteRequest | undefined>;
   getAllQuoteRequests(): Promise<QuoteRequest[]>;
@@ -142,7 +142,7 @@ export interface IStorage {
   getQuoteRequestsByUserId(userId: number): Promise<QuoteRequest[]>;
   createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest>;
   updateQuoteRequest(id: number, request: Partial<QuoteRequest>): Promise<QuoteRequest | undefined>;
-  
+
   // Quote Request Comment methods
   getQuoteRequestComments(requestId: number): Promise<QuoteRequestComment[]>;
   addQuoteRequestComment(comment: InsertQuoteRequestComment): Promise<QuoteRequestComment>;
@@ -182,27 +182,27 @@ export interface IStorage {
   createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
   markContactMessageAsRead(id: number): Promise<boolean>;
   deleteContactMessage(id: number): Promise<boolean>;
-  
+
   // Metal Type methods
   getMetalType(id: number): Promise<MetalType | undefined>;
   getAllMetalTypes(): Promise<MetalType[]>;
   createMetalType(metalType: InsertMetalType): Promise<MetalType>;
   updateMetalType(id: number, metalType: Partial<InsertMetalType>): Promise<MetalType | undefined>;
   deleteMetalType(id: number): Promise<boolean>;
-  
+
   // Stone Type methods
   getStoneType(id: number): Promise<StoneType | undefined>;
   getAllStoneTypes(): Promise<StoneType[]>;
   createStoneType(stoneType: InsertStoneType): Promise<StoneType>;
   updateStoneType(id: number, stoneType: Partial<InsertStoneType>): Promise<StoneType | undefined>;
   deleteStoneType(id: number): Promise<boolean>;
-  
+
   // Product-Stone methods
   getProductStones(productId: number): Promise<StoneType[]>;
   addProductStones(productId: number, stoneTypeIds: number[]): Promise<void>;
   updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void>;
   removeProductStone(productId: number, stoneTypeId: number): Promise<boolean>;
-  
+
   // Inspiration Gallery methods
   getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined>;
   getAllInspirationItems(): Promise<InspirationGalleryItem[]>;
@@ -211,7 +211,7 @@ export interface IStorage {
   createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem>;
   updateInspirationItem(id: number, item: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined>;
   deleteInspirationItem(id: number): Promise<boolean>;
-  
+
   // Product Type methods
   getProductType(id: number): Promise<ProductType | undefined>;
   getAllProductTypes(): Promise<ProductType[]>;
@@ -236,7 +236,7 @@ export class MemStorage implements IStorage {
   private productStones: Map<string, ProductStone>; // Key is "productId-stoneTypeId"
   private inspirationItems: Map<number, InspirationGalleryItem>;
   private customizationRequests: Map<number, any>; // Customization requests
-  
+
   private currentUserId: number;
   private currentProductId: number;
   private currentDesignRequestId: number;
@@ -251,7 +251,7 @@ export class MemStorage implements IStorage {
   private currentProductTypeId: number;
   private currentCustomizationRequestId: number;
   private productTypes: Map<number, ProductType>;
-  
+
   // Session store for authentication
   public sessionStore: any; // Using any to avoid type issues with express-session
 
@@ -270,7 +270,7 @@ export class MemStorage implements IStorage {
     this.inspirationItems = new Map();
     this.productTypes = new Map();
     this.customizationRequests = new Map();
-    
+
     this.currentUserId = 1;
     this.currentProductId = 1;
     this.currentDesignRequestId = 1;
@@ -284,12 +284,12 @@ export class MemStorage implements IStorage {
     this.currentInspirationItemId = 1;
     this.currentProductTypeId = 1;
     this.currentCustomizationRequestId = 1;
-    
+
     // Initialize session store for authentication
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
     });
-    
+
     // Initialize with sample data
     this.initSampleData();
   }
@@ -312,14 +312,14 @@ export class MemStorage implements IStorage {
     this.users.set(id, user);
     return user;
   }
-  
+
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
   }
-  
+
   async deleteUser(usernameOrId: string | number): Promise<boolean> {
     let userId: number | undefined;
-    
+
     if (typeof usernameOrId === 'string') {
       // Find user by username
       const user = await this.getUserByUsername(usernameOrId);
@@ -331,10 +331,10 @@ export class MemStorage implements IStorage {
       const user = await this.getUser(userId);
       if (!user) return false;
     }
-    
+
     // Delete related data (in a real app, this would be more complex)
     // Delete customization requests, quote requests, orders, cart items
-    
+
     // Delete the user
     return this.users.delete(userId);
   }
@@ -376,7 +376,7 @@ export class MemStorage implements IStorage {
   async updateProduct(id: number, productUpdate: Partial<InsertProduct>): Promise<Product | undefined> {
     const product = this.products.get(id);
     if (!product) return undefined;
-    
+
     const updatedProduct = { ...product, ...productUpdate };
     this.products.set(id, updatedProduct);
     return updatedProduct;
@@ -385,7 +385,7 @@ export class MemStorage implements IStorage {
   async updateProductAiInputs(id: number, aiInputs: any): Promise<Product | undefined> {
     const product = this.products.get(id);
     if (!product) return undefined;
-    
+
     const updatedProduct = { ...product, aiInputs };
     this.products.set(id, updatedProduct);
     return updatedProduct;
@@ -429,7 +429,7 @@ export class MemStorage implements IStorage {
   async updateDesignRequest(id: number, designRequestUpdate: Partial<DesignRequest>): Promise<DesignRequest | undefined> {
     const designRequest = this.designRequests.get(id);
     if (!designRequest) return undefined;
-    
+
     const updatedDesignRequest = { ...designRequest, ...designRequestUpdate };
     this.designRequests.set(id, updatedDesignRequest);
     return updatedDesignRequest;
@@ -463,7 +463,7 @@ export class MemStorage implements IStorage {
   async updateCartItem(id: number, cartItemUpdate: Partial<CartItem>): Promise<CartItem | undefined> {
     const cartItem = this.cartItems.get(id);
     if (!cartItem) return undefined;
-    
+
     const updatedCartItem = { ...cartItem, ...cartItemUpdate };
     this.cartItems.set(id, updatedCartItem);
     return updatedCartItem;
@@ -477,7 +477,7 @@ export class MemStorage implements IStorage {
     const cartItemIds = Array.from(this.cartItems.values())
       .filter((item) => item.sessionId === sessionId)
       .map((item) => item.id);
-    
+
     cartItemIds.forEach((id) => this.cartItems.delete(id));
     return true;
   }
@@ -508,7 +508,7 @@ export class MemStorage implements IStorage {
     const createdAt = new Date();
     const paymentStatus = "advance_paid";
     const orderStatus = "processing";
-    
+
     const order: Order = { 
       ...insertOrder, 
       id, 
@@ -523,7 +523,7 @@ export class MemStorage implements IStorage {
   async updateOrder(id: number, orderUpdate: Partial<Order>): Promise<Order | undefined> {
     const order = this.orders.get(id);
     if (!order) return undefined;
-    
+
     const updatedOrder = { ...order, ...orderUpdate };
     this.orders.set(id, updatedOrder);
     return updatedOrder;
@@ -553,40 +553,40 @@ export class MemStorage implements IStorage {
       (testimonial) => testimonial.isApproved
     );
   }
-  
+
   async getTestimonials(options?: { userId?: number, status?: string, limit?: number, approved?: boolean }): Promise<Testimonial[]> {
     let result = Array.from(this.testimonials.values());
-    
+
     // Apply filters based on options
     if (options) {
       if (options.userId !== undefined) {
         result = result.filter(t => t.userId === options.userId);
       }
-      
+
       if (options.status) {
         result = result.filter(t => t.status === options.status);
       }
-      
+
       if (options.approved !== undefined) {
         result = result.filter(t => t.isApproved === options.approved);
       }
     }
-    
+
     // Order by created date, newest first
     result.sort((a, b) => {
       const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt || 0);
       const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
     });
-    
+
     // Apply limit if specified
     if (options?.limit && options.limit > 0) {
       result = result.slice(0, options.limit);
     }
-    
+
     return result;
   }
-  
+
   async getTestimonialById(id: number): Promise<Testimonial | undefined> {
     return this.testimonials.get(id);
   }
@@ -595,7 +595,7 @@ export class MemStorage implements IStorage {
     const id = this.currentTestimonialId++;
     const createdAt = new Date();
     const updatedAt = new Date();
-    
+
     // Set default values if not provided
     const testimonial: Testimonial = { 
       ...insertTestimonial, 
@@ -606,7 +606,7 @@ export class MemStorage implements IStorage {
       isApproved: insertTestimonial.isApproved || false,
       imageUrls: insertTestimonial.imageUrls || []
     };
-    
+
     this.testimonials.set(id, testimonial);
     return testimonial;
   }
@@ -614,16 +614,16 @@ export class MemStorage implements IStorage {
   async updateTestimonial(id: number, testimonialUpdate: Partial<Testimonial>): Promise<Testimonial | undefined> {
     const testimonial = this.testimonials.get(id);
     if (!testimonial) return undefined;
-    
+
     // Update the timestamp
     const updatedAt = new Date();
-    
+
     const updatedTestimonial = { 
       ...testimonial, 
       ...testimonialUpdate,
       updatedAt
     };
-    
+
     this.testimonials.set(id, updatedTestimonial);
     return updatedTestimonial;
   }
@@ -649,7 +649,7 @@ export class MemStorage implements IStorage {
   async markContactMessageAsRead(id: number): Promise<boolean> {
     const message = this.contactMessages.get(id);
     if (!message) return false;
-    
+
     const updatedMessage = { ...message, isRead: true };
     this.contactMessages.set(id, updatedMessage);
     return true;
@@ -658,61 +658,61 @@ export class MemStorage implements IStorage {
   async deleteContactMessage(id: number): Promise<boolean> {
     return this.contactMessages.delete(id);
   }
-  
+
   // Metal Type methods
   async getMetalType(id: number): Promise<MetalType | undefined> {
     return this.metalTypes.get(id);
   }
-  
+
   async getAllMetalTypes(): Promise<MetalType[]> {
     return Array.from(this.metalTypes.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
-  
+
   async createMetalType(metalType: InsertMetalType): Promise<MetalType> {
     const id = this.currentMetalTypeId++;
     const newMetalType: MetalType = { ...metalType, id };
     this.metalTypes.set(id, newMetalType);
     return newMetalType;
   }
-  
+
   async updateMetalType(id: number, metalTypeUpdate: Partial<InsertMetalType>): Promise<MetalType | undefined> {
     const metalType = this.metalTypes.get(id);
     if (!metalType) return undefined;
-    
+
     const updatedMetalType = { ...metalType, ...metalTypeUpdate };
     this.metalTypes.set(id, updatedMetalType);
     return updatedMetalType;
   }
-  
+
   async deleteMetalType(id: number): Promise<boolean> {
     return this.metalTypes.delete(id);
   }
-  
+
   // Stone Type methods
   async getStoneType(id: number): Promise<StoneType | undefined> {
     return this.stoneTypes.get(id);
   }
-  
+
   async getAllStoneTypes(): Promise<StoneType[]> {
     return Array.from(this.stoneTypes.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
-  
+
   async createStoneType(stoneType: InsertStoneType): Promise<StoneType> {
     const id = this.currentStoneTypeId++;
     const newStoneType: StoneType = { ...stoneType, id };
     this.stoneTypes.set(id, newStoneType);
     return newStoneType;
   }
-  
+
   async updateStoneType(id: number, stoneTypeUpdate: Partial<InsertStoneType>): Promise<StoneType | undefined> {
     const stoneType = this.stoneTypes.get(id);
     if (!stoneType) return undefined;
-    
+
     const updatedStoneType = { ...stoneType, ...stoneTypeUpdate };
     this.stoneTypes.set(id, updatedStoneType);
     return updatedStoneType;
   }
-  
+
   async deleteStoneType(id: number): Promise<boolean> {
     // First, delete any product-stone associations
     for (const [key, productStone] of this.productStones.entries()) {
@@ -720,26 +720,26 @@ export class MemStorage implements IStorage {
         this.productStones.delete(key);
       }
     }
-    
+
     return this.stoneTypes.delete(id);
   }
-  
+
   // Product-Stone relationship methods
   async getProductStones(productId: number): Promise<StoneType[]> {
     const stoneIds = Array.from(this.productStones.values())
       .filter(ps => ps.productId === productId)
       .map(ps => ps.stoneTypeId);
-    
+
     return stoneIds.map(id => this.stoneTypes.get(id)).filter(Boolean) as StoneType[];
   }
-  
+
   async addProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
     stoneTypeIds.forEach(stoneTypeId => {
       const key = `${productId}-${stoneTypeId}`;
       this.productStones.set(key, { productId, stoneTypeId });
     });
   }
-  
+
   async updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
     // First, delete all existing product-stone relationships for this product
     for (const [key, productStone] of this.productStones.entries()) {
@@ -747,11 +747,11 @@ export class MemStorage implements IStorage {
         this.productStones.delete(key);
       }
     }
-    
+
     // Then add the new relationships
     await this.addProductStones(productId, stoneTypeIds);
   }
-  
+
   async removeProductStone(productId: number, stoneTypeId: number): Promise<boolean> {
     const key = `${productId}-${stoneTypeId}`;
     return this.productStones.delete(key);
@@ -785,12 +785,12 @@ export class MemStorage implements IStorage {
   async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
     const request = this.customizationRequests.get(id);
     if (!request) return null;
-    
+
     const updatedRequest = { ...request, status };
     this.customizationRequests.set(id, updatedRequest);
     return updatedRequest;
   }
-  
+
   // For compatibility with orders
   async getOrdersByUserId(userId: number): Promise<any[]> {
     return this.getOrdersByUser(userId);
@@ -828,7 +828,7 @@ export class MemStorage implements IStorage {
   async updateInspirationItem(id: number, itemUpdate: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined> {
     const item = this.inspirationItems.get(id);
     if (!item) return undefined;
-    
+
     const updatedItem = { ...item, ...itemUpdate };
     this.inspirationItems.set(id, updatedItem);
     return updatedItem;
@@ -837,24 +837,24 @@ export class MemStorage implements IStorage {
   async deleteInspirationItem(id: number): Promise<boolean> {
     return this.inspirationItems.delete(id);
   }
-  
+
   // Product Type methods
   async getProductType(id: number): Promise<ProductType | undefined> {
     return this.productTypes.get(id);
   }
-  
+
   async getAllProductTypes(): Promise<ProductType[]> {
     return Array.from(this.productTypes.values()).sort((a, b) => 
       (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name)
     );
   }
-  
+
   async getActiveProductTypes(): Promise<ProductType[]> {
     return Array.from(this.productTypes.values())
       .filter(type => type.isActive)
       .sort((a, b) => (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name));
   }
-  
+
   async createProductType(productType: InsertProductType): Promise<ProductType> {
     const id = this.currentProductTypeId++;
     const createdAt = new Date();
@@ -862,16 +862,16 @@ export class MemStorage implements IStorage {
     this.productTypes.set(id, newProductType);
     return newProductType;
   }
-  
+
   async updateProductType(id: number, productTypeUpdate: Partial<InsertProductType>): Promise<ProductType | undefined> {
     const productType = this.productTypes.get(id);
     if (!productType) return undefined;
-    
+
     const updatedProductType = { ...productType, ...productTypeUpdate };
     this.productTypes.set(id, updatedProductType);
     return updatedProductType;
   }
-  
+
   async deleteProductType(id: number): Promise<boolean> {
     return this.productTypes.delete(id);
   }
@@ -892,7 +892,7 @@ export class MemStorage implements IStorage {
         name: "Royal Elegance Necklace",
         description: "Handcrafted polki diamonds set in pure gold with pearl accents.",
         basePrice: 175000,
-        imageUrl: "https://images.unsplash.com/photo-1605100804567-1efa885e640d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        imageUrl: "https://images.unsplash.com/photo-16051008045567-1efa885e640d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
         additionalImages: [],
         details: "Exquisitely crafted necklace featuring traditional Polki diamond work. Each diamond is hand-cut and set in 22kt gold, creating a timeless piece with unparalleled brilliance.",
         dimensions: "Length: 18 inches, Weight: 45 grams approximately",
@@ -964,7 +964,7 @@ export class MemStorage implements IStorage {
     // Don't automatically create product types in dev mode
     // This allows admin to create them through the UI
     // In a production environment, you might want to seed these
-    
+
     /* Commented out to avoid seeding automatically
     const productTypes: InsertProductType[] = [
       {
@@ -1018,7 +1018,7 @@ export class MemStorage implements IStorage {
 export class DatabaseStorage implements IStorage {
   // Session store for authentication
   public sessionStore: any; // Using any to avoid type issues with express-session
-  
+
   constructor() {
     // Initialize with PostgresSessionStore
     // Using the already imported pool from db.ts
@@ -1027,7 +1027,7 @@ export class DatabaseStorage implements IStorage {
       createTableIfMissing: true 
     });
   }
-  
+
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -1043,7 +1043,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
-  
+
   async getAllUsers(): Promise<User[]> {
     try {
       const allUsers = await db.select().from(users);
@@ -1053,11 +1053,11 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
-  
+
   async deleteUser(usernameOrId: string | number): Promise<boolean> {
     try {
       let userId: number;
-      
+
       // Find the user ID based on input
       if (typeof usernameOrId === 'string') {
         const user = await this.getUserByUsername(usernameOrId);
@@ -1074,61 +1074,61 @@ export class DatabaseStorage implements IStorage {
         }
         userId = usernameOrId;
       }
-      
+
       // Delete related data in order to maintain referential integrity
       console.log(`Deleting all data for user ID ${userId}`);
-      
+
       // Begin transaction
       await db.transaction(async (tx) => {
         // 1. Delete all designRequest comments
         const userDesignRequests = await tx.select().from(designRequests).where(eq(designRequests.userId, userId));
-        
+
         for (const dr of userDesignRequests) {
           await tx.delete(designRequestComments).where(eq(designRequestComments.designRequestId, dr.id));
           await tx.delete(designFeedback).where(eq(designFeedback.designRequestId, dr.id));
           await tx.delete(designPayments).where(eq(designPayments.designRequestId, dr.id));
         }
-        
+
         // 2. Delete all design requests
         await tx.delete(designRequests).where(eq(designRequests.userId, userId));
-        
+
         // 3. Delete all customization request comments
         const custRequests = await tx.select().from(customizationRequests).where(eq(customizationRequests.userId, userId));
-        
+
         for (const cr of custRequests) {
           await tx.delete(customizationRequestComments).where(eq(customizationRequestComments.customizationRequestId, cr.id));
         }
-        
+
         // 4. Delete all customization requests
         await tx.delete(customizationRequests).where(eq(customizationRequests.userId, userId));
-        
+
         // 5. Delete all quote request comments
         const quoteReqs = await tx.select().from(quoteRequests).where(eq(quoteRequests.userId, userId));
-        
+
         for (const qr of quoteReqs) {
           await tx.delete(quoteRequestComments).where(eq(quoteRequestComments.quoteRequestId, qr.id));
         }
-        
+
         // 6. Delete all quote requests
         await tx.delete(quoteRequests).where(eq(quoteRequests.userId, userId));
-        
+
         // 7. Delete all order items
         const userOrders = await tx.select().from(orders).where(eq(orders.userId, userId));
-        
+
         for (const order of userOrders) {
           await tx.delete(orderItems).where(eq(orderItems.orderId, order.id));
         }
-        
+
         // 8. Delete all orders
         await tx.delete(orders).where(eq(orders.userId, userId));
-        
+
         // 9. Delete all cart items
         await tx.delete(cartItems).where(eq(cartItems.userId, userId));
-        
+
         // 10. Finally, delete the user
         await tx.delete(users).where(eq(users.id, userId));
       });
-      
+
       console.log(`Successfully deleted user ID ${userId} and all related data`);
       return true;
     } catch (error) {
@@ -1159,7 +1159,7 @@ export class DatabaseStorage implements IStorage {
     const [product] = await db.insert(products).values(insertProduct).returning();
     return product;
   }
-  
+
   async updateProduct(id: number, productUpdate: Partial<InsertProduct>): Promise<Product | undefined> {
     const [updatedProduct] = await db
       .update(products)
@@ -1168,12 +1168,12 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedProduct || undefined;
   }
-  
+
   async getProductById(id: number): Promise<Product | undefined> {
     // Alias for getProduct
     return this.getProduct(id);
   }
-  
+
   async updateProductAiInputs(id: number, aiInputs: any): Promise<Product | undefined> {
     console.log("Updating AI inputs for product:", id, aiInputs);
     const [updatedProduct] = await db
@@ -1183,7 +1183,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedProduct || undefined;
   }
-  
+
   async deleteProduct(id: number): Promise<boolean> {
     const result = await db.delete(products).where(eq(products.id, id));
     return !!result;
@@ -1219,7 +1219,7 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
-  
+
   async getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]> {
     try {
       const requests = await db
@@ -1243,10 +1243,10 @@ export class DatabaseStorage implements IStorage {
           ? insertDesignRequest.primaryStones 
           : (insertDesignRequest.primaryStone ? [insertDesignRequest.primaryStone] : [])
       };
-      
+
       // Log the data being inserted
       console.log("Creating design request with data:", JSON.stringify(formattedData, null, 2));
-      
+
       const [request] = await db.insert(designRequests).values(formattedData).returning();
       return request;
     } catch (error) {
@@ -1267,7 +1267,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
-  
+
   // Design Request Comment methods
   async getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]> {
     try {
@@ -1281,7 +1281,7 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
-  
+
   async addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment> {
     try {
       const [newComment] = await db
@@ -1294,7 +1294,7 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
-  
+
   // Implement design feedback methods for chat with images support
   async getDesignFeedback(designRequestId: number): Promise<DesignFeedback[]> {
     try {
@@ -1315,7 +1315,7 @@ export class DatabaseStorage implements IStorage {
         .insert(designFeedback)
         .values(feedback)
         .returning();
-      
+
       // If this is an admin response, increment iteration count
       if (feedback.isFromAdmin) {
         const designRequest = await this.getDesignRequest(feedback.designRequestId);
@@ -1323,12 +1323,12 @@ export class DatabaseStorage implements IStorage {
           // Check if we need to update the design request status
           const currentStatus = designRequest.status;
           let newStatus = currentStatus;
-          
+
           // If current status is 'design_in_progress', change to 'design_ready_for_review'
           if (currentStatus === 'design_in_progress') {
             newStatus = 'design_ready_for_review';
           }
-          
+
           // Update iteration count
           await this.updateDesignRequest(feedback.designRequestId, {
             iterationsCount: (designRequest.iterationsCount || 0) + 1,
@@ -1347,14 +1347,14 @@ export class DatabaseStorage implements IStorage {
           }
         }
       }
-      
+
       return newFeedback;
     } catch (error) {
       console.error("Error adding design feedback:", error);
       throw error;
     }
   }
-  
+
   // Implement design payment methods
   async getDesignPayments(designRequestId: number): Promise<DesignPayment[]> {
     try {
@@ -1375,7 +1375,7 @@ export class DatabaseStorage implements IStorage {
         .insert(designPayments)
         .values(payment)
         .returning();
-      
+
       // If payment is successful consultation fee, update design request status
       if (payment.paymentType === 'consultation_fee' && payment.status === 'completed') {
         await this.updateDesignRequest(payment.designRequestId, {
@@ -1384,7 +1384,7 @@ export class DatabaseStorage implements IStorage {
           status: 'design_started'
         });
       }
-      
+
       return newPayment;
     } catch (error) {
       console.error("Error adding design payment:", error);
@@ -1399,7 +1399,7 @@ export class DatabaseStorage implements IStorage {
         .set({ status })
         .where(eq(designPayments.id, id))
         .returning();
-      
+
       // If payment status changed to completed and it's a consultation fee,
       // update the design request as paid
       if (payment && payment.status === 'completed' && payment.paymentType === 'consultation_fee') {
@@ -1408,7 +1408,7 @@ export class DatabaseStorage implements IStorage {
           status: 'design_started'
         });
       }
-      
+
       return payment;
     } catch (error) {
       console.error("Error updating design payment status:", error);
@@ -1453,987 +1453,12 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  // Order methods
-  async getOrder(id: number): Promise<Order | undefined> {
-    const [order] = await db.select().from(orders).where(eq(orders.id, id));
-    return order || undefined;
-  }
-
-  async getAllOrders(): Promise<Order[]> {
-    return await db.select().from(orders).orderBy(desc(orders.createdAt));
-  }
-
-  async getOrdersBySession(sessionId: string): Promise<Order[]> {
-    return await db.select().from(orders).where(eq(orders.sessionId, sessionId));
-  }
-
-  async getOrdersByUser(userId: number): Promise<Order[]> {
-    return await db.select().from(orders).where(eq(orders.userId, userId));
-  }
-
-  async createOrder(insertOrder: InsertOrder): Promise<Order> {
-    const [order] = await db.insert(orders).values(insertOrder).returning();
-    return order;
-  }
-
-  async updateOrder(id: number, orderUpdate: Partial<Order>): Promise<Order | undefined> {
-    const [order] = await db.update(orders)
-      .set(orderUpdate)
-      .where(eq(orders.id, id))
-      .returning();
-    return order || undefined;
-  }
-
-  // Order Item methods
-  async getOrderItemsByOrder(orderId: number): Promise<OrderItem[]> {
-    return await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
-  }
-
-  async createOrderItem(insertOrderItem: InsertOrderItem): Promise<OrderItem> {
-    const [item] = await db.insert(orderItems).values(insertOrderItem).returning();
-    return item;
-  }
-
-  // Client Stories (Testimonial) methods
-  async getAllTestimonials(): Promise<Testimonial[]> {
-    return await db.select().from(testimonials).orderBy(desc(testimonials.createdAt));
-  }
-
-  async getApprovedTestimonials(): Promise<Testimonial[]> {
-    return await db.select().from(testimonials).where(eq(testimonials.isApproved, true)).orderBy(desc(testimonials.createdAt));
-  }
-  
-  async getTestimonials(options?: { userId?: number, status?: string, limit?: number, approved?: boolean }): Promise<Testimonial[]> {
-    let query = db.select().from(testimonials);
-    
-    // Apply filters
-    if (options) {
-      if (options.userId !== undefined) {
-        query = query.where(eq(testimonials.userId, options.userId));
-      }
-      
-      if (options.status) {
-        query = query.where(eq(testimonials.status, options.status));
-      }
-      
-      if (options.approved !== undefined) {
-        query = query.where(eq(testimonials.isApproved, options.approved));
-      }
-    }
-    
-    // Always sort by newest first
-    query = query.orderBy(desc(testimonials.createdAt));
-    
-    // Apply limit if specified
-    if (options?.limit && options.limit > 0) {
-      query = query.limit(options.limit);
-    }
-    
-    return await query;
-  }
-  
-  async getTestimonialById(id: number): Promise<Testimonial | undefined> {
-    const [testimonial] = await db.select().from(testimonials).where(eq(testimonials.id, id));
-    return testimonial || undefined;
-  }
-
-  async createTestimonial(insertTestimonial: InsertTestimonial): Promise<Testimonial> {
-    const values = {
-      ...insertTestimonial,
-      status: insertTestimonial.status || 'pending',
-      isApproved: insertTestimonial.isApproved || false,
-      imageUrls: insertTestimonial.imageUrls || []
-    };
-    
-    const [testimonial] = await db.insert(testimonials).values(values).returning();
-    return testimonial;
-  }
-
-  async updateTestimonial(id: number, testimonialUpdate: Partial<Testimonial>): Promise<Testimonial | undefined> {
-    const values = {
-      ...testimonialUpdate,
-      updatedAt: new Date()
-    };
-    
-    const [testimonial] = await db.update(testimonials)
-      .set(values)
-      .where(eq(testimonials.id, id))
-      .returning();
-    return testimonial || undefined;
-  }
-
-  async deleteTestimonial(id: number): Promise<boolean> {
-    const result = await db.delete(testimonials).where(eq(testimonials.id, id));
-    return result.rowCount > 0;
-  }
-
-  // Contact Message methods
-  async getAllContactMessages(): Promise<ContactMessage[]> {
-    return await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
-  }
-
-  async createContactMessage(insertMessage: InsertContactMessage): Promise<ContactMessage> {
-    const [message] = await db.insert(contactMessages).values({
-      ...insertMessage,
-      isRead: false
-    }).returning();
-    return message;
-  }
-
-  async markContactMessageAsRead(id: number): Promise<boolean> {
-    const result = await db.update(contactMessages)
-      .set({ isRead: true })
-      .where(eq(contactMessages.id, id));
-    return result.rowCount > 0;
-  }
-
-  async deleteContactMessage(id: number): Promise<boolean> {
-    const result = await db.delete(contactMessages).where(eq(contactMessages.id, id));
-    return result.rowCount > 0;
-  }
-
-  // Metal Type methods
-  async getMetalType(id: number): Promise<MetalType | undefined> {
-    try {
-      const [metalType] = await db.select().from(metalTypes).where(eq(metalTypes.id, id));
-      return metalType;
-    } catch (error) {
-      console.error("Error getting metal type:", error);
-      return undefined;
-    }
-  }
-  
-  async getMetalTypeByName(name: string): Promise<MetalType | undefined> {
-    try {
-      // Convert string like "18kt-gold" to "18K Gold" format for searching
-      const formattedName = name
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-        .replace(/kt/i, 'K');
-      
-      const [metalType] = await db
-        .select()
-        .from(metalTypes)
-        .where(sql`LOWER(${metalTypes.name}) LIKE LOWER(${`%${formattedName}%`})`);
-      
-      return metalType;
-    } catch (error) {
-      console.error("Error getting metal type by name:", error);
-      return undefined;
-    }
-  }
-  
-  async getMetalTypeById(id: number | string): Promise<MetalType | undefined> {
-    // If id is a number, use getMetalType
-    if (typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id))) {
-      return this.getMetalType(typeof id === 'string' ? parseInt(id) : id);
-    }
-    
-    // Otherwise, try to look up by name
-    return this.getMetalTypeByName(id as string);
-  }
-  
-  async getAllMetalTypes(): Promise<MetalType[]> {
-    try {
-      return await db.select().from(metalTypes).orderBy(asc(metalTypes.name));
-    } catch (error) {
-      console.error("Error getting all metal types:", error);
-      return [];
-    }
-  }
-  
-  async createMetalType(metalType: InsertMetalType): Promise<MetalType> {
-    try {
-      const [newMetalType] = await db.insert(metalTypes).values(metalType).returning();
-      return newMetalType;
-    } catch (error) {
-      console.error("Error creating metal type:", error);
-      throw error;
-    }
-  }
-  
-  async updateMetalType(id: number, metalTypeUpdate: Partial<InsertMetalType>): Promise<MetalType | undefined> {
-    try {
-      const [updatedMetalType] = await db
-        .update(metalTypes)
-        .set(metalTypeUpdate)
-        .where(eq(metalTypes.id, id))
-        .returning();
-      return updatedMetalType;
-    } catch (error) {
-      console.error("Error updating metal type:", error);
-      return undefined;
-    }
-  }
-  
-  async deleteMetalType(id: number): Promise<boolean> {
-    try {
-      const result = await db.delete(metalTypes).where(eq(metalTypes.id, id));
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Error deleting metal type:", error);
-      return false;
-    }
-  }
-  
-  // Stone Type methods
-  async getStoneType(id: number): Promise<StoneType | undefined> {
-    try {
-      // Ensure id is a valid number to prevent SQL errors
-      if (isNaN(id)) {
-        console.warn(`Invalid stone type id provided: ${id}`);
-        return undefined;
-      }
-      
-      const [stoneType] = await db.select().from(stoneTypes).where(eq(stoneTypes.id, id));
-      return stoneType;
-    } catch (error) {
-      console.error("Error getting stone type:", error);
-      return undefined;
-    }
-  }
-  
-  async getStoneTypeByName(name: string): Promise<StoneType | undefined> {
-    try {
-      // Convert string like "natural-polki" to "Natural Polki" format for searching
-      const formattedName = name
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      
-      const [stoneType] = await db
-        .select()
-        .from(stoneTypes)
-        .where(sql`LOWER(${stoneTypes.name}) LIKE LOWER(${`%${formattedName}%`})`);
-      
-      return stoneType;
-    } catch (error) {
-      console.error("Error getting stone type by name:", error);
-      return undefined;
-    }
-  }
-  
-  async getStoneTypeById(id: number | string): Promise<StoneType | undefined> {
-    // First check if id is valid
-    if (id === null || id === undefined || (typeof id === 'number' && isNaN(id))) {
-      console.warn(`Invalid stone type id: ${id}`);
-      return undefined;
-    }
-    
-    // If id is a number or numeric string, use getStoneType
-    if (typeof id === 'number' || (typeof id === 'string' && /^\d+$/.test(id))) {
-      const numericId = typeof id === 'string' ? parseInt(id) : id;
-      // Double-check that parsed number is valid
-      if (!isNaN(numericId)) {
-        return this.getStoneType(numericId);
-      } else {
-        console.warn(`Failed to parse stone type id: ${id}`);
-        return undefined;
-      }
-    }
-    
-    // If it's a non-numeric string, try to look up by name
-    if (typeof id === 'string' && id.trim().length > 0) {
-      return this.getStoneTypeByName(id);
-    }
-    
-    return undefined;
-  }
-  
-  async getAllStoneTypes(): Promise<StoneType[]> {
-    try {
-      return await db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
-    } catch (error) {
-      console.error("Error getting all stone types:", error);
-      return [];
-    }
-  }
-  
-  async createStoneType(stoneType: InsertStoneType): Promise<StoneType> {
-    try {
-      console.log("STORAGE: Creating stone type with data:", stoneType);
-      
-      // Ensure priceModifier is a number
-      if (typeof stoneType.priceModifier === 'string') {
-        stoneType.priceModifier = parseFloat(stoneType.priceModifier as any);
-      }
-      
-      console.log("STORAGE: Attempting database insert with cleaned data:", stoneType);
-      const insertResult = await db.insert(stoneTypes).values(stoneType).returning();
-      console.log("STORAGE: Insert result:", insertResult);
-      
-      if (insertResult && insertResult.length > 0) {
-        const [newStoneType] = insertResult;
-        console.log("STORAGE: Successfully created stone type:", newStoneType);
-        return newStoneType;
-      } else {
-        throw new Error("No stone type was created or returned from database");
-      }
-    } catch (error) {
-      console.error("STORAGE: Error creating stone type:", error);
-      throw error;
-    }
-  }
-  
-  async updateStoneType(id: number, stoneTypeUpdate: Partial<InsertStoneType>): Promise<StoneType | undefined> {
-    try {
-      const [updatedStoneType] = await db
-        .update(stoneTypes)
-        .set(stoneTypeUpdate)
-        .where(eq(stoneTypes.id, id))
-        .returning();
-      return updatedStoneType;
-    } catch (error) {
-      console.error("Error updating stone type:", error);
-      return undefined;
-    }
-  }
-  
-  async deleteStoneType(id: number): Promise<boolean> {
-    try {
-      // First, delete any product-stone associations
-      await db.delete(productStones).where(eq(productStones.stoneTypeId, id));
-      
-      // Then delete the stone type
-      const result = await db.delete(stoneTypes).where(eq(stoneTypes.id, id));
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Error deleting stone type:", error);
-      return false;
-    }
-  }
-  
-  // Product-Stone relationship methods
-  async getProductStones(productId: number): Promise<StoneType[]> {
-    try {
-      const result = await db
-        .select({
-          stoneType: stoneTypes
-        })
-        .from(productStones)
-        .innerJoin(stoneTypes, eq(productStones.stoneTypeId, stoneTypes.id))
-        .where(eq(productStones.productId, productId));
-      
-      return result.map(r => r.stoneType);
-    } catch (error) {
-      console.error("Error getting product stones:", error);
-      return [];
-    }
-  }
-  
-  async addProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
-    try {
-      // Create the values array for batch insert
-      const values = stoneTypeIds.map(stoneTypeId => ({
-        productId,
-        stoneTypeId
-      }));
-      
-      if (values.length > 0) {
-        await db.insert(productStones).values(values);
-      }
-    } catch (error) {
-      console.error("Error adding product stones:", error);
-      throw error;
-    }
-  }
-  
-  async updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
-    try {
-      // Begin transaction
-      await db.transaction(async (tx) => {
-        // Delete all existing associations
-        await tx.delete(productStones).where(eq(productStones.productId, productId));
-        
-        // Add new associations
-        if (stoneTypeIds.length > 0) {
-          const values = stoneTypeIds.map(stoneTypeId => ({
-            productId,
-            stoneTypeId
-          }));
-          
-          await tx.insert(productStones).values(values);
-        }
-      });
-    } catch (error) {
-      console.error("Error updating product stones:", error);
-      throw error;
-    }
-  }
-  
-  async removeProductStone(productId: number, stoneTypeId: number): Promise<boolean> {
-    try {
-      const result = await db
-        .delete(productStones)
-        .where(
-          and(
-            eq(productStones.productId, productId),
-            eq(productStones.stoneTypeId, stoneTypeId)
-          )
-        );
-      
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Error removing product stone:", error);
-      return false;
-    }
-  }
-
-  // Inspiration Gallery methods
-  async getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined> {
-    try {
-      const [item] = await db.select().from(inspirationGallery).where(eq(inspirationGallery.id, id));
-      return item || undefined;
-    } catch (error) {
-      console.error("Error getting inspiration gallery item:", error);
-      return undefined;
-    }
-  }
-
-  async getAllInspirationItems(): Promise<InspirationGalleryItem[]> {
-    try {
-      return await db.select().from(inspirationGallery).orderBy(desc(inspirationGallery.createdAt));
-    } catch (error) {
-      console.error("Error getting all inspiration gallery items:", error);
-      return [];
-    }
-  }
-
-  async getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]> {
-    try {
-      return await db.select().from(inspirationGallery)
-        .where(eq(inspirationGallery.featured, true))
-        .orderBy(desc(inspirationGallery.createdAt));
-    } catch (error) {
-      console.error("Error getting featured inspiration gallery items:", error);
-      return [];
-    }
-  }
-
-  async getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]> {
-    try {
-      return await db.select().from(inspirationGallery)
-        .where(eq(inspirationGallery.category, category))
-        .orderBy(desc(inspirationGallery.createdAt));
-    } catch (error) {
-      console.error("Error getting inspiration gallery items by category:", error);
-      return [];
-    }
-  }
-
-  async createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem> {
-    try {
-      const [inspirationItem] = await db.insert(inspirationGallery).values(item).returning();
-      return inspirationItem;
-    } catch (error) {
-      console.error("Error creating inspiration gallery item:", error);
-      throw error;
-    }
-  }
-
-  async updateInspirationItem(id: number, itemUpdate: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined> {
-    try {
-      const [item] = await db.update(inspirationGallery)
-        .set(itemUpdate)
-        .where(eq(inspirationGallery.id, id))
-        .returning();
-      return item || undefined;
-    } catch (error) {
-      console.error("Error updating inspiration gallery item:", error);
-      return undefined;
-    }
-  }
-
-  async deleteInspirationItem(id: number): Promise<boolean> {
-    try {
-      const result = await db.delete(inspirationGallery).where(eq(inspirationGallery.id, id));
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Error deleting inspiration gallery item:", error);
-      return false;
-    }
-  }
-
-  // Product Type methods
-  async getProductType(id: number): Promise<ProductType | undefined> {
-    try {
-      const [productType] = await db.select().from(productTypes).where(eq(productTypes.id, id));
-      return productType || undefined;
-    } catch (error) {
-      console.error("Error getting product type:", error);
-      return undefined;
-    }
-  }
-  
-  async getAllProductTypes(): Promise<ProductType[]> {
-    try {
-      return await db.select()
-        .from(productTypes)
-        .orderBy(asc(productTypes.displayOrder), asc(productTypes.name));
-    } catch (error) {
-      console.error("Error getting all product types:", error);
-      return [];
-    }
-  }
-  
-  async getActiveProductTypes(): Promise<ProductType[]> {
-    try {
-      return await db.select()
-        .from(productTypes)
-        .where(eq(productTypes.isActive, true))
-        .orderBy(asc(productTypes.displayOrder), asc(productTypes.name));
-    } catch (error) {
-      console.error("Error getting active product types:", error);
-      return [];
-    }
-  }
-  
-  async createProductType(insertProductType: InsertProductType): Promise<ProductType> {
-    try {
-      const [productType] = await db.insert(productTypes).values(insertProductType).returning();
-      return productType;
-    } catch (error) {
-      console.error("Error creating product type:", error);
-      throw error;
-    }
-  }
-  
-  async updateProductType(id: number, productTypeUpdate: Partial<InsertProductType>): Promise<ProductType | undefined> {
-    try {
-      const [productType] = await db.update(productTypes)
-        .set(productTypeUpdate)
-        .where(eq(productTypes.id, id))
-        .returning();
-      return productType || undefined;
-    } catch (error) {
-      console.error("Error updating product type:", error);
-      return undefined;
-    }
-  }
-  
-  async deleteProductType(id: number): Promise<boolean> {
-    try {
-      const result = await db.delete(productTypes).where(eq(productTypes.id, id));
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Error deleting product type:", error);
-      return false;
-    }
-  }
-
-  // Customization request methods
-  async createCustomizationRequest(request: any): Promise<any> {
-    try {
-      console.log("Creating customization request with data:", request);
-      
-      // Use the correct table for customization requests
-      const [newRequest] = await db
-        .insert(customizationRequests)
-        .values({
-          userId: request.userId || null,
-          fullName: request.fullName, // Match the schema field name
-          email: request.email,
-          phone: request.phone || null,
-          country: request.country || null,
-          productId: request.productId,
-          originalMetalType: request.originalMetalType || "Unknown",
-          requestedMetalType: request.requestedMetalType || "Unknown",
-          originalStoneType: request.originalStoneType || "Unknown",
-          requestedStoneType: request.requestedStoneType || "Unknown",
-          additionalNotes: request.additionalNotes || null,
-          status: "pending", // Default status
-          imageUrls: request.imageUrls || [],
-        })
-        .returning();
-      
-      console.log("Successfully created customization request:", newRequest);
-      return newRequest;
-    } catch (error) {
-      console.error("Error creating customization request:", error);
-      throw error;
-    }
-  }
-
-  async getAllCustomizationRequests(): Promise<any[]> {
-    try {
-      const requests = await db
-        .select()
-        .from(customizationRequests)
-        .orderBy(desc(customizationRequests.createdAt));
-      return requests;
-    } catch (error) {
-      console.error("Error getting all customization requests:", error);
-      return [];
-    }
-  }
-  
-  async getCustomizationRequestsByUserId(userId: number): Promise<any[]> {
-    try {
-      const requests = await db
-        .select()
-        .from(customizationRequests)
-        .where(eq(customizationRequests.userId, userId))
-        .orderBy(desc(customizationRequests.createdAt));
-      return requests;
-    } catch (error) {
-      console.error(`Error getting customization requests for user ${userId}:`, error);
-      return [];
-    }
-  }
-  
-  async getCustomizationRequest(id: number): Promise<any> {
-    try {
-      const [request] = await db
-        .select()
-        .from(customizationRequests)
-        .where(eq(customizationRequests.id, id));
-      return request;
-    } catch (error) {
-      console.error(`Error getting customization request ${id}:`, error);
-      return null;
-    }
-  }
-  
-  async getCustomizationRequestComments(requestId: number): Promise<any[]> {
-    try {
-      const comments = await db
-        .select()
-        .from(customizationRequestComments)
-        .where(eq(customizationRequestComments.customizationRequestId, requestId))
-        .orderBy(asc(customizationRequestComments.createdAt));
-      return comments;
-    } catch (error) {
-      console.error(`Error getting comments for customization request ${requestId}:`, error);
-      return [];
-    }
-  }
-  
-  async addCustomizationRequestComment(comment: any): Promise<any> {
-    try {
-      const [newComment] = await db
-        .insert(customizationRequestComments)
-        .values({
-          customizationRequestId: comment.customizationRequestId,
-          content: comment.content,
-          createdBy: comment.createdBy || 'Anonymous',
-          userId: comment.userId || null,
-          imageUrl: comment.imageUrl || null,
-          isAdmin: comment.isAdmin || false
-        })
-        .returning();
-      return newComment;
-    } catch (error) {
-      console.error("Error adding customization request comment:", error);
-      throw error;
-    }
-  }
-
-  async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
-    try {
-      const [updatedRequest] = await db
-        .update(customizationRequests)
-        .set({ status })
-        .where(eq(customizationRequests.id, id))
-        .returning();
-      return updatedRequest;
-    } catch (error) {
-      console.error("Error updating customization request status:", error);
-      return null;
-    }
-  }
-  
-  async updateCustomizationRequest(id: number, requestData: Partial<CustomizationRequest>): Promise<CustomizationRequest | undefined> {
-    try {
-      console.log("Updating customization request:", id, requestData);
-      const [updatedRequest] = await db
-        .update(customizationRequests)
-        .set(requestData)
-        .where(eq(customizationRequests.id, id))
-        .returning();
-      return updatedRequest;
-    } catch (error) {
-      console.error("Error updating customization request:", error);
-      return undefined;
-    }
-  }
-  
-  // Quote Request methods
-  async getAllQuoteRequests(): Promise<QuoteRequest[]> {
-    try {
-      const requests = await db
-        .select()
-        .from(quoteRequests)
-        .orderBy(desc(quoteRequests.createdAt));
-      return requests;
-    } catch (error) {
-      console.error("Error getting all quote requests:", error);
-      return [];
-    }
-  }
-  
-  async getQuoteRequest(id: number): Promise<QuoteRequest | undefined> {
-    try {
-      const [request] = await db
-        .select()
-        .from(quoteRequests)
-        .where(eq(quoteRequests.id, id));
-      return request || undefined;
-    } catch (error) {
-      console.error("Error getting quote request:", error);
-      return undefined;
-    }
-  }
-  
-  async getQuoteRequestsByUserId(userId: number): Promise<QuoteRequest[]> {
-    try {
-      const requests = await db
-        .select()
-        .from(quoteRequests)
-        .where(eq(quoteRequests.userId, userId))
-        .orderBy(desc(quoteRequests.createdAt));
-      return requests;
-    } catch (error) {
-      console.error("Error getting quote requests by user ID:", error);
-      return [];
-    }
-  }
-  
-  async getQuoteRequestsByEmail(email: string): Promise<QuoteRequest[]> {
-    try {
-      const requests = await db
-        .select()
-        .from(quoteRequests)
-        .where(eq(quoteRequests.email, email))
-        .orderBy(desc(quoteRequests.createdAt));
-      return requests;
-    } catch (error) {
-      console.error("Error getting quote requests by email:", error);
-      return [];
-    }
-  }
-  
-  async createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest> {
-    try {
-      const [newRequest] = await db
-        .insert(quoteRequests)
-        .values(request)
-        .returning();
-      return newRequest;
-    } catch (error) {
-      console.error("Error creating quote request:", error);
-      throw error;
-    }
-  }
-  
-  async updateQuoteRequest(id: number, request: Partial<QuoteRequest>): Promise<QuoteRequest | undefined> {
-    try {
-      const [updatedRequest] = await db
-        .update(quoteRequests)
-        .set(request)
-        .where(eq(quoteRequests.id, id))
-        .returning();
-      return updatedRequest;
-    } catch (error) {
-      console.error("Error updating quote request:", error);
-      return undefined;
-    }
-  }
-  
-  async getQuoteRequestComments(requestId: number): Promise<QuoteRequestComment[]> {
-    try {
-      const comments = await db
-        .select()
-        .from(quoteRequestComments)
-        .where(eq(quoteRequestComments.quoteRequestId, requestId))
-        .orderBy(asc(quoteRequestComments.createdAt));
-      return comments;
-    } catch (error) {
-      console.error("Error getting quote request comments:", error);
-      return [];
-    }
-  }
-  
-  async addQuoteRequestComment(comment: InsertQuoteRequestComment): Promise<QuoteRequestComment> {
-    try {
-      const [newComment] = await db
-        .insert(quoteRequestComments)
-        .values(comment)
-        .returning();
-      return newComment;
-    } catch (error) {
-      console.error("Error adding quote request comment:", error);
-      throw error;
-    }
-  }
-  
-  // Order methods
-  async getOrdersByUserId(userId: number): Promise<any[]> {
-    try {
-      const userOrders = await db
-        .select()
-        .from(orders)
-        .where(eq(orders.userId, userId))
-        .orderBy(desc(orders.createdAt));
-        
-      // For each order, fetch its items
-      const ordersWithItems = await Promise.all(
-        userOrders.map(async (order) => {
-          const items = await db
-            .select()
-            .from(orderItems)
-            .where(eq(orderItems.orderId, order.id));
-            
-          // For each item, fetch the associated product
-          const itemsWithProducts = await Promise.all(
-            items.map(async (item) => {
-              const [product] = await db
-                .select()
-                .from(products)
-                .where(eq(products.id, item.productId));
-              
-              return {
-                ...item,
-                product: product || null
-              };
-            })
-          );
-          
-          return {
-            ...order,
-            items: itemsWithProducts
-          };
-        })
-      );
-      
-      return ordersWithItems;
-    } catch (error) {
-      console.error("Error getting orders by user ID:", error);
-      return [];
-    }
-  }
-  
-  // Cart methods
-  async getCartItemsDetailsBySession(sessionId: string): Promise<any> {
-    try {
-      let cartItemsList = [];
-      
-      if (sessionId) {
-        cartItemsList = await db
-          .select()
-          .from(cartItems)
-          .where(eq(cartItems.sessionId, sessionId));
-      }
-      
-      // Fetch product details for each cart item
-      const itemsWithProducts = await Promise.all(
-        cartItemsList.map(async (item) => {
-          const [productData] = await db
-            .select()
-            .from(products)
-            .where(eq(products.id, item.productId));
-          
-          return {
-            ...item,
-            product: productData || null
-          };
-        })
-      );
-      
-      // Calculate total price
-      const total = itemsWithProducts.reduce((sum, item) => sum + (item.price || 0), 0);
-      
-      return {
-        items: itemsWithProducts,
-        total
-      };
-    } catch (error) {
-      console.error("Error getting cart items by session:", error);
-      return { items: [], total: 0 };
-    }
-  }
-  
-  async getCartItemsByUser(userId: number): Promise<any> {
-    try {
-      const userCartItems = await db
-        .select()
-        .from(cartItems)
-        .where(eq(cartItems.userId, userId));
-      
-      // Fetch product details for each cart item
-      const itemsWithProducts = await Promise.all(
-        userCartItems.map(async (item) => {
-          const [productData] = await db
-            .select()
-            .from(products)
-            .where(eq(products.id, item.productId));
-          
-          return {
-            ...item,
-            product: productData || null
-          };
-        })
-      );
-      
-      // Calculate total price
-      const total = itemsWithProducts.reduce((sum, item) => sum + (item.price || 0), 0);
-      
-      return {
-        items: itemsWithProducts,
-        total
-      };
-    } catch (error) {
-      console.error("Error getting cart items by user:", error);
-      return { items: [], total: 0 };
-    }
-  }
-  
-  async addCartItem(cartItem: InsertCartItem): Promise<any> {
-    try {
-      const [item] = await db
-        .insert(cartItems)
-        .values(cartItem)
-        .returning();
-      
-      return item;
-    } catch (error) {
-      console.error("Error adding cart item:", error);
-      throw error;
-    }
-  }
-  
-  async removeCartItem(id: number): Promise<boolean> {
-    try {
-      await db
-        .delete(cartItems)
-        .where(eq(cartItems.id, id));
-      
-      return true;
-    } catch (error) {
-      console.error("Error removing cart item:", error);
-      return false;
-    }
-  }
-  
-  async clearCart(sessionId: string): Promise<boolean> {
-    try {
-      await db
-        .delete(cartItems)
-        .where(eq(cartItems.sessionId, sessionId));
-      
-      return true;
-    } catch (error) {
-      console.error("Error clearing cart:", error);
-      return false;
-    }
-  }
-  
   async clearCartByUser(userId: number): Promise<boolean> {
     try {
       await db
         .delete(cartItems)
         .where(eq(cartItems.userId, userId));
-      
+
       return true;
     } catch (error) {
       console.error("Error clearing user cart:", error);
@@ -2466,7 +1491,7 @@ export class DatabaseStorage implements IStorage {
       let gemKeywords: string[] = [];
       let aiInputs = null;
       let similarityScore = new Map<number, number>();
-      
+
       // Common gemstone types for keyword matching
       const gemstoneTypes = [
         "diamond", "emerald", "ruby", "sapphire", "pearl", "tanzanite", "topaz", 
@@ -2476,21 +1501,21 @@ export class DatabaseStorage implements IStorage {
         "navaratan", "coral", "pota", "freshwater", "precious", "semi-precious",
         "carved", "lab-grown", "natural", "stone", "crystal"
       ];
-      
+
       // Try to extract AI inputs for more accurate matching
       try {
         if (currentProduct.aiInputs) {
           aiInputs = typeof currentProduct.aiInputs === 'string' 
             ? JSON.parse(currentProduct.aiInputs) 
             : currentProduct.aiInputs;
-            
+
           if (aiInputs) {
             productType = aiInputs.productType || "";
             metalType = aiInputs.metalType || "";
             mainStoneType = aiInputs.mainStoneType || "";
             secondaryStoneType = aiInputs.secondaryStoneType || "";
             otherStoneType = aiInputs.otherStoneType || "";
-            
+
             // Add gemstone keywords from all stone types
             if (mainStoneType) gemKeywords.push(...this.extractGemKeywords(mainStoneType));
             if (secondaryStoneType) gemKeywords.push(...this.extractGemKeywords(secondaryStoneType));
@@ -2505,7 +1530,7 @@ export class DatabaseStorage implements IStorage {
             mainStoneType = additionalData.mainStoneType || "";
             secondaryStoneType = additionalData.secondaryStoneType || "";
             otherStoneType = additionalData.otherStoneType || "";
-            
+
             // If we have aiInputs inside additionalData, use those instead
             if (additionalData.aiInputs) {
               productType = additionalData.aiInputs.productType || productType;
@@ -2514,31 +1539,31 @@ export class DatabaseStorage implements IStorage {
               secondaryStoneType = additionalData.aiInputs.secondaryStoneType || secondaryStoneType;
               otherStoneType = additionalData.aiInputs.otherStoneType || otherStoneType;
             }
-            
+
             // Add gemstone keywords from all stone types
             if (mainStoneType) gemKeywords.push(...this.extractGemKeywords(mainStoneType));
             if (secondaryStoneType) gemKeywords.push(...this.extractGemKeywords(secondaryStoneType));
             if (otherStoneType) gemKeywords.push(...this.extractGemKeywords(otherStoneType));
           }
         }
-        
+
         // Extract gem keywords from product name and description
         if (currentProduct.name) {
           gemKeywords.push(...this.extractGemKeywords(currentProduct.name));
         }
-        
+
         if (currentProduct.description) {
           gemKeywords.push(...this.extractGemKeywords(currentProduct.description));
         }
-        
+
         // Remove duplicates and empty entries
         gemKeywords = [...new Set(gemKeywords)].filter(Boolean);
         console.log(`Extracted gem keywords: ${gemKeywords.join(", ")}`);
-        
+
       } catch (error) {
         console.error(`Error parsing product details for product ${productId}:`, error);
       }
-      
+
       // Get all products except the current one
       const allProducts = await db
         .select()
@@ -2546,9 +1571,9 @@ export class DatabaseStorage implements IStorage {
         .where(
           sql`${products.id} != ${productId} AND ${products.imageUrl} IS NOT NULL`
         );
-        
+
       console.log(`Found ${allProducts.length} other products to compare against`);
-      
+
       // Calculate similarity score for each product
       for (const product of allProducts) {
         let score = 0;
@@ -2559,21 +1584,21 @@ export class DatabaseStorage implements IStorage {
         let otherSecondaryStoneType = "";
         let otherOtherStoneType = "";
         let otherGemKeywords: string[] = [];
-        
+
         // Try to extract AI inputs for comparison
         try {
           if (product.aiInputs) {
             productAiInputs = typeof product.aiInputs === 'string' 
               ? JSON.parse(product.aiInputs) 
               : product.aiInputs;
-              
+
             if (productAiInputs) {
               otherProductType = productAiInputs.productType || "";
               otherMetalType = productAiInputs.metalType || "";
               otherMainStoneType = productAiInputs.mainStoneType || "";
               otherSecondaryStoneType = productAiInputs.secondaryStoneType || "";
               otherOtherStoneType = productAiInputs.otherStoneType || "";
-              
+
               // Add gemstone keywords from all stone types
               if (otherMainStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherMainStoneType));
               if (otherSecondaryStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherSecondaryStoneType));
@@ -2588,7 +1613,7 @@ export class DatabaseStorage implements IStorage {
               otherMainStoneType = additionalData.mainStoneType || "";
               otherSecondaryStoneType = additionalData.secondaryStoneType || "";
               otherOtherStoneType = additionalData.otherStoneType || "";
-              
+
               // If we have aiInputs inside additionalData, use those instead
               if (additionalData.aiInputs) {
                 otherProductType = additionalData.aiInputs.productType || otherProductType;
@@ -2597,59 +1622,59 @@ export class DatabaseStorage implements IStorage {
                 otherSecondaryStoneType = additionalData.aiInputs.secondaryStoneType || otherSecondaryStoneType;
                 otherOtherStoneType = additionalData.aiInputs.otherStoneType || otherOtherStoneType;
               }
-              
+
               // Add gemstone keywords from all stone types
               if (otherMainStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherMainStoneType));
               if (otherSecondaryStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherSecondaryStoneType));
               if (otherOtherStoneType) otherGemKeywords.push(...this.extractGemKeywords(otherOtherStoneType));
             }
           }
-          
+
           // Extract gem keywords from product name and description
           if (product.name) {
             otherGemKeywords.push(...this.extractGemKeywords(product.name));
           }
-          
+
           if (product.description) {
             otherGemKeywords.push(...this.extractGemKeywords(product.description));
           }
-          
+
           // Remove duplicates and empty entries
           otherGemKeywords = [...new Set(otherGemKeywords)].filter(Boolean);
-          
+
         } catch (error) {
           console.error(`Error parsing product details for product ${product.id}:`, error);
         }
-        
+
         // Match by product type/category (highest weight)
         if (otherProductType && productType && otherProductType.toLowerCase() === productType.toLowerCase()) {
           score += 5;
         } else if (product.category && productCategory && product.category.toLowerCase() === productCategory.toLowerCase()) {
           score += 4;
         }
-        
+
         // Match by metal type (medium weight)
         if (otherMetalType && metalType && otherMetalType.toLowerCase() === metalType.toLowerCase()) {
           score += 3;
         }
-        
+
         // Match by main stone type (medium weight)
         if (otherMainStoneType && mainStoneType && otherMainStoneType.toLowerCase().includes(mainStoneType.toLowerCase())) {
           score += 3;
         }
-        
+
         // Match by secondary stone type (lower weight)
         if (otherSecondaryStoneType && secondaryStoneType && 
             otherSecondaryStoneType.toLowerCase().includes(secondaryStoneType.toLowerCase())) {
           score += 2;
         }
-        
+
         // Match by other stone type
         if (otherOtherStoneType && otherStoneType && 
             otherOtherStoneType.toLowerCase().includes(otherStoneType.toLowerCase())) {
           score += 2;
         }
-        
+
         // Enhanced gemstone keyword matching (high weight for gemstone matches)
         if (gemKeywords.length > 0 && otherGemKeywords.length > 0) {
           const matchingGemKeywords = gemKeywords.filter(keyword => 
@@ -2657,41 +1682,41 @@ export class DatabaseStorage implements IStorage {
               otherKeyword.includes(keyword) || keyword.includes(otherKeyword)
             )
           );
-          
+
           // Gemstone matches are highly valued
           score += matchingGemKeywords.length * 4;
         }
-        
+
         // Name-based keyword matching (still important)
         if (product.name && currentProduct.name) {
           const productWords = product.name.toLowerCase().split(/\s+/);
           const currentProductWords = currentProduct.name.toLowerCase().split(/\s+/);
-          
+
           // Count how many words match between the two products
           const matchingWords = productWords.filter(word => 
             currentProductWords.includes(word) && word.length > 3); // Only count words longer than 3 chars
-          
+
           score += matchingWords.length * 2;
         }
-        
+
         // Store the score for this product
         similarityScore.set(product.id, score);
       }
-      
+
       // Sort the products by their similarity score (descending)
       const sortedProducts = allProducts.sort((a, b) => {
         const scoreA = similarityScore.get(a.id) || 0;
         const scoreB = similarityScore.get(b.id) || 0;
         return scoreB - scoreA;
       });
-      
+
       // Log the top products and their scores for debugging
       const topProducts = sortedProducts.slice(0, limit);
       console.log(`Top ${topProducts.length} related products for ${productId}:`);
       topProducts.forEach(product => {
         console.log(`- ID ${product.id}: "${product.name}" (Score: ${similarityScore.get(product.id)})`);
       });
-      
+
       // Return the top N most similar products
       return topProducts;
     } catch (error) {
@@ -2699,13 +1724,13 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
-  
+
   // Helper method to extract gemstone keywords from text
   private extractGemKeywords(text: string): string[] {
     if (!text) return [];
-    
+
     const normalizedText = text.toLowerCase();
-    
+
     // Common gemstone types for keyword matching
     const gemstoneTypes = [
       "diamond", "emerald", "ruby", "sapphire", "pearl", "tanzanite", "topaz", 
@@ -2715,15 +1740,15 @@ export class DatabaseStorage implements IStorage {
       "navaratan", "coral", "pota", "freshwater", "precious", "semi-precious",
       "carved", "lab-grown", "natural", "stone", "crystal"
     ];
-    
+
     // Add prefixes and variations
     const gemVariations = [
       "rose quartz", "lavender quartz", "smoky quartz", "rock crystal",
       "multi-colored", "multi colored", "multicolored", "multi-gemstone", "multi gemstone"
     ];
-    
+
     const allGemTerms = [...gemstoneTypes, ...gemVariations];
-    
+
     // Extract keywords that are found in the text
     return allGemTerms.filter(term => normalizedText.includes(term));
   }

@@ -74,6 +74,10 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
+    // Add health check endpoint for Cloud Run
+    app.get('/', (_req, res) => {
+      res.status(200).json({ status: 'ok' });
+    });
     serveStatic(app);
   }
 
