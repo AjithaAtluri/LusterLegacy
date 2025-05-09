@@ -926,6 +926,7 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
             </DialogDescription>
           </DialogHeader>
           
+          {/* We're not using FormProvider/Form here since this isn't a standard form submission */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -958,41 +959,47 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
             </div>
             
             <div>
-              <FormLabel htmlFor="product-image">Select Image</FormLabel>
+              <Label htmlFor="product-image">Select Image</Label>
               <Input 
                 id="product-image" 
                 type="file" 
                 accept="image/*" 
                 onChange={handleImageChange}
-                className="cursor-pointer"
+                className="cursor-pointer mt-1.5"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Recommended size: 1000 x 1000 pixels. Maximum file size: 5MB.
               </p>
             </div>
             
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => {
-                setEditSection(null);
-                setImageFile(null);
-                setImagePreview(null);
-              }}>
-                Cancel
-              </Button>
+            <div className="flex justify-between mt-4">
               <Button 
                 type="button" 
-                disabled={!imageFile || isImageUploading}
-                onClick={handleImageUpload}
+                variant="outline" 
+                onClick={() => {
+                  setEditSection(null);
+                  setImageFile(null);
+                  setImagePreview(null);
+                }}
               >
-                {isImageUploading ? (
-                  <>
-                    <span className="animate-spin mr-2">⏳</span> Uploading...
-                  </>
-                ) : (
-                  'Upload Image'
-                )}
+                Cancel
               </Button>
-            </DialogFooter>
+              <div className="space-x-2">
+                <Button 
+                  type="button" 
+                  disabled={!imageFile || isImageUploading}
+                  onClick={handleImageUpload}
+                >
+                  {isImageUploading ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span> Uploading...
+                    </>
+                  ) : (
+                    'Upload Image'
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
