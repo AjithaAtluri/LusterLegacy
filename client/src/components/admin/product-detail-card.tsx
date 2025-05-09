@@ -414,6 +414,20 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       // This guarantees the price update will run after the update succeeds
       setEditSection('materials');
       
+      // Immediately update the local stoneDetails state to match the form values
+      // This ensures the UI reflects the changes even before the server responds
+      setStoneDetails(prevDetails => ({
+        ...prevDetails,
+        metalType: data.metalType,
+        metalWeight: data.metalWeight,
+        primaryStone: data.primaryStone,
+        primaryStoneWeight: data.primaryStoneWeight,
+        secondaryStone: data.secondaryStone,
+        secondaryStoneWeight: data.secondaryStoneWeight,
+        otherStone: data.otherStone,
+        otherStoneWeight: data.otherStoneWeight
+      }));
+      
       updateMutation.mutate({
         details: JSON.stringify(detailsUpdate)
       });
@@ -471,6 +485,37 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
     },
     onSuccess: async (updatedProduct) => {
       console.log("Price update successful:", updatedProduct);
+      
+      try {
+        // If product.details exists, parse it to extract updated stone details
+        if (updatedProduct.details) {
+          let updatedDetails = {};
+          try {
+            updatedDetails = typeof updatedProduct.details === 'string' 
+              ? JSON.parse(updatedProduct.details) 
+              : updatedProduct.details;
+              
+            // Immediately update the stoneDetails state with the parsed values
+            // This ensures the UI displays the correct updated information
+            setStoneDetails(prevDetails => ({
+              ...prevDetails,
+              metalType: updatedDetails.metalType || prevDetails.metalType,
+              metalWeight: updatedDetails.metalWeight || prevDetails.metalWeight,
+              primaryStone: updatedDetails.primaryStone || prevDetails.primaryStone,
+              primaryStoneWeight: updatedDetails.primaryStoneWeight || prevDetails.primaryStoneWeight,
+              secondaryStone: updatedDetails.secondaryStone || prevDetails.secondaryStone,
+              secondaryStoneWeight: updatedDetails.secondaryStoneWeight || prevDetails.secondaryStoneWeight,
+              otherStone: updatedDetails.otherStone || prevDetails.otherStone,
+              otherStoneWeight: updatedDetails.otherStoneWeight || prevDetails.otherStoneWeight,
+              detailedDescription: updatedDetails.detailedDescription || prevDetails.detailedDescription
+            }));
+          } catch (parseError) {
+            console.error("Error parsing updated product details:", parseError);
+          }
+        }
+      } catch (error) {
+        console.error("Error updating local state after price update:", error);
+      }
       
       // Immediately update cache with new data
       queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
