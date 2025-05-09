@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/admin-layout";
-import ProductForm from "@/components/admin/product-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/components/ui/dialog";
@@ -29,11 +28,13 @@ export default function AdminProducts() {
   const action = params.get('action');
   
   // If action=new, redirect to AI generator page
-  useState(() => {
+  useEffect(() => {
     if (action === 'new') {
       setLocation("/admin/ai-generator");
+      // Clean up URL
+      cleanupUrl();
     }
-  });
+  }, [action, setLocation]);
   
   // Fetch products from the standard products endpoint that contains all product data
   const { data: products, isLoading } = useQuery({
@@ -219,79 +220,7 @@ export default function AdminProducts() {
         </div>
       )}
       
-      {/* Create Product Dialog */}
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle className="font-playfair text-xl">Add New Product</DialogTitle>
-            <DialogDescription>
-              Create a new product to add to your catalog.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <ProductForm onSuccess={handleFormClose} />
-        </DialogContent>
-      </Dialog>
-      
-      {/* Edit Product Dialog */}
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-5xl">
-          <DialogHeader>
-            <DialogTitle className="font-playfair text-xl">Edit Product</DialogTitle>
-            <DialogDescription>
-              Make changes to the selected product.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedProduct && (
-            <ProductForm 
-              initialData={selectedProduct} 
-              productId={selectedProduct.id} 
-              onSuccess={handleFormClose} 
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      {/* Product Details Dialog */}
-      <Dialog 
-        open={isViewingDetails} 
-        onOpenChange={(open) => {
-          if (!open) {
-            // Don't actually close when clicking outside
-            // Instead, do nothing so the dialog stays open
-            return false;
-          }
-        }} 
-        modal={true}
-      >
-        <DialogContent 
-          className="max-w-4xl max-h-[90vh] overflow-y-auto p-0"
-          onPointerDownOutside={(e) => {
-            // Prevent closing when clicking outside
-            e.preventDefault();
-          }}
-          onEscapeKeyDown={(e) => {
-            // Prevent closing with escape key
-            e.preventDefault();
-          }}
-        >
-          {selectedProduct && (
-            <ProductDetailCard 
-              product={selectedProduct} 
-              onClose={() => {
-                // Only this explicit button close should work
-                setIsViewingDetails(false);
-                
-                // Refetch the product data when closing to ensure list displays updated data
-                queryClient.invalidateQueries({ queryKey: ['/api/products'] });
-                queryClient.refetchQueries({ queryKey: ['/api/products'] });
-              }}
-              isFullPage={false} 
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Delete Confirmation Dialog is the only dialog we need to keep */}
       
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
