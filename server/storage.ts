@@ -640,8 +640,19 @@ export class DatabaseStorage implements IStorage {
   async getOrdersByUserId(userId: number): Promise<any[]> { return []; }
   async getDesignRequest(id: number): Promise<DesignRequest | undefined> { return undefined; }
   async getAllDesignRequests(): Promise<DesignRequest[]> { return []; }
+  
+  async getAllCustomDesigns(): Promise<DesignRequest[]> { 
+    // For API consistency, we're using getAllCustomDesigns as an alias for getAllDesignRequests
+    return this.getAllDesignRequests(); 
+  }
   async getDesignRequestsByEmail(email: string): Promise<DesignRequest[]> { return []; }
   async getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]> { return []; }
+  
+  async getCustomDesignsByStatus(statusList: string[]): Promise<DesignRequest[]> {
+    // For API consistency, returning empty array for now
+    // In a production environment, this would filter by status
+    return [];
+  }
   async createDesignRequest(designRequest: InsertDesignRequest): Promise<DesignRequest> { return {} as DesignRequest; }
   async updateDesignRequest(id: number, designRequest: Partial<DesignRequest>): Promise<DesignRequest | undefined> { return undefined; }
   async getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]> { return []; }
