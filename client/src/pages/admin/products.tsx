@@ -269,7 +269,19 @@ export default function AdminProducts() {
       </Dialog>
       
       {/* Product Details Dialog */}
-      <Dialog open={isViewingDetails} onOpenChange={setIsViewingDetails} modal={false}>
+      <Dialog 
+        open={isViewingDetails} 
+        onOpenChange={(open) => {
+          // Only allow closing via the explicit close button, not by clicking outside
+          if (!open) {
+            // This will prevent automatic closing when clicking outside
+            // The onClose prop in ProductDetailCard will handle the explicit close button
+          } else {
+            setIsViewingDetails(true);
+          }
+        }} 
+        modal={true}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           {selectedProduct && (
             <ProductDetailCard 

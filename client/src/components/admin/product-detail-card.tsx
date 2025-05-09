@@ -259,25 +259,44 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       }
       return response.json();
     },
-    onSuccess: (updatedProduct) => {
-      toast({
-        title: "Product updated",
-        description: "Product information has been successfully updated.",
-      });
+    onSuccess: async (updatedProduct) => {
+      console.log("Product update successful:", updatedProduct);
+      
+      // Close the edit dialog first
       setEditSection(null);
       
-      // Ensure all product-related queries are invalidated
+      // Immediately update cache with new data
+      queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
+      queryClient.setQueryData([`/api/direct-product/${product.id}`], updatedProduct);
+      
+      // Invalidate all product-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
       
-      // Update the product data in cache directly
-      queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
-      queryClient.setQueryData([`/api/direct-product/${product.id}`], updatedProduct);
-
-      // Force a refetch of the current product
-      queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] });
-      queryClient.refetchQueries({ queryKey: [`/api/direct-product/${product.id}`] });
+      // Force a refetch to ensure the UI displays the latest data
+      try {
+        const [directProductResult, productResult] = await Promise.all([
+          queryClient.refetchQueries({ queryKey: [`/api/direct-product/${product.id}`] }),
+          queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] })
+        ]);
+        console.log("Product data refreshed after update:", {
+          directProductResult,
+          productResult
+        });
+        
+        // Update prices after data is refreshed, since price depends on updated materials
+        if (editSection === 'materials') {
+          updatePriceMutation.mutate();
+        }
+      } catch (error) {
+        console.error("Error refreshing product data after update:", error);
+      }
+      
+      toast({
+        title: "Product updated",
+        description: "Product information has been successfully updated and view refreshed.",
+      });
     },
     onError: (error) => {
       toast({
@@ -417,24 +436,36 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
         throw error;
       }
     },
-    onSuccess: (updatedProduct) => {
-      toast({
-        title: "Price updated",
-        description: "Product price has been updated based on the latest calculations.",
-      });
+    onSuccess: async (updatedProduct) => {
+      console.log("Price update successful:", updatedProduct);
       
-      // Invalidate all product-related queries to ensure fresh data
+      // Immediately update cache with new data
+      queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
+      queryClient.setQueryData([`/api/direct-product/${product.id}`], updatedProduct);
+      
+      // Invalidate all related product queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
       
-      // Update the product data in cache directly
-      queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
-      queryClient.setQueryData([`/api/direct-product/${product.id}`], updatedProduct);
+      // Force a refetch to ensure the UI displays the latest data with the newest price calculation
+      try {
+        const [directProductResult, productResult] = await Promise.all([
+          queryClient.refetchQueries({ queryKey: [`/api/direct-product/${product.id}`] }),
+          queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] })
+        ]);
+        console.log("Product data refreshed after price update:", {
+          directProductResult,
+          productResult
+        });
+      } catch (error) {
+        console.error("Error refreshing product data after price update:", error);
+      }
       
-      // Force a refetch of the current product
-      queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] });
-      queryClient.refetchQueries({ queryKey: [`/api/direct-product/${product.id}`] });
+      toast({
+        title: "Price updated",
+        description: "Product price has been recalculated and saved successfully.",
+      });
     },
     onError: (error) => {
       toast({
