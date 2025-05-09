@@ -1687,63 +1687,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Try to calculate accurate price based on product information
       try {
-        // Extract AI inputs if available
-        let aiInputs = null;
-        if (product.aiInputs) {
-          aiInputs = typeof product.aiInputs === 'string' 
-            ? JSON.parse(product.aiInputs) 
-            : product.aiInputs;
-        } else if (product.details) {
-          // Try to extract from nested details
-          const parsedDetails = typeof product.details === 'string' 
-            ? JSON.parse(product.details) 
-            : product.details;
+        // Parse the product details to get the latest data
+        let parsedDetails = {};
+        if (product.details) {
+          try {
+            parsedDetails = typeof product.details === 'string' 
+              ? JSON.parse(product.details) 
+              : product.details;
+          } catch (err) {
+            console.error("Error parsing product details:", err);
+          }
+        }
+        
+        // Get material info from various possible sources
+        // PRIORITY: 1. Direct details fields (from UI edits), 2. aiInputs, 3. nested aiInputs
+        let materialInfo = {
+          // First check if user updated these fields directly in the UI
+          metalType: parsedDetails.metalType,
+          metalWeight: parsedDetails.metalWeight,
+          primaryStone: parsedDetails.primaryStone,
+          primaryStoneWeight: parsedDetails.primaryStoneWeight,
+          secondaryStone: parsedDetails.secondaryStone,
+          secondaryStoneWeight: parsedDetails.secondaryStoneWeight,
+          otherStone: parsedDetails.otherStone,
+          otherStoneWeight: parsedDetails.otherStoneWeight,
           
-          if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+          // These might not be set by direct UI edits
+          productType: "",
+          mainStoneType: "",
+          mainStoneWeight: "",
+          secondaryStoneType: "",
+          otherStoneType: ""
+        };
+        
+        // If we don't have material info directly, try from aiInputs
+        if (!materialInfo.metalType || !materialInfo.primaryStone) {
+          // Extract AI inputs if available
+          let aiInputs = null;
+          if (product.aiInputs) {
+            aiInputs = typeof product.aiInputs === 'string' 
+              ? JSON.parse(product.aiInputs) 
+              : product.aiInputs;
+          } else if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
             aiInputs = parsedDetails.additionalData.aiInputs;
           }
-        }
-
-        if (aiInputs) {
-          // Create parameters for price calculator
-          const params = {
-            productType: aiInputs.productType || "",
-            metalType: aiInputs.metalType || "",
-            metalWeight: parseFloat(aiInputs.metalWeight) || 0,
-            primaryGems: [],
-            otherStone: aiInputs.otherStoneType ? {
-              stoneTypeId: aiInputs.otherStoneType,
-              caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
-            } : undefined
-          };
           
-          // Add main stone if available
-          if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
-            params.primaryGems.push({
-              name: aiInputs.mainStoneType,
-              carats: parseFloat(aiInputs.mainStoneWeight) || 0
-            });
+          if (aiInputs) {
+            // Fill in any missing values from aiInputs
+            materialInfo.productType = aiInputs.productType || materialInfo.productType;
+            materialInfo.metalType = materialInfo.metalType || aiInputs.metalType;
+            materialInfo.metalWeight = materialInfo.metalWeight || aiInputs.metalWeight;
+            
+            // For gemstones, map between different naming conventions
+            materialInfo.primaryStone = materialInfo.primaryStone || aiInputs.mainStoneType;
+            materialInfo.primaryStoneWeight = materialInfo.primaryStoneWeight || aiInputs.mainStoneWeight;
+            materialInfo.secondaryStone = materialInfo.secondaryStone || aiInputs.secondaryStoneType;
+            materialInfo.secondaryStoneWeight = materialInfo.secondaryStoneWeight || aiInputs.secondaryStoneWeight;
+            materialInfo.otherStone = materialInfo.otherStone || aiInputs.otherStoneType;
+            materialInfo.otherStoneWeight = materialInfo.otherStoneWeight || aiInputs.otherStoneWeight;
           }
-          
-          // Add secondary stone if available
-          if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
-            params.primaryGems.push({
-              name: aiInputs.secondaryStoneType,
-              carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
-            });
-          }
-          
-          // Calculate price
-          const result = await calculateJewelryPrice(params);
-          
-          // Add calculated prices to product
-          product.calculatedPriceUSD = result.priceUSD;
-          product.calculatedPriceINR = result.priceINR;
-        } else {
-          // Fallback to base price conversion
-          product.calculatedPriceUSD = Math.round(product.basePrice / USD_TO_INR_RATE);
-          product.calculatedPriceINR = product.basePrice;
         }
+        
+        console.log("Using material info for price calculation:", {
+          metalType: materialInfo.metalType,
+          metalWeight: materialInfo.metalWeight,
+          primaryStone: materialInfo.primaryStone,
+          primaryStoneWeight: materialInfo.primaryStoneWeight,
+          secondaryStone: materialInfo.secondaryStone,
+          secondaryStoneWeight: materialInfo.secondaryStoneWeight,
+          otherStone: materialInfo.otherStone,
+          otherStoneWeight: materialInfo.otherStoneWeight
+        });
+        
+        // Create parameters for price calculator
+        const params = {
+          productType: materialInfo.productType || "",
+          metalType: materialInfo.metalType || "",
+          metalWeight: parseFloat(materialInfo.metalWeight) || 0,
+          primaryGems: [],
+          otherStone: materialInfo.otherStone ? {
+            stoneTypeId: materialInfo.otherStone,
+            caratWeight: parseFloat(materialInfo.otherStoneWeight) || 0
+          } : undefined
+        };
+        
+        // Add primary stone if available
+        if (materialInfo.primaryStone && materialInfo.primaryStoneWeight) {
+          params.primaryGems.push({
+            name: materialInfo.primaryStone,
+            carats: parseFloat(materialInfo.primaryStoneWeight) || 0
+          });
+        }
+        
+        // Add secondary stone if available
+        if (materialInfo.secondaryStone && materialInfo.secondaryStoneWeight) {
+          params.primaryGems.push({
+            name: materialInfo.secondaryStone,
+            carats: parseFloat(materialInfo.secondaryStoneWeight) || 0
+          });
+        }
+        
+        // Calculate price
+        const result = await calculateJewelryPrice(params);
+        
+        // Add calculated prices to product
+        product.calculatedPriceUSD = result.priceUSD;
+        product.calculatedPriceINR = result.priceINR;
       } catch (calcError) {
         console.error(`Error calculating price for product ${product.id}:`, calcError);
         // Fallback to base price conversion
@@ -1833,69 +1882,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate accurate prices for each product
       const productsWithAccuratePrices = await Promise.all(relatedProducts.map(async product => {
         try {
-          // Extract AI inputs if available
-          let aiInputs = null;
+          // Parse the product details to get the latest data
+          let parsedDetails = {};
+          if (product.details) {
+            try {
+              parsedDetails = typeof product.details === 'string' 
+                ? JSON.parse(product.details) 
+                : product.details;
+            } catch (err) {
+              console.error("Error parsing product details:", err);
+            }
+          }
           
-          if (product.aiInputs) {
-            aiInputs = typeof product.aiInputs === 'string' 
-              ? JSON.parse(product.aiInputs) 
-              : product.aiInputs;
-          } else if (product.details) {
-            // Try to extract from nested details
-            const parsedDetails = typeof product.details === 'string' 
-              ? JSON.parse(product.details) 
-              : product.details;
+          // Get material info from various possible sources
+          // PRIORITY: 1. Direct details fields (from UI edits), 2. aiInputs, 3. nested aiInputs
+          let materialInfo = {
+            // First check if user updated these fields directly in the UI
+            metalType: parsedDetails.metalType,
+            metalWeight: parsedDetails.metalWeight,
+            primaryStone: parsedDetails.primaryStone,
+            primaryStoneWeight: parsedDetails.primaryStoneWeight,
+            secondaryStone: parsedDetails.secondaryStone,
+            secondaryStoneWeight: parsedDetails.secondaryStoneWeight,
+            otherStone: parsedDetails.otherStone,
+            otherStoneWeight: parsedDetails.otherStoneWeight,
             
-            if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+            // These might not be set by direct UI edits
+            productType: "",
+            mainStoneType: "",
+            mainStoneWeight: "",
+            secondaryStoneType: "",
+            otherStoneType: ""
+          };
+          
+          // If we don't have material info directly, try from aiInputs
+          if (!materialInfo.metalType || !materialInfo.primaryStone) {
+            // Extract AI inputs if available
+            let aiInputs = null;
+            if (product.aiInputs) {
+              aiInputs = typeof product.aiInputs === 'string' 
+                ? JSON.parse(product.aiInputs) 
+                : product.aiInputs;
+            } else if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
               aiInputs = parsedDetails.additionalData.aiInputs;
             }
+            
+            if (aiInputs) {
+              // Fill in any missing values from aiInputs
+              materialInfo.productType = aiInputs.productType || materialInfo.productType;
+              materialInfo.metalType = materialInfo.metalType || aiInputs.metalType;
+              materialInfo.metalWeight = materialInfo.metalWeight || aiInputs.metalWeight;
+              
+              // For gemstones, map between different naming conventions
+              materialInfo.primaryStone = materialInfo.primaryStone || aiInputs.mainStoneType;
+              materialInfo.primaryStoneWeight = materialInfo.primaryStoneWeight || aiInputs.mainStoneWeight;
+              materialInfo.secondaryStone = materialInfo.secondaryStone || aiInputs.secondaryStoneType;
+              materialInfo.secondaryStoneWeight = materialInfo.secondaryStoneWeight || aiInputs.secondaryStoneWeight;
+              materialInfo.otherStone = materialInfo.otherStone || aiInputs.otherStoneType;
+              materialInfo.otherStoneWeight = materialInfo.otherStoneWeight || aiInputs.otherStoneWeight;
+            }
           }
           
-          if (aiInputs) {
-            // Create parameters for price calculator
-            const params = {
-              productType: aiInputs.productType || "",
-              metalType: aiInputs.metalType || "",
-              metalWeight: parseFloat(aiInputs.metalWeight) || 0,
-              primaryGems: [],
-              otherStone: aiInputs.otherStoneType ? {
-                stoneTypeId: aiInputs.otherStoneType,
-                caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
-              } : undefined
-            };
-            
-            // Add main stone if available
-            if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
-              params.primaryGems.push({
-                name: aiInputs.mainStoneType,
-                carats: parseFloat(aiInputs.mainStoneWeight) || 0
-              });
-            }
-            
-            // Add secondary stone if available
-            if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
-              params.primaryGems.push({
-                name: aiInputs.secondaryStoneType,
-                carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
-              });
-            }
-            
-            // Calculate price using the standard calculator function
-            const result = await calculateJewelryPrice(params);
-            
-            return {
-              ...product,
-              calculatedPriceUSD: result.priceUSD,
-              calculatedPriceINR: result.priceINR
-            };
-          } else {
-            // Fallback to base price conversion
-            return {
-              ...product,
-              calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-              calculatedPriceINR: product.basePrice
-            };
+          // Create parameters for price calculator
+          const params = {
+            productType: materialInfo.productType || "",
+            metalType: materialInfo.metalType || "",
+            metalWeight: parseFloat(materialInfo.metalWeight) || 0,
+            primaryGems: [],
+            otherStone: materialInfo.otherStone ? {
+              stoneTypeId: materialInfo.otherStone,
+              caratWeight: parseFloat(materialInfo.otherStoneWeight) || 0
+            } : undefined
+          };
+          
+          // Add primary stone if available
+          if (materialInfo.primaryStone && materialInfo.primaryStoneWeight) {
+            params.primaryGems.push({
+              name: materialInfo.primaryStone,
+              carats: parseFloat(materialInfo.primaryStoneWeight) || 0
+            });
           }
+          
+          // Add secondary stone if available
+          if (materialInfo.secondaryStone && materialInfo.secondaryStoneWeight) {
+            params.primaryGems.push({
+              name: materialInfo.secondaryStone,
+              carats: parseFloat(materialInfo.secondaryStoneWeight) || 0
+            });
+          }
+          
+          // Calculate price using the standard calculator function
+          const result = await calculateJewelryPrice(params);
+          
+          return {
+            ...product,
+            calculatedPriceUSD: result.priceUSD,
+            calculatedPriceINR: result.priceINR
+          };
         } catch (error) {
           console.error(`Error processing product ${product.id} for pricing:`, error);
           // Fallback to base price
