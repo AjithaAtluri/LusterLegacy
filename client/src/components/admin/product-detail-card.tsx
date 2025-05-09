@@ -21,9 +21,10 @@ import { useAdminPriceCalculator } from "@/hooks/use-admin-price-calculator";
 interface ProductDetailCardProps {
   product: any;
   onClose: () => void;
+  isFullPage?: boolean;
 }
 
-export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) {
+export function ProductDetailCard({ product, onClose, isFullPage = false }: ProductDetailCardProps) {
   const { toast } = useToast();
   const [editSection, setEditSection] = useState<string | null>(null);
   
@@ -477,7 +478,16 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
   });
   
   return (
-    <Card className="w-full">
+    <Card className={`w-full ${isFullPage ? "shadow-none border-0" : ""}`}>
+      {/* Header with Close Button for non-fullpage view */}
+      {!isFullPage && (
+        <div className="flex justify-end p-3">
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+      
       {/* Product Image */}
       <div className="w-full h-64 overflow-hidden bg-muted relative">
         <img 
@@ -637,23 +647,48 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       </CardContent>
       
       <CardFooter className="flex justify-between border-t p-4">
-        <Button variant="outline" onClick={onClose}>Close</Button>
-        <Button 
-          variant="default" 
-          onClick={() => {
-            // Update price using the same mutation as the "Update Price" button
-            updatePriceMutation.mutate();
-          }}
-          disabled={updatePriceMutation.isPending || isCalculating}
-        >
-          {updatePriceMutation.isPending ? (
-            <>Refreshing...</>
-          ) : (
-            <>
-              <RefreshCcw className="h-4 w-4 mr-2" /> Refresh Price
-            </>
-          )}
-        </Button>
+        {!isFullPage ? (
+          // For dialog mode, show Close and Refresh buttons
+          <>
+            <Button variant="outline" onClick={onClose}>Close</Button>
+            <Button 
+              variant="default" 
+              onClick={() => {
+                // Update price using the same mutation as the "Update Price" button
+                updatePriceMutation.mutate();
+              }}
+              disabled={updatePriceMutation.isPending || isCalculating}
+            >
+              {updatePriceMutation.isPending ? (
+                <>Refreshing...</>
+              ) : (
+                <>
+                  <RefreshCcw className="h-4 w-4 mr-2" /> Refresh Price
+                </>
+              )}
+            </Button>
+          </>
+        ) : (
+          // For full page mode, show just the Refresh Price button centered
+          <div className="w-full flex justify-center">
+            <Button 
+              variant="default" 
+              onClick={() => {
+                updatePriceMutation.mutate();
+              }}
+              disabled={updatePriceMutation.isPending || isCalculating}
+              className="w-48"
+            >
+              {updatePriceMutation.isPending ? (
+                <>Refreshing Price...</>
+              ) : (
+                <>
+                  <RefreshCcw className="h-4 w-4 mr-2" /> Refresh Price
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </CardFooter>
       
       {/* Edit Dialogs */}
