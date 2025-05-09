@@ -62,13 +62,13 @@ export function PriceBreakdownTotal({
   // Calculate the total with the correct overhead
   const calculatedTotalCost = baseCost + correctOverhead;
   
-  // The price from the API should match this total (with possible small rounding differences)
-  const isConsistent = Math.abs(calculatedTotalCost - priceUSD) < 5; // Allow for small rounding differences
+  // Always use the correctly calculated total based on the sum of components
+  // This ensures the breakdown adds up properly to the displayed total
+  const displayTotalUSD = calculatedTotalCost;
+  const displayTotalINR = Math.round(calculatedTotalCost * (exchangeRate || 83));
   
-  // Use the calculated total if it's significantly different from the API total
-  // This ensures the breakdown components add up correctly to the displayed total
-  const displayTotalUSD = !isConsistent && calculatedTotalCost > 5 ? calculatedTotalCost : priceUSD;
-  const displayTotalINR = !isConsistent && calculatedTotalCost > 5 ? Math.round(calculatedTotalCost * (exchangeRate || 83)) : priceINR;
+  // The price from the API might not match this total due to data storage or rounding issues
+  const isConsistent = Math.abs(calculatedTotalCost - priceUSD) < 5; // Allow for small rounding differences
   
   // Override the overhead value displayed in the UI
   const displayOverhead = correctOverhead;
