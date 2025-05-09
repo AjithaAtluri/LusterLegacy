@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useGoldPrice } from "./use-gold-price";
@@ -46,6 +46,11 @@ export function useAdminPriceCalculator({
   const { goldPrice, isLoading: isGoldPriceLoading, location, timestamp } = useGoldPrice();
   const { exchangeRate, isLoading: isExchangeRateLoading } = useExchangeRate();
   
+  // Use a ref to track if we've already calculated price for these parameters
+  const calculatedParamsRef = useRef<string>('');
+  // Use a ref to limit calculation to once per render cycle
+  const calculationCountRef = useRef<number>(0);
+  
   const [priceUSD, setPriceUSD] = useState<number>(0);
   const [priceINR, setPriceINR] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
@@ -74,6 +79,24 @@ export function useAdminPriceCalculator({
         "preventCalculation flag set to true");
       return;
     }
+    
+    // Create a hash of current parameters to avoid duplicate calculations
+    const paramsHash = `${metalType}-${metalWeight}-${mainStoneType}-${mainStoneWeight}-${secondaryStoneType}-${secondaryStoneWeight}-${otherStoneType}-${otherStoneWeight}`;
+    
+    // If we've already calculated price for these parameters, don't recalculate
+    if (calculatedParamsRef.current === paramsHash) {
+      console.log("Price calculation skipped: Parameters unchanged");
+      return;
+    }
+    
+    // Only allow one calculation per render cycle
+    if (calculationCountRef.current > 0) {
+      console.log("Price calculation skipped: Already calculated once this render cycle");
+      return;
+    }
+    
+    // Increment calculation count for this render cycle
+    calculationCountRef.current += 1;
 
     const calculatePrice = async () => {
       try {
@@ -155,6 +178,10 @@ export function useAdminPriceCalculator({
         
         setBreakdown(completeBreakdown);
         
+        // Store the params hash to avoid recalculation for the same params
+        calculatedParamsRef.current = paramsHash;
+        console.log("Price calculation successful, parameters cached:", paramsHash);
+        
       } catch (error) {
         console.error("Error calculating price:", error);
         toast({
@@ -172,7 +199,11 @@ export function useAdminPriceCalculator({
       calculatePrice();
     }, 500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // Reset calculation count on cleanup to allow calculation in next render cycle
+      calculationCountRef.current = 0;
+    };
   }, [
     metalType, 
     metalWeight, 
@@ -186,6 +217,15 @@ export function useAdminPriceCalculator({
     toast
   ]);
 
+  // Function to manually trigger price calculation
+  const calculatePrice = () => {
+    // Reset the stored params hash to force recalculation
+    calculatedParamsRef.current = '';
+    // Reset the calculation count to allow a new calculation
+    calculationCountRef.current = 0;
+    console.log("Manual price calculation triggered");
+  };
+
   return {
     priceUSD,
     priceINR,
@@ -195,6 +235,7 @@ export function useAdminPriceCalculator({
     exchangeRate,
     goldPriceLocation: location,
     goldPriceTimestamp: timestamp,
-    isGoldPriceLoading
+    isGoldPriceLoading,
+    calculatePrice // Expose the function to manually trigger price calculation
   };
 }

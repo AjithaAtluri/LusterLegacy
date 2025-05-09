@@ -3,6 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminPriceCalculator } from "@/hooks/use-admin-price-calculator";
 import { formatCurrency } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface PriceCalculatorDisplayProps {
   metalType: string;
@@ -36,7 +38,8 @@ export function PriceCalculatorDisplay({
     exchangeRate,
     goldPriceLocation,
     goldPriceTimestamp,
-    isGoldPriceLoading
+    isGoldPriceLoading,
+    calculatePrice // Get the manual calculation function
   } = useAdminPriceCalculator({
     metalType,
     metalWeight,
@@ -306,6 +309,20 @@ export function PriceCalculatorDisplay({
                 )}
               </div>
             </div>
+          </div>
+          
+          {/* Refresh Price Button */}
+          <div className="pt-3 flex justify-end">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => calculatePrice()}
+              disabled={isCalculating}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw size={14} className={isCalculating ? "animate-spin" : ""} />
+              <span>Update Price</span>
+            </Button>
           </div>
           
           {/* Note */}

@@ -240,7 +240,12 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
     secondaryStoneType: stoneDetails.secondaryStone,
     secondaryStoneWeight: String(stoneDetails.secondaryStoneWeight),
     otherStoneType: stoneDetails.otherStone,
-    otherStoneWeight: String(stoneDetails.otherStoneWeight)
+    otherStoneWeight: String(stoneDetails.otherStoneWeight),
+    // Prevent calculation when editing text-only sections 
+    // (basic info, detailed description, or product flags)
+    preventCalculation: editSection === 'basic' || 
+                        editSection === 'description' || 
+                        editSection === 'flags'
   });
   
   // Form for basic info editing
