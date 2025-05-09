@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { Pencil, Save, X, RefreshCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
@@ -905,22 +906,82 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       
       {/* Image Edit Dialog */}
       <Dialog open={editSection === 'image'} onOpenChange={(open) => !open && setEditSection(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Edit Image</DialogTitle>
+            <DialogTitle>Update Product Image</DialogTitle>
             <DialogDescription>
-              This feature is not implemented in this simplified version. Please use the Full Edit option to manage images.
+              Upload a new image for this product.
             </DialogDescription>
           </DialogHeader>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditSection(null)}>
-              Close
-            </Button>
-            <Button onClick={() => window.location.href = `/admin/edit-product/${product.id}`}>
-              Go to Full Edit
-            </Button>
-          </DialogFooter>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium mb-2">Current Image</p>
+                <div className="relative w-full aspect-square rounded-md overflow-hidden border border-border">
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.name} 
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-sm font-medium mb-2">New Image Preview</p>
+                <div className="relative w-full aspect-square rounded-md overflow-hidden border border-border bg-muted">
+                  {imagePreview ? (
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-sm text-muted-foreground">No image selected</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <FormLabel htmlFor="product-image">Select Image</FormLabel>
+              <Input 
+                id="product-image" 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange}
+                className="cursor-pointer"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Recommended size: 1000 x 1000 pixels. Maximum file size: 5MB.
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                setEditSection(null);
+                setImageFile(null);
+                setImagePreview(null);
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                type="button" 
+                disabled={!imageFile || isImageUploading}
+                onClick={handleImageUpload}
+              >
+                {isImageUploading ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span> Uploading...
+                  </>
+                ) : (
+                  'Upload Image'
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </Card>
