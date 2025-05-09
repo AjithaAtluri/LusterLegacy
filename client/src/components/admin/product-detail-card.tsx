@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Save, X, RefreshCcw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,29 @@ interface ProductDetailCardProps {
 export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) {
   const { toast } = useToast();
   const [editSection, setEditSection] = useState<string | null>(null);
+  
+  // Fetch metal types and stone types from API
+  const { data: metalTypes = [], isLoading: isMetalTypesLoading } = useQuery({
+    queryKey: ['/api/metal-types'],
+    queryFn: async () => {
+      const response = await fetch('/api/metal-types');
+      if (!response.ok) {
+        throw new Error('Failed to fetch metal types');
+      }
+      return response.json();
+    }
+  });
+
+  const { data: stoneTypes = [], isLoading: isStoneTypesLoading } = useQuery({
+    queryKey: ['/api/stone-types'],
+    queryFn: async () => {
+      const response = await fetch('/api/stone-types');
+      if (!response.ok) {
+        throw new Error('Failed to fetch stone types');
+      }
+      return response.json();
+    }
+  });
   
   // Extract stone details from product
   const getStoneDetails = () => {
@@ -442,9 +466,29 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Metal Type</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a metal type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {isMetalTypesLoading ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : metalTypes && metalTypes.length > 0 ? (
+                            metalTypes.map((metalType: any) => (
+                              <SelectItem key={metalType.id} value={metalType.name}>
+                                {metalType.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none" disabled>No metal types available</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -472,9 +516,30 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Primary Stone</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a stone type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="None">None</SelectItem>
+                          {isStoneTypesLoading ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : stoneTypes && stoneTypes.length > 0 ? (
+                            stoneTypes.map((stoneType: any) => (
+                              <SelectItem key={stoneType.id} value={stoneType.name}>
+                                {stoneType.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none" disabled>No stone types available</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -502,9 +567,30 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Secondary Stone</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a stone type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="None">None</SelectItem>
+                          {isStoneTypesLoading ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : stoneTypes && stoneTypes.length > 0 ? (
+                            stoneTypes.map((stoneType: any) => (
+                              <SelectItem key={stoneType.id} value={stoneType.name}>
+                                {stoneType.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none" disabled>No stone types available</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -532,9 +618,30 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Other Stone</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a stone type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="None">None</SelectItem>
+                          {isStoneTypesLoading ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : stoneTypes && stoneTypes.length > 0 ? (
+                            stoneTypes.map((stoneType: any) => (
+                              <SelectItem key={stoneType.id} value={stoneType.name}>
+                                {stoneType.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="none" disabled>No stone types available</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
