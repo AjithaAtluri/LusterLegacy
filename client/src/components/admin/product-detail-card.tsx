@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Save, X, RefreshCcw } from "lucide-react";
@@ -125,7 +125,8 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
   const basicInfoForm = useForm({
     defaultValues: {
       name: product.name || "",
-      description: product.description || ""
+      description: product.description || "",
+      detailedDescription: stoneDetails.detailedDescription || ""
     }
   });
   
@@ -171,9 +172,16 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
   
   // Handle basic info save
   const handleBasicInfoSave = (data: any) => {
+    // Create updated details object with the detailed description
+    const detailsUpdate = {
+      ...product.details ? (typeof product.details === 'string' ? JSON.parse(product.details) : product.details) : {},
+      detailedDescription: data.detailedDescription
+    };
+    
     updateMutation.mutate({
       name: data.name,
-      description: data.description
+      description: data.description,
+      details: JSON.stringify(detailsUpdate)
     });
   };
   
@@ -427,8 +435,28 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
                   <FormItem>
                     <FormLabel>Product Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} rows={3} />
                     </FormControl>
+                    <FormDescription>
+                      Brief description shown in product listings
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={basicInfoForm.control}
+                name="detailedDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Detailed Description</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={6} />
+                    </FormControl>
+                    <FormDescription>
+                      Comprehensive product details shown on the product page
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
