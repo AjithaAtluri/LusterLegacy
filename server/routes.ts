@@ -32,6 +32,23 @@ import path from "path";
 import { calculateJewelryPrice, getSamplePriceCalculation, getGemPricePerCaratFromName } from "./utils/price-calculator";
 import fs from "fs";
 import { validateAdmin } from "./utils";
+
+// Enhanced middleware to check admin rights while respecting impersonation
+const validateAdminWithImpersonation = (req: Request, res: Response, next: NextFunction) => {
+  // Check if the user is impersonating and has an admin role cookie
+  const isImpersonating = req.cookies.admin_impersonating === 'true';
+  const originalAdminRole = req.cookies.admin_role;
+  
+  if (isImpersonating && (originalAdminRole === 'admin' || originalAdminRole === 'limited-admin')) {
+    console.log(`Admin access granted through impersonation: ${req.user?.username} with original role ${originalAdminRole}`);
+    // Allow access and proceed
+    next();
+    return;
+  }
+  
+  // Not impersonating or no admin role cookie - fall back to regular validation
+  validateAdmin(req, res, next);
+};
 import { v4 as uuidv4 } from "uuid";
 import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal";
 import { generateContent } from "./ai-service";
@@ -7239,6 +7256,15 @@ Respond in JSON format:
         maxAge: 2 * 60 * 60 * 1000 // 2 hours max
       });
       
+      // Store the admin role to preserve admin access during impersonation
+      res.cookie('admin_role', req.user.role, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 2 * 60 * 60 * 1000 // 2 hours max
+      });
+      
       // Also store display information in a non-http-only cookie so the frontend can show impersonation status
       res.cookie('impersonating_user', targetUser.username, { 
         httpOnly: false, 
@@ -7306,6 +7332,7 @@ Respond in JSON format:
       // Clear impersonation cookies
       res.clearCookie('admin_impersonating', { path: '/' });
       res.clearCookie('real_admin_id', { path: '/' });
+      res.clearCookie('admin_role', { path: '/' });
       res.clearCookie('impersonating_user', { path: '/' });
       
       // Log back in as the admin
