@@ -272,21 +272,36 @@ export default function AdminProducts() {
       <Dialog 
         open={isViewingDetails} 
         onOpenChange={(open) => {
-          // Only allow closing via the explicit close button, not by clicking outside
           if (!open) {
-            // This will prevent automatic closing when clicking outside
-            // The onClose prop in ProductDetailCard will handle the explicit close button
-          } else {
-            setIsViewingDetails(true);
+            // Don't actually close when clicking outside
+            // Instead, do nothing so the dialog stays open
+            return false;
           }
         }} 
         modal={true}
       >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent 
+          className="max-w-4xl max-h-[90vh] overflow-y-auto p-0"
+          onPointerDownOutside={(e) => {
+            // Prevent closing when clicking outside
+            e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            // Prevent closing with escape key
+            e.preventDefault();
+          }}
+        >
           {selectedProduct && (
             <ProductDetailCard 
               product={selectedProduct} 
-              onClose={() => setIsViewingDetails(false)} 
+              onClose={() => {
+                // Only this explicit button close should work
+                setIsViewingDetails(false);
+                
+                // Refetch the product data when closing to ensure list displays updated data
+                queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+                queryClient.refetchQueries({ queryKey: ['/api/products'] });
+              }} 
             />
           )}
         </DialogContent>

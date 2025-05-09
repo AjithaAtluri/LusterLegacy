@@ -641,18 +641,18 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
         <Button 
           variant="default" 
           onClick={() => {
-            // Force refresh of product data
-            queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
-            queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
-            queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] });
-            
-            toast({
-              title: "Refreshed",
-              description: "Product data has been refreshed",
-            });
+            // Update price using the same mutation as the "Update Price" button
+            updatePriceMutation.mutate();
           }}
+          disabled={updatePriceMutation.isPending || isCalculating}
         >
-          <RefreshCcw className="h-4 w-4 mr-2" /> Refresh View
+          {updatePriceMutation.isPending ? (
+            <>Refreshing...</>
+          ) : (
+            <>
+              <RefreshCcw className="h-4 w-4 mr-2" /> Refresh Price
+            </>
+          )}
         </Button>
       </CardFooter>
       
