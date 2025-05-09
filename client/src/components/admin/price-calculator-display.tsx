@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { useEffect } from "react";
 
 interface PriceCalculatorDisplayProps {
   metalType: string;
@@ -59,7 +60,7 @@ export function PriceCalculatorDisplay({
       calculatePrice();
       console.log("Initial price calculation triggered");
     }
-  }, []);
+  }, [metalType, metalWeight, isCalculating, calculatePrice]);
   
   // Calculate the base cost (materials only)
   const baseCost = breakdown.metalCost + 
@@ -108,6 +109,18 @@ export function PriceCalculatorDisplay({
         <div className="text-xs pt-2 text-muted-foreground flex items-center gap-1">
           <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
           <span>Based on live gold price: ₹{goldPrice?.toLocaleString('en-IN') || "---"}/g</span>
+        </div>
+        <div className="pt-2">
+          <Button 
+            size="xs" 
+            variant="default" 
+            onClick={() => calculatePrice()}
+            disabled={isCalculating}
+            className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white font-medium h-7 text-xs w-full"
+          >
+            <RefreshCw size={12} className={isCalculating ? "animate-spin" : ""} />
+            <span>Update Pricing</span>
+          </Button>
         </div>
       </div>
     );
@@ -325,10 +338,10 @@ export function PriceCalculatorDisplay({
           <div className="pt-3 flex justify-end">
             <Button 
               size="sm" 
-              variant="outline" 
+              variant="default" 
               onClick={() => calculatePrice()}
               disabled={isCalculating}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white font-medium"
             >
               <RefreshCw size={14} className={isCalculating ? "animate-spin" : ""} />
               <span>Update Price</span>
