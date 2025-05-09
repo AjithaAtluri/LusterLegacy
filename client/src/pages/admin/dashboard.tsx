@@ -20,11 +20,10 @@ import {
   UserCircle
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 // Separate component for testimonials list to prevent React hooks rules violation
-// Use memo to prevent unnecessary re-renders
-const PendingTestimonialsList = memo(function PendingTestimonialsList() {
+function PendingTestimonialsList() {
   const { data: testimonials, isLoading: isLoadingTestimonials } = useQuery({
     queryKey: ['/api/admin/testimonials']
   });
@@ -197,9 +196,31 @@ export default function AdminDashboard() {
   const requestStats = calculateRequestStats();
   const designStats = calculateDesignStats();
   
-  // Pending designs
+  // Define type for design objects
+  interface DesignRequest {
+    id: number;
+    fullName: string;
+    email: string;
+    status: string;
+    imageUrl: string;
+    createdAt: Date | null;
+    [key: string]: any; // Allow for additional properties
+  }
+  
+  // Pending designs with proper type annotation
   const pendingDesigns = Array.isArray(designs) ? 
-    designs.filter((design: any) => design.status === "pending").slice(0, 5) : [];
+    designs.filter((design: any) => design.status === "pending")
+      .slice(0, 5)
+      .map((design: any): DesignRequest => ({
+        id: design.id,
+        fullName: design.fullName || "Unknown",
+        email: design.email || "",
+        status: design.status || "pending",
+        imageUrl: design.imageUrl || "",
+        createdAt: design.createdAt || null,
+        ...design // Include all other properties
+      }))
+    : [];
   
   // Get today's date
   const today = new Date();

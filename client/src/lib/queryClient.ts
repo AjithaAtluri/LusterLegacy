@@ -358,10 +358,5 @@ export const queryClient = new QueryClient({
       retryDelay: attempt => Math.min(1000 * 2 ** attempt, 15000), // Exponential backoff for mutations too
       networkMode: 'always', // More reliable in production
     },
-  },
-  logger: {
-    log: loggerEnabled ? console.log : () => {},
-    warn: loggerEnabled ? console.warn : () => {},
-    error: console.error, // Always keep error logging
   }
 });
