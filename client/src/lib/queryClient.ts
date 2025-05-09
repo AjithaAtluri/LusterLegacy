@@ -39,34 +39,16 @@ export async function apiRequest(
   const isAdminEndpoint = url.includes('/admin/');
   const isAIEndpoint = url.includes('generate') || url.includes('analyze') || url.includes('content');
   
-  // Debug level varies by endpoint type
-  const shouldLog = isAdminEndpoint || isAIEndpoint;
+  // Debug level varies by endpoint type and environment
+  const isDev = import.meta.env.DEV;
+  const shouldLog = isDev && (isAdminEndpoint || isAIEndpoint);
   
   if (shouldLog) {
-    console.log(`Making ${isAIEndpoint ? 'AI' : 'admin'} API request to ${url}`, {
-      method,
-      hasData: !!data,
-      dataSize: data ? (typeof data === 'string' ? data.length : 'object') : 0,
-      contentType: headers["Content-Type"],
-      withCredentials: true
-    });
+    console.log(`Making ${isAIEndpoint ? 'AI' : 'admin'} API request to ${url}`);
     
     // For AI endpoints, add special debug header
     if (isAIEndpoint) {
       headers["X-Debug-AI-Request"] = "true";
-      
-      // Test document.cookie access to verify cookies are available to JS
-      try {
-        const cookieStr = document.cookie;
-        const hasCookies = cookieStr && cookieStr.length > 0;
-        
-        console.log("Browser cookies available:", {
-          hasCookies,
-          cookieCount: hasCookies ? cookieStr.split(';').length : 0
-        });
-      } catch (e) {
-        console.error("Could not access document.cookie:", e);
-      }
     }
   }
 
@@ -80,38 +62,11 @@ export async function apiRequest(
     });
     
     if (shouldLog) {
-      // Log key headers instead of trying to iterate through HeadersIterator
-      const responseHeaders = {
-        'content-type': res.headers.get('content-type'),
-        'content-length': res.headers.get('content-length'),
-        'set-cookie': res.headers.get('set-cookie')
-      };
+      console.log(`${isAIEndpoint ? 'AI' : 'Admin'} API response status: ${res.status} for ${url}`);
       
-      console.log(`${isAIEndpoint ? 'AI' : 'Admin'} API response status: ${res.status}`, {
-        url,
-        status: res.status,
-        statusText: res.statusText,
-        headers: responseHeaders
-      });
-      
-      // For AI endpoints with error response, try to extract more details
+      // Only log error details in dev mode
       if (isAIEndpoint && !res.ok) {
-        try {
-          const errorText = await res.clone().text();
-          console.error(`AI endpoint error response:`, {
-            statusCode: res.status,
-            responseText: errorText.substring(0, 500) + (errorText.length > 500 ? '...' : '')
-          });
-          
-          try {
-            const errorJson = JSON.parse(errorText);
-            console.error("Parsed error details:", errorJson);
-          } catch (parseErr) {
-            // Text wasn't valid JSON
-          }
-        } catch (textErr) {
-          console.error("Could not extract error response text");
-        }
+        console.error(`AI endpoint error: ${res.status}`);
       }
     }
 
@@ -141,16 +96,25 @@ export const getQueryFn: <T>(options: {
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-        console.log(`Auth query returned 401 for ${queryKey[0]}, returning null`);
+        if (import.meta.env.DEV) {
+          console.log(`Auth query returned 401 for ${queryKey[0]}, returning null`);
+        }
         return null;
       }
 
       await throwIfResNotOk(res);
       const data = await res.json();
-      console.log(`Auth query successful for ${queryKey[0]}:`, data);
+      if (import.meta.env.DEV) {
+        console.log(`Auth query successful for ${queryKey[0]}`);
+      }
       return data;
     } catch (error) {
-      console.error(`Error in query ${queryKey[0]}:`, error);
+      // Only log the error message, not the full error object in production
+      if (import.meta.env.DEV) {
+        console.error(`Error in query ${queryKey[0]}:`, error);
+      } else {
+        console.error(`Error in query ${queryKey[0]}`);
+      }
       throw error;
     }
   };
@@ -370,17 +334,25 @@ export const devHelpers = {
   }
 };
 
+// Create environment-specific Query Client configuration
+const isDev = import.meta.env.DEV;
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      refetchOnWindowFocus: isDev ? false : true, // Enable refetching on window focus in production
+      staleTime: isDev ? Infinity : 5 * 60 * 1000, // 5 minutes stale time in production
+      retry: isDev ? false : 1, // Allow one retry in production
+      retryDelay: 1000, // 1 second delay between retries
+      gcTime: 10 * 60 * 1000, // 10 minutes before unused data is garbage collected
+      networkMode: 'online', // Only fetch when online
     },
     mutations: {
-      retry: false,
+      retry: isDev ? false : 1,
+      retryDelay: 1000,
+      networkMode: 'online',
     },
   },
 });
