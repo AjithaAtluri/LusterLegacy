@@ -382,6 +382,10 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       console.log("Saving product with updated materials details:", detailsUpdate);
       
+      // Ensure the editSection is set to 'materials' before the mutation triggers
+      // This guarantees the price update will run after the update succeeds
+      setEditSection('materials');
+      
       updateMutation.mutate({
         details: JSON.stringify(detailsUpdate)
       });
