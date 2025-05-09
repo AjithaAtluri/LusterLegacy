@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from 'embla-carousel-react';
 import { EmblaOptionsType } from 'embla-carousel';
 import { Button } from "@/components/ui/button";
+import { queryClient } from "@/lib/queryClient";
 
 interface Product {
   id: number;
@@ -15,13 +16,23 @@ interface Product {
   basePrice: number;
   imageUrl?: string;
   details?: string;
+  calculatedPriceUSD?: number; // Add the calculated price fields
+  calculatedPriceINR?: number;
   [key: string]: any; // Allow for other properties
 }
 
 export default function FeaturedProducts() {
-  // Fetch featured products
+  // Force refetch on initial render to ensure we have fresh data
+  useEffect(() => {
+    // Invalidate the featured products cache to ensure we get fresh data
+    queryClient.invalidateQueries({ queryKey: ['/api/products/featured'] });
+  }, []);
+
+  // Fetch featured products with refetch enabled
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ['/api/products/featured'],
+    refetchOnMount: true,
+    staleTime: 0 // Consider data always stale to force refetch
   });
   
   // Carousel options with autoplay

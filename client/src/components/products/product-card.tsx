@@ -215,6 +215,10 @@ export default function ProductCard({ product }: ProductCardProps) {
             <p className="text-xs text-muted-foreground">
               {formatCurrency(calculatedPriceINR, 'INR')}
             </p>
+            {/* Visual indicator for updated prices */}
+            {product.calculatedPriceUSD && (
+              <span className="absolute -top-2 -right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            )}
             <div className="absolute top-0 left-0 h-[1px] w-4 bg-primary/40"></div>
             <div className="absolute top-0 right-0 h-[1px] w-4 bg-primary/40"></div>
             <div className="absolute bottom-0 left-0 h-[1px] w-4 bg-primary/40"></div>
