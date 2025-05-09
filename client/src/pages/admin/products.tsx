@@ -301,7 +301,8 @@ export default function AdminProducts() {
                 // Refetch the product data when closing to ensure list displays updated data
                 queryClient.invalidateQueries({ queryKey: ['/api/products'] });
                 queryClient.refetchQueries({ queryKey: ['/api/products'] });
-              }} 
+              }}
+              isFullPage={false} 
             />
           )}
         </DialogContent>
