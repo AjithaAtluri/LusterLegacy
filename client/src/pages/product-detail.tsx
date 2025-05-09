@@ -358,7 +358,11 @@ export default function ProductDetail() {
   }, [product?.details]);
   
   // Use server-calculated price rather than recalculating on client side
-  const currentPrice = product?.calculatedPriceUSD ?? product?.basePrice ?? 0;
+  // Use the same calculation logic as product-card.tsx for consistent pricing display
+  const USD_TO_INR_RATE = 83; // Same fallback rate used in product-card.tsx
+  const calculatedPriceUSD = product?.calculatedPriceUSD ?? (product?.basePrice ? Math.round(product.basePrice / USD_TO_INR_RATE) : 0);
+  const calculatedPriceINR = product?.calculatedPriceINR ?? product?.basePrice ?? 0;
+  const currentPrice = calculatedPriceUSD;
   
   // If product not found
   if (error) {
