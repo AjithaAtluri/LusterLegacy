@@ -859,22 +859,22 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                 <span>Total Price:</span>
                 <div className="text-right">
                   {(() => {
-                    // Always use local calculation if available, it's more accurate
-                    if (priceUSD > 0 && priceINR > 0) {
-                      return (
-                        <>
-                          <div>{formatCurrency(priceUSD)}</div>
-                          <div className="text-sm font-normal text-muted-foreground">₹{priceINR.toLocaleString()}</div>
-                        </>
-                      );
-                    }
-                    
-                    // Fallback to server-calculated price if local calculation failed
+                    // Prioritize server-calculated price - it's the source of truth
                     if (product.calculatedPriceUSD && product.calculatedPriceINR) {
                       return (
                         <>
                           <div>{formatCurrency(product.calculatedPriceUSD)}</div>
                           <div className="text-sm font-normal text-muted-foreground">₹{product.calculatedPriceINR.toLocaleString()}</div>
+                        </>
+                      );
+                    }
+                    
+                    // Fall back to local calculation if server calculation is not available
+                    if (priceUSD > 0 && priceINR > 0) {
+                      return (
+                        <>
+                          <div>{formatCurrency(priceUSD)}</div>
+                          <div className="text-sm font-normal text-muted-foreground">₹{priceINR.toLocaleString()}</div>
                         </>
                       );
                     }
@@ -908,11 +908,18 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
               
               <div className="text-xs text-muted-foreground mt-2 space-y-1">
                 <div>Base price in database: ₹{product.basePrice?.toLocaleString() || 'N/A'}</div>
-                {product.calculatedPriceUSD && product.calculatedPriceINR && 
-                 priceUSD > 0 && priceINR > 0 && 
+                {/* Always show server calculation for clarity */}
+                {product.calculatedPriceUSD && product.calculatedPriceINR && (
+                  <div className="text-green-600">
+                    Server calculation: {formatCurrency(product.calculatedPriceUSD)} (₹{product.calculatedPriceINR.toLocaleString()})
+                  </div>
+                )}
+                {/* Only show local calculation if different from server */}
+                {priceUSD > 0 && priceINR > 0 && 
+                 product.calculatedPriceUSD && product.calculatedPriceINR &&
                  (product.calculatedPriceUSD !== priceUSD || product.calculatedPriceINR !== priceINR) && (
                   <div className="text-amber-600">
-                    Server calculation: {formatCurrency(product.calculatedPriceUSD)} (₹{product.calculatedPriceINR.toLocaleString()})
+                    Local calculation: {formatCurrency(priceUSD)} (₹{priceINR.toLocaleString()})
                   </div>
                 )}
               </div>
