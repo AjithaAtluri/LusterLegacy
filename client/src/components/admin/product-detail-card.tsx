@@ -843,18 +843,25 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                         (breakdown.primaryStoneCost || 0) + 
                         (breakdown.secondaryStoneCost || 0) + 
                         (breakdown.otherStoneCost || 0);
+                      
+                      // Calculate 25% overhead
+                      const calculatedOverhead = Math.round(baseMaterialsCost * 0.25);
+                      
                       return (
-                        <div className="flex justify-between pt-2 border-t border-border">
-                          <span className="text-muted-foreground font-medium">Base Materials Subtotal:</span>
-                          <span className="font-medium">₹{baseMaterialsCost.toLocaleString()}</span>
-                        </div>
+                        <>
+                          <div className="flex justify-between pt-2 border-t border-border">
+                            <span className="text-muted-foreground font-medium">Base Materials Subtotal:</span>
+                            <span className="font-medium">₹{baseMaterialsCost.toLocaleString()}</span>
+                          </div>
+                          
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Overhead & Labor (25%):</span>
+                            <span>₹{calculatedOverhead.toLocaleString()}</span>
+                          </div>
+                        </>
                       );
                     })()}
                     
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Overhead & Labor (25%):</span>
-                      <span>₹{breakdown.overhead?.toLocaleString() || 0}</span>
-                    </div>
                   </>
                 )}
               </div>
@@ -864,8 +871,31 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
               <div className="flex justify-between items-center font-bold text-lg">
                 <span>Total Price:</span>
                 <div className="text-right">
-                  <div>{formatCurrency(priceUSD)}</div>
-                  <div className="text-sm font-normal text-muted-foreground">₹{priceINR.toLocaleString()}</div>
+                  {(() => {
+                    // Recalculate the total using our custom breakdown calculations
+                    const baseMaterialsCost = 
+                      (breakdown.metalCost || 0) + 
+                      (breakdown.primaryStoneCost || 0) + 
+                      (breakdown.secondaryStoneCost || 0) + 
+                      (breakdown.otherStoneCost || 0);
+                    
+                    // Calculate 25% overhead
+                    const calculatedOverhead = Math.round(baseMaterialsCost * 0.25);
+                    
+                    // Total is base materials + calculated overhead
+                    const recalculatedTotalINR = baseMaterialsCost + calculatedOverhead;
+                    
+                    // Convert to USD using current exchange rate (or fallback to original if exchange rate is missing)
+                    const exchangeRate = exchangeRateData?.rate || (priceINR > 0 ? priceINR / priceUSD : 84);
+                    const recalculatedTotalUSD = Math.round(recalculatedTotalINR / exchangeRate);
+                    
+                    return (
+                      <>
+                        <div>{formatCurrency(recalculatedTotalUSD)}</div>
+                        <div className="text-sm font-normal text-muted-foreground">₹{recalculatedTotalINR.toLocaleString()}</div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
               
