@@ -263,8 +263,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
     onSuccess: async (updatedProduct) => {
       console.log("Product update successful:", updatedProduct);
       
-      // Close the edit dialog first
-      setEditSection(null);
+      // Store whether we need to update prices (if we were editing materials)
+      const needsPriceUpdate = editSection === 'materials';
       
       // Immediately update cache with new data
       queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
@@ -286,13 +286,17 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
           productResult
         });
         
-        // Update prices after data is refreshed, since price depends on updated materials
-        if (editSection === 'materials') {
-          updatePriceMutation.mutate();
+        // Update prices after data is refreshed if we were editing materials
+        if (needsPriceUpdate) {
+          console.log("Updating prices after materials change");
+          await updatePriceMutation.mutateAsync();
         }
       } catch (error) {
         console.error("Error refreshing product data after update:", error);
       }
+      
+      // Now close the edit dialog AFTER all updates are complete
+      setEditSection(null);
       
       toast({
         title: "Product updated",
