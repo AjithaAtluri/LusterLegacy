@@ -212,7 +212,22 @@ export function useAdminPriceCalculator({
     }
     
     // Create a hash of current parameters to avoid duplicate calculations
-    const paramsHash = `${metalType}-${metalWeight}-${mainStoneType}-${mainStoneWeight}-${secondaryStoneType}-${secondaryStoneWeight}-${otherStoneType}-${otherStoneWeight}`;
+    // Make sure all values are strings for consistent hash generation
+    const paramsHash = `${String(metalType)}-${String(metalWeight)}-${String(mainStoneType)}-${String(mainStoneWeight)}-${String(secondaryStoneType)}-${String(secondaryStoneWeight)}-${String(otherStoneType)}-${String(otherStoneWeight)}`;
+    
+    // Log all parameters to debug any issues
+    console.log("Material parameters for price calculation:", {
+      metalType: String(metalType),
+      metalWeight: String(metalWeight),
+      mainStoneType: String(mainStoneType),
+      mainStoneWeight: String(mainStoneWeight),
+      secondaryStoneType: String(secondaryStoneType),
+      secondaryStoneWeight: String(secondaryStoneWeight),
+      otherStoneType: String(otherStoneType),
+      otherStoneWeight: String(otherStoneWeight),
+      currentHash: paramsHash,
+      previousHash: calculatedParamsRef.current
+    });
     
     // If we've already calculated price for these parameters, don't recalculate
     if (calculatedParamsRef.current === paramsHash) {
@@ -220,13 +235,20 @@ export function useAdminPriceCalculator({
       return;
     }
     
-    // Only perform this once
+    // Update the hash for next comparison
     calculatedParamsRef.current = paramsHash;
+    console.log("Parameters changed, will recalculate price. New hash:", paramsHash);
     
     // Debounce the calculation to avoid too many API calls
     const timer = setTimeout(() => {
-      console.log("Executing debounced price calculation");
-      fetchPriceCalculation();
+      console.log("Executing debounced price calculation with parameters:", {
+        metalType: String(metalType),
+        metalWeight: String(metalWeight),
+        mainStoneType: String(mainStoneType),
+        mainStoneWeight: String(mainStoneWeight)
+      });
+      // Force calculation to ensure it runs
+      fetchPriceCalculation(true);
     }, 500);
 
     return () => {

@@ -305,6 +305,40 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         product.isFeatured = updatedProduct.isFeatured;
       }
       
+      // Update product details for material updates
+      if (editSection === 'materials' && updatedProduct.details) {
+        console.log("Materials update detected - applying changes to local state");
+        try {
+          // Parse the updated details
+          const updatedDetails = typeof updatedProduct.details === 'string'
+            ? JSON.parse(updatedProduct.details)
+            : updatedProduct.details;
+            
+          // Update the product object directly for immediate UI updates
+          product.details = updatedProduct.details;
+          
+          // Ensure complete replacement of the stoneDetails state with new values
+          setStoneDetails({
+            metalType: String(updatedDetails.metalType || ''),
+            metalWeight: String(updatedDetails.metalWeight || '0'),
+            primaryStone: String(updatedDetails.primaryStone || ''),
+            primaryStoneWeight: String(updatedDetails.primaryStoneWeight || '0'),
+            secondaryStone: String(updatedDetails.secondaryStone || ''),
+            secondaryStoneWeight: String(updatedDetails.secondaryStoneWeight || '0'),
+            otherStone: String(updatedDetails.otherStone || ''),
+            otherStoneWeight: String(updatedDetails.otherStoneWeight || '0'),
+            detailedDescription: updatedDetails.detailedDescription || ''
+          });
+          
+          console.log("Material details updated in local state:", updatedDetails);
+          
+          // Force update to ensure UI reflects changes
+          forceUpdate();
+        } catch (error) {
+          console.error("Error updating material details in local state:", error);
+        }
+      }
+      
       // Force UI update for immediate reflection of changes
       forceUpdate();
       
@@ -419,6 +453,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
   // Handle materials save
   const handleMaterialsSave = (data: any) => {
     try {
+      console.log("Materials save initiated with data:", data);
+      
       // Safely parse the existing details
       let existingDetails = {};
       if (product.details) {
@@ -435,21 +471,29 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       // Preserve important details that shouldn't be lost during the update
       const detailedDescription = existingDetails.detailedDescription || '';
       
-      // Create updated details object with the materials info
+      // Create updated details object with the materials info - make sure all values are converted to strings
+      // This ensures they will be properly saved and retrieved from the database
       const detailsUpdate = {
         ...existingDetails,
         detailedDescription, // Explicitly preserve this in case it gets lost
-        metalType: data.metalType,
-        metalWeight: data.metalWeight,
-        primaryStone: data.primaryStone,
-        primaryStoneWeight: data.primaryStoneWeight,
-        secondaryStone: data.secondaryStone,
-        secondaryStoneWeight: data.secondaryStoneWeight,
-        otherStone: data.otherStone,
-        otherStoneWeight: data.otherStoneWeight
+        metalType: String(data.metalType || ''),
+        metalWeight: String(data.metalWeight || '0'),
+        primaryStone: String(data.primaryStone || ''),
+        primaryStoneWeight: String(data.primaryStoneWeight || '0'),
+        secondaryStone: String(data.secondaryStone || ''),
+        secondaryStoneWeight: String(data.secondaryStoneWeight || '0'),
+        otherStone: String(data.otherStone || ''),
+        otherStoneWeight: String(data.otherStoneWeight || '0')
       };
       
       console.log("Saving product with updated materials details:", detailsUpdate);
+      
+      // Set the material values globally in the state BEFORE making API call
+      // This ensures the UI reflects the changes immediately
+      product.details = JSON.stringify(detailsUpdate);
+      
+      // Force a re-render of the current component to reflect the changes
+      forceUpdate();
       
       // Ensure the editSection is set to 'materials' before the mutation triggers
       // This guarantees the price update will run after the update succeeds
@@ -460,17 +504,24 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       // Immediately update the local stoneDetails state to match the form values
       // This ensures the UI reflects the changes even before the server responds
-      setStoneDetails(prevDetails => ({
-        ...prevDetails,
-        metalType: data.metalType,
-        metalWeight: data.metalWeight,
-        primaryStone: data.primaryStone,
-        primaryStoneWeight: data.primaryStoneWeight,
-        secondaryStone: data.secondaryStone,
-        secondaryStoneWeight: data.secondaryStoneWeight,
-        otherStone: data.otherStone,
-        otherStoneWeight: data.otherStoneWeight
-      }));
+      setStoneDetails({
+        metalType: String(data.metalType || ''),
+        metalWeight: String(data.metalWeight || '0'),
+        primaryStone: String(data.primaryStone || ''),
+        primaryStoneWeight: String(data.primaryStoneWeight || '0'),
+        secondaryStone: String(data.secondaryStone || ''),
+        secondaryStoneWeight: String(data.secondaryStoneWeight || '0'),
+        otherStone: String(data.otherStone || ''),
+        otherStoneWeight: String(data.otherStoneWeight || '0'),
+        detailedDescription
+      });
+      
+      console.log("Updated local stoneDetails state:", {
+        metalType: String(data.metalType || ''),
+        metalWeight: String(data.metalWeight || '0'),
+        primaryStone: String(data.primaryStone || ''),
+        primaryStoneWeight: String(data.primaryStoneWeight || '0')
+      });
       
       updateMutation.mutate({
         details: JSON.stringify(detailsUpdate)
