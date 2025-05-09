@@ -14,6 +14,7 @@ interface UsePriceCalculatorProps {
   secondaryStoneWeight?: string;
   otherStoneType?: string;
   otherStoneWeight?: string;
+  preventCalculation?: boolean; // Flag to prevent automatic calculations
 }
 
 interface PriceBreakdown {
@@ -38,7 +39,8 @@ export function useAdminPriceCalculator({
   secondaryStoneType = "none_selected",
   secondaryStoneWeight = "0",
   otherStoneType = "none_selected",
-  otherStoneWeight = "0"
+  otherStoneWeight = "0",
+  preventCalculation = false
 }: UsePriceCalculatorProps) {
   const { toast } = useToast();
   const { goldPrice, isLoading: isGoldPriceLoading, location, timestamp } = useGoldPrice();
@@ -63,8 +65,13 @@ export function useAdminPriceCalculator({
 
   // Calculate price
   useEffect(() => {
-    // Don't calculate if required fields are missing
-    if (!metalType || !metalWeight || metalType === "none_selected") {
+    // Don't calculate if required fields are missing or calculation is prevented
+    if (!metalType || !metalWeight || metalType === "none_selected" || preventCalculation) {
+      console.log("Price calculation skipped:", 
+        !metalType ? "Missing metal type" : 
+        !metalWeight ? "Missing metal weight" : 
+        metalType === "none_selected" ? "No metal selected" : 
+        "preventCalculation flag set to true");
       return;
     }
 
@@ -175,6 +182,7 @@ export function useAdminPriceCalculator({
     secondaryStoneWeight, 
     otherStoneType,
     otherStoneWeight,
+    preventCalculation,
     toast
   ]);
 
