@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import GemSparkle from "@/components/ui/gem-sparkle";
 import ReliableProductImage from "@/components/ui/reliable-product-image";
+import { formatCurrency } from "@/lib/utils";
 
 // Helper function to generate 5-word titles for products
 function getShortProductTitle(product: any): string {
@@ -157,7 +158,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
   
   return (
-    <div className="product-card bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[580px]">
+    <div className="product-card bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[620px]">
       <div className="relative h-[400px] overflow-hidden flex-shrink-0 bg-white dark:bg-black dark:bg-opacity-40 bg-opacity-5 flex items-center justify-center p-2">
         {/* Using the reliable product image component for consistent images */}
         <Link href={`/product-detail/${product.id}`}>
@@ -203,6 +204,22 @@ export default function ProductCard({ product }: ProductCardProps) {
             {getShortProductTitle(product)}
           </h3>
           <div className="absolute left-1/2 bottom-0 -translate-x-1/2 w-12 h-[1px] bg-primary/40 dark:bg-primary/60"></div>
+        </div>
+        
+        {/* Product Price Display */}
+        <div className="text-center mb-3 relative">
+          <div className="relative inline-block px-6 py-2">
+            <p className="font-montserrat font-semibold text-lg text-primary">
+              {formatCurrency(calculatedPriceUSD, 'USD')}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(calculatedPriceINR, 'INR')}
+            </p>
+            <div className="absolute top-0 left-0 h-[1px] w-4 bg-primary/40"></div>
+            <div className="absolute top-0 right-0 h-[1px] w-4 bg-primary/40"></div>
+            <div className="absolute bottom-0 left-0 h-[1px] w-4 bg-primary/40"></div>
+            <div className="absolute bottom-0 right-0 h-[1px] w-4 bg-primary/40"></div>
+          </div>
         </div>
         
         {/* Flex spacer to push button to bottom */}
