@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { GoldPriceDisplay } from "@/components/admin/gold-price-display";
+// Gold price display has been removed
 import { 
   ShoppingBag, 
   Users, 
@@ -208,9 +208,7 @@ export default function AdminDashboard() {
               {formattedDate}
             </p>
           </div>
-          <div className="mt-4 md:mt-0 md:w-64">
-            <GoldPriceDisplay />
-          </div>
+          {/* Gold price display removed */}
         </div>
         
         {/* Stats Cards - Relevant Customer Request Information */}
