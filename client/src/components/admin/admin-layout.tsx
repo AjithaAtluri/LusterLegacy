@@ -18,6 +18,7 @@ import {
   X,
   Diamond,
   Gem,
+  Sparkles,
   Paintbrush,
   Receipt,
   Wand2,
@@ -387,6 +388,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       title: "AI Content Generator(For new Products)", 
       icon: <Wand2 className="h-5 w-5" />, 
       href: "/admin/ai-generator" 
+    },
+    { 
+      title: "AI Admin Dashboard", 
+      icon: <Sparkles className="h-5 w-5" />, 
+      href: "/admin/ai-dashboard" 
     },
     {
       title: "User Management",
