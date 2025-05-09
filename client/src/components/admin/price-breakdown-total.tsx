@@ -203,6 +203,18 @@ export function PriceBreakdownTotal({
         </div>
       )}
       
+      {/* Base Materials Cost */}
+      <div className="text-sm">
+        <div className="flex justify-between items-center">
+          <span className="font-medium">Base Materials Subtotal:</span>
+          {isCalculating ? (
+            <Skeleton className="h-4 w-24" />
+          ) : (
+            formatDualCurrency(baseCost)
+          )}
+        </div>
+      </div>
+      
       {/* Overhead */}
       <div className="text-sm">
         <div className="flex justify-between items-center">
