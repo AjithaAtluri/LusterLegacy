@@ -2051,27 +2051,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Endpoint to handle product image uploads
   app.patch('/api/products/:id/image', validateAdmin, upload.single('mainImage'), async (req, res) => {
+    console.log('Image upload endpoint called for product');
     try {
+      // Log request information
+      console.log('Request params:', req.params);
+      console.log('Request user:', req.user?.id, req.user?.username, req.user?.role);
+      console.log('Request file object exists:', !!req.file);
+      
       const productId = parseInt(req.params.id);
       if (isNaN(productId)) {
+        console.error('Invalid product ID format:', req.params.id);
         return res.status(400).json({ message: 'Invalid product ID' });
       }
       
       if (!req.file) {
+        console.error('No file was uploaded or multer failed to process the file');
         return res.status(400).json({ message: 'No image file provided' });
       }
       
       console.log(`PATCH product image update: Updating image for product ${productId}`);
-      console.log('File details:', req.file);
+      console.log('File details:', {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: `${Math.round(req.file.size / 1024)} KB`,
+        path: req.file.path
+      });
       
       // Get the existing product
+      console.log(`Looking up existing product with ID ${productId}`);
       const existingProduct = await storage.getProduct(productId);
       if (!existingProduct) {
+        console.error(`Product not found with ID ${productId}`);
         return res.status(404).json({ message: 'Product not found' });
       }
       
+      console.log(`Found existing product: ${existingProduct.id} - ${existingProduct.name}`);
+      console.log(`Current image URL: ${existingProduct.imageUrl}`);
+      
       // Update only the image URL
       const imageUrl = `/uploads/${req.file.filename}`;
+      console.log(`Setting new image URL to: ${imageUrl}`);
+      
       const updatedProduct = await storage.updateProduct(productId, { imageUrl });
       
       if (!updatedProduct) {
@@ -2079,11 +2100,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Product image update failed' });
       }
       
-      console.log(`Successfully updated image for product ${productId} to ${imageUrl}`);
+      console.log(`Successfully updated image for product ${productId}`);
+      console.log(`New product data:`, {
+        id: updatedProduct.id,
+        name: updatedProduct.name,
+        imageUrl: updatedProduct.imageUrl
+      });
+      
       res.json(updatedProduct);
       
     } catch (error) {
       console.error('Error updating product image:', error);
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      
       res.status(500).json({
         message: 'Error updating product image',
         error: error instanceof Error ? error.message : String(error)

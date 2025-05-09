@@ -59,10 +59,12 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("Image file selected:", file.name, "Size:", Math.round(file.size / 1024), "KB");
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
+        console.log("Image preview created successfully");
       };
       reader.readAsDataURL(file);
     }
@@ -79,23 +81,32 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       return;
     }
     
+    console.log("Starting image upload for product ID:", product.id);
+    console.log("Image file:", imageFile.name, "Size:", Math.round(imageFile.size / 1024), "KB", "Type:", imageFile.type);
+    
     setIsImageUploading(true);
     
     try {
       const formData = new FormData();
       formData.append('mainImage', imageFile);
+      console.log("FormData created with image file");
       
+      console.log("Sending PATCH request to:", `/api/products/${product.id}/image`);
       const response = await apiRequest('PATCH', `/api/products/${product.id}/image`, formData, {
         isFormData: true
       });
+      
+      console.log("Server response status:", response.status);
       
       if (!response.ok) {
         throw new Error('Failed to update product image');
       }
       
       const updatedProduct = await response.json();
+      console.log("Updated product received:", updatedProduct.id, "New image URL:", updatedProduct.imageUrl);
       
       // Update cache
+      console.log("Invalidating cache for product queries");
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
@@ -109,6 +120,7 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       setEditSection(null);
       setImageFile(null);
       setImagePreview(null);
+      console.log("Image upload completed successfully");
     } catch (error) {
       console.error("Error updating image:", error);
       toast({
