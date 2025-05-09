@@ -111,9 +111,21 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
       
+      // Force a refresh of the current product
+      const refreshPromises = [
+        queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] }),
+        queryClient.refetchQueries({ queryKey: [`/api/direct-product/${product.id}`] }),
+      ];
+      
+      // Wait for cache to be refreshed
+      await Promise.all(refreshPromises);
+      
+      // Update any price calculations if needed
+      await updatePriceMutation.mutateAsync();
+      
       toast({
         title: "Image updated",
-        description: "Product image has been successfully updated",
+        description: "Product image has been successfully updated and view refreshed",
       });
       
       // Close dialog
