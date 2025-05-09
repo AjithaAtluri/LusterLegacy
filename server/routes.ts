@@ -1760,30 +1760,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Create parameters for price calculator
+        // IMPORTANT: Parse weights correctly by converting any string values to actual numbers
+        const metalWeightValue = materialInfo.metalWeight;
+        const metalWeightNumber = typeof metalWeightValue === 'string' ? 
+          parseFloat(metalWeightValue.replace(/[^\d.-]/g, '')) : 
+          (typeof metalWeightValue === 'number' ? metalWeightValue : 0);
+          
+        console.log(`Parsed metal weight: ${metalWeightValue} → ${metalWeightNumber}`);
+          
         const params = {
           productType: materialInfo.productType || "",
           metalType: materialInfo.metalType || "",
-          metalWeight: parseFloat(materialInfo.metalWeight) || 0,
+          metalWeight: metalWeightNumber,
           primaryGems: [],
           otherStone: materialInfo.otherStone ? {
             stoneTypeId: materialInfo.otherStone,
-            caratWeight: parseFloat(materialInfo.otherStoneWeight) || 0
+            caratWeight: typeof materialInfo.otherStoneWeight === 'string' ? 
+              parseFloat(materialInfo.otherStoneWeight.replace(/[^\d.-]/g, '')) : 
+              (typeof materialInfo.otherStoneWeight === 'number' ? materialInfo.otherStoneWeight : 0)
           } : undefined
         };
         
         // Add primary stone if available
         if (materialInfo.primaryStone && materialInfo.primaryStoneWeight) {
+          // Properly extract the numeric weight value by cleaning non-numeric characters
+          const primaryStoneWeight = typeof materialInfo.primaryStoneWeight === 'string' ? 
+            parseFloat(materialInfo.primaryStoneWeight.replace(/[^\d.-]/g, '')) : 
+            (typeof materialInfo.primaryStoneWeight === 'number' ? materialInfo.primaryStoneWeight : 0);
+            
+          console.log(`Parsed primary stone (${materialInfo.primaryStone}) weight: ${materialInfo.primaryStoneWeight} → ${primaryStoneWeight}`);
+          
           params.primaryGems.push({
             name: materialInfo.primaryStone,
-            carats: parseFloat(materialInfo.primaryStoneWeight) || 0
+            carats: primaryStoneWeight
           });
         }
         
         // Add secondary stone if available
         if (materialInfo.secondaryStone && materialInfo.secondaryStoneWeight) {
+          // Properly extract the numeric weight value by cleaning non-numeric characters
+          const secondaryStoneWeight = typeof materialInfo.secondaryStoneWeight === 'string' ? 
+            parseFloat(materialInfo.secondaryStoneWeight.replace(/[^\d.-]/g, '')) : 
+            (typeof materialInfo.secondaryStoneWeight === 'number' ? materialInfo.secondaryStoneWeight : 0);
+            
+          console.log(`Parsed secondary stone (${materialInfo.secondaryStone}) weight: ${materialInfo.secondaryStoneWeight} → ${secondaryStoneWeight}`);
+          
           params.primaryGems.push({
             name: materialInfo.secondaryStone,
-            carats: parseFloat(materialInfo.secondaryStoneWeight) || 0
+            carats: secondaryStoneWeight
           });
         }
         
@@ -1944,30 +1968,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Create parameters for price calculator
+          // IMPORTANT: Parse weights correctly by converting any string values to actual numbers
+          const metalWeightValue = materialInfo.metalWeight;
+          const metalWeightNumber = typeof metalWeightValue === 'string' ? 
+            parseFloat(metalWeightValue.replace(/[^\d.-]/g, '')) : 
+            (typeof metalWeightValue === 'number' ? metalWeightValue : 0);
+            
+          console.log(`Related product: Parsed metal weight: ${metalWeightValue} → ${metalWeightNumber}`);
+            
           const params = {
             productType: materialInfo.productType || "",
             metalType: materialInfo.metalType || "",
-            metalWeight: parseFloat(materialInfo.metalWeight) || 0,
+            metalWeight: metalWeightNumber,
             primaryGems: [],
             otherStone: materialInfo.otherStone ? {
               stoneTypeId: materialInfo.otherStone,
-              caratWeight: parseFloat(materialInfo.otherStoneWeight) || 0
+              caratWeight: typeof materialInfo.otherStoneWeight === 'string' ? 
+                parseFloat(materialInfo.otherStoneWeight.replace(/[^\d.-]/g, '')) : 
+                (typeof materialInfo.otherStoneWeight === 'number' ? materialInfo.otherStoneWeight : 0)
             } : undefined
           };
           
           // Add primary stone if available
           if (materialInfo.primaryStone && materialInfo.primaryStoneWeight) {
+            // Properly extract the numeric weight value by cleaning non-numeric characters
+            const primaryStoneWeight = typeof materialInfo.primaryStoneWeight === 'string' ? 
+              parseFloat(materialInfo.primaryStoneWeight.replace(/[^\d.-]/g, '')) : 
+              (typeof materialInfo.primaryStoneWeight === 'number' ? materialInfo.primaryStoneWeight : 0);
+              
+            console.log(`Related product: Parsed primary stone (${materialInfo.primaryStone}) weight: ${materialInfo.primaryStoneWeight} → ${primaryStoneWeight}`);
+            
             params.primaryGems.push({
               name: materialInfo.primaryStone,
-              carats: parseFloat(materialInfo.primaryStoneWeight) || 0
+              carats: primaryStoneWeight
             });
           }
           
           // Add secondary stone if available
           if (materialInfo.secondaryStone && materialInfo.secondaryStoneWeight) {
+            // Properly extract the numeric weight value by cleaning non-numeric characters
+            const secondaryStoneWeight = typeof materialInfo.secondaryStoneWeight === 'string' ? 
+              parseFloat(materialInfo.secondaryStoneWeight.replace(/[^\d.-]/g, '')) : 
+              (typeof materialInfo.secondaryStoneWeight === 'number' ? materialInfo.secondaryStoneWeight : 0);
+              
+            console.log(`Related product: Parsed secondary stone (${materialInfo.secondaryStone}) weight: ${materialInfo.secondaryStoneWeight} → ${secondaryStoneWeight}`);
+            
             params.primaryGems.push({
               name: materialInfo.secondaryStone,
-              carats: parseFloat(materialInfo.secondaryStoneWeight) || 0
+              carats: secondaryStoneWeight
             });
           }
           
