@@ -215,6 +215,17 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
   // Use state for stone details so it can be updated
   const [stoneDetails, setStoneDetails] = useState(() => getStoneDetails());
   
+  // Flag to prevent automatic state updates during our own mutations
+  const [preventAutoStateUpdate, setPreventAutoStateUpdate] = useState(false);
+  
+  // Keep stone details in sync with product changes
+  useEffect(() => {
+    if (!preventAutoStateUpdate) {
+      console.log("Syncing stone details with product data");
+      setStoneDetails(getStoneDetails());
+    }
+  }, [product.details, preventAutoStateUpdate]);
+  
   // Price calculation hook
   const {
     priceUSD,
@@ -415,6 +426,9 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       // This guarantees the price update will run after the update succeeds
       setEditSection('materials');
       
+      // Prevent auto updates from useEffect during our own mutations
+      setPreventAutoStateUpdate(true);
+      
       // Immediately update the local stoneDetails state to match the form values
       // This ensures the UI reflects the changes even before the server responds
       setStoneDetails(prevDetails => ({
@@ -446,6 +460,10 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
   const updatePriceMutation = useMutation({
     mutationFn: async () => {
       try {
+        console.log("Starting price update. Setting preventAutoStateUpdate to true...");
+        // Prevent automatic state updates during our own mutation
+        setPreventAutoStateUpdate(true);
+        
         // Safely get the existing product details to preserve them during price update
         let existingDetails = {};
         if (product.details) {
@@ -480,6 +498,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         }
         return response.json();
       } catch (error) {
+        // Always reset the flag on error
+        setPreventAutoStateUpdate(false);
         console.error("Price update error:", error);
         throw error;
       }
@@ -514,7 +534,15 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
             console.error("Error parsing updated product details:", parseError);
           }
         }
+        
+        // Now that we've successfully updated, we can reset the flag
+        // This will allow normal useEffect updates to work again
+        console.log("Price update successful, resetting preventAutoStateUpdate flag to false");
+        setPreventAutoStateUpdate(false);
+        
       } catch (error) {
+        // Make sure we reset the flag even on error in the success handler
+        setPreventAutoStateUpdate(false);
         console.error("Error updating local state after price update:", error);
       }
       
