@@ -287,10 +287,10 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       // Store whether we need to update prices (if we were editing materials)
       const needsPriceUpdate = editSection === 'materials';
       
-      // For product description edits, we should reset the preventAutoStateUpdate flag 
-      // but not trigger a price update
-      if (editSection === 'basicInfo') {
-        console.log("Basic info update completed. Resetting preventAutoStateUpdate flag...");
+      // Reset the prevent auto state update flag after any type of edit
+      // This ensures that future updates will work properly
+      if (editSection === 'basicInfo' || editSection === 'materials') {
+        console.log(`${editSection} update completed. Resetting preventAutoStateUpdate flag...`);
         setPreventAutoStateUpdate(false);
       }
       

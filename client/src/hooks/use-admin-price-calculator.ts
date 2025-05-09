@@ -75,7 +75,23 @@ export function useAdminPriceCalculator({
   // Define a standalone function to calculate prices outside of useEffect
   const fetchPriceCalculation = async (forceCalculation = false) => {
     try {
+      // To avoid multiple concurrent price calculations, check if we're already calculating
+      if (isCalculating && !forceCalculation) {
+        console.log("Price calculation already in progress, skipping duplicate request");
+        return;
+      }
+
       setIsCalculating(true);
+      console.log("Starting price calculation for:", {
+        metalType,
+        metalWeight,
+        mainStoneType,
+        mainStoneWeight,
+        secondaryStoneType,
+        secondaryStoneWeight,
+        otherStoneType,
+        otherStoneWeight
+      });
       
       // Prepare the request payload
       const metalWeightNum = safeParseFloat(metalWeight);
@@ -177,7 +193,7 @@ export function useAdminPriceCalculator({
     console.log("Manual price calculation triggered");
   };
 
-  // Use a separate useEffect for automatic calculations
+  // Use a separate useEffect for automatic calculations with better dependency tracking
   useEffect(() => {
     // If manual calculation only is enabled, skip automatic calculation completely
     if (manualCalculationOnly) {
@@ -204,26 +220,20 @@ export function useAdminPriceCalculator({
       return;
     }
     
-    // Only allow one calculation per render cycle
-    if (calculationCountRef.current > 0) {
-      console.log("Automatic price calculation skipped: Already calculated once this render cycle");
-      return;
-    }
+    // Only perform this once
+    calculatedParamsRef.current = paramsHash;
     
-    // Increment calculation count for this render cycle
-    calculationCountRef.current += 1;
-
     // Debounce the calculation to avoid too many API calls
     const timer = setTimeout(() => {
+      console.log("Executing debounced price calculation");
       fetchPriceCalculation();
     }, 500);
 
     return () => {
       clearTimeout(timer);
-      // Reset calculation count on cleanup to allow calculation in next render cycle
-      calculationCountRef.current = 0;
     };
   }, [
+    // Use a stable dependency array to prevent unnecessary recalculations
     metalType, 
     metalWeight, 
     mainStoneType, 
@@ -233,8 +243,8 @@ export function useAdminPriceCalculator({
     otherStoneType,
     otherStoneWeight,
     preventCalculation,
-    manualCalculationOnly, // Include the new flag in dependencies
-    toast // Include toast in dependencies
+    manualCalculationOnly
+    // Remove toast from dependencies to avoid unnecessary recalculations
   ]);
 
   return {
