@@ -859,7 +859,17 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                 <span>Total Price:</span>
                 <div className="text-right">
                   {(() => {
-                    // Check if the product has pre-calculated prices from the server
+                    // Always use local calculation if available, it's more accurate
+                    if (priceUSD > 0 && priceINR > 0) {
+                      return (
+                        <>
+                          <div>{formatCurrency(priceUSD)}</div>
+                          <div className="text-sm font-normal text-muted-foreground">₹{priceINR.toLocaleString()}</div>
+                        </>
+                      );
+                    }
+                    
+                    // Fallback to server-calculated price if local calculation failed
                     if (product.calculatedPriceUSD && product.calculatedPriceINR) {
                       return (
                         <>
@@ -869,7 +879,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                       );
                     }
                     
-                    // Fallback to recalculating locally if server didn't provide pre-calculated prices
+                    // Last resort fallback - calculate from the breakdown
                     const baseMaterialsCost = 
                       (breakdown.metalCost || 0) + 
                       (breakdown.primaryStoneCost || 0) + 
@@ -882,9 +892,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                     // Total is base materials + calculated overhead
                     const recalculatedTotalINR = baseMaterialsCost + calculatedOverhead;
                     
-                    // Convert to USD using the same ratio as the original calculation
-                    // if priceINR or priceUSD is zero, use a default exchange rate of 84
-                    const exchangeRate = (priceINR > 0 && priceUSD > 0) ? (priceINR / priceUSD) : 84;
+                    // Convert to USD using a default exchange rate of 84
+                    const exchangeRate = 84;
                     const recalculatedTotalUSD = Math.round(recalculatedTotalINR / exchangeRate);
                     
                     return (
@@ -899,11 +908,11 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
               
               <div className="text-xs text-muted-foreground mt-2 space-y-1">
                 <div>Base price in database: ₹{product.basePrice?.toLocaleString() || 'N/A'}</div>
-                {priceUSD > 0 && priceINR > 0 && (
-                  product.calculatedPriceUSD !== priceUSD || product.calculatedPriceINR !== priceINR
-                ) && (
+                {product.calculatedPriceUSD && product.calculatedPriceINR && 
+                 priceUSD > 0 && priceINR > 0 && 
+                 (product.calculatedPriceUSD !== priceUSD || product.calculatedPriceINR !== priceINR) && (
                   <div className="text-amber-600">
-                    Local calculation: {formatCurrency(priceUSD)} (₹{priceINR.toLocaleString()})
+                    Server calculation: {formatCurrency(product.calculatedPriceUSD)} (₹{product.calculatedPriceINR.toLocaleString()})
                   </div>
                 )}
               </div>
