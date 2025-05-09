@@ -2048,6 +2048,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Endpoint to handle product image uploads
+  app.patch('/api/products/:id/image', validateAdmin, upload.single('mainImage'), async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image file provided' });
+      }
+      
+      console.log(`PATCH product image update: Updating image for product ${productId}`);
+      console.log('File details:', req.file);
+      
+      // Get the existing product
+      const existingProduct = await storage.getProduct(productId);
+      if (!existingProduct) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+      
+      // Update only the image URL
+      const imageUrl = `/uploads/${req.file.filename}`;
+      const updatedProduct = await storage.updateProduct(productId, { imageUrl });
+      
+      if (!updatedProduct) {
+        console.error(`Image update failed: No product returned for ID ${productId}`);
+        return res.status(404).json({ message: 'Product image update failed' });
+      }
+      
+      console.log(`Successfully updated image for product ${productId} to ${imageUrl}`);
+      res.json(updatedProduct);
+      
+    } catch (error) {
+      console.error('Error updating product image:', error);
+      res.status(500).json({
+        message: 'Error updating product image',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // Delete a product (admin only)
   app.delete('/api/products/:id', validateAdmin, async (req, res) => {
