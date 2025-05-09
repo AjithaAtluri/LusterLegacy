@@ -4998,8 +4998,8 @@ Respond in JSON format:
           : metalTypeId
       );
       
-      // If metal type not found, try to find by name
-      let metalType = metalTypeData?.name || "18K Gold";
+      // If metal type not found, use what was provided or a reasonable fallback
+      let metalType = metalTypeData?.name || metalTypeId || "14K Gold";
       
       // Transform the gems data into the format expected by the calculator
       let primaryGems: Array<{name: string, carats?: number, stoneTypeId?: number}> = [];
