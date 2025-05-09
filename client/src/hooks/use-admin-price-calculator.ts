@@ -139,11 +139,11 @@ export function useAdminPriceCalculator({
 
         // Create complete breakdown - ensure all properties exist
         const completeBreakdown: PriceBreakdown = {
-          metalCost: priceData.usd.breakdown?.metalCost || 0,
-          primaryStoneCost: priceData.usd.breakdown?.primaryStoneCost || 0,
-          secondaryStoneCost: priceData.usd.breakdown?.secondaryStoneCost || 0,
-          otherStoneCost: priceData.usd.breakdown?.otherStoneCost || 0,
-          overhead: priceData.usd.breakdown?.overhead || 0
+          metalCost: priceData.inr.breakdown?.metalCost || 0,
+          primaryStoneCost: priceData.inr.breakdown?.primaryStoneCost || 0,
+          secondaryStoneCost: priceData.inr.breakdown?.secondaryStoneCost || 0,
+          otherStoneCost: priceData.inr.breakdown?.otherStoneCost || 0,
+          overhead: priceData.inr.breakdown?.overhead || 0
         };
         
         setBreakdown(completeBreakdown);

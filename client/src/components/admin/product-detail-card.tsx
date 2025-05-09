@@ -30,16 +30,37 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
     try {
       const details = product.details ? (typeof product.details === 'string' ? JSON.parse(product.details) : product.details) : {};
       const aiInputs = product.aiInputs || {};
+      const additionalData = details?.additionalData || {};
+      
+      console.log("Getting stone details from:", {
+        details: details,
+        aiInputs: aiInputs,
+        additionalData: additionalData
+      });
+      
+      // Collect possible values from different sources
+      const metalType = details.metalType || aiInputs.metalType || additionalData.metalType || "Unknown";
+      const metalWeight = details.metalWeight || aiInputs.metalWeight || additionalData.metalWeight || 0;
+      const primaryStone = details.primaryStone || aiInputs.primaryStone || additionalData.mainStoneType || details.mainStoneType || aiInputs.mainStoneType || "None";
+      const primaryStoneWeight = details.primaryStoneWeight || aiInputs.primaryStoneWeight || additionalData.mainStoneWeight || details.mainStoneWeight || aiInputs.mainStoneWeight || 0;
+      const secondaryStone = details.secondaryStone || aiInputs.secondaryStone || additionalData.secondaryStone || additionalData.secondaryStoneType || "None";
+      const secondaryStoneWeight = details.secondaryStoneWeight || aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
+      const otherStone = details.otherStone || aiInputs.otherStone || additionalData.otherStone || additionalData.otherStoneType || "None";
+      const otherStoneWeight = details.otherStoneWeight || aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
+      
+      // For the detailed description, look at both standard location and nested inside details
+      const detailedDescription = details.detailedDescription || aiInputs.detailedDescription || additionalData.detailedDescription || "";
       
       return {
-        metalType: details.metalType || aiInputs.metalType || "Unknown",
-        metalWeight: details.metalWeight || aiInputs.metalWeight || 0,
-        primaryStone: details.primaryStone || aiInputs.primaryStone || "None",
-        primaryStoneWeight: details.primaryStoneWeight || aiInputs.primaryStoneWeight || 0,
-        secondaryStone: details.secondaryStone || aiInputs.secondaryStone || "None",
-        secondaryStoneWeight: details.secondaryStoneWeight || aiInputs.secondaryStoneWeight || 0,
-        otherStone: details.otherStone || aiInputs.otherStone || "None", 
-        otherStoneWeight: details.otherStoneWeight || aiInputs.otherStoneWeight || 0
+        metalType,
+        metalWeight,
+        primaryStone,
+        primaryStoneWeight,
+        secondaryStone,
+        secondaryStoneWeight,
+        otherStone,
+        otherStoneWeight,
+        detailedDescription
       };
     } catch (error) {
       console.error("Error parsing product details:", error);
@@ -51,7 +72,8 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
         secondaryStone: "None",
         secondaryStoneWeight: 0,
         otherStone: "None",
-        otherStoneWeight: 0
+        otherStoneWeight: 0,
+        detailedDescription: ""
       };
     }
   };
@@ -204,6 +226,13 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
           <div>
             <CardTitle className="text-2xl">{product.name}</CardTitle>
             <CardDescription className="mt-2">{product.description}</CardDescription>
+            
+            {stoneDetails.detailedDescription && (
+              <div className="mt-4 text-sm text-muted-foreground">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-1">Detailed Description:</h4>
+                <p className="whitespace-pre-wrap">{stoneDetails.detailedDescription}</p>
+              </div>
+            )}
           </div>
           <Button 
             variant="outline" 
