@@ -178,6 +178,7 @@ function App() {
                 
                 {/* Admin pages - using protected routes */}
                 <ProtectedRoute path="/admin/ai-generator" component={AIContentGenerator} adminOnly />
+                {/* Removed duplicate AI Admin Dashboard route */}
                 <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
                 <ProtectedRoute path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} adminOnly />
                 <ProtectedRoute path="/admin/edit-product/:id" component={AdminEditProductNew} adminOnly />
