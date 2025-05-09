@@ -885,8 +885,9 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                     // Total is base materials + calculated overhead
                     const recalculatedTotalINR = baseMaterialsCost + calculatedOverhead;
                     
-                    // Convert to USD using current exchange rate (or fallback to original if exchange rate is missing)
-                    const exchangeRate = exchangeRateData?.rate || (priceINR > 0 ? priceINR / priceUSD : 84);
+                    // Convert to USD using the same ratio as the original calculation
+                    // if priceINR or priceUSD is zero, use a default exchange rate of 84
+                    const exchangeRate = (priceINR > 0 && priceUSD > 0) ? (priceINR / priceUSD) : 84;
                     const recalculatedTotalUSD = Math.round(recalculatedTotalINR / exchangeRate);
                     
                     return (
