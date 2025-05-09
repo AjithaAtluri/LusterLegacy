@@ -754,9 +754,22 @@ export default function EditProductNew() {
         description: "The product has been successfully deleted.",
       });
       
-      // Invalidate queries
+      // Clear any cached product data from session storage
+      try {
+        console.log("Clearing product cache from session storage after delete");
+        sessionStorage.removeItem(`product_${params.id}`);
+      } catch (error) {
+        console.error("Failed to clear session storage cache:", error);
+      }
+      
+      // Comprehensive cache invalidation
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${params.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${params.id}`] });
+      
+      // Force refetch of product listings
+      queryClient.refetchQueries({ queryKey: ['/api/products'] });
       
       // Redirect back to products list
       setLocation('/admin/products');
@@ -1213,8 +1226,31 @@ export default function EditProductNew() {
     },
     onSuccess: (data) => {
       console.log("Product update successful, invalidating queries");
+      
+      // Invalidate all related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/products', params.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products', params.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${params.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${params.id}`] });
+      
+      // Force a refetch of product-related queries
+      queryClient.refetchQueries({ queryKey: ['/api/products'] });
+      
+      // Update session storage with new data
+      try {
+        // Clear cache first
+        sessionStorage.removeItem(`product_${params.id}`);
+        
+        // Update cache with the new data
+        if (data) {
+          sessionStorage.setItem(`product_${params.id}`, JSON.stringify(data));
+          console.log("Updated product cache in session storage");
+        }
+      } catch (error) {
+        console.error("Failed to update session storage cache:", error);
+      }
       
       toast({
         title: "Product Updated",
@@ -1364,6 +1400,21 @@ export default function EditProductNew() {
       const result = await updateProductMutation.mutateAsync(formData);
       console.log("Product update API response:", result);
 
+      // Clear any cached product data from session storage
+      try {
+        console.log("Clearing product cache from session storage");
+        sessionStorage.removeItem(`product_${params.id}`);
+      } catch (error) {
+        console.error("Failed to clear session storage cache:", error);
+      }
+      
+      // Force invalidate all product-related queries again
+      console.log("Manually invalidating all product queries after successful update");
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${params.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${params.id}`] });
+      queryClient.refetchQueries({ queryKey: ['/api/products'] });
+      
       // Show success toast
       toast({
         title: "Product Updated",
