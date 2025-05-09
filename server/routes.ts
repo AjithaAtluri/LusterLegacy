@@ -3272,6 +3272,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Error fetching all testimonials' });
     }
   });
+  
+  // Consolidated dashboard data endpoint for better performance
+  app.get("/api/admin/dashboard-data", validateAdmin, async (_req, res) => {
+    try {
+      console.log("Fetching consolidated dashboard data");
+      
+      // Collect all dashboard data in parallel for better performance
+      const [quoteRequests, customizationRequests, designs, products, testimonials] = await Promise.all([
+        storage.getAllQuoteRequests(),
+        storage.getAllCustomizationRequests(),
+        storage.getAllCustomDesigns(),
+        storage.getAllProducts(),
+        storage.getAllTestimonials()
+      ]);
+      
+      // Return consolidated data in a single response
+      res.json({
+        quoteRequests,
+        customizationRequests,
+        designs,
+        products,
+        testimonials: testimonials || []
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      res.status(500).json({ message: "Error fetching dashboard data" });
+    }
+  });
 
   // Update testimonial status and approval (admin only)
   app.put('/api/admin/testimonials/:id', validateAdmin, async (req, res) => {
