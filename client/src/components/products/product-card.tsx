@@ -153,7 +153,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   // In cases where the price calculator fails on the server, we might get null values
   const USD_TO_INR_RATE = 83; // Same fallback rate used server-side
   
-  // Provide fallbacks for null/undefined calculated price values
+  // Provide fallbacks for null/undefined calculated price values - use the same approach as product-detail.tsx
   const calculatedPriceUSD = product.calculatedPriceUSD ?? Math.round(product.basePrice / USD_TO_INR_RATE);
   const calculatedPriceINR = product.calculatedPriceINR ?? product.basePrice;
   
