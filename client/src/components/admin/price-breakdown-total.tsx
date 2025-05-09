@@ -64,8 +64,22 @@ export function PriceBreakdownTotal({
   
   // Always use the correctly calculated total based on the sum of components
   // This ensures the breakdown adds up properly to the displayed total
-  const displayTotalUSD = calculatedTotalCost;
+  const displayTotalUSD = Math.round(calculatedTotalCost);
   const displayTotalINR = Math.round(calculatedTotalCost * (exchangeRate || 83));
+  
+  // Log the calculations to verify the math
+  console.log("Price Calculation Details:", {
+    metalCost: breakdown.metalCost,
+    primaryStoneCost: breakdown.primaryStoneCost,
+    secondaryStoneCost: breakdown.secondaryStoneCost,
+    otherStoneCost: breakdown.otherStoneCost,
+    baseCost,
+    correctOverhead,
+    calculatedTotalCost,
+    displayTotalUSD,
+    displayTotalINR,
+    apiTotal: priceUSD
+  });
   
   // The price from the API might not match this total due to data storage or rounding issues
   const isConsistent = Math.abs(calculatedTotalCost - priceUSD) < 5; // Allow for small rounding differences

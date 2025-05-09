@@ -18,12 +18,22 @@ interface UsePriceCalculatorProps {
   manualCalculationOnly?: boolean; // Flag to allow only manual price calculations (no auto calculations)
 }
 
+interface Stone {
+  name: string;
+  carats: number;
+  price: number;
+  totalCost: number;
+  isMain?: boolean;
+}
+
 interface PriceBreakdown {
   metalCost: number;
   primaryStoneCost: number;
   secondaryStoneCost: number;
   otherStoneCost: number;
   overhead: number;
+  stoneCost?: number; // Total stone cost from API
+  stones?: Stone[]; // Individual stone details
 }
 
 interface PriceData {
@@ -159,12 +169,25 @@ export function useAdminPriceCalculator({
       setPriceINR(priceData.inr.price);
 
       // Create complete breakdown - ensure all properties exist
+      const stoneCost = priceData.inr.breakdown?.stoneCost || 0;
+      
+      // Extract individual stone costs from the stoneCost total based on gem breakdown
+      const primaryStoneCost = priceData.inr.breakdown?.stones?.find((s: Stone) => s.isMain)?.totalCost || 0;
+      const secondaryStoneCost = priceData.inr.breakdown?.stones?.find((s: Stone) => !s.isMain && s.name.toLowerCase().includes('diamond'))?.totalCost || 0;
+      const otherStoneCost = priceData.inr.breakdown?.stones?.find((s: Stone) => !s.isMain && !s.name.toLowerCase().includes('diamond'))?.totalCost || 0;
+      
+      // Log the original breakdown and how we're mapping it
+      console.log("Original breakdown from API:", priceData.inr.breakdown);
+      console.log("Mapped stone costs:", { primaryStoneCost, secondaryStoneCost, otherStoneCost, totalStoneCost: stoneCost });
+      
       const completeBreakdown: PriceBreakdown = {
         metalCost: priceData.inr.breakdown?.metalCost || 0,
-        primaryStoneCost: priceData.inr.breakdown?.primaryStoneCost || 0,
-        secondaryStoneCost: priceData.inr.breakdown?.secondaryStoneCost || 0,
-        otherStoneCost: priceData.inr.breakdown?.otherStoneCost || 0,
-        overhead: priceData.inr.breakdown?.overhead || 0
+        primaryStoneCost: primaryStoneCost,
+        secondaryStoneCost: secondaryStoneCost,
+        otherStoneCost: otherStoneCost,
+        overhead: priceData.inr.breakdown?.overhead || 0,
+        stoneCost: stoneCost,
+        stones: priceData.inr.breakdown?.stones || []
       };
       
       setBreakdown(completeBreakdown);
