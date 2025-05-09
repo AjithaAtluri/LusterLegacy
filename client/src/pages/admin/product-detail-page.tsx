@@ -10,14 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import ProductForm from "@/components/admin/product-form";
 
 export default function ProductDetailPage() {
-  const { productId } = useParams();
+  const { id } = useParams();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   
   // Fetch the product data
   const { data: product, isLoading, error } = useQuery({
-    queryKey: [`/api/products/${productId}`],
+    queryKey: [`/api/products/${id}`],
   });
   
   const handleBack = () => {
@@ -30,8 +30,8 @@ export default function ProductDetailPage() {
     setIsEditing(false);
     
     // Refresh product data after edit
-    queryClient.invalidateQueries({ queryKey: [`/api/products/${productId}`] });
-    queryClient.refetchQueries({ queryKey: [`/api/products/${productId}`] });
+    queryClient.invalidateQueries({ queryKey: [`/api/products/${id}`] });
+    queryClient.refetchQueries({ queryKey: [`/api/products/${id}`] });
   };
 
   if (isLoading) {
@@ -96,7 +96,7 @@ export default function ProductDetailPage() {
             
             <ProductForm 
               initialData={product} 
-              productId={parseInt(productId as string)} 
+              productId={parseInt(id as string)} 
               onSuccess={handleFormClose} 
             />
           </DialogContent>
