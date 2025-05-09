@@ -1992,6 +1992,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // PATCH endpoint for partial product updates (admin only)
+  // This is specifically designed for product detail card updates
+  app.patch('/api/products/:id', validateAdmin, async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: 'Invalid product ID' });
+      }
+
+      console.log(`PATCH product update: Updating product ${productId}`);
+      console.log('PATCH Request body:', JSON.stringify(req.body, null, 2));
+
+      // Process details field if it exists and is a string
+      const productData = {...req.body};
+      
+      // If details is provided as a string, make sure it's valid JSON
+      if (productData.details && typeof productData.details === 'string') {
+        try {
+          // Validate that details is valid JSON
+          JSON.parse(productData.details);
+          console.log('Details JSON is valid');
+        } catch (jsonError) {
+          console.error('Invalid JSON in details field:', jsonError);
+          return res.status(400).json({ 
+            message: 'Invalid JSON in details field',
+            error: jsonError instanceof Error ? jsonError.message : String(jsonError)
+          });
+        }
+      }
+      
+      // Get the existing product to ensure we're not losing data
+      const existingProduct = await storage.getProduct(productId);
+      if (!existingProduct) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
+
+      // Update the product
+      const updatedProduct = await storage.updateProduct(productId, productData);
+      if (!updatedProduct) {
+        console.error(`PATCH update failed: No product returned for ID ${productId}`);
+        return res.status(404).json({ message: 'Product update failed' });
+      }
+
+      console.log(`Successfully PATCHed product ${productId}`, {
+        fields: Object.keys(updatedProduct)
+      });
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error('Error updating product with PATCH:', error);
+      res.status(500).json({ 
+        message: 'Error updating product',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // Delete a product (admin only)
   app.delete('/api/products/:id', validateAdmin, async (req, res) => {
