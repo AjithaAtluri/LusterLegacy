@@ -171,10 +171,10 @@ export function useAdminPriceCalculator({
       // Create complete breakdown - ensure all properties exist
       const stoneCost = priceData.inr.breakdown?.stoneCost || 0;
       
-      // Extract individual stone costs from the stoneCost total based on gem breakdown
-      const primaryStoneCost = priceData.inr.breakdown?.stones?.find((s: Stone) => s.isMain)?.totalCost || 0;
-      const secondaryStoneCost = priceData.inr.breakdown?.stones?.find((s: Stone) => !s.isMain && s.name.toLowerCase().includes('diamond'))?.totalCost || 0;
-      const otherStoneCost = priceData.inr.breakdown?.stones?.find((s: Stone) => !s.isMain && !s.name.toLowerCase().includes('diamond'))?.totalCost || 0;
+      // Use the direct stone costs from API
+      const primaryStoneCost = priceData.inr.breakdown?.primaryStoneCost || 0;
+      const secondaryStoneCost = priceData.inr.breakdown?.secondaryStoneCost || 0;
+      const otherStoneCost = priceData.inr.breakdown?.otherStoneCost || 0;
       
       // Log the original breakdown and how we're mapping it
       console.log("Original breakdown from API:", priceData.inr.breakdown);
