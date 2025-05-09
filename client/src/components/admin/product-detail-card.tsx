@@ -49,6 +49,77 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
     }
   });
   
+  // State for image upload
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  
+  // Handle image change
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Handle image upload
+  const handleImageUpload = async () => {
+    if (!imageFile) {
+      toast({
+        title: "No image selected",
+        description: "Please select an image to upload",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsImageUploading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('mainImage', imageFile);
+      
+      const response = await apiRequest('PATCH', `/api/products/${product.id}/image`, formData, {
+        isFormData: true
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update product image');
+      }
+      
+      const updatedProduct = await response.json();
+      
+      // Update cache
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
+      
+      toast({
+        title: "Image updated",
+        description: "Product image has been successfully updated",
+      });
+      
+      // Close dialog
+      setEditSection(null);
+      setImageFile(null);
+      setImagePreview(null);
+    } catch (error) {
+      console.error("Error updating image:", error);
+      toast({
+        title: "Update failed",
+        description: error instanceof Error ? error.message : "Failed to update image",
+        variant: "destructive"
+      });
+    } finally {
+      setIsImageUploading(false);
+    }
+  };
+  
   // Extract stone details from product
   const getStoneDetails = () => {
     try {
@@ -511,8 +582,21 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       
       <CardFooter className="flex justify-between border-t p-4">
         <Button variant="outline" onClick={onClose}>Close</Button>
-        <Button variant="default" onClick={() => window.location.href = `/admin/edit-product/${product.id}`}>
-          Full Edit
+        <Button 
+          variant="default" 
+          onClick={() => {
+            // Force refresh of product data
+            queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
+            queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] });
+            
+            toast({
+              title: "Refreshed",
+              description: "Product data has been refreshed",
+            });
+          }}
+        >
+          <RefreshCcw className="h-4 w-4 mr-2" /> Refresh View
         </Button>
       </CardFooter>
       
