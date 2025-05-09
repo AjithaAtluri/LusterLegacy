@@ -337,6 +337,10 @@ export const devHelpers = {
 // Create environment-specific Query Client configuration
 const isDev = import.meta.env.DEV;
 
+// Reduce console noise in production
+const loggerEnabled = isDev;
+
+// Optimized Query Client for production performance
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -344,15 +348,20 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: isDev ? false : true, // Enable refetching on window focus in production
       staleTime: isDev ? Infinity : 5 * 60 * 1000, // 5 minutes stale time in production
-      retry: isDev ? false : 1, // Allow one retry in production
-      retryDelay: 1000, // 1 second delay between retries
-      gcTime: 10 * 60 * 1000, // 10 minutes before unused data is garbage collected
-      networkMode: 'online', // Only fetch when online
+      retry: isDev ? false : 2, // More retries in production for better reliability
+      retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff with 30s max
+      gcTime: 15 * 60 * 1000, // 15 minutes before unused data is garbage collected (longer for production)
+      networkMode: 'always', // More reliable in production
     },
     mutations: {
-      retry: isDev ? false : 1,
-      retryDelay: 1000,
-      networkMode: 'online',
+      retry: isDev ? false : 2,
+      retryDelay: attempt => Math.min(1000 * 2 ** attempt, 15000), // Exponential backoff for mutations too
+      networkMode: 'always', // More reliable in production
     },
   },
+  logger: {
+    log: loggerEnabled ? console.log : () => {},
+    warn: loggerEnabled ? console.warn : () => {},
+    error: console.error, // Always keep error logging
+  }
 });

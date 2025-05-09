@@ -20,10 +20,11 @@ import {
   UserCircle
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 
 // Separate component for testimonials list to prevent React hooks rules violation
-function PendingTestimonialsList() {
+// Use memo to prevent unnecessary re-renders
+const PendingTestimonialsList = memo(function PendingTestimonialsList() {
   const { data: testimonials, isLoading: isLoadingTestimonials } = useQuery({
     queryKey: ['/api/admin/testimonials']
   });
