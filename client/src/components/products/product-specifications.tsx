@@ -79,11 +79,18 @@ export function ProductSpecifications({
         </div>
       )}
       
-      {/* Estimated Price */}
+      {/* Estimated Price - Now showing both USD and INR consistently with product cards */}
       {currentPrice > 0 && (
-        <div className="flex justify-between items-center">
-          <span className="font-montserrat text-sm font-semibold text-foreground/80">Estimated Price:</span>
-          <span className="font-cormorant text-lg font-semibold text-primary">{formatCurrency(currentPrice)}</span>
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between items-center">
+            <span className="font-montserrat text-sm font-semibold text-foreground/80">Estimated Price:</span>
+            <span className="font-cormorant text-lg font-semibold text-primary">{formatCurrency(currentPrice)}</span>
+          </div>
+          <div className="flex justify-end">
+            <span className="font-cormorant text-sm text-muted-foreground">
+              ₹{Math.round(currentPrice * 83).toLocaleString('en-IN')}
+            </span>
+          </div>
         </div>
       )}
     </div>
