@@ -190,8 +190,8 @@ export default function AdminProducts() {
                 <div className="flex items-center gap-2">
                   <Button 
                     onClick={() => {
-                      setSelectedProduct(product);
-                      setIsViewingDetails(true);
+                      // Navigate to product detail page
+                      setLocation(`/admin/products/${product.id}`);
                     }} 
                     size="sm" 
                     className="flex-1"
