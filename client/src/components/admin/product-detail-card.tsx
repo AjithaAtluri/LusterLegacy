@@ -10,6 +10,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Save, X, RefreshCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
@@ -504,12 +505,12 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
           className="w-full h-full object-cover"
         />
         <Button 
-          variant="outline" 
-          size="sm" 
-          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
+          variant="secondary" 
+          size="default" 
+          className="absolute top-2 right-2 bg-amber-400 hover:bg-amber-500 text-black font-medium shadow-md border border-amber-600"
           onClick={() => setEditSection('image')}
         >
-          <Pencil className="h-4 w-4 mr-1" /> Edit Image
+          <Pencil className="h-4 w-4 mr-2" /> Edit Image
         </Button>
       </div>
       
@@ -651,6 +652,59 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
               </div>
             </>
           )}
+        </div>
+        {/* Product Flags Section */}
+        <div className="space-y-4 mt-8">
+          <h3 className="text-lg font-medium">Product Flags</h3>
+          <div className="space-y-4 bg-muted/50 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <Checkbox 
+                id="isNew" 
+                checked={product.isNew || false}
+                onCheckedChange={(checked) => {
+                  updateMutation.mutate({
+                    isNew: checked === true
+                  });
+                }}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="isNew" className="font-medium">Mark as New</Label>
+                <p className="text-sm text-muted-foreground">Adds a "New" badge to the product in the catalog</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3">
+              <Checkbox 
+                id="isBestseller" 
+                checked={product.isBestseller || false}
+                onCheckedChange={(checked) => {
+                  updateMutation.mutate({
+                    isBestseller: checked === true
+                  });
+                }}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="isBestseller" className="font-medium">Mark as Bestseller</Label>
+                <p className="text-sm text-muted-foreground">Adds a "Bestseller" badge to the product in the catalog</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start space-x-3">
+              <Checkbox 
+                id="isFeatured" 
+                checked={product.isFeatured || false}
+                onCheckedChange={(checked) => {
+                  updateMutation.mutate({
+                    isFeatured: checked === true
+                  });
+                }}
+              />
+              <div className="space-y-1">
+                <Label htmlFor="isFeatured" className="font-medium">Featured on Homepage</Label>
+                <p className="text-sm text-muted-foreground">Shows this product in the featured section on the homepage</p>
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
       

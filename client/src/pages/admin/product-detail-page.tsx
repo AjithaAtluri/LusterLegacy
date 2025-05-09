@@ -69,12 +69,9 @@ export default function ProductDetailPage() {
       </Helmet>
       
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-start items-center">
           <Button variant="outline" onClick={handleBack}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Products
-          </Button>
-          <Button onClick={() => setIsEditing(true)}>
-            <Pencil className="mr-2 h-4 w-4" /> Edit Product
           </Button>
         </div>
         
