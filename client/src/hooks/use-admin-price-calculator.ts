@@ -15,6 +15,7 @@ interface UsePriceCalculatorProps {
   otherStoneType?: string;
   otherStoneWeight?: string;
   preventCalculation?: boolean; // Flag to prevent automatic calculations
+  manualCalculationOnly?: boolean; // Flag to allow only manual price calculations (no auto calculations)
 }
 
 interface PriceBreakdown {
@@ -40,7 +41,8 @@ export function useAdminPriceCalculator({
   secondaryStoneWeight = "0",
   otherStoneType = "none_selected",
   otherStoneWeight = "0",
-  preventCalculation = false
+  preventCalculation = false,
+  manualCalculationOnly = false
 }: UsePriceCalculatorProps) {
   const { toast } = useToast();
   const { goldPrice, isLoading: isGoldPriceLoading, location, timestamp } = useGoldPrice();
@@ -68,11 +70,118 @@ export function useAdminPriceCalculator({
     return isNaN(parsed) ? 0 : parsed;
   };
 
-  // Calculate price
+
+
+  // Define a standalone function to calculate prices outside of useEffect
+  const fetchPriceCalculation = async (forceCalculation = false) => {
+    try {
+      setIsCalculating(true);
+      
+      // Prepare the request payload
+      const metalWeightNum = safeParseFloat(metalWeight);
+      const mainStoneWeightNum = safeParseFloat(mainStoneWeight);
+      const secondaryStoneWeightNum = safeParseFloat(secondaryStoneWeight);
+      const otherStoneWeightNum = safeParseFloat(otherStoneWeight);
+      
+      // Skip calculation if all weights are 0
+      if (metalWeightNum <= 0 && mainStoneWeightNum <= 0 && secondaryStoneWeightNum <= 0 && otherStoneWeightNum <= 0) {
+        setPriceUSD(0);
+        setPriceINR(0);
+        setBreakdown({
+          metalCost: 0,
+          primaryStoneCost: 0,
+          secondaryStoneCost: 0,
+          otherStoneCost: 0,
+          overhead: 0
+        });
+        return;
+      }
+      
+      // Prepare secondary stone with single type
+      let secondaryStoneData = null;
+      if (secondaryStoneType && secondaryStoneType !== "none_selected" && secondaryStoneWeightNum > 0) {
+        secondaryStoneData = {
+          stoneTypeId: secondaryStoneType,
+          caratWeight: secondaryStoneWeightNum
+        };
+      }
+      
+      const requestData = {
+        metalTypeId: metalType,
+        metalWeight: metalWeightNum,
+        primaryStone: mainStoneType !== "none_selected" ? {
+          stoneTypeId: mainStoneType,
+          caratWeight: mainStoneWeightNum
+        } : null,
+        secondaryStones: secondaryStoneData ? [secondaryStoneData] : [],
+        otherStone: otherStoneType !== "none_selected" && otherStoneType !== "none" ? {
+          stoneTypeId: otherStoneType,
+          caratWeight: otherStoneWeightNum
+        } : null
+      };
+      
+      console.log(`Price calculation request${forceCalculation ? ' (forced)' : ''}:`, requestData);
+      
+      // Make API request
+      const response = await apiRequest("POST", "/api/calculate-price", requestData);
+      
+      if (!response.ok) {
+        throw new Error("Failed to calculate price");
+      }
+      
+      const data = await response.json();
+      console.log("Price calculation response:", data);
+      
+      if (!data.success) {
+        throw new Error(data.message || "Failed to calculate price");
+      }
+      
+      const priceData: { usd: PriceData, inr: PriceData } = data;
+      
+      // Update state with calculated prices
+      setPriceUSD(priceData.usd.price);
+      setPriceINR(priceData.inr.price);
+
+      // Create complete breakdown - ensure all properties exist
+      const completeBreakdown: PriceBreakdown = {
+        metalCost: priceData.inr.breakdown?.metalCost || 0,
+        primaryStoneCost: priceData.inr.breakdown?.primaryStoneCost || 0,
+        secondaryStoneCost: priceData.inr.breakdown?.secondaryStoneCost || 0,
+        otherStoneCost: priceData.inr.breakdown?.otherStoneCost || 0,
+        overhead: priceData.inr.breakdown?.overhead || 0
+      };
+      
+      setBreakdown(completeBreakdown);
+      
+      // Create a hash of current parameters to avoid duplicate calculations
+      const paramsHash = `${metalType}-${metalWeight}-${mainStoneType}-${mainStoneWeight}-${secondaryStoneType}-${secondaryStoneWeight}-${otherStoneType}-${otherStoneWeight}`;
+      calculatedParamsRef.current = paramsHash;
+      console.log("Price calculation successful, parameters cached:", paramsHash);
+      
+    } catch (error) {
+      console.error("Error calculating price:", error);
+      toast({
+        title: "Price Calculation Error",
+        description: "Could not calculate price with the provided specifications",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  // Function to manually trigger price calculation
+  const calculatePrice = () => {
+    // Force a new calculation
+    fetchPriceCalculation(true);
+    console.log("Manual price calculation triggered");
+  };
+
+  // Use a separate useEffect for automatic calculations
   useEffect(() => {
     // Don't calculate if required fields are missing or calculation is prevented
     if (!metalType || !metalWeight || metalType === "none_selected" || preventCalculation) {
-      console.log("Price calculation skipped:", 
+      console.log("Automatic price calculation skipped:", 
         !metalType ? "Missing metal type" : 
         !metalWeight ? "Missing metal weight" : 
         metalType === "none_selected" ? "No metal selected" : 
@@ -85,118 +194,22 @@ export function useAdminPriceCalculator({
     
     // If we've already calculated price for these parameters, don't recalculate
     if (calculatedParamsRef.current === paramsHash) {
-      console.log("Price calculation skipped: Parameters unchanged");
+      console.log("Automatic price calculation skipped: Parameters unchanged");
       return;
     }
     
     // Only allow one calculation per render cycle
     if (calculationCountRef.current > 0) {
-      console.log("Price calculation skipped: Already calculated once this render cycle");
+      console.log("Automatic price calculation skipped: Already calculated once this render cycle");
       return;
     }
     
     // Increment calculation count for this render cycle
     calculationCountRef.current += 1;
 
-    const calculatePrice = async () => {
-      try {
-        setIsCalculating(true);
-        
-        // Prepare the request payload
-        const metalWeightNum = safeParseFloat(metalWeight);
-        const mainStoneWeightNum = safeParseFloat(mainStoneWeight);
-        const secondaryStoneWeightNum = safeParseFloat(secondaryStoneWeight);
-        const otherStoneWeightNum = safeParseFloat(otherStoneWeight);
-        
-        // Skip calculation if all weights are 0
-        if (metalWeightNum <= 0 && mainStoneWeightNum <= 0 && secondaryStoneWeightNum <= 0 && otherStoneWeightNum <= 0) {
-          setPriceUSD(0);
-          setPriceINR(0);
-          setBreakdown({
-            metalCost: 0,
-            primaryStoneCost: 0,
-            secondaryStoneCost: 0,
-            otherStoneCost: 0,
-            overhead: 0
-          });
-          return;
-        }
-        
-        // Prepare secondary stone with single type
-        let secondaryStoneData = null;
-        if (secondaryStoneType && secondaryStoneType !== "none_selected" && secondaryStoneWeightNum > 0) {
-          secondaryStoneData = {
-            stoneTypeId: secondaryStoneType,
-            caratWeight: secondaryStoneWeightNum
-          };
-        }
-        
-        const requestData = {
-          metalTypeId: metalType,
-          metalWeight: metalWeightNum,
-          primaryStone: mainStoneType !== "none_selected" ? {
-            stoneTypeId: mainStoneType,
-            caratWeight: mainStoneWeightNum
-          } : null,
-          secondaryStones: secondaryStoneData ? [secondaryStoneData] : [],
-          otherStone: otherStoneType !== "none_selected" && otherStoneType !== "none" ? {
-            stoneTypeId: otherStoneType,
-            caratWeight: otherStoneWeightNum
-          } : null
-        };
-        
-        console.log("Price calculation request:", requestData);
-        
-        // Make API request
-        const response = await apiRequest("POST", "/api/calculate-price", requestData);
-        
-        if (!response.ok) {
-          throw new Error("Failed to calculate price");
-        }
-        
-        const data = await response.json();
-        console.log("Price calculation response:", data);
-        
-        if (!data.success) {
-          throw new Error(data.message || "Failed to calculate price");
-        }
-        
-        const priceData: { usd: PriceData, inr: PriceData } = data;
-        
-        // Update state with calculated prices
-        setPriceUSD(priceData.usd.price);
-        setPriceINR(priceData.inr.price);
-
-        // Create complete breakdown - ensure all properties exist
-        const completeBreakdown: PriceBreakdown = {
-          metalCost: priceData.inr.breakdown?.metalCost || 0,
-          primaryStoneCost: priceData.inr.breakdown?.primaryStoneCost || 0,
-          secondaryStoneCost: priceData.inr.breakdown?.secondaryStoneCost || 0,
-          otherStoneCost: priceData.inr.breakdown?.otherStoneCost || 0,
-          overhead: priceData.inr.breakdown?.overhead || 0
-        };
-        
-        setBreakdown(completeBreakdown);
-        
-        // Store the params hash to avoid recalculation for the same params
-        calculatedParamsRef.current = paramsHash;
-        console.log("Price calculation successful, parameters cached:", paramsHash);
-        
-      } catch (error) {
-        console.error("Error calculating price:", error);
-        toast({
-          title: "Price Calculation Error",
-          description: "Could not calculate price with the provided specifications",
-          variant: "destructive"
-        });
-      } finally {
-        setIsCalculating(false);
-      }
-    };
-
     // Debounce the calculation to avoid too many API calls
     const timer = setTimeout(() => {
-      calculatePrice();
+      fetchPriceCalculation();
     }, 500);
 
     return () => {
@@ -214,17 +227,8 @@ export function useAdminPriceCalculator({
     otherStoneType,
     otherStoneWeight,
     preventCalculation,
-    toast
+    toast // Include toast in dependencies
   ]);
-
-  // Function to manually trigger price calculation
-  const calculatePrice = () => {
-    // Reset the stored params hash to force recalculation
-    calculatedParamsRef.current = '';
-    // Reset the calculation count to allow a new calculation
-    calculationCountRef.current = 0;
-    console.log("Manual price calculation triggered");
-  };
 
   return {
     priceUSD,
