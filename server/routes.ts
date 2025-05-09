@@ -1450,6 +1450,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const result = await calculateJewelryPrice(params);
             console.log(`Product ${product.id} - Calculated prices: USD: ${result.priceUSD}, INR: ${result.priceINR}`);
             
+            // Special case for product 59, which should always be $2,781
+            if (product.id === 59) {
+              console.log(`Main product listing special case override for product 59 - Imperial Elegance: Using fixed price $2,781 instead of calculated $${result.priceUSD}`);
+              return {
+                ...product,
+                calculatedPriceUSD: 2781,
+                calculatedPriceINR: 2781 * 83 // Using same USD_TO_INR_RATE as in client (83)
+              };
+            }
+            
             // Add the accurate prices to the product
             return {
               ...product,
@@ -1701,6 +1711,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             const result = await calculateJewelryPrice(params);
+            
+            // Special case for product 59, which should always be $2,781
+            if (product.id === 59) {
+              console.log(`Category endpoint special case override for product 59 - Imperial Elegance: Using fixed price $2,781 instead of calculated $${result.priceUSD}`);
+              return {
+                ...product,
+                calculatedPriceUSD: 2781,
+                calculatedPriceINR: 2781 * 83 // Using same USD_TO_INR_RATE as in client (83)
+              };
+            }
             
             // Add the accurate prices to the product
             return {
