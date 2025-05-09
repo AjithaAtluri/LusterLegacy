@@ -177,23 +177,58 @@ export function PriceCalculatorDisplay({
 
           {/* Price Breakdown */}
           <div className="pt-4 border-t">
-            <h4 className="text-sm font-medium mb-2">Price Breakdown (USD)</h4>
+            <h4 className="text-sm font-medium mb-2">Price Breakdown (USD & INR)</h4>
             <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Metal Cost</span>
-                {isCalculating ? (
-                  <Skeleton className="h-4 w-16" />
-                ) : (
-                  <span>{formatCurrency(breakdown.metalCost)}</span>
-                )}
+              {/* Metal Cost with detail */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm font-medium">
+                  <span className="text-muted-foreground">Metal Cost</span>
+                  {isCalculating ? (
+                    <Skeleton className="h-4 w-16" />
+                  ) : (
+                    <div className="flex flex-col items-end">
+                      <span>{formatCurrency(breakdown.metalCost)}</span>
+                      <span className="text-xs text-muted-foreground">₹{Math.round(breakdown.metalCost * exchangeRate).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground flex items-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 mr-1.5"></div>
+                      {metalType}
+                    </span>
+                  </div>
+                  <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
+                    Weight: {metalWeight}g × ₹{Math.round(breakdown.metalCost / Number(metalWeight) * exchangeRate).toLocaleString('en-IN')}/g
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Primary Stone</span>
-                {isCalculating ? (
-                  <Skeleton className="h-4 w-16" />
-                ) : (
-                  <span>{formatCurrency(breakdown.primaryStoneCost)}</span>
-                )}
+              
+              {/* Primary Stone with detail */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm font-medium">
+                  <span className="text-muted-foreground">Primary Stone</span>
+                  {isCalculating ? (
+                    <Skeleton className="h-4 w-16" />
+                  ) : (
+                    <div className="flex flex-col items-end">
+                      <span>{formatCurrency(breakdown.primaryStoneCost)}</span>
+                      <span className="text-xs text-muted-foreground">₹{Math.round(breakdown.primaryStoneCost * exchangeRate).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground flex items-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                      {mainStoneType}
+                    </span>
+                  </div>
+                  <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
+                    Weight: {mainStoneWeight} carats × ₹{Math.round(breakdown.primaryStoneCost / Number(mainStoneWeight) * exchangeRate).toLocaleString('en-IN')}/carat
+                  </div>
+                </div>
               </div>
               {/* Secondary Stones with detail display */}
               <div className="space-y-2">
@@ -202,7 +237,10 @@ export function PriceCalculatorDisplay({
                   {isCalculating ? (
                     <Skeleton className="h-4 w-16" />
                   ) : (
-                    <span>{formatCurrency(breakdown.secondaryStoneCost)}</span>
+                    <div className="flex flex-col items-end">
+                      <span>{formatCurrency(breakdown.secondaryStoneCost)}</span>
+                      <span className="text-xs text-muted-foreground">₹{Math.round(breakdown.secondaryStoneCost * exchangeRate).toLocaleString('en-IN')}</span>
+                    </div>
                   )}
                 </div>
                 {secondaryStoneType && secondaryStoneType !== "none_selected" && (
@@ -215,7 +253,7 @@ export function PriceCalculatorDisplay({
                     </div>
                     {secondaryStoneWeight && Number(secondaryStoneWeight) > 0 && (
                       <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
-                        Weight: {secondaryStoneWeight} carats
+                        Weight: {secondaryStoneWeight} carats × ₹{Math.round(breakdown.secondaryStoneCost / Number(secondaryStoneWeight) * exchangeRate).toLocaleString('en-IN')}/carat
                       </div>
                     )}
                   </div>
@@ -230,7 +268,10 @@ export function PriceCalculatorDisplay({
                     {isCalculating ? (
                       <Skeleton className="h-4 w-16" />
                     ) : (
-                      <span>{formatCurrency(breakdown.otherStoneCost)}</span>
+                      <div className="flex flex-col items-end">
+                        <span>{formatCurrency(breakdown.otherStoneCost)}</span>
+                        <span className="text-xs text-muted-foreground">₹{Math.round(breakdown.otherStoneCost * exchangeRate).toLocaleString('en-IN')}</span>
+                      </div>
                     )}
                   </div>
                   <div className="bg-muted/30 p-2 rounded-sm text-xs space-y-1 ml-2">
@@ -242,7 +283,7 @@ export function PriceCalculatorDisplay({
                     </div>
                     {otherStoneWeight && Number(otherStoneWeight) > 0 && (
                       <div className="text-right text-muted-foreground mt-1 pt-1 border-t border-border/40">
-                        Weight: {otherStoneWeight} carats
+                        Weight: {otherStoneWeight} carats × ₹{Math.round(breakdown.otherStoneCost / Number(otherStoneWeight) * exchangeRate).toLocaleString('en-IN')}/carat
                       </div>
                     )}
                   </div>
@@ -253,8 +294,9 @@ export function PriceCalculatorDisplay({
                 {isCalculating ? (
                   <Skeleton className="h-4 w-16" />
                 ) : (
-                  <div>
+                  <div className="flex flex-col items-end">
                     <span>{formatCurrency(correctOverhead)}</span>
+                    <span className="text-xs text-muted-foreground">₹{Math.round(correctOverhead * exchangeRate).toLocaleString('en-IN')}</span>
                     {Math.abs(correctOverhead - breakdown.overhead) > 5 && (
                       <div className="text-xs text-amber-500 mt-0.5">
                         Recalculated (API: {formatCurrency(breakdown.overhead)})
