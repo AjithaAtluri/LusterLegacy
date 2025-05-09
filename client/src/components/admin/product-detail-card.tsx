@@ -282,6 +282,13 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       // Store whether we need to update prices (if we were editing materials)
       const needsPriceUpdate = editSection === 'materials';
       
+      // For product description edits, we should reset the preventAutoStateUpdate flag 
+      // but not trigger a price update
+      if (editSection === 'basicInfo') {
+        console.log("Basic info update completed. Resetting preventAutoStateUpdate flag...");
+        setPreventAutoStateUpdate(false);
+      }
+      
       // For product flags (checkboxes), directly update the component state
       if ('isNew' in updatedProduct) {
         product.isNew = updatedProduct.isNew;
@@ -351,6 +358,12 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
   // Handle basic info save
   const handleBasicInfoSave = (data: any) => {
     try {
+      console.log("Saving basic info with name, description, and detailed description...");
+      
+      // Set the preventAutoStateUpdate flag to true to prevent
+      // automatic price recalculations when just updating text fields
+      setPreventAutoStateUpdate(true);
+      
       // Safely parse the existing details
       let existingDetails = {};
       if (product.details) {
@@ -372,12 +385,23 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       console.log("Saving product with updated details:", detailsUpdate);
       
+      // Set the edit section to basicInfo to help track what we're updating
+      setEditSection('basicInfo');
+      
+      // Update stoneDetails locally for immediate UI update
+      setStoneDetails(prevDetails => ({
+        ...prevDetails,
+        detailedDescription: data.detailedDescription
+      }));
+      
       updateMutation.mutate({
         name: data.name,
         description: data.description,
         details: JSON.stringify(detailsUpdate)
       });
     } catch (error) {
+      // Always reset the flag on error
+      setPreventAutoStateUpdate(false);
       console.error("Error in handleBasicInfoSave:", error);
       toast({
         title: "Error preparing data for save",
@@ -447,6 +471,9 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         details: JSON.stringify(detailsUpdate)
       });
     } catch (error) {
+      // Always reset the flag on error
+      setPreventAutoStateUpdate(false);
+      
       console.error("Error in handleMaterialsSave:", error);
       toast({
         title: "Error preparing data for save",
