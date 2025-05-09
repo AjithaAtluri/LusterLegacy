@@ -51,6 +51,8 @@ const AdminEditProductNew = lazy(() => import("@/pages/admin/edit-product-new"))
 const AdminMetalTypes = lazy(() => import("@/pages/admin/metal-types"));
 const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminProductTypes = lazy(() => import("@/pages/admin/product-types"));
+// New AI Admin Dashboard
+const AIAdminDashboard = lazy(() => import("@/pages/admin/ai-admin-dashboard"));
 const AdminDesigns = lazy(() => import("@/pages/admin/designs"));
 // New request type pages
 const AdminCustomizations = lazy(() => import("@/pages/admin/customizations"));
