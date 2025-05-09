@@ -56,16 +56,8 @@ export function PriceBreakdownTotal({
                   breakdown.secondaryStoneCost + 
                   breakdown.otherStoneCost;
                   
-  // Calculate the correct 25% overhead
-  const correctOverhead = baseCost * 0.25;
-  
-  // Calculate the total with the correct overhead
-  const calculatedTotalCost = baseCost + correctOverhead;
-  
-  // Always use the correctly calculated total based on the sum of components
-  // This ensures the breakdown adds up properly to the displayed total
-  const displayTotalUSD = Math.round(calculatedTotalCost);
-  const displayTotalINR = Math.round(calculatedTotalCost * (exchangeRate || 83));
+  // Get the overhead directly from the API
+  const apiOverhead = breakdown.overhead;
   
   // Log the calculations to verify the math
   console.log("Price Calculation Details:", {
@@ -74,18 +66,18 @@ export function PriceBreakdownTotal({
     secondaryStoneCost: breakdown.secondaryStoneCost,
     otherStoneCost: breakdown.otherStoneCost,
     baseCost,
-    correctOverhead,
-    calculatedTotalCost,
-    displayTotalUSD,
-    displayTotalINR,
-    apiTotal: priceUSD
+    apiOverhead,
+    expectedOverhead: baseCost * 0.25,
+    apiTotal: priceUSD,
+    apiInrTotal: priceINR
   });
   
-  // The price from the API might not match this total due to data storage or rounding issues
-  const isConsistent = Math.abs(calculatedTotalCost - priceUSD) < 5; // Allow for small rounding differences
+  // Use the values directly from the API
+  const displayTotalUSD = priceUSD;
+  const displayTotalINR = priceINR;
   
-  // Override the overhead value displayed in the UI
-  const displayOverhead = correctOverhead;
+  // Use the overhead value directly from the API
+  const displayOverhead = apiOverhead;
   
   // Function to format dual currency prices
   const formatDualCurrency = (usdAmount: number) => {
@@ -225,11 +217,7 @@ export function PriceBreakdownTotal({
             formatDualCurrency(displayOverhead)
           )}
         </div>
-        {breakdown.overhead !== displayOverhead && !isCalculating && (
-          <div className="text-xs text-amber-500 mt-1 text-right">
-            Recalculated for accuracy (API value: {formatCurrency(breakdown.overhead)})
-          </div>
-        )}
+        {/* Overhead is now directly from the API, so no need for recalculation message */}
       </div>
       
       <Separator className="my-2" />
@@ -243,11 +231,6 @@ export function PriceBreakdownTotal({
           <div className="flex flex-col items-end">
             <span className="text-base">{formatCurrency(displayTotalUSD)}</span>
             <span className="text-sm">₹{displayTotalINR.toLocaleString('en-IN')}</span>
-            {!isConsistent && (
-              <span className="text-xs text-amber-500 mt-1">
-                Using calculated total (API total: {formatCurrency(priceUSD)})
-              </span>
-            )}
           </div>
         )}
       </div>

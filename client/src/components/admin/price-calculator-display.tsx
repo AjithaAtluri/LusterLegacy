@@ -62,24 +62,15 @@ export function PriceCalculatorDisplay({
     }
   }, [metalType, metalWeight, isCalculating, calculatePrice]);
   
-  // Calculate the base cost (materials only)
+  // Calculate the base cost (materials only) - for display only
   const baseCost = breakdown.metalCost + 
                  breakdown.primaryStoneCost + 
                  breakdown.secondaryStoneCost + 
                  breakdown.otherStoneCost;
-                 
-  // Calculate the correct 25% overhead
-  const correctOverhead = baseCost * 0.25;
   
-  // Calculate the total with the correct overhead
-  const calculatedTotalCost = baseCost + correctOverhead;
-  
-  // The price from the API should match this total (with possible small rounding differences)
-  const isConsistent = Math.abs(calculatedTotalCost - priceUSD) < 5; // Allow for small rounding differences
-  
-  // Use the calculated total if it's significantly different from the API total
-  const displayTotalUSD = !isConsistent && calculatedTotalCost > 5 ? calculatedTotalCost : priceUSD;
-  const displayTotalINR = !isConsistent && calculatedTotalCost > 5 ? Math.round(calculatedTotalCost * (exchangeRate || 83)) : priceINR;
+  // Get the API values directly
+  const displayTotalUSD = priceUSD;
+  const displayTotalINR = priceINR;
 
   // Render a compact version with just the price info
   if (compact) {
@@ -101,11 +92,7 @@ export function PriceCalculatorDisplay({
             <span className="font-medium">₹{displayTotalINR.toLocaleString('en-IN')}</span>
           )}
         </div>
-        {!isConsistent && !isCalculating && (
-          <div className="text-xs text-amber-500">
-            Recalculated for accuracy
-          </div>
-        )}
+        {/* No longer need consistency check as we're using API values directly */}
         <div className="text-xs pt-2 text-muted-foreground flex items-center gap-1">
           <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
           <span>Based on live gold price: ₹{goldPrice?.toLocaleString('en-IN') || "---"}/g</span>
@@ -180,9 +167,6 @@ export function PriceCalculatorDisplay({
               ) : (
                 <div>
                   <p className="text-2xl font-bold">{formatCurrency(displayTotalUSD)}</p>
-                  {!isConsistent && (
-                    <p className="text-xs text-amber-500">Recalculated for accuracy</p>
-                  )}
                 </div>
               )}
             </div>
@@ -193,9 +177,6 @@ export function PriceCalculatorDisplay({
               ) : (
                 <div>
                   <p className="text-2xl font-bold">₹{displayTotalINR.toLocaleString('en-IN')}</p>
-                  {!isConsistent && (
-                    <p className="text-xs text-amber-500">(API: ₹{priceINR.toLocaleString('en-IN')})</p>
-                  )}
                 </div>
               )}
             </div>
