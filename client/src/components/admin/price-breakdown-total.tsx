@@ -129,6 +129,13 @@ export function PriceBreakdownTotal({
   
   return (
     <div className="space-y-3">
+      {/* Debug info - useful for development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded text-xs mb-4">
+          <p>Breakdown data: {JSON.stringify(breakdown, null, 2)}</p>
+        </div>
+      )}
+      
       {/* Metal cost */}
       <div className="text-sm">
         <div className="flex justify-between items-center">
@@ -136,10 +143,10 @@ export function PriceBreakdownTotal({
           {isCalculating ? (
             <Skeleton className="h-4 w-24" />
           ) : (
-            formatDualCurrency(breakdown.metalCost)
+            formatDualCurrency(breakdown?.metalCost || 0)
           )}
         </div>
-        {!isCalculating && metalWeightNum > 0 && (
+        {!isCalculating && metalWeightNum > 0 && breakdown?.metalCost > 0 && (
           getCalculationDetail("g", metalWeightNum, metalPricePerGram, breakdown.metalCost)
         )}
       </div>
@@ -152,10 +159,10 @@ export function PriceBreakdownTotal({
             {isCalculating ? (
               <Skeleton className="h-4 w-24" />
             ) : (
-              formatDualCurrency(breakdown.primaryStoneCost)
+              formatDualCurrency(breakdown?.primaryStoneCost || 0)
             )}
           </div>
-          {!isCalculating && (
+          {!isCalculating && breakdown?.primaryStoneCost > 0 && (
             getCalculationDetail("ct", Number(mainStoneWeight), mainStonePricePerCarat, breakdown.primaryStoneCost)
           )}
         </div>
@@ -169,10 +176,10 @@ export function PriceBreakdownTotal({
             {isCalculating ? (
               <Skeleton className="h-4 w-24" />
             ) : (
-              formatDualCurrency(breakdown.secondaryStoneCost)
+              formatDualCurrency(breakdown?.secondaryStoneCost || 0)
             )}
           </div>
-          {!isCalculating && (
+          {!isCalculating && breakdown?.secondaryStoneCost > 0 && (
             getCalculationDetail("ct", Number(secondaryStoneWeight), secondaryStonePricePerCarat, breakdown.secondaryStoneCost)
           )}
         </div>
@@ -186,10 +193,10 @@ export function PriceBreakdownTotal({
             {isCalculating ? (
               <Skeleton className="h-4 w-24" />
             ) : (
-              formatDualCurrency(breakdown.otherStoneCost || 0)
+              formatDualCurrency(breakdown?.otherStoneCost || 0)
             )}
           </div>
-          {!isCalculating && breakdown.otherStoneCost > 0 && (
+          {!isCalculating && breakdown?.otherStoneCost > 0 && (
             getCalculationDetail("ct", Number(otherStoneWeight), otherStonePricePerCarat, breakdown.otherStoneCost)
           )}
         </div>
