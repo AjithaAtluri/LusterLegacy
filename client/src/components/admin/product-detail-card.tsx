@@ -859,7 +859,17 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                 <span>Total Price:</span>
                 <div className="text-right">
                   {(() => {
-                    // Recalculate the total using our custom breakdown calculations
+                    // Check if the product has pre-calculated prices from the server
+                    if (product.calculatedPriceUSD && product.calculatedPriceINR) {
+                      return (
+                        <>
+                          <div>{formatCurrency(product.calculatedPriceUSD)}</div>
+                          <div className="text-sm font-normal text-muted-foreground">₹{product.calculatedPriceINR.toLocaleString()}</div>
+                        </>
+                      );
+                    }
+                    
+                    // Fallback to recalculating locally if server didn't provide pre-calculated prices
                     const baseMaterialsCost = 
                       (breakdown.metalCost || 0) + 
                       (breakdown.primaryStoneCost || 0) + 
@@ -887,8 +897,15 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                 </div>
               </div>
               
-              <div className="text-xs text-muted-foreground mt-2">
-                Base price in database: ₹{product.basePrice?.toLocaleString() || 'N/A'}
+              <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                <div>Base price in database: ₹{product.basePrice?.toLocaleString() || 'N/A'}</div>
+                {priceUSD > 0 && priceINR > 0 && (
+                  product.calculatedPriceUSD !== priceUSD || product.calculatedPriceINR !== priceINR
+                ) && (
+                  <div className="text-amber-600">
+                    Local calculation: {formatCurrency(priceUSD)} (₹{priceINR.toLocaleString()})
+                  </div>
+                )}
               </div>
             </>
           )}
