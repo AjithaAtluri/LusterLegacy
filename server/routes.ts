@@ -32,23 +32,6 @@ import path from "path";
 import { calculateJewelryPrice, getSamplePriceCalculation, getGemPricePerCaratFromName } from "./utils/price-calculator";
 import fs from "fs";
 import { validateAdmin } from "./utils";
-
-// Enhanced middleware to check admin rights while respecting impersonation
-const validateAdminWithImpersonation = (req: Request, res: Response, next: NextFunction) => {
-  // Check if the user is impersonating and has an admin role cookie
-  const isImpersonating = req.cookies.admin_impersonating === 'true';
-  const originalAdminRole = req.cookies.admin_role;
-  
-  if (isImpersonating && (originalAdminRole === 'admin' || originalAdminRole === 'limited-admin')) {
-    console.log(`Admin access granted through impersonation: ${req.user?.username} with original role ${originalAdminRole}`);
-    // Allow access and proceed
-    next();
-    return;
-  }
-  
-  // Not impersonating or no admin role cookie - fall back to regular validation
-  validateAdmin(req, res, next);
-};
 import { v4 as uuidv4 } from "uuid";
 import { paypalClientId, createOrder, captureOrder, cancelOrder } from "./paypal";
 import { generateContent } from "./ai-service";
@@ -5666,7 +5649,7 @@ Respond in JSON format:
   });
   
   // Products Management with Multi-select Stones
-  app.get('/api/admin/products', validateAdminWithImpersonation, async (req, res) => {
+  app.get('/api/admin/products', validateAdmin, async (req, res) => {
     try {
       const products = await storage.getAllProducts();
       res.json(products);
@@ -5676,7 +5659,7 @@ Respond in JSON format:
     }
   });
 
-  app.get('/api/admin/products/:id', validateAdminWithImpersonation, async (req, res) => {
+  app.get('/api/admin/products/:id', validateAdmin, async (req, res) => {
     try {
       console.log(`GET /api/admin/products/${req.params.id} - Admin: ${req.user?.username}`);
       
@@ -5714,7 +5697,7 @@ Respond in JSON format:
     }
   });
 
-  app.post('/api/admin/products', validateAdminWithImpersonation, upload.fields([
+  app.post('/api/admin/products', validateAdmin, upload.fields([
     { name: 'mainImage', maxCount: 1 },
     { name: 'additionalImage1', maxCount: 1 },
     { name: 'additionalImage2', maxCount: 1 },
@@ -5801,7 +5784,7 @@ Respond in JSON format:
     }
   });
 
-  app.put('/api/admin/products/:id', validateAdminWithImpersonation, upload.fields([
+  app.put('/api/admin/products/:id', validateAdmin, upload.fields([
     { name: 'mainImage', maxCount: 1 },
     { name: 'additionalImage1', maxCount: 1 },
     { name: 'additionalImage2', maxCount: 1 },
@@ -7149,8 +7132,6 @@ Respond in JSON format:
     }
   });
   
-
-  
   // Delete a user
   app.delete('/api/admin/users/:id', validateAdmin, async (req, res) => {
     try {
@@ -7198,165 +7179,6 @@ Respond in JSON format:
         success: false,
         message: 'Error deleting user', 
         error: error instanceof Error ? error.message : 'Unknown error' 
-      });
-    }
-  });
-  
-  // Impersonate user (admin only)
-  app.post('/api/admin/impersonate/:userId', validateAdmin, async (req, res) => {
-    try {
-      console.log("Impersonation endpoint - request received for user ID:", req.params.userId);
-      
-      // Only full admins can impersonate users
-      if (!req.isAuthenticated() || req.user.role !== 'admin') {
-        return res.status(403).json({ 
-          success: false,
-          message: 'Only administrators can impersonate users' 
-        });
-      }
-      
-      // Save admin information for restoration later
-      const adminId = req.user.id;
-      const adminUsername = req.user.username;
-      
-      // Make sure the userId is a number
-      const userId = parseInt(req.params.userId, 10);
-      if (isNaN(userId)) {
-        return res.status(400).json({ 
-          success: false,
-          message: 'Invalid user ID' 
-        });
-      }
-      
-      // Get the target user
-      const targetUser = await storage.getUser(userId);
-      if (!targetUser) {
-        return res.status(404).json({ 
-          success: false,
-          message: 'User not found' 
-        });
-      }
-      
-      console.log(`Admin ${adminUsername} (ID: ${adminId}) is impersonating user ${targetUser.username} (ID: ${userId})`);
-      
-      // Store impersonation information in session cookies
-      res.cookie('admin_impersonating', 'true', { 
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 2 * 60 * 60 * 1000 // 2 hours max
-      });
-      
-      res.cookie('real_admin_id', adminId.toString(), { 
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 2 * 60 * 60 * 1000 // 2 hours max
-      });
-      
-      // Store the admin role to preserve admin access during impersonation
-      res.cookie('admin_role', req.user.role, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 2 * 60 * 60 * 1000 // 2 hours max
-      });
-      
-      // Also store display information in a non-http-only cookie so the frontend can show impersonation status
-      res.cookie('impersonating_user', targetUser.username, { 
-        httpOnly: false, 
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 2 * 60 * 60 * 1000 // 2 hours max
-      });
-      
-      // Log in as the target user (replace current session)
-      req.login(targetUser, (err) => {
-        if (err) {
-          console.error('Error during impersonation login:', err);
-          return res.status(500).json({ 
-            success: false,
-            message: 'Failed to impersonate user' 
-          });
-        }
-        
-        // Success - return information about impersonation
-        return res.json({ 
-          success: true, 
-          impersonating: targetUser.username,
-          impersonatingId: targetUser.id,
-          message: `You are now viewing the site as ${targetUser.username}` 
-        });
-      });
-    } catch (error) {
-      console.error('Error during impersonation:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Failed to impersonate user',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-  
-  // Stop impersonation (return to admin account)
-  app.post('/api/admin/stop-impersonation', async (req, res) => {
-    try {
-      console.log("Stop impersonation endpoint - request received");
-      
-      // Check for impersonation cookies
-      const isImpersonating = req.cookies.admin_impersonating === 'true';
-      const realAdminId = req.cookies.real_admin_id ? parseInt(req.cookies.real_admin_id, 10) : null;
-      
-      if (!isImpersonating || !realAdminId) {
-        return res.status(400).json({ 
-          success: false,
-          message: 'Not currently impersonating a user' 
-        });
-      }
-      
-      // Get the real admin user
-      const adminUser = await storage.getUser(realAdminId);
-      if (!adminUser || adminUser.role !== 'admin') {
-        return res.status(404).json({ 
-          success: false,
-          message: 'Admin user not found or no longer has admin privileges' 
-        });
-      }
-      
-      console.log(`User ${req.user?.username} (ID: ${req.user?.id}) returning to admin account ${adminUser.username} (ID: ${adminUser.id})`);
-      
-      // Clear impersonation cookies
-      res.clearCookie('admin_impersonating', { path: '/' });
-      res.clearCookie('real_admin_id', { path: '/' });
-      res.clearCookie('admin_role', { path: '/' });
-      res.clearCookie('impersonating_user', { path: '/' });
-      
-      // Log back in as the admin
-      req.login(adminUser, (err) => {
-        if (err) {
-          console.error('Error during stop impersonation login:', err);
-          return res.status(500).json({ 
-            success: false,
-            message: 'Failed to return to admin account' 
-          });
-        }
-        
-        // Success - return confirmation
-        return res.json({ 
-          success: true, 
-          message: `You have returned to your admin account (${adminUser.username})` 
-        });
-      });
-    } catch (error) {
-      console.error('Error stopping impersonation:', error);
-      res.status(500).json({ 
-        success: false,
-        message: 'Failed to stop impersonation',
-        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

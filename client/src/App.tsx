@@ -9,7 +9,6 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useToast } from "@/hooks/use-toast";
-import ImpersonationBanner from "@/components/admin/impersonation-banner";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("@/pages/home"));
@@ -218,7 +217,6 @@ function App() {
           <Footer />
           {/* WhatsApp button hidden for now */}
           {/* <WhatsAppButton /> */}
-          <ImpersonationBanner />
         </div>
       </AuthProvider>
     </ThemeProvider>

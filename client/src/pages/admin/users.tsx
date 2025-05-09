@@ -19,7 +19,7 @@ import {
   CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, UserCircle, UserPlus, ShieldCheck, Eye } from "lucide-react";
+import { Loader2, Trash2, UserCircle, UserPlus, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -152,36 +152,6 @@ export default function AdminUsersPage() {
       });
     }
   });
-  
-  // Mutation for impersonating a user
-  const impersonateUserMutation = useMutation({
-    mutationFn: async (userId: number) => {
-      const response = await apiRequest("POST", `/api/admin/impersonate/${userId}`);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Impersonation Active",
-        description: `You are now viewing the site as ${data.impersonating}`,
-        variant: "default"
-      });
-      
-      // Redirect to homepage to see the site as the impersonated user
-      window.location.href = "/";
-    },
-    onError: (error) => {
-      toast({
-        title: "Impersonation Failed",
-        description: "Failed to impersonate user: " + (error instanceof Error ? error.message : "Unknown error"),
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Handler for impersonation button click
-  const handleImpersonateUser = (userId: number) => {
-    impersonateUserMutation.mutate(userId);
-  };
   
   // Handle input changes in the form
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -371,31 +341,15 @@ export default function AdminUsersPage() {
                         </TableCell>
                         <TableCell>{formatDate(user.createdAt)}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleImpersonateUser(user.id)}
-                              disabled={impersonateUserMutation.isPending}
-                              title={`View site as ${user.username}`}
-                              className="text-amber-500 hover:text-amber-600 hover:bg-amber-50"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">Impersonate</span>
-                            </Button>
-                            
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setUserToDelete(user)}
-                              disabled={user.role === "admin" || deleteUserMutation.isPending}
-                              title={user.role === "admin" ? "Admin users cannot be deleted" : "Delete user"}
-                              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setUserToDelete(user)}
+                            disabled={user.role === "admin" || deleteUserMutation.isPending}
+                            title={user.role === "admin" ? "Admin users cannot be deleted" : "Delete user"}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
