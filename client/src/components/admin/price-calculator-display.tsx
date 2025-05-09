@@ -302,13 +302,8 @@ export function PriceCalculatorDisplay({
                   <Skeleton className="h-4 w-16" />
                 ) : (
                   <div className="flex flex-col items-end">
-                    <span>{formatCurrency(correctOverhead)}</span>
-                    <span className="text-xs text-muted-foreground">₹{Math.round(correctOverhead * exchangeRate).toLocaleString('en-IN')}</span>
-                    {Math.abs(correctOverhead - breakdown.overhead) > 5 && (
-                      <div className="text-xs text-amber-500 mt-0.5">
-                        Recalculated (API: {formatCurrency(breakdown.overhead)})
-                      </div>
-                    )}
+                    <span>{formatCurrency(breakdown.overhead)}</span>
+                    <span className="text-xs text-muted-foreground">₹{Math.round(breakdown.overhead * exchangeRate).toLocaleString('en-IN')}</span>
                   </div>
                 )}
               </div>
