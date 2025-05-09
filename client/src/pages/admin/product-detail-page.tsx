@@ -5,12 +5,15 @@ import { Helmet } from "react-helmet";
 import { ProductDetailCard } from "@/components/admin/product-detail-card";
 import AdminLayout from "@/components/admin/admin-layout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import ProductForm from "@/components/admin/product-form";
 
 export default function ProductDetailPage() {
   const { productId } = useParams();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
   
   // Fetch the product data
   const { data: product, isLoading, error } = useQuery({
@@ -21,6 +24,14 @@ export default function ProductDetailPage() {
     // Invalidate products query to refresh data when going back
     queryClient.invalidateQueries({ queryKey: ['/api/products'] });
     setLocation("/admin/products");
+  };
+  
+  const handleFormClose = () => {
+    setIsEditing(false);
+    
+    // Refresh product data after edit
+    queryClient.invalidateQueries({ queryKey: [`/api/products/${productId}`] });
+    queryClient.refetchQueries({ queryKey: [`/api/products/${productId}`] });
   };
 
   if (isLoading) {
@@ -62,6 +73,9 @@ export default function ProductDetailPage() {
           <Button variant="outline" onClick={handleBack}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Products
           </Button>
+          <Button onClick={() => setIsEditing(true)}>
+            <Pencil className="mr-2 h-4 w-4" /> Edit Product
+          </Button>
         </div>
         
         <ProductDetailCard 
@@ -69,6 +83,24 @@ export default function ProductDetailPage() {
           onClose={handleBack} 
           isFullPage={true}
         />
+        
+        {/* Edit Product Dialog */}
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent className="max-w-5xl">
+            <DialogHeader>
+              <DialogTitle className="font-playfair text-xl">Edit Product</DialogTitle>
+              <DialogDescription>
+                Make changes to the selected product.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <ProductForm 
+              initialData={product} 
+              productId={parseInt(productId as string)} 
+              onSuccess={handleFormClose} 
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

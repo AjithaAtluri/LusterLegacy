@@ -4,7 +4,6 @@ import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/admin-layout";
 import ProductForm from "@/components/admin/product-form";
-import { ProductDetailCard } from "@/components/admin/product-detail-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/components/ui/dialog";
@@ -13,13 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Pencil, Eye, Trash2, FileImage } from "lucide-react";
+import { Loader2, Plus, Search, Eye, Trash2, FileImage } from "lucide-react";
 
 export default function AdminProducts() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isViewingDetails, setIsViewingDetails] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -105,12 +101,8 @@ export default function AdminProducts() {
     }
   };
   
-  // Handle form close
-  const handleFormClose = () => {
-    setIsCreating(false);
-    setIsEditing(false);
-    setSelectedProduct(null);
-    
+  // Handle URL cleanup
+  const cleanupUrl = () => {
     // Remove action=new from URL
     if (action === 'new') {
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -197,13 +189,6 @@ export default function AdminProducts() {
                     className="flex-1"
                   >
                     <Eye className="mr-1 h-4 w-4" /> View
-                  </Button>
-                  <Button 
-                    onClick={() => handleEditProduct(product)} 
-                    size="sm" 
-                    variant="outline"
-                  >
-                    <Pencil className="h-4 w-4" />
                   </Button>
                   <Button 
                     onClick={() => handleDeleteClick(product)} 
