@@ -212,7 +212,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
     }
   };
   
-  const stoneDetails = getStoneDetails();
+  // Use state for stone details so it can be updated
+  const [stoneDetails, setStoneDetails] = useState(() => getStoneDetails());
   
   // Price calculation hook
   const {
