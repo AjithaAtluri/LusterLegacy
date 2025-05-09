@@ -179,6 +179,12 @@ export function useAdminPriceCalculator({
 
   // Use a separate useEffect for automatic calculations
   useEffect(() => {
+    // If manual calculation only is enabled, skip automatic calculation completely
+    if (manualCalculationOnly) {
+      console.log("Automatic price calculation disabled: manualCalculationOnly flag is set to true");
+      return;
+    }
+
     // Don't calculate if required fields are missing or calculation is prevented
     if (!metalType || !metalWeight || metalType === "none_selected" || preventCalculation) {
       console.log("Automatic price calculation skipped:", 
@@ -227,6 +233,7 @@ export function useAdminPriceCalculator({
     otherStoneType,
     otherStoneWeight,
     preventCalculation,
+    manualCalculationOnly, // Include the new flag in dependencies
     toast // Include toast in dependencies
   ]);
 

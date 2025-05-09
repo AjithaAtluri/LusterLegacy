@@ -48,8 +48,18 @@ export function PriceCalculatorDisplay({
     secondaryStoneType,
     secondaryStoneWeight,
     otherStoneType,
-    otherStoneWeight
+    otherStoneWeight,
+    manualCalculationOnly: true // Only calculate prices manually
   });
+  
+  // Trigger initial calculation when component mounts
+  useEffect(() => {
+    // Only calculate if we have valid inputs and aren't already calculating
+    if (metalType && metalWeight && !isCalculating) {
+      calculatePrice();
+      console.log("Initial price calculation triggered");
+    }
+  }, []);
   
   // Calculate the base cost (materials only)
   const baseCost = breakdown.metalCost + 
