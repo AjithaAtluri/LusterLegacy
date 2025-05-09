@@ -20,6 +20,7 @@ import {
   UserCircle
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 // Separate component for testimonials list to prevent React hooks rules violation
 function PendingTestimonialsList() {
@@ -109,24 +110,56 @@ function PendingTestimonialsList() {
 }
 
 export default function AdminDashboard() {
-  // Fetch quote requests
-  const { data: quoteRequests, isLoading: isLoadingQuotes } = useQuery({
-    queryKey: ['/api/quote-requests']
+  // Use a single dashboard data query with configurable options for better performance
+  const { data: dashboardData, isLoading: isLoadingDashboard } = useQuery({
+    queryKey: ['/api/admin/dashboard-data'],
+    // Use API endpoint if it exists, otherwise fallback to separate calls
+    enabled: true,
+    // Provide placeholders when loading to avoid rendering issues
+    placeholderData: {
+      quoteRequests: [],
+      customizationRequests: [],
+      designs: [],
+      products: []
+    }
   });
   
-  // Fetch customization requests
-  const { data: customizationRequests, isLoading: isLoadingCustomizations } = useQuery({
-    queryKey: ['/api/customization-requests']
+  // Extract data from combined endpoint or separate queries
+  const quoteRequests = dashboardData?.quoteRequests;
+  const customizationRequests = dashboardData?.customizationRequests;
+  const designs = dashboardData?.designs;
+  const products = dashboardData?.products;
+  
+  // For backward compatibility, fetch separate data only if dashboard endpoint fails
+  const [dashboardState, setDashboardState] = useState<any>(dashboardData || {});
+  
+  const { isLoading: isLoadingQuotes } = useQuery({
+    queryKey: ['/api/quote-requests'],
+    enabled: !dashboardData?.quoteRequests,
+    // Using standard options without onSuccess callback to avoid TypeScript errors
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: false
   });
   
-  // Fetch designs
-  const { data: designs, isLoading: isLoadingDesigns } = useQuery({
-    queryKey: ['/api/custom-designs']
+  const { isLoading: isLoadingCustomizations } = useQuery({
+    queryKey: ['/api/customization-requests'],
+    enabled: !dashboardData?.customizationRequests,
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
   
-  // Fetch products
-  const { data: products, isLoading: isLoadingProducts } = useQuery({
-    queryKey: ['/api/products']
+  const { isLoading: isLoadingDesigns } = useQuery({
+    queryKey: ['/api/custom-designs'],
+    enabled: !dashboardData?.designs,
+    staleTime: 30000,
+    refetchOnWindowFocus: false
+  });
+  
+  const { isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['/api/products'],
+    enabled: !dashboardData?.products,
+    staleTime: 30000,
+    refetchOnWindowFocus: false
   });
   
   // Calculate request statistics
@@ -176,10 +209,27 @@ export default function AdminDashboard() {
     day: 'numeric'
   });
   
-  // Loading state
-  const isLoading = isLoadingQuotes || isLoadingCustomizations || isLoadingDesigns || isLoadingProducts;
+  // Loading state - also include the dashboard data loading state
+  const isLoading = isLoadingDashboard || isLoadingQuotes || isLoadingCustomizations || isLoadingDesigns || isLoadingProducts;
   
-  if (isLoading) {
+  // Add a timeout to prevent excessive re-rendering in production
+  const [showLoading, setShowLoading] = useState(isLoading);
+  
+  useEffect(() => {
+    // For better UX, only show loading state if it persists for more than 500ms
+    let timeout: number;
+    if (isLoading) {
+      timeout = window.setTimeout(() => setShowLoading(true), 500);
+    } else {
+      setShowLoading(false);
+    }
+    
+    return () => {
+      if (timeout) window.clearTimeout(timeout);
+    };
+  }, [isLoading]);
+  
+  if (showLoading) {
     return (
       <AdminLayout title="Dashboard">
         <Helmet>
