@@ -659,8 +659,19 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       {/* Edit Dialogs */}
       
       {/* Basic Info Edit Dialog */}
-      <Dialog open={editSection === 'basicInfo'} onOpenChange={(open) => !open && setEditSection(null)}>
-        <DialogContent>
+      <Dialog 
+        open={editSection === 'basicInfo'} 
+        onOpenChange={(open) => {
+          // Only allow explicit close from the cancel button
+          if (!open) {
+            return false;
+          }
+        }}
+      >
+        <DialogContent
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Edit Basic Information</DialogTitle>
             <DialogDescription>
@@ -732,8 +743,20 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       </Dialog>
       
       {/* Materials Edit Dialog */}
-      <Dialog open={editSection === 'materials'} onOpenChange={(open) => !open && setEditSection(null)}>
-        <DialogContent className="max-w-xl">
+      <Dialog 
+        open={editSection === 'materials'} 
+        onOpenChange={(open) => {
+          // Only allow explicit close from the cancel button
+          if (!open) {
+            return false;
+          }
+        }}
+      >
+        <DialogContent 
+          className="max-w-xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Edit Materials</DialogTitle>
             <DialogDescription>
@@ -960,8 +983,20 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       </Dialog>
       
       {/* Image Edit Dialog */}
-      <Dialog open={editSection === 'image'} onOpenChange={(open) => !open && setEditSection(null)}>
-        <DialogContent className="max-w-xl">
+      <Dialog 
+        open={editSection === 'image'} 
+        onOpenChange={(open) => {
+          // Only allow explicit close from the cancel button
+          if (!open) {
+            return false;
+          }
+        }}
+      >
+        <DialogContent 
+          className="max-w-xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Update Product Image</DialogTitle>
             <DialogDescription>
