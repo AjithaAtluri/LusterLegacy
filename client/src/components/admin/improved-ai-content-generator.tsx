@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, Image, Upload, X } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 
 // Define the expected response structure from the AI
 interface AIGeneratedContent {
@@ -108,6 +109,11 @@ export default function ImprovedAIContentGenerator({
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [stoneTypeFields, setStoneTypeFields] = useState([{ name: "", carats: 0.1 }]);
   
+  // Image state
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  
   // Fetch stone types from the API using public endpoints
   const { data: stoneTypes, isLoading: isLoadingStoneTypes, error: stoneTypesError } = useQuery<StoneType[]>({
     queryKey: ['/api/stone-types'],
@@ -137,6 +143,48 @@ export default function ImprovedAIContentGenerator({
   // Error tracking
   const [error, setError] = useState<string | null>(null);
   const [isModelFallback, setIsModelFallback] = useState(false);
+  
+  // Handle image selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select an image file (JPEG, PNG, etc.)",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setSelectedImage(file);
+      
+      // Create image preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreview(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Remove selected image
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -199,14 +247,44 @@ export default function ImprovedAIContentGenerator({
       // Filter out empty stone type fields
       const validStoneTypes = stoneTypeFields.filter(stone => stone.name.trim() !== "");
 
+      // Create the multipart form data if an image is selected
+      let imageBase64 = null;
+      if (selectedImage) {
+        setIsImageLoading(true);
+        
+        // Convert the image to base64
+        try {
+          const reader = new FileReader();
+          imageBase64 = await new Promise((resolve, reject) => {
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(selectedImage);
+          });
+          
+          // Extract the base64 data part (remove the data:image/xxx;base64, prefix)
+          if (typeof imageBase64 === 'string') {
+            imageBase64 = imageBase64.split(',')[1];
+          }
+        } catch (error) {
+          console.error("Error processing image:", error);
+          throw new Error("Failed to process the uploaded image");
+        } finally {
+          setIsImageLoading(false);
+        }
+      }
+
       // Create the request payload
       const requestPayload = {
         ...formData,
         metalWeight: Number(formData.metalWeight) || 5,
         primaryGems: validStoneTypes.length > 0 ? validStoneTypes : undefined, // Keep primaryGems key for backward compatibility
+        imageBase64: imageBase64, // Add the image data if available
       };
 
-      console.log("Generating content with data:", requestPayload);
+      console.log("Generating content with data:", {
+        ...requestPayload,
+        imageBase64: imageBase64 ? "Image data included" : null
+      });
 
       // Make the API request to the public endpoint
       const response = await apiRequest(
