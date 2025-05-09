@@ -51,8 +51,7 @@ const AdminEditProductNew = lazy(() => import("@/pages/admin/edit-product-new"))
 const AdminMetalTypes = lazy(() => import("@/pages/admin/metal-types"));
 const AdminStoneTypes = lazy(() => import("@/pages/admin/stone-types"));
 const AdminProductTypes = lazy(() => import("@/pages/admin/product-types"));
-// New AI Admin Dashboard
-const AIAdminDashboard = lazy(() => import("@/pages/admin/ai-admin-dashboard"));
+// AI Admin Dashboard removed (duplicate functionality)
 const AdminDesigns = lazy(() => import("@/pages/admin/designs"));
 // New request type pages
 const AdminCustomizations = lazy(() => import("@/pages/admin/customizations"));
@@ -179,7 +178,6 @@ function App() {
                 
                 {/* Admin pages - using protected routes */}
                 <ProtectedRoute path="/admin/ai-generator" component={AIContentGenerator} adminOnly />
-                <ProtectedRoute path="/admin/ai-dashboard" component={AIAdminDashboard} adminOnly />
                 <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
                 <ProtectedRoute path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} adminOnly />
                 <ProtectedRoute path="/admin/edit-product/:id" component={AdminEditProductNew} adminOnly />

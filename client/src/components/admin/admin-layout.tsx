@@ -389,11 +389,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       icon: <Wand2 className="h-5 w-5" />, 
       href: "/admin/ai-generator" 
     },
-    { 
-      title: "AI Admin Dashboard", 
-      icon: <Sparkles className="h-5 w-5" />, 
-      href: "/admin/ai-dashboard" 
-    },
     {
       title: "User Management",
       icon: <Users className="h-5 w-5" />,
