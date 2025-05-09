@@ -5666,7 +5666,7 @@ Respond in JSON format:
   });
   
   // Products Management with Multi-select Stones
-  app.get('/api/admin/products', validateAdmin, async (req, res) => {
+  app.get('/api/admin/products', validateAdminWithImpersonation, async (req, res) => {
     try {
       const products = await storage.getAllProducts();
       res.json(products);
@@ -5676,7 +5676,7 @@ Respond in JSON format:
     }
   });
 
-  app.get('/api/admin/products/:id', validateAdmin, async (req, res) => {
+  app.get('/api/admin/products/:id', validateAdminWithImpersonation, async (req, res) => {
     try {
       console.log(`GET /api/admin/products/${req.params.id} - Admin: ${req.user?.username}`);
       
@@ -5714,7 +5714,7 @@ Respond in JSON format:
     }
   });
 
-  app.post('/api/admin/products', validateAdmin, upload.fields([
+  app.post('/api/admin/products', validateAdminWithImpersonation, upload.fields([
     { name: 'mainImage', maxCount: 1 },
     { name: 'additionalImage1', maxCount: 1 },
     { name: 'additionalImage2', maxCount: 1 },
@@ -5801,7 +5801,7 @@ Respond in JSON format:
     }
   });
 
-  app.put('/api/admin/products/:id', validateAdmin, upload.fields([
+  app.put('/api/admin/products/:id', validateAdminWithImpersonation, upload.fields([
     { name: 'mainImage', maxCount: 1 },
     { name: 'additionalImage1', maxCount: 1 },
     { name: 'additionalImage2', maxCount: 1 },
