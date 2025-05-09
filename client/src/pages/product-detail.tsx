@@ -357,11 +357,27 @@ export default function ProductDetail() {
     // dimensions handling removed as requested
   }, [product?.details]);
   
-  // Use server-calculated price rather than recalculating on client side
-  // Use the same calculation logic as product-card.tsx for consistent pricing display
-  const USD_TO_INR_RATE = 83; // Same fallback rate used in product-card.tsx
+  // IMPORTANT: Always use server-calculated price rather than client-side or database-saved values
+  // Server applies the proper formula with metal prices, stone costs, and overhead
+  const USD_TO_INR_RATE = 83; // Same fallback rate used consistently across the application
+  
+  // For debugging purposes - log both values to see the difference
+  useEffect(() => {
+    if (product) {
+      console.log("Price values comparison:", {
+        "Server calculatedPriceUSD": product.calculatedPriceUSD,
+        "Server calculatedPriceINR": product.calculatedPriceINR,
+        "Database basePrice": product.basePrice,
+        "Database basePrice in USD": product.basePrice ? Math.round(product.basePrice / USD_TO_INR_RATE) : 0
+      });
+    }
+  }, [product]);
+  
+  // Always prioritize server-calculated values (these come from price-calculator.ts on the server)
   const calculatedPriceUSD = product?.calculatedPriceUSD ?? (product?.basePrice ? Math.round(product.basePrice / USD_TO_INR_RATE) : 0);
   const calculatedPriceINR = product?.calculatedPriceINR ?? product?.basePrice ?? 0;
+  
+  // Always use the server-calculated USD price for display
   const currentPrice = calculatedPriceUSD;
   
   // If product not found
@@ -478,6 +494,7 @@ export default function ProductDetail() {
                 otherStoneType={otherStoneType}
                 otherStoneWeight={otherStoneWeight}
                 currentPrice={currentPrice}
+                inrPrice={calculatedPriceINR} // Pass the server-calculated INR price
                 formatCurrency={formatCurrency}
                 className="mb-6"
               />

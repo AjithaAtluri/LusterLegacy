@@ -10,6 +10,7 @@ interface ProductSpecificationsProps {
   otherStoneType?: string;
   otherStoneWeight?: number;
   currentPrice?: number;
+  inrPrice?: number; // Add a prop to accept server-calculated INR price
   formatCurrency: (value: number) => string;
   className?: string;
 }
@@ -24,6 +25,7 @@ export function ProductSpecifications({
   otherStoneType,
   otherStoneWeight = 0,
   currentPrice = 0,
+  inrPrice, // Add server-calculated INR price
   formatCurrency,
   className = "",
 }: ProductSpecificationsProps) {
@@ -79,7 +81,7 @@ export function ProductSpecifications({
         </div>
       )}
       
-      {/* Estimated Price - Now showing both USD and INR consistently with product cards */}
+      {/* Estimated Price - Now showing both USD and INR using server-calculated values */}
       {currentPrice > 0 && (
         <div className="flex flex-col gap-1">
           <div className="flex justify-between items-center">
@@ -88,7 +90,11 @@ export function ProductSpecifications({
           </div>
           <div className="flex justify-end">
             <span className="font-cormorant text-sm text-muted-foreground">
-              ₹{Math.round(currentPrice * 83).toLocaleString('en-IN')}
+              {/* Use server-calculated INR price if available, otherwise fall back to conversion */}
+              ₹{inrPrice 
+                ? inrPrice.toLocaleString('en-IN')
+                : Math.round(currentPrice * 83).toLocaleString('en-IN')
+              }
             </span>
           </div>
         </div>
