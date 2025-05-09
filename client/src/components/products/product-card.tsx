@@ -149,13 +149,13 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? productMetalType.toLowerCase().replace(/\s+/g, '-') 
     : undefined;
   
-  // Use calculated price if available, or fall back to calculating from base price
-  // We'll use 83 as the conversion rate (same as in price-calculator.ts) for fallback
-  const USD_TO_INR_RATE = 83;
+  // Use calculated price from API, or fall back to base price conversion if calculations fail
+  // In cases where the price calculator fails on the server, we might get null values
+  const USD_TO_INR_RATE = 83; // Same fallback rate used server-side
   
-  // Use the calculated price from API if available
-  const calculatedPriceUSD = product.calculatedPriceUSD || Math.round(product.basePrice / USD_TO_INR_RATE);
-  const calculatedPriceINR = product.calculatedPriceINR || product.basePrice;
+  // Provide fallbacks for null/undefined calculated price values
+  const calculatedPriceUSD = product.calculatedPriceUSD ?? Math.round(product.basePrice / USD_TO_INR_RATE);
+  const calculatedPriceINR = product.calculatedPriceINR ?? product.basePrice;
   
   return (
     <div className="product-card bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[620px]">
