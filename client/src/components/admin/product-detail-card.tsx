@@ -880,47 +880,9 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       </CardContent>
       
       <CardFooter className="flex justify-between border-t p-4">
-        {!isFullPage ? (
-          // For dialog mode, show Close and Refresh buttons
-          <>
-            <Button variant="outline" onClick={onClose}>Close</Button>
-            <Button 
-              variant="default" 
-              onClick={() => {
-                // Update price using the same mutation as the "Update Price" button
-                updatePriceMutation.mutate();
-              }}
-              disabled={updatePriceMutation.isPending || isCalculating}
-            >
-              {updatePriceMutation.isPending ? (
-                <>Refreshing...</>
-              ) : (
-                <>
-                  <RefreshCcw className="h-4 w-4 mr-2" /> Refresh Price
-                </>
-              )}
-            </Button>
-          </>
-        ) : (
-          // For full page mode, show just the Refresh Price button centered
-          <div className="w-full flex justify-center">
-            <Button 
-              variant="default" 
-              onClick={() => {
-                updatePriceMutation.mutate();
-              }}
-              disabled={updatePriceMutation.isPending || isCalculating}
-              className="w-48"
-            >
-              {updatePriceMutation.isPending ? (
-                <>Refreshing Price...</>
-              ) : (
-                <>
-                  <RefreshCcw className="h-4 w-4 mr-2" /> Refresh Price
-                </>
-              )}
-            </Button>
-          </div>
+        {!isFullPage && (
+          // For dialog mode, show Close button only
+          <Button variant="outline" onClick={onClose}>Close</Button>
         )}
       </CardFooter>
       
