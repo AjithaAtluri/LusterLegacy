@@ -288,27 +288,27 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
           ) : (
             <>
               <div className="space-y-2">
-                {breakdown?.inr && (
+                {breakdown && (
                   <>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Metal Cost:</span>
-                      <span>₹{breakdown.inr.breakdown.metalCost.toLocaleString()}</span>
+                      <span>₹{breakdown.metalCost?.toLocaleString() || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Primary Stone:</span>
-                      <span>₹{breakdown.inr.breakdown.primaryStoneCost.toLocaleString()}</span>
+                      <span>₹{breakdown.primaryStoneCost?.toLocaleString() || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Secondary Stone:</span>
-                      <span>₹{breakdown.inr.breakdown.secondaryStoneCost.toLocaleString()}</span>
+                      <span>₹{breakdown.secondaryStoneCost?.toLocaleString() || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Other Stone:</span>
-                      <span>₹{breakdown.inr.breakdown.otherStoneCost.toLocaleString()}</span>
+                      <span>₹{breakdown.otherStoneCost?.toLocaleString() || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Overhead & Labor:</span>
-                      <span>₹{breakdown.inr.breakdown.overhead.toLocaleString()}</span>
+                      <span>₹{breakdown.overhead?.toLocaleString() || 0}</span>
                     </div>
                   </>
                 )}
