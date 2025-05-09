@@ -97,18 +97,7 @@ export function PriceCalculatorDisplay({
           <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
           <span>Based on live gold price: ₹{goldPrice?.toLocaleString('en-IN') || "---"}/g</span>
         </div>
-        <div className="pt-2">
-          <Button 
-            size="xs" 
-            variant="default" 
-            onClick={() => calculatePrice()}
-            disabled={isCalculating}
-            className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white font-medium h-7 text-xs w-full"
-          >
-            <RefreshCw size={12} className={isCalculating ? "animate-spin" : ""} />
-            <span>Update Pricing</span>
-          </Button>
-        </div>
+        {/* Update price button removed */}
       </div>
     );
   }
@@ -310,19 +299,7 @@ export function PriceCalculatorDisplay({
             </div>
           </div>
           
-          {/* Refresh Price Button */}
-          <div className="pt-3 flex justify-end">
-            <Button 
-              size="sm" 
-              variant="default" 
-              onClick={() => calculatePrice()}
-              disabled={isCalculating}
-              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white font-medium"
-            >
-              <RefreshCw size={14} className={isCalculating ? "animate-spin" : ""} />
-              <span>Update Price</span>
-            </Button>
-          </div>
+          {/* Update price button removed */}
           
           {/* Note */}
           <div className="text-xs text-muted-foreground pt-2">
