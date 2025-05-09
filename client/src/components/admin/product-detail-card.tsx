@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useReducer } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,9 @@ interface ProductDetailCardProps {
 export function ProductDetailCard({ product, onClose, isFullPage = false }: ProductDetailCardProps) {
   const { toast } = useToast();
   const [editSection, setEditSection] = useState<string | null>(null);
+  
+  // Add forceUpdate to trigger re-renders when needed (especially for checkbox state changes)
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
   
   // Fetch metal types and stone types from API
   const { data: metalTypes = [], isLoading: isMetalTypesLoading } = useQuery({
@@ -277,6 +280,9 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       if ('isFeatured' in updatedProduct) {
         product.isFeatured = updatedProduct.isFeatured;
       }
+      
+      // Force UI update for immediate reflection of changes
+      forceUpdate();
       
       // Immediately update cache with new data
       queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
