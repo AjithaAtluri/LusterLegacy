@@ -198,14 +198,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             : product.details;
             
           // Extract metal and stone details for price calculation
+          // ONLY use database values, NOT AI-generated values
+          // This prioritizes user-edited values over AI-generated values
           const metalType = details.metalType || "";
           const metalWeight = details.metalWeight || "";
-          const mainStoneType = details.mainStoneType || "";
-          const mainStoneWeight = details.mainStoneWeight || "";
-          const secondaryStoneType = details.secondaryStoneType || "";
+          const mainStoneType = details.primaryStone || details.mainStoneType || ""; // First try primaryStone (user edited)
+          const mainStoneWeight = details.primaryStoneWeight || details.mainStoneWeight || "";
+          const secondaryStoneType = details.secondaryStone || details.secondaryStoneType || "";
           const secondaryStoneWeight = details.secondaryStoneWeight || "";
           
-          console.log(`[DIRECT-PRODUCT] Calculating prices for product ${productId} with:`, {
+          console.log(`[DIRECT-PRODUCT] Calculating prices for product ${productId} with database values:`, {
             metalType,
             metalWeight,
             mainStoneType,
@@ -1808,33 +1810,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           otherStoneType: ""
         };
         
-        // If we don't have material info directly, try from aiInputs
-        if (!materialInfo.metalType || !materialInfo.primaryStone) {
-          // Extract AI inputs if available
-          let aiInputs = null;
-          if (product.aiInputs) {
-            aiInputs = typeof product.aiInputs === 'string' 
-              ? JSON.parse(product.aiInputs) 
-              : product.aiInputs;
-          } else if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
-            aiInputs = parsedDetails.additionalData.aiInputs;
-          }
-          
-          if (aiInputs) {
-            // Fill in any missing values from aiInputs
-            materialInfo.productType = aiInputs.productType || materialInfo.productType;
-            materialInfo.metalType = materialInfo.metalType || aiInputs.metalType;
-            materialInfo.metalWeight = materialInfo.metalWeight || aiInputs.metalWeight;
-            
-            // For gemstones, map between different naming conventions
-            materialInfo.primaryStone = materialInfo.primaryStone || aiInputs.mainStoneType;
-            materialInfo.primaryStoneWeight = materialInfo.primaryStoneWeight || aiInputs.mainStoneWeight;
-            materialInfo.secondaryStone = materialInfo.secondaryStone || aiInputs.secondaryStoneType;
-            materialInfo.secondaryStoneWeight = materialInfo.secondaryStoneWeight || aiInputs.secondaryStoneWeight;
-            materialInfo.otherStone = materialInfo.otherStone || aiInputs.otherStoneType;
-            materialInfo.otherStoneWeight = materialInfo.otherStoneWeight || aiInputs.otherStoneWeight;
-          }
+        // We are no longer using AI inputs for material info to avoid price calculation inconsistencies
+        // Only use database values that have been directly edited and saved
+        // This ensures consistency with product card prices and admin views
+        
+        // Set a sensible fallback for metal type if it's missing (use 14K gold as default)
+        if (!materialInfo.metalType) {
+          materialInfo.metalType = "14k Yellow Gold";
+          console.log(`[DIRECT-PRODUCT] Using default metal type (14k Yellow Gold) for product ${productId}`);
         }
+        
+        // Log what we're using for calculations
+        console.log(`[DIRECT-PRODUCT] Using database values only for product ${productId}`);
+        
+        // No AI input fallbacks - this is intentional to maintain price consistency
         
         console.log("Using material info for price calculation:", {
           metalType: materialInfo.metalType,
@@ -2034,33 +2023,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             otherStoneType: ""
           };
           
-          // If we don't have material info directly, try from aiInputs
-          if (!materialInfo.metalType || !materialInfo.primaryStone) {
-            // Extract AI inputs if available
-            let aiInputs = null;
-            if (product.aiInputs) {
-              aiInputs = typeof product.aiInputs === 'string' 
-                ? JSON.parse(product.aiInputs) 
-                : product.aiInputs;
-            } else if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
-              aiInputs = parsedDetails.additionalData.aiInputs;
-            }
-            
-            if (aiInputs) {
-              // Fill in any missing values from aiInputs
-              materialInfo.productType = aiInputs.productType || materialInfo.productType;
-              materialInfo.metalType = materialInfo.metalType || aiInputs.metalType;
-              materialInfo.metalWeight = materialInfo.metalWeight || aiInputs.metalWeight;
-              
-              // For gemstones, map between different naming conventions
-              materialInfo.primaryStone = materialInfo.primaryStone || aiInputs.mainStoneType;
-              materialInfo.primaryStoneWeight = materialInfo.primaryStoneWeight || aiInputs.mainStoneWeight;
-              materialInfo.secondaryStone = materialInfo.secondaryStone || aiInputs.secondaryStoneType;
-              materialInfo.secondaryStoneWeight = materialInfo.secondaryStoneWeight || aiInputs.secondaryStoneWeight;
-              materialInfo.otherStone = materialInfo.otherStone || aiInputs.otherStoneType;
-              materialInfo.otherStoneWeight = materialInfo.otherStoneWeight || aiInputs.otherStoneWeight;
-            }
+          // We are no longer using AI inputs for material info in related products
+          // to ensure consistency with direct product endpoint and product cards
+          
+          // Set a sensible fallback for metal type if it's missing
+          if (!materialInfo.metalType) {
+            materialInfo.metalType = "14k Yellow Gold";
+            console.log(`[RELATED PRODUCTS] Using default metal type (14k Yellow Gold) for product ${product.id}`);
           }
+          
+          console.log(`[RELATED PRODUCTS] Using database values only for product ${product.id}`);
+          
+          // No AI input fallbacks to ensure price calculation consistency
           
           // Create parameters for price calculator
           // IMPORTANT: Parse weights correctly by converting any string values to actual numbers
