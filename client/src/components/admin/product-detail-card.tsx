@@ -181,50 +181,132 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
   
   // Handle basic info save
   const handleBasicInfoSave = (data: any) => {
-    // Create updated details object with the detailed description
-    const detailsUpdate = {
-      ...product.details ? (typeof product.details === 'string' ? JSON.parse(product.details) : product.details) : {},
-      detailedDescription: data.detailedDescription
-    };
-    
-    updateMutation.mutate({
-      name: data.name,
-      description: data.description,
-      details: JSON.stringify(detailsUpdate)
-    });
+    try {
+      // Safely parse the existing details
+      let existingDetails = {};
+      if (product.details) {
+        try {
+          existingDetails = typeof product.details === 'string' 
+            ? JSON.parse(product.details) 
+            : product.details;
+        } catch (parseError) {
+          console.error("Error parsing existing details:", parseError);
+          existingDetails = {};
+        }
+      }
+      
+      // Create updated details object with the detailed description
+      const detailsUpdate = {
+        ...existingDetails,
+        detailedDescription: data.detailedDescription
+      };
+      
+      console.log("Saving product with updated details:", detailsUpdate);
+      
+      updateMutation.mutate({
+        name: data.name,
+        description: data.description,
+        details: JSON.stringify(detailsUpdate)
+      });
+    } catch (error) {
+      console.error("Error in handleBasicInfoSave:", error);
+      toast({
+        title: "Error preparing data for save",
+        description: "There was an error processing the form data. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   // Handle materials save
   const handleMaterialsSave = (data: any) => {
-    const detailsUpdate = {
-      ...product.details ? (typeof product.details === 'string' ? JSON.parse(product.details) : product.details) : {},
-      metalType: data.metalType,
-      metalWeight: data.metalWeight,
-      primaryStone: data.primaryStone,
-      primaryStoneWeight: data.primaryStoneWeight,
-      secondaryStone: data.secondaryStone,
-      secondaryStoneWeight: data.secondaryStoneWeight,
-      otherStone: data.otherStone,
-      otherStoneWeight: data.otherStoneWeight
-    };
-    
-    updateMutation.mutate({
-      details: JSON.stringify(detailsUpdate)
-    });
+    try {
+      // Safely parse the existing details
+      let existingDetails = {};
+      if (product.details) {
+        try {
+          existingDetails = typeof product.details === 'string' 
+            ? JSON.parse(product.details) 
+            : product.details;
+        } catch (parseError) {
+          console.error("Error parsing existing details:", parseError);
+          existingDetails = {};
+        }
+      }
+      
+      // Preserve important details that shouldn't be lost during the update
+      const detailedDescription = existingDetails.detailedDescription || '';
+      
+      // Create updated details object with the materials info
+      const detailsUpdate = {
+        ...existingDetails,
+        detailedDescription, // Explicitly preserve this in case it gets lost
+        metalType: data.metalType,
+        metalWeight: data.metalWeight,
+        primaryStone: data.primaryStone,
+        primaryStoneWeight: data.primaryStoneWeight,
+        secondaryStone: data.secondaryStone,
+        secondaryStoneWeight: data.secondaryStoneWeight,
+        otherStone: data.otherStone,
+        otherStoneWeight: data.otherStoneWeight
+      };
+      
+      console.log("Saving product with updated materials details:", detailsUpdate);
+      
+      updateMutation.mutate({
+        details: JSON.stringify(detailsUpdate)
+      });
+    } catch (error) {
+      console.error("Error in handleMaterialsSave:", error);
+      toast({
+        title: "Error preparing data for save",
+        description: "There was an error processing the form data. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   // Price update mutation
   const updatePriceMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('PATCH', `/api/products/${product.id}`, {
-        basePrice: priceINR,
-        calculatedPriceUSD: priceUSD,
-        calculatedPriceINR: priceINR
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update product price');
+      try {
+        // Safely get the existing product details to preserve them during price update
+        let existingDetails = {};
+        if (product.details) {
+          try {
+            existingDetails = typeof product.details === 'string' 
+              ? JSON.parse(product.details) 
+              : product.details;
+          } catch (parseError) {
+            console.error("Error parsing existing details during price update:", parseError);
+            existingDetails = {};
+          }
+        }
+        
+        // Add price information to details
+        const updatedDetails = {
+          ...existingDetails,
+          calculatedPriceUSD: priceUSD,
+          calculatedPriceINR: priceINR
+        };
+        
+        console.log("Updating prices with details:", updatedDetails);
+        
+        const response = await apiRequest('PATCH', `/api/products/${product.id}`, {
+          basePrice: priceINR,
+          calculatedPriceUSD: priceUSD,
+          calculatedPriceINR: priceINR,
+          details: JSON.stringify(updatedDetails)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update product price');
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Price update error:", error);
+        throw error;
       }
-      return response.json();
     },
     onSuccess: () => {
       toast({
