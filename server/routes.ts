@@ -5812,7 +5812,85 @@ Respond in JSON format:
   app.get('/api/admin/products', validateAdmin, async (req, res) => {
     try {
       const products = await storage.getAllProducts();
-      res.json(products);
+      
+      // Calculate accurate prices for each product in the admin view also
+      // to match what's shown in the public-facing views
+      const USD_TO_INR_RATE = 83;
+      
+      const productsWithAccuratePrices = await Promise.all(products.map(async product => {
+        try {
+          // Try to get AI inputs from product.aiInputs first
+          let aiInputs = product.aiInputs ? JSON.parse(product.aiInputs as unknown as string) : null;
+          
+          // If aiInputs is null, try to extract from the nested details JSON
+          if (!aiInputs && product.details) {
+            try {
+              const parsedDetails = JSON.parse(product.details as string);
+              if (parsedDetails.additionalData && parsedDetails.additionalData.aiInputs) {
+                aiInputs = parsedDetails.additionalData.aiInputs;
+              }
+            } catch (err) {
+              console.error(`Failed to parse details JSON for product ${product.id}:`, err);
+            }
+          }
+          
+          if (aiInputs) {
+            // Extract parameters for the price calculator
+            const params = {
+              productType: aiInputs.productType || "",
+              metalType: aiInputs.metalType || "",
+              metalWeight: parseFloat(aiInputs.metalWeight) || 0,
+              primaryGems: [],
+              otherStone: aiInputs.otherStoneType ? {
+                stoneTypeId: aiInputs.otherStoneType,
+                caratWeight: parseFloat(aiInputs.otherStoneWeight) || 0
+              } : undefined
+            };
+            
+            // Add main stone if available
+            if (aiInputs.mainStoneType && aiInputs.mainStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.mainStoneType,
+                carats: parseFloat(aiInputs.mainStoneWeight) || 0
+              });
+            }
+            
+            // Add secondary stone if available
+            if (aiInputs.secondaryStoneType && aiInputs.secondaryStoneWeight) {
+              params.primaryGems.push({
+                name: aiInputs.secondaryStoneType,
+                carats: parseFloat(aiInputs.secondaryStoneWeight) || 0
+              });
+            }
+            
+            const result = await calculateJewelryPrice(params);
+            
+            // Add the accurate prices to the product
+            return {
+              ...product,
+              calculatedPriceUSD: result.priceUSD,
+              calculatedPriceINR: result.priceINR
+            };
+          }
+          
+          // If AI inputs are not available, use the base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        } catch (error) {
+          console.error(`Error calculating price for product ${product.id}:`, error);
+          // Return the product with default conversion from base price
+          return {
+            ...product,
+            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
+            calculatedPriceINR: product.basePrice
+          };
+        }
+      }));
+      
+      res.json(productsWithAccuratePrices);
     } catch (error) {
       console.error('Error fetching products:', error);
       res.status(500).json({ message: 'Failed to fetch products' });
