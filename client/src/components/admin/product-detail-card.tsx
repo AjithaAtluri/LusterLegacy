@@ -783,19 +783,20 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Metal Cost:</span>
                       <div className="text-right">
-                        <span>₹{breakdown.metalCost?.toLocaleString() || 0}</span>
+                        <span>₹{(product.calculatedBreakdown?.metalCost || breakdown.metalCost || 0).toLocaleString()}</span>
                         <div className="text-xs text-muted-foreground">
-                          {stoneDetails.metalWeight}g × ₹{Math.round(breakdown.metalCost / Number(stoneDetails.metalWeight)).toLocaleString()}/g
+                          {stoneDetails.metalWeight}g × ₹{Math.round((product.calculatedBreakdown?.metalCost || breakdown.metalCost || 1) / Number(stoneDetails.metalWeight || 1)).toLocaleString()}/g
                         </div>
                       </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Primary Stone:</span>
                       <div className="text-right">
-                        <span>₹{breakdown.primaryStoneCost > 0 ? breakdown.primaryStoneCost.toLocaleString() : "0"}</span>
-                        {Number(stoneDetails.primaryStoneWeight) > 0 && breakdown.primaryStoneCost > 0 && (
+                        <span>₹{(product.calculatedBreakdown?.primaryStoneCost || breakdown.primaryStoneCost || 0) > 0 ? 
+                              (product.calculatedBreakdown?.primaryStoneCost || breakdown.primaryStoneCost).toLocaleString() : "0"}</span>
+                        {Number(stoneDetails.primaryStoneWeight) > 0 && (product.calculatedBreakdown?.primaryStoneCost || breakdown.primaryStoneCost) > 0 && (
                           <div className="text-xs text-muted-foreground">
-                            {stoneDetails.primaryStoneWeight} ct × ₹{Math.round(breakdown.primaryStoneCost / Number(stoneDetails.primaryStoneWeight)).toLocaleString()}/ct
+                            {stoneDetails.primaryStoneWeight} ct × ₹{Math.round((product.calculatedBreakdown?.primaryStoneCost || breakdown.primaryStoneCost) / Number(stoneDetails.primaryStoneWeight)).toLocaleString()}/ct
                           </div>
                         )}
                       </div>
@@ -803,10 +804,11 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Secondary Stone:</span>
                       <div className="text-right">
-                        <span>₹{breakdown.secondaryStoneCost > 0 ? breakdown.secondaryStoneCost.toLocaleString() : "0"}</span>
-                        {Number(stoneDetails.secondaryStoneWeight) > 0 && breakdown.secondaryStoneCost > 0 && (
+                        <span>₹{(product.calculatedBreakdown?.secondaryStoneCost || breakdown.secondaryStoneCost || 0) > 0 ? 
+                              (product.calculatedBreakdown?.secondaryStoneCost || breakdown.secondaryStoneCost).toLocaleString() : "0"}</span>
+                        {Number(stoneDetails.secondaryStoneWeight) > 0 && (product.calculatedBreakdown?.secondaryStoneCost || breakdown.secondaryStoneCost) > 0 && (
                           <div className="text-xs text-muted-foreground">
-                            {stoneDetails.secondaryStoneWeight} ct × ₹{Math.round(breakdown.secondaryStoneCost / Number(stoneDetails.secondaryStoneWeight)).toLocaleString()}/ct
+                            {stoneDetails.secondaryStoneWeight} ct × ₹{Math.round((product.calculatedBreakdown?.secondaryStoneCost || breakdown.secondaryStoneCost) / Number(stoneDetails.secondaryStoneWeight)).toLocaleString()}/ct
                           </div>
                         )}
                       </div>
@@ -814,10 +816,11 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Other Stone:</span>
                       <div className="text-right">
-                        <span>₹{breakdown.otherStoneCost > 0 ? breakdown.otherStoneCost.toLocaleString() : "0"}</span>
-                        {Number(stoneDetails.otherStoneWeight) > 0 && breakdown.otherStoneCost > 0 && (
+                        <span>₹{(product.calculatedBreakdown?.otherStoneCost || breakdown.otherStoneCost || 0) > 0 ? 
+                              (product.calculatedBreakdown?.otherStoneCost || breakdown.otherStoneCost).toLocaleString() : "0"}</span>
+                        {Number(stoneDetails.otherStoneWeight) > 0 && (product.calculatedBreakdown?.otherStoneCost || breakdown.otherStoneCost) > 0 && (
                           <div className="text-xs text-muted-foreground">
-                            {stoneDetails.otherStoneWeight} ct × ₹{Math.round(breakdown.otherStoneCost / Number(stoneDetails.otherStoneWeight)).toLocaleString()}/ct
+                            {stoneDetails.otherStoneWeight} ct × ₹{Math.round((product.calculatedBreakdown?.otherStoneCost || breakdown.otherStoneCost) / Number(stoneDetails.otherStoneWeight)).toLocaleString()}/ct
                           </div>
                         )}
                       </div>
@@ -825,7 +828,19 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                     
                     {/* Calculate base materials subtotal */}
                     {(() => {
-                      const baseMaterialsCost = 
+                      // Use server values from product.calculatedBreakdown if available, otherwise use local breakdown
+                      const useServerValues = product.calculatedBreakdown && (
+                        product.calculatedBreakdown.metalCost > 0 || 
+                        product.calculatedBreakdown.primaryStoneCost > 0 || 
+                        product.calculatedBreakdown.secondaryStoneCost > 0 || 
+                        product.calculatedBreakdown.otherStoneCost > 0
+                      );
+                      
+                      const baseMaterialsCost = useServerValues ?
+                        (product.calculatedBreakdown.metalCost || 0) + 
+                        (product.calculatedBreakdown.primaryStoneCost || 0) + 
+                        (product.calculatedBreakdown.secondaryStoneCost || 0) + 
+                        (product.calculatedBreakdown.otherStoneCost || 0) :
                         (breakdown.metalCost || 0) + 
                         (breakdown.primaryStoneCost || 0) + 
                         (breakdown.secondaryStoneCost || 0) + 
@@ -833,6 +848,9 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                       
                       // Calculate 25% overhead
                       const calculatedOverhead = Math.round(baseMaterialsCost * 0.25);
+                      // Use server overhead if available
+                      const displayedOverhead = useServerValues ? 
+                        (product.calculatedBreakdown.overhead || calculatedOverhead) : calculatedOverhead;
                       
                       return (
                         <>
@@ -843,7 +861,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                           
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Overhead & Labor (25%):</span>
-                            <span>₹{calculatedOverhead.toLocaleString()}</span>
+                            <span>₹{displayedOverhead.toLocaleString()}</span>
                           </div>
                         </>
                       );
