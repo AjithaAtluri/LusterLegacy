@@ -833,8 +833,24 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                         )}
                       </div>
                     </div>
+                    
+                    {/* Calculate base materials subtotal */}
+                    {(() => {
+                      const baseMaterialsCost = 
+                        (breakdown.metalCost || 0) + 
+                        (breakdown.primaryStoneCost || 0) + 
+                        (breakdown.secondaryStoneCost || 0) + 
+                        (breakdown.otherStoneCost || 0);
+                      return (
+                        <div className="flex justify-between pt-2 border-t border-border">
+                          <span className="text-muted-foreground font-medium">Base Materials Subtotal:</span>
+                          <span className="font-medium">₹{baseMaterialsCost.toLocaleString()}</span>
+                        </div>
+                      );
+                    })()}
+                    
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Overhead & Labor:</span>
+                      <span className="text-muted-foreground">Overhead & Labor (25%):</span>
                       <span>₹{breakdown.overhead?.toLocaleString() || 0}</span>
                     </div>
                   </>
