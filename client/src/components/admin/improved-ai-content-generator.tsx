@@ -134,8 +134,8 @@ export default function ImprovedAIContentGenerator({
   
   // Form state
   const [formData, setFormData] = useState({
-    productTypes: [] as string[],  // Changed to array for multiple selection
-    metalTypes: [] as string[],    // Changed to array for multiple selection
+    productType: "", // Single product type selection
+    metalType: "",   // Single metal type selection
     metalWeight: 5,
     userDescription: "",
   });
@@ -537,6 +537,72 @@ export default function ImprovedAIContentGenerator({
               onChange={handleInputChange}
             />
           </div>
+          
+          {/* Image Upload Section */}
+          <div className="space-y-2">
+            <Label>Product Image (Optional)</Label>
+            <div className="border rounded-md p-4 bg-muted/30">
+              {imagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Product preview" 
+                    className="w-full max-h-64 object-contain rounded-md mb-2"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={removeImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    The AI will analyze this image to generate more accurate product descriptions.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <div className="flex items-center justify-center w-full">
+                    <label 
+                      htmlFor="image-upload" 
+                      className={cn(
+                        "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer",
+                        "hover:bg-muted/50 transition-colors duration-200",
+                        isImageLoading ? "opacity-50 cursor-not-allowed" : ""
+                      )}
+                    >
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        {isImageLoading ? (
+                          <Loader2 className="w-8 h-8 mb-2 text-primary animate-spin" />
+                        ) : (
+                          <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                        )}
+                        <p className="mb-1 text-sm text-muted-foreground">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG or JPEG (max 5MB)
+                        </p>
+                      </div>
+                      <input 
+                        id="image-upload" 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/png, image/jpeg, image/jpg"
+                        onChange={handleImageChange}
+                        disabled={isImageLoading}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Upload an image of your jewelry product for the AI to analyze and generate accurate descriptions.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button 
@@ -555,7 +621,10 @@ export default function ImprovedAIContentGenerator({
                 Generating...
               </>
             ) : (
-              'Generate Content'
+              <>
+                <Image className="mr-2 h-4 w-4" />
+                Generate Content
+              </>
             )}
           </Button>
         </CardFooter>
