@@ -3270,22 +3270,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: new Date(),
       });
       
-      // Extract product details from JSON string if necessary
+      // Extract product details from persisted database values only
       let metalType = "14K Yellow Gold"; // Default fallback
       let stoneType = "None"; // Default fallback
       
-      // Parse product details from JSON if available
+      // Parse product details from database values only
       if (product.details) {
         try {
+          // Use the JSON.parse with try-catch as details is stored as a string
           const details = JSON.parse(product.details);
-          if (details.additionalData) {
-            // Use the AI inputs if available, otherwise fallback to direct properties
-            const aiInputs = details.additionalData.aiInputs || {};
-            
-            metalType = aiInputs.metalType || details.additionalData.metalType || metalType;
-            stoneType = aiInputs.mainStoneType || details.additionalData.mainStoneType || 
-                        details.additionalData.primaryStone || stoneType;
+          
+          // Use only the direct database values, no AI inputs
+          if (details.metalType) {
+            metalType = details.metalType;
           }
+          
+          if (details.primaryStone) {
+            stoneType = details.primaryStone;
+          }
+          
+          console.log("Using persisted database values for order creation:", { metalType, stoneType });
         } catch (e) {
           console.log("Could not parse product details:", e);
         }
@@ -5369,11 +5373,21 @@ Respond in JSON format:
         },
         // Include input data for reference
         inputs: {
-          metalType,
+          // Only include what was actually provided in the request, not what was calculated/looked up
+          metalType: metalTypeId, // Use the original input value
           metalWeight,
-          primaryStone,
-          secondaryStones,
-          otherStone
+          primaryStone: primaryStone ? {
+            stoneTypeId: primaryStone.stoneTypeId,
+            caratWeight: primaryStone.caratWeight
+          } : null,
+          secondaryStones: secondaryStones ? secondaryStones.map(stone => ({
+            stoneTypeId: stone.stoneTypeId,
+            caratWeight: stone.caratWeight
+          })) : [],
+          otherStone: otherStone ? {
+            stoneTypeId: otherStone.stoneTypeId,
+            caratWeight: otherStone.caratWeight
+          } : null
         }
       });
     } catch (error) {
