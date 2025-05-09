@@ -942,17 +942,9 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       {/* Basic Info Edit Dialog */}
       <Dialog 
         open={editSection === 'basicInfo'} 
-        onOpenChange={(open) => {
-          // Only allow explicit close from the cancel button
-          if (!open) {
-            return false;
-          }
-        }}
+        onOpenChange={(open) => !open && setEditSection(null)}
       >
-        <DialogContent
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Basic Information</DialogTitle>
             <DialogDescription>
@@ -1026,17 +1018,10 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       {/* Materials Edit Dialog */}
       <Dialog 
         open={editSection === 'materials'} 
-        onOpenChange={(open) => {
-          // Only allow explicit close from the cancel button
-          if (!open) {
-            return false;
-          }
-        }}
+        onOpenChange={(open) => !open && setEditSection(null)}
       >
         <DialogContent 
           className="max-w-xl"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogHeader>
             <DialogTitle>Edit Materials</DialogTitle>
@@ -1266,17 +1251,10 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       {/* Image Edit Dialog */}
       <Dialog 
         open={editSection === 'image'} 
-        onOpenChange={(open) => {
-          // Only allow explicit close from the cancel button
-          if (!open) {
-            return false;
-          }
-        }}
+        onOpenChange={(open) => !open && setEditSection(null)}
       >
         <DialogContent 
           className="max-w-xl"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogHeader>
             <DialogTitle>Update Product Image</DialogTitle>
