@@ -267,6 +267,17 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       // Store whether we need to update prices (if we were editing materials)
       const needsPriceUpdate = editSection === 'materials';
       
+      // For product flags (checkboxes), directly update the component state
+      if ('isNew' in updatedProduct) {
+        product.isNew = updatedProduct.isNew;
+      }
+      if ('isBestseller' in updatedProduct) {
+        product.isBestseller = updatedProduct.isBestseller;
+      }
+      if ('isFeatured' in updatedProduct) {
+        product.isFeatured = updatedProduct.isFeatured;
+      }
+      
       // Immediately update cache with new data
       queryClient.setQueryData([`/api/products/${product.id}`], updatedProduct);
       queryClient.setQueryData([`/api/direct-product/${product.id}`], updatedProduct);
@@ -278,14 +289,13 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       // Force a refetch to ensure the UI displays the latest data
       try {
-        const [directProductResult, productResult] = await Promise.all([
-          queryClient.refetchQueries({ queryKey: [`/api/direct-product/${product.id}`] }),
-          queryClient.refetchQueries({ queryKey: [`/api/products/${product.id}`] })
+        // Force a hard refresh of the data with fetchQuery instead of refetchQueries
+        await Promise.all([
+          queryClient.fetchQuery({ queryKey: [`/api/direct-product/${product.id}`] }),
+          queryClient.fetchQuery({ queryKey: [`/api/products/${product.id}`] })
         ]);
-        console.log("Product data refreshed after update:", {
-          directProductResult,
-          productResult
-        });
+        
+        console.log("Product data refreshed after update:", updatedProduct);
         
         // Update prices after data is refreshed if we were editing materials
         if (needsPriceUpdate) {
@@ -298,6 +308,13 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       // Now close the edit dialog AFTER all updates are complete
       setEditSection(null);
+      
+      // Re-render the component by triggering a state update
+      setEditSection(prevState => {
+        // Just a trick to force re-render
+        setTimeout(() => null, 0);
+        return null;
+      });
       
       toast({
         title: "Product updated",
@@ -662,6 +679,12 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                 id="isNew" 
                 checked={product.isNew || false}
                 onCheckedChange={(checked) => {
+                  // Update the local product state immediately for the UI
+                  product.isNew = checked === true;
+                  // Force a re-render
+                  forceUpdate();
+                  
+                  // Then send the update to the server
                   updateMutation.mutate({
                     isNew: checked === true
                   });
@@ -678,6 +701,12 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                 id="isBestseller" 
                 checked={product.isBestseller || false}
                 onCheckedChange={(checked) => {
+                  // Update the local product state immediately for the UI
+                  product.isBestseller = checked === true;
+                  // Force a re-render
+                  forceUpdate();
+                  
+                  // Then send the update to the server
                   updateMutation.mutate({
                     isBestseller: checked === true
                   });
@@ -694,6 +723,12 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                 id="isFeatured" 
                 checked={product.isFeatured || false}
                 onCheckedChange={(checked) => {
+                  // Update the local product state immediately for the UI
+                  product.isFeatured = checked === true;
+                  // Force a re-render
+                  forceUpdate();
+                  
+                  // Then send the update to the server
                   updateMutation.mutate({
                     isFeatured: checked === true
                   });

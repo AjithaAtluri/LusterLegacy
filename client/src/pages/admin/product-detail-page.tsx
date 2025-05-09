@@ -15,10 +15,23 @@ export default function ProductDetailPage() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Fetch the product data
+  // Fetch the product data - set refetchInterval to ensure regular updates
   const { data: product, isLoading, error } = useQuery({
     queryKey: [`/api/products/${id}`],
+    refetchInterval: 2000, // Refresh every 2 seconds to capture updates from popups
+    staleTime: 1000, // Consider data stale after 1 second
   });
+  
+  // Force refresh of product data when component mounts or remounts
+  useEffect(() => {
+    // Fetch fresh data when the component mounts
+    const refreshData = async () => {
+      await queryClient.invalidateQueries({ queryKey: [`/api/products/${id}`] });
+      await queryClient.fetchQuery({ queryKey: [`/api/products/${id}`] });
+    };
+    
+    refreshData();
+  }, [id, queryClient]);
   
   const handleBack = () => {
     // Invalidate products query to refresh data when going back
@@ -29,9 +42,13 @@ export default function ProductDetailPage() {
   const handleFormClose = () => {
     setIsEditing(false);
     
-    // Refresh product data after edit
-    queryClient.invalidateQueries({ queryKey: [`/api/products/${id}`] });
-    queryClient.refetchQueries({ queryKey: [`/api/products/${id}`] });
+    // Refresh product data after edit - using fetchQuery for guaranteed fresh data
+    const refreshData = async () => {
+      await queryClient.invalidateQueries({ queryKey: [`/api/products/${id}`] });
+      await queryClient.fetchQuery({ queryKey: [`/api/products/${id}`] });
+    };
+    
+    refreshData();
   };
 
   if (isLoading) {
