@@ -767,20 +767,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium">Price Breakdown</h3>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => updatePriceMutation.mutate()}
-              disabled={updatePriceMutation.isPending || isCalculating}
-            >
-              {updatePriceMutation.isPending ? (
-                <>Updating...</>
-              ) : (
-                <>
-                  <RefreshCcw className="h-4 w-4 mr-1" /> Update Price
-                </>
-              )}
-            </Button>
+            {/* Update Price button removed */}
           </div>
           
           {isCalculating ? (
