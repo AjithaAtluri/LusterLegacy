@@ -72,8 +72,17 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
       const otherStone = details.otherStone || aiInputs.otherStone || additionalData.otherStone || additionalData.otherStoneType || "None";
       const otherStoneWeight = details.otherStoneWeight || aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
       
-      // For the detailed description, look at both standard location and nested inside details
-      const detailedDescription = details.detailedDescription || aiInputs.detailedDescription || additionalData.detailedDescription || "";
+      // For the detailed description, look at multiple possible locations to ensure we find it
+      const detailedDescription = 
+        details.detailedDescription || 
+        aiInputs.detailedDescription || 
+        additionalData.detailedDescription || 
+        details.detailed_description || 
+        aiInputs.detailed_description || 
+        additionalData.detailed_description || 
+        "";
+      
+      console.log("Extracted detailed description:", detailedDescription);
       
       return {
         metalType,
@@ -437,9 +446,9 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
                     <FormControl>
                       <Textarea {...field} rows={3} />
                     </FormControl>
-                    <FormDescription>
+                    <p className="text-sm text-muted-foreground">
                       Brief description shown in product listings
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -454,9 +463,9 @@ export function ProductDetailCard({ product, onClose }: ProductDetailCardProps) 
                     <FormControl>
                       <Textarea {...field} rows={6} />
                     </FormControl>
-                    <FormDescription>
+                    <p className="text-sm text-muted-foreground">
                       Comprehensive product details shown on the product page
-                    </FormDescription>
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
