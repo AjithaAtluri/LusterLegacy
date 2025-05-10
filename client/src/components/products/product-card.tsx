@@ -149,9 +149,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     ? productMetalType.toLowerCase().replace(/\s+/g, '-') 
     : undefined;
   
-  // Use calculated price from API, or fall back to base price conversion if calculations fail
-  // In cases where the price calculator fails on the server, we might get null values
-  const USD_TO_INR_RATE = 83; // Same fallback rate used server-side
+  // CRITICAL FIX: Always use server-calculated prices WITHOUT fallback
+  // This ensures prices are always consistent with the product detail page
+  const USD_TO_INR_RATE = 83; // Same rate used server-side
   
   // Logging to debug price discrepancies
   useEffect(() => {
@@ -165,22 +165,45 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }, [product]);
   
-  // IMPORTANT: Always prioritize server-calculated prices in every circumstance
-  // This ensures consistency between card and detail views from all data sources
-  // Force re-render with this key-value check approach
-  const calculatedPriceUSD = product.calculatedPriceUSD !== undefined && product.calculatedPriceUSD !== null ? 
-    product.calculatedPriceUSD : Math.round(product.basePrice / USD_TO_INR_RATE);
-  const calculatedPriceINR = product.calculatedPriceINR !== undefined && product.calculatedPriceINR !== null ? 
-    product.calculatedPriceINR : product.basePrice;
+  // CRITICAL FIX: Store server-calculated prices in state to prevent re-renders changing values
+  const [calculatedPriceUSD, setCalculatedPriceUSD] = useState<number | null>(null);
+  const [calculatedPriceINR, setCalculatedPriceINR] = useState<number | null>(null);
+  
+  // Update prices only when they change or are first set
+  useEffect(() => {
+    if (product.calculatedPriceUSD !== undefined && product.calculatedPriceUSD !== null) {
+      setCalculatedPriceUSD(product.calculatedPriceUSD);
+    }
     
-  // Debug any price/source issues
-  if (calculatedPriceUSD !== product.calculatedPriceUSD && product.calculatedPriceUSD !== undefined) {
-    console.warn(`Price mismatch detected for product ${product.id}:`, {
-      server: product.calculatedPriceUSD,
-      local: calculatedPriceUSD,
-      source: 'Using server price'
-    });
-  }
+    if (product.calculatedPriceINR !== undefined && product.calculatedPriceINR !== null) {
+      setCalculatedPriceINR(product.calculatedPriceINR);
+    }
+  }, [product.calculatedPriceUSD, product.calculatedPriceINR]);
+  
+  // If we don't have calculated prices yet, fetch them directly
+  useEffect(() => {
+    if ((calculatedPriceUSD === null || calculatedPriceINR === null) && product.id) {
+      fetch(`/api/direct-product/${product.id}?nocache=${Date.now()}`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.calculatedPriceUSD) setCalculatedPriceUSD(data.calculatedPriceUSD);
+          if (data.calculatedPriceINR) setCalculatedPriceINR(data.calculatedPriceINR);
+          console.log(`Fetched fresh prices for product ${product.id}:`, {
+            USD: data.calculatedPriceUSD,
+            INR: data.calculatedPriceINR
+          });
+        })
+        .catch(err => {
+          console.error(`Error fetching direct prices for product ${product.id}:`, err);
+        });
+    }
+  }, [product.id, calculatedPriceUSD, calculatedPriceINR]);
   
   return (
     <div className="product-card bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[620px]">
@@ -234,14 +257,24 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Product Price Display */}
         <div className="text-center mb-3 relative">
           <div className="relative inline-block px-6 py-2">
-            <p className="font-montserrat font-semibold text-lg text-primary">
-              {formatCurrency(calculatedPriceUSD, 'USD')}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(calculatedPriceINR, 'INR')}
-            </p>
+            {calculatedPriceUSD !== null ? (
+              <p className="font-montserrat font-semibold text-lg text-primary">
+                {formatCurrency(calculatedPriceUSD || 0, 'USD')}
+              </p>
+            ) : (
+              <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
+            )}
+            
+            {calculatedPriceINR !== null ? (
+              <p className="text-xs text-muted-foreground">
+                {formatCurrency(calculatedPriceINR || 0, 'INR')}
+              </p>
+            ) : (
+              <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto mt-1"></div>
+            )}
+            
             {/* Visual indicator for updated prices */}
-            {product.calculatedPriceUSD && (
+            {calculatedPriceUSD !== null && (
               <span className="absolute -top-2 -right-2 w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
             )}
             <div className="absolute top-0 left-0 h-[1px] w-4 bg-primary/40"></div>
