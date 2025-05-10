@@ -57,7 +57,7 @@ app.use((req, res, next) => {
 (async () => {
   // Ensure uploads directory exists before setting up routes
   ensureUploadsDirectory();
-  
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -74,11 +74,14 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // Add health check endpoint for monitoring
+    // Add health check endpoint for Cloud Run
     app.get('/health', (_req, res) => {
-      res.status(200).json({ status: 'ok', timestamp: Date.now() });
+      res.status(200).json({ 
+        status: 'ok',
+        timestamp: new Date().toISOString()
+      });
     });
-    
+
     // In production, serve static files 
     log("Serving static files in production mode...");
     serveStatic(app);
