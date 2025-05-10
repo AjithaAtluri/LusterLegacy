@@ -40,15 +40,45 @@ export default function FeaturedProducts() {
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Fetch featured products with aggressive refetch policy
-  const { data: featuredProductsIds, isLoading: isFeaturedLoading } = useQuery<Product[]>({
-    queryKey: ['/api/products/featured'],
-    refetchOnMount: 'always', // Always refetch when component mounts, regardless of data freshness
-    refetchOnWindowFocus: true, // Refetch when window regains focus
-    refetchOnReconnect: true, // Refetch when network reconnects
-    staleTime: 0, // Consider data always stale to force refetch
-    refetchInterval: 30000 // Refetch every 30 seconds even if the user isn't interacting with the page
-  });
+  // CRITICAL FIX: Skip using React Query caching entirely for featured products
+  // This ensures we always get fresh data directly from the server without any client-side caching
+  const [featuredProductsIds, setFeaturedProductsIds] = useState<Product[]>([]);
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    // Function to fetch featured products directly
+    const fetchFeaturedProducts = async () => {
+      try {
+        console.log("Fetching fresh featured products list from server");
+        setIsFeaturedLoading(true);
+        const response = await fetch('/api/products/featured', {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        const data = await response.json();
+        console.log("Received featured products:", data);
+        setFeaturedProductsIds(data);
+        setIsFeaturedLoading(false);
+      } catch (error) {
+        console.error("Error fetching featured products:", error);
+        setIsFeaturedLoading(false);
+      }
+    };
+    
+    // Initial fetch
+    fetchFeaturedProducts();
+    
+    // Set up polling interval
+    const intervalId = setInterval(() => {
+      console.log("Polling for fresh featured products");
+      fetchFeaturedProducts();
+    }, 15000); // Poll every 15 seconds
+    
+    return () => clearInterval(intervalId);
+  }, []);
   
   // Track featured product IDs
   const [productIds, setProductIds] = useState<number[]>([]);
@@ -76,13 +106,24 @@ export default function FeaturedProducts() {
       try {
         console.log("Loading detailed product data from direct endpoints");
         
-        // Fetch each product using the direct-product endpoint (same as product detail page)
+        // Fetch each product using the direct-product endpoint with no caching
+        // This guarantees fresh data every time
         const productPromises = productIds.map(id => 
-          fetch(`/api/direct-product/${id}`)
+          fetch(`/api/direct-product/${id}?nocache=${Date.now()}`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          })
             .then(res => res.json())
             .then(data => {
-              // The direct-product endpoint returns the product directly, not wrapped in a 'data' property
-              console.log(`Direct product ${id} data:`, data);
+              // Log the received price data for verification
+              console.log(`Direct product ${id} fresh data:`, {
+                id: id,
+                calculatedPriceUSD: data.calculatedPriceUSD,
+                basePrice: data.basePrice
+              });
               return data;
             })
             .catch(err => {
