@@ -698,13 +698,26 @@ export class DatabaseStorage implements IStorage {
   async createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial> { return {} as Testimonial; }
   async updateTestimonial(id: number, testimonial: Partial<Testimonial>): Promise<Testimonial | undefined> { return undefined; }
   async deleteTestimonial(id: number): Promise<boolean> { return true; }
-  async getAllContactMessages(): Promise<ContactMessage[]> { return []; }
+  async getAllContactMessages(): Promise<ContactMessage[]> {
+    // Fetch all messages from the database, ordered by creation date (newest first)
+    return await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
+  }
   async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
     // Insert into the database and return
     const [result] = await db.insert(contactMessages).values(message).returning();
     return result;
   }
-  async markContactMessageAsRead(id: number): Promise<boolean> { return true; }
+  async markContactMessageAsRead(id: number): Promise<boolean> {
+    try {
+      await db.update(contactMessages)
+        .set({ isRead: true })
+        .where(eq(contactMessages.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      return false;
+    }
+  }
   async deleteContactMessage(id: number): Promise<boolean> { return true; }
   async getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined> { return undefined; }
   async getAllInspirationItems(): Promise<InspirationGalleryItem[]> { return []; }
