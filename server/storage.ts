@@ -699,7 +699,11 @@ export class DatabaseStorage implements IStorage {
   async updateTestimonial(id: number, testimonial: Partial<Testimonial>): Promise<Testimonial | undefined> { return undefined; }
   async deleteTestimonial(id: number): Promise<boolean> { return true; }
   async getAllContactMessages(): Promise<ContactMessage[]> { return []; }
-  async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> { return {} as ContactMessage; }
+  async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
+    // Insert into the database and return
+    const [result] = await db.insert(contactMessages).values(message).returning();
+    return result;
+  }
   async markContactMessageAsRead(id: number): Promise<boolean> { return true; }
   async deleteContactMessage(id: number): Promise<boolean> { return true; }
   async getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined> { return undefined; }

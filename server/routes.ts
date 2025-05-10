@@ -3772,11 +3772,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit contact message
   app.post('/api/contact', async (req, res) => {
     try {
+      console.log('Contact form submission received:', req.body);
       const messageData = insertContactMessageSchema.parse(req.body);
       const message = await storage.createContactMessage(messageData);
+      console.log('Contact message created successfully:', message.id);
       res.status(201).json(message);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Invalid contact message data:', error.errors);
         return res.status(400).json({ message: 'Invalid message data', errors: error.errors });
       }
       console.error('Error submitting contact message:', error);
