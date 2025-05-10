@@ -2245,6 +2245,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error(`PATCH update failed: No product returned for ID ${productId}`);
         return res.status(404).json({ message: 'Product update failed' });
       }
+      
+      // If the update involves material info changes (which affect price calculation),
+      // recalculate the price and update the product with the new calculated price
+      const hasMaterialChanges = productData.details && 
+        typeof productData.details === 'string' && (
+          productData.details.includes('metalType') || 
+          productData.details.includes('metalWeight') || 
+          productData.details.includes('primaryStone') || 
+          productData.details.includes('primaryStoneWeight') ||
+          productData.details.includes('secondaryStone') ||
+          productData.details.includes('secondaryStoneWeight') ||
+          productData.details.includes('otherStone') ||
+          productData.details.includes('otherStoneWeight')
+        );
+      
+      if (hasMaterialChanges) {
+        console.log(`Material changes detected for product ${productId}, recalculating price...`);
+        
+        try {
+          // Get the updated product with full details
+          const freshProduct = await storage.getProduct(productId);
+          if (freshProduct) {
+            // Parse product details
+            let parsedDetails = {};
+            try {
+              parsedDetails = typeof freshProduct.details === 'string' 
+                ? JSON.parse(freshProduct.details) 
+                : freshProduct.details || {};
+            } catch (err) {
+              console.error(`Error parsing details for product ${productId}:`, err);
+            }
+            
+            // Extract material info
+            const materialInfo = {
+              metalType: parsedDetails.metalType || 'Unknown',
+              metalWeight: parsedDetails.metalWeight || 0,
+              primaryStone: parsedDetails.primaryStone || 'None',
+              primaryStoneWeight: parsedDetails.primaryStoneWeight || 0,
+              secondaryStone: parsedDetails.secondaryStone || 'None',
+              secondaryStoneWeight: parsedDetails.secondaryStoneWeight || 0,
+              otherStone: parsedDetails.otherStone || 'None',
+              otherStoneWeight: parsedDetails.otherStoneWeight || 0
+            };
+            
+            console.log(`[DIRECT-PRODUCT] Using database values only for product ${productId}`);
+            console.log('Using material info for price calculation:', materialInfo);
+            
+            // Calculate price based on material info
+            const priceResult = await calculatePrice(materialInfo, true);
+            
+            // Update the product with calculated price
+            if (priceResult.success) {
+              const priceUpdateData = {
+                calculatedPriceUSD: priceResult.usd.price,
+                calculatedPriceINR: priceResult.inr.price,
+                calculatedBreakdown: JSON.stringify({
+                  metalCost: priceResult.inr.metalCost,
+                  primaryStoneCost: priceResult.inr.primaryStoneCost,
+                  secondaryStoneCost: priceResult.inr.secondaryStoneCost,
+                  otherStoneCost: priceResult.inr.otherStoneCost,
+                  overhead: priceResult.inr.overhead
+                })
+              };
+              
+              console.log(`Updating product ${productId} with calculated prices:`, priceUpdateData);
+              
+              // Update the product with new price data
+              await storage.updateProduct(productId, priceUpdateData);
+              
+              // Update our response object with the calculated prices
+              updatedProduct.calculatedPriceUSD = priceResult.usd.price;
+              updatedProduct.calculatedPriceINR = priceResult.inr.price;
+              updatedProduct.calculatedBreakdown = priceUpdateData.calculatedBreakdown;
+            }
+          }
+        } catch (priceError) {
+          console.error(`Error recalculating price for product ${productId}:`, priceError);
+          // Don't fail the entire update just because price calculation failed
+        }
+      }
 
       console.log(`Successfully PATCHed product ${productId}`, {
         fields: Object.keys(updatedProduct)
