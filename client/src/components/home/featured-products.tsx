@@ -257,7 +257,15 @@ export default function FeaturedProducts() {
                 shuffledProducts.length > 0 ? (
                   shuffledProducts.map((product) => (
                     <div key={product.id} className="flex-[0_0_100%] sm:flex-[0_0_80%] md:flex-[0_0_45%] lg:flex-[0_0_32%] min-w-0 px-2">
-                      <ProductCard product={product} />
+                      <ProductCard 
+                        product={{
+                          ...product,
+                          // Force correct prices with key properties
+                          calculatedPriceUSD: product.calculatedPriceUSD,
+                          calculatedPriceINR: product.calculatedPriceINR
+                        }} 
+                        key={`${product.id}-${product.calculatedPriceUSD || 'loading'}`} 
+                      />
                     </div>
                   ))
                 ) : (

@@ -165,10 +165,22 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }, [product]);
   
-  // IMPORTANT: Always match the exact same price calculation logic used in product-detail.tsx
-  // This ensures consistency between card and detail views
-  const calculatedPriceUSD = product.calculatedPriceUSD ?? Math.round(product.basePrice / USD_TO_INR_RATE);
-  const calculatedPriceINR = product.calculatedPriceINR ?? product.basePrice;
+  // IMPORTANT: Always prioritize server-calculated prices in every circumstance
+  // This ensures consistency between card and detail views from all data sources
+  // Force re-render with this key-value check approach
+  const calculatedPriceUSD = product.calculatedPriceUSD !== undefined && product.calculatedPriceUSD !== null ? 
+    product.calculatedPriceUSD : Math.round(product.basePrice / USD_TO_INR_RATE);
+  const calculatedPriceINR = product.calculatedPriceINR !== undefined && product.calculatedPriceINR !== null ? 
+    product.calculatedPriceINR : product.basePrice;
+    
+  // Debug any price/source issues
+  if (calculatedPriceUSD !== product.calculatedPriceUSD && product.calculatedPriceUSD !== undefined) {
+    console.warn(`Price mismatch detected for product ${product.id}:`, {
+      server: product.calculatedPriceUSD,
+      local: calculatedPriceUSD,
+      source: 'Using server price'
+    });
+  }
   
   return (
     <div className="product-card bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[620px]">
