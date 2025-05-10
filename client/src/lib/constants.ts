@@ -45,7 +45,7 @@ export const STONE_TYPES = [
 // Company details
 export const COMPANY = {
   name: "Luster Legacy",
-  email: "design@lusterlegacy.com",
+  email: "support@lusterlegacy.com",
   phone: "+919876543210",
   whatsapp: "919876543210",
   address: {
