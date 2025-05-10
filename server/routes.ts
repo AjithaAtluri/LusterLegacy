@@ -1916,63 +1916,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Direct product endpoint - specialized for admin edit page reliability
-  // This endpoint bypasses auth checks and price calculation to ensure data is always available
-  app.get('/api/direct-product/:id', async (req, res) => {
-    console.log(`DIRECT PRODUCT FETCH: Requested for ID: ${req.params.id}`);
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: 'Invalid product ID' });
-      }
-
-      // First try to get the product from the database directly using a raw SQL query
-      // This ensures we bypass any potential ORM issues
-      try {
-        const result = await pool.query(
-          'SELECT * FROM "Product" WHERE id = $1',
-          [id]
-        );
-        
-        if (result.rows.length > 0) {
-          console.log(`DIRECT PRODUCT FETCH: Found product ${id} via direct SQL query`);
-          
-          // Add cache control headers to prevent caching
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          res.setHeader('Pragma', 'no-cache');
-          res.setHeader('Expires', '0');
-          
-          return res.status(200).json(result.rows[0]);
-        }
-      } catch (sqlError) {
-        console.error(`DIRECT PRODUCT FETCH: SQL query failed for product ${id}:`, sqlError);
-        // Continue to fallback method
-      }
-      
-      // Fallback to the storage interface
-      const product = await storage.getProduct(id);
-      if (!product) {
-        console.log(`DIRECT PRODUCT FETCH: Product ${id} not found`);
-        return res.status(404).json({ message: 'Product not found' });
-      }
-
-      console.log(`DIRECT PRODUCT FETCH: Sending product ${id} data to client via storage interface`);
-      
-      // Add cache control headers to prevent caching
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.setHeader('Pragma', 'no-cache');
-      res.setHeader('Expires', '0');
-      
-      // Return the raw product without price calculation to ensure speed
-      res.status(200).json(product);
-    } catch (error) {
-      console.error(`DIRECT PRODUCT FETCH: Error retrieving product ${req.params.id}:`, error);
-      res.status(500).json({ 
-        message: "Error retrieving product", 
-        error: error instanceof Error ? error.message : String(error) 
-      });
-    }
-  });
+  // [REMOVED] Duplicate direct-product endpoint removed to fix price calculation inconsistency
+  // Now using only the primary direct-product endpoint which includes proper price calculation
   
   // Get related products by product ID - uses keyword and image matching algorithm
   app.get('/api/products/:id/related', async (req, res) => {
