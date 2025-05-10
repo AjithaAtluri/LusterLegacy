@@ -571,6 +571,7 @@ export const contactMessages = pgTable("contact_messages", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
+  subject: text("subject"),
   message: text("message").notNull(),
   isRead: boolean("is_read").default(false),
   createdAt: timestamp("created_at").defaultNow()
@@ -580,6 +581,7 @@ export const insertContactMessageSchema = createInsertSchema(contactMessages).pi
   name: true,
   email: true,
   phone: true,
+  subject: true,
   message: true,
 });
 
