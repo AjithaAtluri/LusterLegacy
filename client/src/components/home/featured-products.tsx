@@ -41,7 +41,7 @@ export default function FeaturedProducts() {
   }, []);
 
   // Fetch featured products with aggressive refetch policy
-  const { data: products, isLoading } = useQuery<Product[]>({
+  const { data: featuredProductsIds, isLoading: isFeaturedLoading } = useQuery<Product[]>({
     queryKey: ['/api/products/featured'],
     refetchOnMount: 'always', // Always refetch when component mounts, regardless of data freshness
     refetchOnWindowFocus: true, // Refetch when window regains focus
@@ -49,6 +49,72 @@ export default function FeaturedProducts() {
     staleTime: 0, // Consider data always stale to force refetch
     refetchInterval: 30000 // Refetch every 30 seconds even if the user isn't interacting with the page
   });
+  
+  // Track featured product IDs
+  const [productIds, setProductIds] = useState<number[]>([]);
+  useEffect(() => {
+    // Extract IDs from featured products
+    if (featuredProductsIds?.length) {
+      setProductIds(featuredProductsIds.map(p => p.id));
+      console.log("Featured product IDs:", featuredProductsIds.map(p => p.id));
+    }
+  }, [featuredProductsIds]);
+  
+  // Fetch detailed data for each product from the same endpoint used by product detail page
+  // This guarantees price consistency between cards and detail pages
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  useEffect(() => {
+    // Skip if no product IDs
+    if (!productIds.length) return;
+    
+    setIsLoading(true);
+    
+    // Function to load all products from direct endpoint
+    const loadProductsFromDirectEndpoint = async () => {
+      try {
+        console.log("Loading detailed product data from direct endpoints");
+        
+        // Fetch each product using the direct-product endpoint (same as product detail page)
+        const productPromises = productIds.map(id => 
+          fetch(`/api/direct-product/${id}`)
+            .then(res => res.json())
+            .then(data => {
+              // The direct-product endpoint returns the product directly, not wrapped in a 'data' property
+              console.log(`Direct product ${id} data:`, data);
+              return data;
+            })
+            .catch(err => {
+              console.error(`Error fetching direct product ${id}:`, err);
+              return null;
+            })
+        );
+        
+        // Wait for all requests to complete
+        const productResults = await Promise.all(productPromises);
+        const validProducts = productResults.filter(p => p !== null);
+        
+        console.log("Loaded detailed product data:", validProducts);
+        setProducts(validProducts);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading product details:", error);
+        setIsLoading(false);
+      }
+    };
+    
+    // Load products immediately
+    loadProductsFromDirectEndpoint();
+    
+    // Set up interval to refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      console.log("Refreshing detailed product data...");
+      loadProductsFromDirectEndpoint();
+    }, 30000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [productIds]);
   
   // Carousel options with autoplay
   const options: EmblaOptionsType = {

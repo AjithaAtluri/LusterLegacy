@@ -153,7 +153,20 @@ export default function ProductCard({ product }: ProductCardProps) {
   // In cases where the price calculator fails on the server, we might get null values
   const USD_TO_INR_RATE = 83; // Same fallback rate used server-side
   
-  // Provide fallbacks for null/undefined calculated price values - use the same approach as product-detail.tsx
+  // Logging to debug price discrepancies
+  useEffect(() => {
+    if (product.id) {
+      console.log(`ProductCard ID ${product.id} - Price Data:`, {
+        calculatedPriceUSD: product.calculatedPriceUSD,
+        calculatedPriceINR: product.calculatedPriceINR,
+        basePrice: product.basePrice,
+        calculatedLocalUSD: Math.round(product.basePrice / USD_TO_INR_RATE)
+      });
+    }
+  }, [product]);
+  
+  // IMPORTANT: Always match the exact same price calculation logic used in product-detail.tsx
+  // This ensures consistency between card and detail views
   const calculatedPriceUSD = product.calculatedPriceUSD ?? Math.round(product.basePrice / USD_TO_INR_RATE);
   const calculatedPriceINR = product.calculatedPriceINR ?? product.basePrice;
   
