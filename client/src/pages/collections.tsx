@@ -135,8 +135,41 @@ export default function Collections() {
     queryKey: ['/api/product-types/active'],
   });
   
+  // Merge fresh price data with original product data
+  const [enhancedProducts, setEnhancedProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    if (!allProducts.length || !productsWithFreshPrices.length) {
+      return;
+    }
+    
+    // Create a map of fresh prices by product ID for quick lookup
+    const freshPricesMap = productsWithFreshPrices.reduce((map, product) => {
+      map[product.id] = {
+        calculatedPriceUSD: product.calculatedPriceUSD,
+        calculatedPriceINR: product.calculatedPriceINR
+      };
+      return map;
+    }, {} as Record<number, {calculatedPriceUSD?: number, calculatedPriceINR?: number}>);
+    
+    // Merge fresh prices into original product data
+    const enhanced = allProducts.map(product => {
+      if (freshPricesMap[product.id]) {
+        return {
+          ...product,
+          calculatedPriceUSD: freshPricesMap[product.id].calculatedPriceUSD,
+          calculatedPriceINR: freshPricesMap[product.id].calculatedPriceINR
+        };
+      }
+      return product;
+    });
+    
+    console.log("Created enhanced products with fresh prices:", enhanced.length);
+    setEnhancedProducts(enhanced);
+  }, [allProducts, productsWithFreshPrices]);
+
   // Filter and sort products
-  const filteredProducts = allProducts.filter((product) => {
+  const filteredProducts = enhancedProducts.filter((product) => {
     // Filter by product type (with backward compatibility for legacy category field)
     if (productType !== "all") {
       // Try to match by productTypeId first (new way)
@@ -162,15 +195,21 @@ export default function Collections() {
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case "price-asc":
-        return a.basePrice - b.basePrice;
+        // Use calculated price when available, fall back to base price
+        const priceA = a.calculatedPriceUSD || Math.round(a.basePrice / 83);
+        const priceB = b.calculatedPriceUSD || Math.round(b.basePrice / 83);
+        return priceA - priceB;
       case "price-desc":
-        return b.basePrice - a.basePrice;
+        const priceHighA = a.calculatedPriceUSD || Math.round(a.basePrice / 83);
+        const priceHighB = b.calculatedPriceUSD || Math.round(b.basePrice / 83);
+        return priceHighB - priceHighA;
       case "name-asc":
         return a.name.localeCompare(b.name);
       case "name-desc":
         return b.name.localeCompare(a.name);
       default:
-        return 0;
+        // Default is by ID 
+        return b.id - a.id;
     }
   });
   
@@ -269,8 +308,10 @@ export default function Collections() {
         ) : sortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {sortedProducts.map((product) => (
-              <div className="flex justify-center" key={product.id}>
-                <ProductCard product={product} />
+              <div className="flex justify-center" key={`${product.id}-${product.calculatedPriceUSD || 'pending'}`}>
+                <ProductCard 
+                  product={product} 
+                />
               </div>
             ))}
           </div>
