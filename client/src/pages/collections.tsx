@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Loader2 } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 // Define product type interface
 interface ProductType {
@@ -31,6 +32,8 @@ interface Product {
   productTypeId: number;
   productType?: string;
   category?: string; // Legacy field
+  calculatedPriceUSD?: number; // Add the calculated price fields
+  calculatedPriceINR?: number;
 }
 
 export default function Collections() {
@@ -38,10 +41,94 @@ export default function Collections() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
   
-  // Fetch all products
-  const { data: allProducts = [], isLoading: productsLoading } = useQuery<Product[]>({
-    queryKey: ['/api/products'],
-  });
+  // Use direct fetch for products to ensure fresh prices
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  
+  // State for tracking fresh prices
+  const [productIds, setProductIds] = useState<number[]>([]);
+  const [productsWithFreshPrices, setProductsWithFreshPrices] = useState<Product[]>([]);
+  
+  // Fetch products directly with no caching
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setProductsLoading(true);
+        const response = await fetch('/api/products', {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        const data = await response.json();
+        setAllProducts(data);
+        
+        // Extract all product IDs for price fetching
+        const ids = data.map((product: Product) => product.id);
+        setProductIds(ids);
+        
+        setProductsLoading(false);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProductsLoading(false);
+      }
+    };
+    
+    fetchProducts();
+    
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchProducts, 60000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Fetch fresh prices for each product
+  useEffect(() => {
+    if (!productIds.length) return;
+    
+    const loadFreshPrices = async () => {
+      try {
+        console.log("Loading fresh prices for all products...");
+        
+        // Fetch each product from direct-product endpoint to get fresh prices
+        const productPromises = productIds.map(id => 
+          fetch(`/api/direct-product/${id}?nocache=${Date.now()}`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          })
+            .then(res => res.json())
+            .then(data => {
+              console.log(`Fresh price data for product ${id}:`, {
+                id: id,
+                calculatedPriceUSD: data.calculatedPriceUSD,
+                calculatedPriceINR: data.calculatedPriceINR
+              });
+              return data;
+            })
+            .catch(err => {
+              console.error(`Error fetching prices for product ${id}:`, err);
+              return null;
+            })
+        );
+        
+        // Wait for all requests to complete
+        const productResults = await Promise.all(productPromises);
+        const validProducts = productResults.filter(p => p !== null);
+        
+        setProductsWithFreshPrices(validProducts);
+      } catch (error) {
+        console.error("Error loading fresh prices:", error);
+      }
+    };
+    
+    // Load fresh prices immediately and every 60 seconds
+    loadFreshPrices();
+    const interval = setInterval(loadFreshPrices, 60000);
+    return () => clearInterval(interval);
+  }, [productIds]);
   
   // Fetch active product types
   const { data: productTypes = [], isLoading: typesLoading } = useQuery<ProductType[]>({
