@@ -718,7 +718,16 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
-  async deleteContactMessage(id: number): Promise<boolean> { return true; }
+  async deleteContactMessage(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(contactMessages)
+        .where(eq(contactMessages.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting contact message:", error);
+      return false;
+    }
+  }
   async getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined> { return undefined; }
   async getAllInspirationItems(): Promise<InspirationGalleryItem[]> { return []; }
   async getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]> { return []; }

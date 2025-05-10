@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
-import { Loader2, MailOpen, Mail, ExternalLink, UserCircle } from "lucide-react";
+import { Loader2, MailOpen, Mail, ExternalLink, UserCircle, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import AdminLayout from "@/components/admin/admin-layout";
@@ -11,6 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ContactMessage {
   id: number;
@@ -54,6 +65,28 @@ export default function AdminContactMessages() {
       });
     }
   });
+  
+  // Mutation to delete a message
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await apiRequest("DELETE", `/api/admin/contact/${messageId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/contact"] });
+      toast({
+        title: "Success",
+        description: "Message deleted successfully"
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting message:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete message",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Filter messages based on current tab and search term
   const filteredMessages = messages
@@ -78,6 +111,10 @@ export default function AdminContactMessages() {
     
   const handleMarkAsRead = (id: number) => {
     markAsReadMutation.mutate(id);
+  };
+  
+  const handleDeleteMessage = (id: number) => {
+    deleteMessageMutation.mutate(id);
   };
   
   return (
@@ -203,6 +240,36 @@ export default function AdminContactMessages() {
                         Mark as Read
                       </Button>
                     )}
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={deleteMessageMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This message will be permanently deleted.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteMessage(message.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>

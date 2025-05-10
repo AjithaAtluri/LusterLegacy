@@ -3817,6 +3817,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Error updating message' });
     }
   });
+  
+  // Delete a contact message (admin only)
+  app.delete('/api/admin/contact/:id', validateAdmin, async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      if (isNaN(messageId)) {
+        return res.status(400).json({ message: 'Invalid message ID' });
+      }
+
+      const success = await storage.deleteContactMessage(messageId);
+      if (!success) {
+        return res.status(404).json({ message: 'Message not found' });
+      }
+
+      res.json({ message: 'Message deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      res.status(500).json({ message: 'Error deleting message' });
+    }
+  });
 
   /**
    * Authentication routes
