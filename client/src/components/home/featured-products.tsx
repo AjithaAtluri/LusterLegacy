@@ -24,15 +24,30 @@ interface Product {
 export default function FeaturedProducts() {
   // Force refetch on initial render to ensure we have fresh data
   useEffect(() => {
-    // Invalidate the featured products cache to ensure we get fresh data
+    // Immediately invalidate and refetch to ensure we have the most up-to-date data
     queryClient.invalidateQueries({ queryKey: ['/api/products/featured'] });
+    
+    // More aggressive approach - directly refetch without waiting for invalidation
+    queryClient.refetchQueries({ queryKey: ['/api/products/featured'] });
+    
+    // Set up interval to refresh every 30 seconds while component is mounted
+    const refreshInterval = setInterval(() => {
+      console.log("Periodic refresh of featured products");
+      queryClient.refetchQueries({ queryKey: ['/api/products/featured'] });
+    }, 30000); // 30 seconds
+    
+    // Clean up interval on unmount
+    return () => clearInterval(refreshInterval);
   }, []);
 
-  // Fetch featured products with refetch enabled
+  // Fetch featured products with aggressive refetch policy
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ['/api/products/featured'],
-    refetchOnMount: true,
-    staleTime: 0 // Consider data always stale to force refetch
+    refetchOnMount: 'always', // Always refetch when component mounts, regardless of data freshness
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnReconnect: true, // Refetch when network reconnects
+    staleTime: 0, // Consider data always stale to force refetch
+    refetchInterval: 30000 // Refetch every 30 seconds even if the user isn't interacting with the page
   });
   
   // Carousel options with autoplay

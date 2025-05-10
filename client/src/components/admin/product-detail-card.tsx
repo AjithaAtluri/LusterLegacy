@@ -348,6 +348,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       // Invalidate all product-related queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products/featured'] });
       queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
       
@@ -635,6 +636,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       // Invalidate all related product queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products/featured'] });
       queryClient.invalidateQueries({ queryKey: [`/api/products/${product.id}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/direct-product/${product.id}`] });
       
