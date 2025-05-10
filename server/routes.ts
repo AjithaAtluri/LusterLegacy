@@ -244,11 +244,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Continue with original product if price calculation fails
       }
       
-      // Set cache control headers for 5 minutes (products don't change often)
+      // CRITICAL FIX: Set cache control headers to prevent any caching
+      // This forces browsers to always get fresh data with recalculated prices
       res.set({
-        'Cache-Control': 'public, max-age=300',
-        'Pragma': 'cache',
-        'Expires': new Date(Date.now() + 300000).toUTCString()
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       });
       
       console.log(`[DIRECT-PRODUCT] Successfully served product ${productId}`);
