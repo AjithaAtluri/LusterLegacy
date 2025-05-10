@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,9 @@ export default function AdminProducts() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // State to track product prices
+  const [productPrices, setProductPrices] = useState<Record<number, { USD: number, INR: number }>>({});
+  const [loadingPrices, setLoadingPrices] = useState<Record<number, boolean>>({});
   
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -35,11 +38,48 @@ export default function AdminProducts() {
       cleanupUrl();
     }
   }, [action, setLocation]);
+
+  // Function to fetch product price from the direct-product endpoint
+  const fetchProductPrice = useCallback(async (productId: number) => {
+    if (!productId || loadingPrices[productId] || productPrices[productId]) return;
+    
+    setLoadingPrices(prev => ({ ...prev, [productId]: true }));
+    
+    try {
+      const response = await fetch(`/api/direct-product/${productId}`);
+      if (!response.ok) throw new Error('Failed to fetch product price');
+      
+      const data = await response.json();
+      
+      if (data.calculatedPriceUSD) {
+        setProductPrices(prev => ({
+          ...prev,
+          [productId]: {
+            USD: data.calculatedPriceUSD,
+            INR: data.calculatedPriceINR
+          }
+        }));
+      }
+    } catch (error) {
+      console.error(`Error fetching price for product ${productId}:`, error);
+    } finally {
+      setLoadingPrices(prev => ({ ...prev, [productId]: false }));
+    }
+  }, [loadingPrices, productPrices]);
   
   // Fetch products from the standard products endpoint that contains all product data
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products'],
   });
+  
+  // Fetch prices for all products after they've loaded
+  useEffect(() => {
+    if (products && Array.isArray(products) && products.length > 0) {
+      products.forEach(product => {
+        fetchProductPrice(product.id);
+      });
+    }
+  }, [products, fetchProductPrice]);
   
   // Filter products by search query
   const filteredProducts = products?.filter(product => {
@@ -168,7 +208,15 @@ export default function AdminProducts() {
                 <div className="flex items-start justify-between mb-1">
                   <h3 className="font-playfair font-medium">{product.name}</h3>
                   <span className="font-medium text-sm">
-                    {formatCurrency(product.calculatedPriceUSD || Math.round(product.basePrice / 83))}
+                    {loadingPrices[product.id] ? (
+                      <Loader2 className="h-4 w-4 inline animate-spin ml-1" />
+                    ) : (
+                      formatCurrency(
+                        productPrices[product.id]?.USD || 
+                        product.calculatedPriceUSD || 
+                        Math.round(product.basePrice / 83)
+                      )
+                    )}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
@@ -246,7 +294,15 @@ export default function AdminProducts() {
               <div>
                 <h3 className="font-medium">{selectedProduct.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {formatCurrency(selectedProduct.calculatedPriceUSD || Math.round(selectedProduct.basePrice / 83))}
+                  {loadingPrices[selectedProduct.id] ? (
+                    <Loader2 className="h-4 w-4 inline animate-spin ml-1" />
+                  ) : (
+                    formatCurrency(
+                      productPrices[selectedProduct.id]?.USD || 
+                      selectedProduct.calculatedPriceUSD || 
+                      Math.round(selectedProduct.basePrice / 83)
+                    )
+                  )}
                 </p>
               </div>
             </div>
