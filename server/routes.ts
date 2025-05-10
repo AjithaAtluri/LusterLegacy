@@ -206,6 +206,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const mainStoneWeight = details.primaryStoneWeight || details.mainStoneWeight || "";
           const secondaryStoneType = details.secondaryStone || details.secondaryStoneType || "";
           const secondaryStoneWeight = details.secondaryStoneWeight || "";
+          const otherStoneType = details.otherStone || ""; // Add other stone type
+          const otherStoneWeight = details.otherStoneWeight || ""; // Add other stone weight
           
           console.log(`[DIRECT-PRODUCT] Calculating prices for product ${productId} with database values:`, {
             metalType,
@@ -213,19 +215,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mainStoneType,
             mainStoneWeight,
             secondaryStoneType,
-            secondaryStoneWeight
+            secondaryStoneWeight,
+            otherStoneType,
+            otherStoneWeight
           });
           
-          // Calculate prices - legacy/compatibility function call
-          const prices = await calculateJewelryPrice(
-            product.basePrice,
-            metalType, 
-            metalWeight,
-            mainStoneType,
-            mainStoneWeight,
-            secondaryStoneType,
-            secondaryStoneWeight
-          );
+          // Instead of using the legacy function call, use the more flexible version that supports otherStone
+          const params = {
+            productType: "jewelry",
+            metalType,
+            metalWeight: parseFloat(metalWeight) || 0,
+            primaryGems: []
+          };
+          
+          // Add primary stone if available
+          if (mainStoneType) {
+            params.primaryGems.push({
+              name: mainStoneType,
+              carats: parseFloat(mainStoneWeight) || 0
+            });
+          }
+          
+          // Add secondary stone if available
+          if (secondaryStoneType) {
+            params.primaryGems.push({
+              name: secondaryStoneType,
+              carats: parseFloat(secondaryStoneWeight) || 0
+            });
+          }
+          
+          // Add other stone if available - this is the key fix for product #59
+          if (otherStoneType && otherStoneWeight) {
+            params.otherStone = {
+              stoneTypeId: otherStoneType,
+              caratWeight: parseFloat(otherStoneWeight) || 0
+            };
+            
+            console.log(`[DIRECT-PRODUCT] Including other stone in price calculation: ${otherStoneType} (${otherStoneWeight} carats)`);
+          }
+          
+          // Calculate prices using the enhanced parameter format
+          const prices = await calculateJewelryPrice(params);
           
           // Standard price calculation for all products - no special cases
           enhancedProduct = {
@@ -1830,16 +1860,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parseFloat(materialInfo.secondaryStoneWeight.replace(/[^\d.-]/g, '')) : 
           (typeof materialInfo.secondaryStoneWeight === 'number' ? materialInfo.secondaryStoneWeight : 0);
         
-        // Call the calculator in the exact same way as the direct-product endpoint
-        const result = await calculateJewelryPrice(
-          product.basePrice,
-          materialInfo.metalType || "",
-          parsedMetalWeight,
-          materialInfo.primaryStone || "",
-          parsedPrimaryStoneWeight,
-          materialInfo.secondaryStone || "",
-          parsedSecondaryStoneWeight
-        );
+        // Setup the parameters for the price calculator in the enhanced format
+        // that supports otherStone, just like the direct-product endpoint
+        const parsedOtherStoneWeight = typeof materialInfo.otherStoneWeight === 'string' ? 
+          parseFloat(materialInfo.otherStoneWeight.replace(/[^\d.-]/g, '')) : 
+          (typeof materialInfo.otherStoneWeight === 'number' ? materialInfo.otherStoneWeight : 0);
+          
+        // Enhanced parameter format with otherStone support
+        const params = {
+          productType: "jewelry",
+          metalType: materialInfo.metalType || "",
+          metalWeight: parsedMetalWeight,
+          primaryGems: []
+        };
+        
+        // Add primary stone if available
+        if (materialInfo.primaryStone) {
+          params.primaryGems.push({
+            name: materialInfo.primaryStone,
+            carats: parsedPrimaryStoneWeight
+          });
+        }
+        
+        // Add secondary stone if available
+        if (materialInfo.secondaryStone) {
+          params.primaryGems.push({
+            name: materialInfo.secondaryStone,
+            carats: parsedSecondaryStoneWeight
+          });
+        }
+        
+        // Add other stone if available - this is the key fix for product #59
+        if (materialInfo.otherStone && parsedOtherStoneWeight > 0) {
+          params.otherStone = {
+            stoneTypeId: materialInfo.otherStone,
+            caratWeight: parsedOtherStoneWeight
+          };
+          
+          console.log(`Including other stone in price calculation: ${materialInfo.otherStone} (${parsedOtherStoneWeight} carats)`);
+        }
+        
+        // Call the calculator with the enhanced parameter format
+        const result = await calculateJewelryPrice(params);
         
         // No special cases - all products use standard price calculation
         // Add calculated prices to product
