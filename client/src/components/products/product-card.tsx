@@ -169,20 +169,14 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [calculatedPriceUSD, setCalculatedPriceUSD] = useState<number | null>(null);
   const [calculatedPriceINR, setCalculatedPriceINR] = useState<number | null>(null);
   
-  // Update prices only when they change or are first set
-  useEffect(() => {
-    if (product.calculatedPriceUSD !== undefined && product.calculatedPriceUSD !== null) {
-      setCalculatedPriceUSD(product.calculatedPriceUSD);
-    }
-    
-    if (product.calculatedPriceINR !== undefined && product.calculatedPriceINR !== null) {
-      setCalculatedPriceINR(product.calculatedPriceINR);
-    }
-  }, [product.calculatedPriceUSD, product.calculatedPriceINR]);
+  // We no longer update prices from props - always fetch directly from API
+  // This ensures consistent pricing across the application
+  // The useEffect below will fetch fresh prices directly from the API
   
-  // If we don't have calculated prices yet, fetch them directly
+  // ALWAYS fetch prices directly to ensure consistency, regardless of what props provide
   useEffect(() => {
-    if ((calculatedPriceUSD === null || calculatedPriceINR === null) && product.id) {
+    if (product.id) {
+      // Always fetch latest prices directly from API for each product
       fetch(`/api/direct-product/${product.id}?nocache=${Date.now()}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -192,8 +186,16 @@ export default function ProductCard({ product }: ProductCardProps) {
       })
         .then(res => res.json())
         .then(data => {
-          if (data.calculatedPriceUSD) setCalculatedPriceUSD(data.calculatedPriceUSD);
+          if (data.calculatedPriceUSD) {
+            setCalculatedPriceUSD(data.calculatedPriceUSD);
+            console.log(`Direct product ${product.id} fresh data:`, {
+              id: product.id,
+              calculatedPriceUSD: data.calculatedPriceUSD,
+              basePrice: data.basePrice
+            });
+          }
           if (data.calculatedPriceINR) setCalculatedPriceINR(data.calculatedPriceINR);
+          
           console.log(`Fetched fresh prices for product ${product.id}:`, {
             USD: data.calculatedPriceUSD,
             INR: data.calculatedPriceINR
@@ -203,7 +205,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           console.error(`Error fetching direct prices for product ${product.id}:`, err);
         });
     }
-  }, [product.id, calculatedPriceUSD, calculatedPriceINR]);
+  }, [product.id]); // Only depend on product.id, not on calculated prices
   
   return (
     <div className="product-card bg-card rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300 group flex flex-col h-[620px]">
