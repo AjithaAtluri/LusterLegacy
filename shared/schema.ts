@@ -192,7 +192,7 @@ export const insertDesignFeedbackSchema = createInsertSchema(designFeedback).pic
   imageUrls: true,
 });
 
-// Product customization requests schema 
+// Product personalization requests schema 
 export const customizationRequests = pgTable("customization_requests", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
