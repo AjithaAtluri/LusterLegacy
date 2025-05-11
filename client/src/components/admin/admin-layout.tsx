@@ -52,8 +52,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     enabled: !!user?.id
   });
   
-  const { data: customizationRequests } = useQuery({
-    queryKey: ['/api/customization-requests'],
+  const { data: personalizationRequests } = useQuery({
+    queryKey: ['/api/customization-requests'], // Keep the original API endpoint
     enabled: !!user?.id
   });
   
@@ -73,8 +73,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     ? customDesigns.filter((design: any) => design.status === "pending").length 
     : 0;
     
-  const pendingCustomizations = Array.isArray(customizationRequests) 
-    ? customizationRequests.filter((req: any) => req.status === "pending").length 
+  const pendingPersonalizations = Array.isArray(personalizationRequests) 
+    ? personalizationRequests.filter((req: any) => req.status === "pending").length 
     : 0;
     
   const pendingQuotes = Array.isArray(quoteRequests) 
@@ -340,10 +340,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           badge: pendingDesigns > 0 ? pendingDesigns : undefined
         },
         {
-          title: "Product Customization Requests",
+          title: "Product Personalization Requests",
           icon: <Paintbrush className="h-5 w-5" />,
-          href: "/admin/customizations",
-          badge: pendingCustomizations > 0 ? pendingCustomizations : undefined
+          href: "/admin/personalizations",
+          badge: pendingPersonalizations > 0 ? pendingPersonalizations : undefined
         },
         {
           title: "Product Quote Requests",
