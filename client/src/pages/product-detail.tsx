@@ -173,18 +173,18 @@ export default function ProductDetail() {
     setLocation('/collections');
   };
   
-  // Handle customization request with authentication check
-  const handleCustomizationRequest = () => {
+  // Handle personalization request with authentication check
+  const handleCustomizationRequest = () => { // Keeping function name for now to avoid breaking references
     if (!user) {
       toast({
         title: "Authentication Required",
-        description: "Please login or sign up to request customization",
+        description: "Please login or sign up to request personalization",
         variant: "default",
       });
       setLocation('/auth');
       return;
     }
-    setLocation(`/customize-request/${product?.id}`);
+    setLocation(`/customize-request/${product?.id}`); // URL path unchanged for compatibility
   };
   
   // Handle place order with authentication check
@@ -594,10 +594,10 @@ export default function ProductDetail() {
                         productTypeId === "19"; // Type ID 19 is Beads & Gems
                       
                       if (isBeadsAndGems) {
-                        return false; // Don't show customization button for Beads & Gems
+                        return false; // Don't show personalization button for Beads & Gems
                       }
                       
-                      return true; // Show customization button for all other products
+                      return true; // Show personalization button for all other products
                     })() && (
                       <Button 
                         variant="default" 
@@ -605,7 +605,7 @@ export default function ProductDetail() {
                         onClick={handleCustomizationRequest}
                       >
                         <Package className="mr-2 h-4 w-4" />
-                        Customize & Get Estimate
+                        Personalize & Get Estimate
                       </Button>
                     )}
                   </div>
