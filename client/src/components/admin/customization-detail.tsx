@@ -202,7 +202,7 @@ export default function PersonalizationDetail({ customization }: Personalization
   };
 
   // Get customization type badge label and color
-  const getCustomizationTypeDisplay = () => {
+  const getPersonalizationTypeDisplay = () => {
     switch(customization.customizationType) {
       case "metal_and_stone":
         return { label: "Metal & Stone", color: "bg-amber-500" };
@@ -215,14 +215,14 @@ export default function PersonalizationDetail({ customization }: Personalization
     }
   };
 
-  const typeDisplay = getCustomizationTypeDisplay();
+  const typeDisplay = getPersonalizationTypeDisplay();
 
   return (
     <div className="space-y-6">
       {/* Header Section */}
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
         <div>
-          <h2 className="text-2xl font-bold">Customization Request #{customization.id}</h2>
+          <h2 className="text-2xl font-bold">Personalization Request #{customization.id}</h2>
           <p className="text-muted-foreground">
             Submitted on {formatDate(customization.createdAt)}
           </p>
@@ -288,7 +288,7 @@ export default function PersonalizationDetail({ customization }: Personalization
         
         <Card>
           <CardHeader>
-            <CardTitle>Customization Details</CardTitle>
+            <CardTitle>Personalization Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {/* Add product image at the top */}
