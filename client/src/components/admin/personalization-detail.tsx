@@ -1,0 +1,635 @@
+import { useState, useRef } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { formatCurrency } from "@/lib/utils";
+import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText, ArrowRight } from "lucide-react";
+
+interface PersonalizationDetailProps {
+  customization: {
+    id: number;
+    fullName: string;
+    email: string;
+    phone: string | null;
+    country: string | null;
+    productId: number;
+    productName: string;
+    originalMetalType: string;
+    requestedMetalType: string;
+    originalStoneType: string;
+    requestedStoneType: string;
+    additionalNotes: string | null;
+    personalizationType: string;
+    preferredMetal: string;
+    preferredStones: string[];
+    personalizationDetails: string;
+    status: string;
+    quotedPrice: number | null;
+    currency: string | null;
+    imageUrls: string[] | null;
+    productImageUrl?: string | null;
+    createdAt: string;
+    comments?: Array<{
+      id: number;
+      content: string;
+      imageUrl?: string;
+      createdAt: string;
+      createdBy: string;
+      isAdmin: boolean;
+    }>;
+  };
+}
+
+export default function PersonalizationDetail({ customization }: PersonalizationDetailProps) {
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [priceUpdateLoading, setPriceUpdateLoading] = useState(false);
+  const [quotedPrice, setQuotedPrice] = useState(customization.quotedPrice?.toString() || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Handle comment submission
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!comment.trim() && !selectedFile) return;
+
+    setIsSubmitting(true);
+    const formData = new FormData();
+    formData.append("content", comment);
+    formData.append("personalizationRequestId", customization.id.toString());
+    formData.append("isAdmin", "true");
+    
+    if (selectedFile) {
+      formData.append("image", selectedFile);
+    }
+
+    try {
+      const response = await fetch("/api/personalization-comments", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to submit comment");
+
+      toast({
+        title: "Comment submitted",
+        description: "Your comment has been added successfully",
+      });
+
+      // Clear form and refresh data
+      setComment("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      
+      // Refresh personalization requests data
+      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${customization.id}`] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit comment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle status update
+  const updateStatus = async (newStatus: string) => {
+    setStatusUpdateLoading(true);
+    try {
+      const response = await apiRequest("PATCH", `/api/personalization-requests/${customization.id}`, {
+        status: newStatus,
+      });
+
+      if (!response.ok) throw new Error("Failed to update status");
+
+      toast({
+        title: "Status updated",
+        description: `Request status has been updated to ${newStatus}`,
+      });
+
+      // Refresh personalization requests data
+      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${customization.id}`] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setStatusUpdateLoading(false);
+    }
+  };
+
+  // Handle price update
+  const updatePrice = async () => {
+    if (!quotedPrice.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid price",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPriceUpdateLoading(true);
+    try {
+      const price = parseFloat(quotedPrice);
+      const response = await apiRequest("PATCH", `/api/personalization-requests/${customization.id}`, {
+        quotedPrice: price,
+      });
+
+      if (!response.ok) throw new Error("Failed to update price");
+
+      toast({
+        title: "Price updated",
+        description: `Quoted price has been updated to ${formatCurrency(price, customization.currency || "USD")}`,
+      });
+
+      // Refresh personalization requests data
+      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${customization.id}`] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update price. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPriceUpdateLoading(false);
+    }
+  };
+
+  // Handle file change for comment attachment
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  // Open image dialog
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setShowImageDialog(true);
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  // Get personalization type badge label and color
+  const getPersonalizationTypeDisplay = () => {
+    switch(customization.personalizationType) {
+      case "metal_and_stone":
+        return { label: "Metal & Stone", color: "bg-amber-500" };
+      case "metal_only":
+        return { label: "Metal Only", color: "bg-yellow-500" };
+      case "stone_only":
+        return { label: "Stone Only", color: "bg-purple-500" };
+      default:
+        return { label: "Other", color: "bg-slate-500" };
+    }
+  };
+
+  const typeDisplay = getPersonalizationTypeDisplay();
+
+  return (
+    <div className="space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
+        <div>
+          <h2 className="text-2xl font-bold">Personalization Request #{customization.id}</h2>
+          <p className="text-muted-foreground">
+            Submitted on {formatDate(customization.createdAt)}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge 
+              className={
+                customization.status === "completed" ? "bg-green-500" :
+                customization.status === "in_progress" ? "bg-blue-500" :
+                customization.status === "quoted" ? "bg-purple-500" :
+                customization.status === "cancelled" ? "bg-destructive" :
+                "bg-yellow-500"
+              }
+            >
+              {customization.status.replace("_", " ").toUpperCase()}
+            </Badge>
+            
+            <Badge className={typeDisplay.color}>
+              {typeDisplay.label}
+            </Badge>
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      {/* Customer & Product Details */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Customer Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="font-medium">Name:</div>
+              <div className="col-span-2">{customization.fullName}</div>
+              
+              <div className="font-medium">Email:</div>
+              <div className="col-span-2">{customization.email}</div>
+              
+              {customization.phone && (
+                <>
+                  <div className="font-medium">Phone:</div>
+                  <div className="col-span-2">{customization.phone}</div>
+                </>
+              )}
+              
+              {customization.country && (
+                <>
+                  <div className="font-medium">Country:</div>
+                  <div className="col-span-2">{customization.country}</div>
+                </>
+              )}
+            </div>
+            
+            {customization.personalizationDetails && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Additional Notes:</h4>
+                <p className="text-sm whitespace-pre-wrap">{customization.personalizationDetails}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Personalization Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Add product image at the top */}
+            <div className="mb-4 border rounded-md overflow-hidden relative">
+              {/* Display product image if available */}
+              {customization.productId && (
+                <div className="aspect-square w-full h-64 relative">
+                  <img 
+                    src={customization.productImageUrl || `/api/products/${customization.productId}/image`} 
+                    alt={customization.productName}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/src/assets/product-placeholder.png";
+                    }}
+                  />
+                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                    Product ID: {customization.productId}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-3 gap-2">
+              <div className="font-medium">Product:</div>
+              <div className="col-span-2 font-semibold text-primary">{customization.productName}</div>
+              
+              <div className="font-medium">Original Metal:</div>
+              <div className="col-span-2 flex items-center">
+                <span>{customization.originalMetalType || "Not specified"}</span>
+                <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                <span className="text-primary font-medium">{customization.preferredMetal || customization.requestedMetalType || "Not specified"}</span>
+              </div>
+              
+              <div className="font-medium">Original Stone:</div>
+              <div className="col-span-2 flex items-center">
+                <span>{customization.originalStoneType || "Not specified"}</span>
+                <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                <span className="text-primary font-medium">
+                  {customization.preferredStones?.length ? 
+                    customization.preferredStones.join(', ') : 
+                    (customization.requestedStoneType || "Not specified")}
+                </span>
+              </div>
+              
+              {customization.quotedPrice && customization.currency && (
+                <>
+                  <div className="font-medium">Quoted Price:</div>
+                  <div className="col-span-2 font-bold">
+                    {formatCurrency(customization.quotedPrice, customization.currency)}
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {/* Display Reference Images */}
+            {customization.imageUrls && customization.imageUrls.length > 0 && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Reference Images:</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {customization.imageUrls.map((url, index) => (
+                    <div 
+                      key={index}
+                      className="relative aspect-video rounded-md overflow-hidden border cursor-pointer"
+                      onClick={() => handleImageClick(url)}
+                    >
+                      <img 
+                        src={url} 
+                        alt={`Reference ${index + 1}`} 
+                        className="object-cover w-full h-full"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Eye className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* View Product Details Button */}
+            {customization.productId && (
+              <div className="pt-4">
+                <Button asChild variant="outline">
+                  <a href={`/product/${customization.productId}`} target="_blank" rel="noopener noreferrer">
+                    <Eye className="mr-2 h-4 w-4" /> View Product Details
+                  </a>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Admin Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Update Status</Label>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={customization.status === "pending" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("pending")}
+                  disabled={statusUpdateLoading || customization.status === "pending"}
+                >
+                  Pending
+                </Button>
+                <Button
+                  variant={customization.status === "in_progress" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("in_progress")}
+                  disabled={statusUpdateLoading || customization.status === "in_progress"}
+                >
+                  In Progress
+                </Button>
+                <Button
+                  variant={customization.status === "quoted" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("quoted")}
+                  disabled={statusUpdateLoading || customization.status === "quoted" || !customization.quotedPrice}
+                >
+                  Quoted
+                </Button>
+                <Button
+                  variant={customization.status === "approved" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("approved")}
+                  disabled={statusUpdateLoading || customization.status === "approved"}
+                >
+                  Approved
+                </Button>
+                <Button
+                  variant={customization.status === "production" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("production")}
+                  disabled={statusUpdateLoading || customization.status === "production"}
+                >
+                  In Production
+                </Button>
+                <Button
+                  variant={customization.status === "ready" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("ready")}
+                  disabled={statusUpdateLoading || customization.status === "ready"}
+                >
+                  Ready
+                </Button>
+                <Button
+                  variant={customization.status === "completed" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("completed")}
+                  disabled={statusUpdateLoading || customization.status === "completed"}
+                >
+                  Completed
+                </Button>
+                <Button
+                  variant={customization.status === "cancelled" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("cancelled")}
+                  disabled={statusUpdateLoading || customization.status === "cancelled"}
+                >
+                  Cancelled
+                </Button>
+                {statusUpdateLoading && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="quotedPrice">Update Price (USD)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="quotedPrice"
+                  type="number"
+                  placeholder="Enter price in USD"
+                  value={quotedPrice}
+                  onChange={(e) => setQuotedPrice(e.target.value)}
+                  disabled={priceUpdateLoading}
+                />
+                <Button
+                  onClick={updatePrice}
+                  disabled={priceUpdateLoading || !quotedPrice.trim()}
+                >
+                  {priceUpdateLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Updating
+                    </>
+                  ) : "Update Price"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Comments Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Communication History</CardTitle>
+          <CardDescription>
+            Exchange messages with the customer regarding their personalization request
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Comments List */}
+          <div className="space-y-4 max-h-[400px] overflow-y-auto p-2">
+            {customization.comments && customization.comments.length > 0 ? (
+              customization.comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className={`p-3 rounded-lg ${
+                    comment.isAdmin
+                      ? "ml-4 bg-muted"
+                      : "mr-4 bg-primary/10"
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="font-medium text-sm">
+                      {comment.isAdmin ? "Luster Legacy Admin" : comment.createdBy}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatDate(comment.createdAt)}
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                  
+                  {comment.imageUrl && (
+                    <div 
+                      className="mt-2 cursor-pointer"
+                      onClick={() => handleImageClick(comment.imageUrl as string)}
+                    >
+                      <div className="relative aspect-video rounded-md overflow-hidden border border-border">
+                        <img 
+                          src={comment.imageUrl} 
+                          alt="Comment attachment" 
+                          className="object-cover w-full h-full"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Eye className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground py-6">
+                <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p>No comments yet. Start the conversation with the customer.</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Add Comment Form */}
+          <form onSubmit={handleCommentSubmit} className="space-y-3">
+            <Textarea
+              placeholder="Type your message to the customer..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="min-h-[120px]"
+            />
+            
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1"
+              >
+                <ImageIcon className="h-4 w-4" />
+                Attach Image
+              </Button>
+              
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
+              
+              {selectedFile && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-sm">
+                  <FileText className="h-3 w-3" />
+                  <span className="max-w-[150px] truncate">{selectedFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              
+              <div className="flex-1"></div>
+              
+              <Button
+                type="submit"
+                disabled={isSubmitting || (!comment.trim() && !selectedFile)}
+                className="ml-auto"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  "Send Message"
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      
+      {/* Image Preview Dialog */}
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center">
+            <img
+              src={selectedImage}
+              alt="Preview"
+              className="max-h-[70vh] max-w-full object-contain rounded-md"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
