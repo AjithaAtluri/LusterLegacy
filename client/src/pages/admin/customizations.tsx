@@ -17,18 +17,18 @@ export default function PersonalizationsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("active");
   
-  // Fetch all customization requests
-  const { data: customizationRequests, isLoading, isError, refetch } = useQuery({
+  // Fetch all personalization requests
+  const { data: personalizationRequests, isLoading, isError, refetch } = useQuery({
     queryKey: ["/api/customization-requests"],
     queryFn: async () => {
       const res = await fetch("/api/customization-requests");
-      if (!res.ok) throw new Error("Failed to fetch customization requests");
+      if (!res.ok) throw new Error("Failed to fetch personalization requests");
       return res.json();
     }
   });
   
   // Filter requests based on search term and active tab
-  const filteredRequests = customizationRequests ? customizationRequests
+  const filteredRequests = personalizationRequests ? personalizationRequests
     .filter((request: CustomizationRequest) => {
       const searchLower = searchTerm.toLowerCase();
       return (
@@ -56,7 +56,7 @@ export default function PersonalizationsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <AdminLayout title="Product Customization Requests">
+      <AdminLayout title="Product Personalization Requests">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -67,9 +67,9 @@ export default function PersonalizationsPage() {
   // Error state
   if (isError) {
     return (
-      <AdminLayout title="Product Customization Requests">
+      <AdminLayout title="Product Personalization Requests">
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-destructive">Error loading customization requests</p>
+          <p className="text-destructive">Error loading personalization requests</p>
           <Button onClick={handleRefresh} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Try Again
@@ -80,18 +80,18 @@ export default function PersonalizationsPage() {
   }
   
   // Empty state
-  if (customizationRequests && customizationRequests.length === 0) {
+  if (personalizationRequests && personalizationRequests.length === 0) {
     return (
-      <AdminLayout title="Product Customization Requests">
+      <AdminLayout title="Product Personalization Requests">
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <p className="text-muted-foreground">No customization requests found</p>
+          <p className="text-muted-foreground">No personalization requests found</p>
         </div>
       </AdminLayout>
     );
   }
   
   return (
-    <AdminLayout title="Product Customization Requests">
+    <AdminLayout title="Product Personalization Requests">
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="relative w-full md:w-1/3">
@@ -122,7 +122,7 @@ export default function PersonalizationsPage() {
           <TabsContent value={activeTab} className="space-y-4">
             {filteredRequests.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 gap-4">
-                <p className="text-muted-foreground">No matching customization requests found</p>
+                <p className="text-muted-foreground">No matching personalization requests found</p>
               </div>
             ) : (
               <ScrollArea className="h-[calc(100vh-280px)]">
