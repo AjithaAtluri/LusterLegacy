@@ -30,11 +30,11 @@ export default function FeaturedProducts() {
     // More aggressive approach - directly refetch without waiting for invalidation
     queryClient.refetchQueries({ queryKey: ['/api/products/featured'] });
     
-    // Set up interval to refresh every 30 seconds while component is mounted
+    // Set up interval to refresh every 30 minutes while component is mounted
     const refreshInterval = setInterval(() => {
-      console.log("Periodic refresh of featured products");
+      console.log("Periodic refresh of featured products (30-min interval)");
       queryClient.refetchQueries({ queryKey: ['/api/products/featured'] });
-    }, 30000); // 30 seconds
+    }, 1800000); // 30 minutes
     
     // Clean up interval on unmount
     return () => clearInterval(refreshInterval);
