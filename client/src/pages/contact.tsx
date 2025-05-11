@@ -87,6 +87,199 @@ export default function Contact() {
         </div>
       </div>
       
+      {/* FAQ Section */}
+      <div className="container mx-auto px-4 md:px-8 py-16 bg-muted/30">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="font-playfair text-3xl font-bold text-foreground mb-6 text-center">Frequently Asked Questions</h2>
+          <p className="font-montserrat text-foreground/80 mb-10 text-center">
+            Here's everything you need to know about our services and how we can bring your jewelry visions to life.
+          </p>
+          
+          <div className="space-y-8">
+            {/* Custom Design Service */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-playfair text-xl text-primary">Custom Design Service</CardTitle>
+                <CardDescription>Create a completely new, unique piece of jewelry from your imagination</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What is the Custom Design service?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Our Custom Design service is for clients who want to create a completely new piece of jewelry from scratch. 
+                    This service is ideal for unique designs that aren't in our existing collection.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What is the process?</h4>
+                  <ol className="text-foreground/80 text-sm list-decimal pl-5 space-y-1">
+                    <li>Submit your design idea and pay a $150 consultation fee</li>
+                    <li>Our designers create initial concept sketches/mockups</li>
+                    <li>You receive up to 4 iterations to refine the design</li>
+                    <li>Once approved, we provide a final quote for production</li>
+                    <li>Upon payment, production begins with regular updates</li>
+                    <li>The finished piece is delivered to you</li>
+                  </ol>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What does the $150 consultation fee cover?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    The fee covers professional design consultation, up to 4 design iterations, detailed material 
+                    recommendations, and a final production quote. This fee is credited toward your final purchase if you proceed with production.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">How long does the custom design process take?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Design phase: 2-3 weeks depending on complexity and iterations<br />
+                    Production: 4-8 weeks after design approval
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Final Quote Service */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-playfair text-xl text-primary">Final Quote Service</CardTitle>
+                <CardDescription>Get an exact price for a piece from our collection</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What is the Final Quote service?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Our Final Quote service allows you to request an official price confirmation for any piece from our 
+                    existing catalog in its original form without modifications.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">When should I use this service?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Use this service when you're ready to purchase a catalog item and need a final price confirmation 
+                    that accounts for current material costs and any additional services like engraving or gift wrapping.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Is there a fee for getting a final quote?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    No, final quotes for catalog items are provided complimentary with no obligation to purchase.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">How long is my quote valid?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Final quotes are valid for 14 days from issuance. After this period, price adjustments may 
+                    be necessary due to fluctuations in precious metal and gemstone markets.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Personalization Service */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-playfair text-xl text-primary">Personalization Service</CardTitle>
+                <CardDescription>Modify an existing piece from our collection to suit your preferences</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What is the Personalization service?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Our Personalization service allows you to request modifications to our existing catalog pieces, 
+                    such as changing the metal type, gemstones, or size.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What types of personalizations can I request?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Common personalizations include:
+                  </p>
+                  <ul className="text-foreground/80 text-sm list-disc pl-5 space-y-1">
+                    <li>Changing metal type (e.g., from yellow gold to white gold)</li>
+                    <li>Substituting gemstones (e.g., ruby instead of sapphire)</li>
+                    <li>Size adjustments and length modifications</li>
+                    <li>Adding engraving or personal inscriptions</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Is there a fee for personalization requests?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    There is no fee for submitting a personalization request. After reviewing your request, 
+                    we will provide a price quote for the modified piece.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What materials do you offer?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    <strong>Metals:</strong> 18K yellow gold, 18K white gold, 18K rose gold, platinum<br />
+                    <strong>Gemstones:</strong> Diamonds (natural and lab-grown), rubies, sapphires, emeralds, tanzanite, 
+                    as well as semi-precious stones like amethyst, topaz, and aquamarine
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">How long does a personalization take?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Personalized pieces typically take 3-6 weeks to produce after your order confirmation, 
+                    depending on the complexity of the modifications.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* General FAQs */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-playfair text-xl text-primary">General Information</CardTitle>
+                <CardDescription>Pricing, shipping, and other important details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">How are prices determined?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Our prices are based on material costs (metal weight, gemstone type and quality), craftsmanship complexity, 
+                    and design exclusivity. All prices include our designer's expertise and premium craftsmanship.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What payment methods do you accept?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    We accept bank transfers, major credit cards, and select cryptocurrency payments. For custom pieces, 
+                    we typically require a 50% deposit to begin production with the balance due prior to shipping.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">Do you offer international shipping?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    Yes, we ship worldwide with fully insured delivery. International shipments may incur customs duties 
+                    or import taxes, which are the responsibility of the recipient.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-foreground mb-2">What is your quality guarantee?</h4>
+                  <p className="text-foreground/80 text-sm">
+                    All Luster Legacy pieces come with a certificate of authenticity and a 1-year warranty against 
+                    manufacturing defects. We also offer complimentary cleaning and inspection services.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+      
       <div className="container mx-auto px-4 md:px-8 py-16">
         {isSubmitted && !user ? (
           <div className="max-w-3xl mx-auto mb-16">
