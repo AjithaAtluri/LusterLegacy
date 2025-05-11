@@ -32,7 +32,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
   // Add forceUpdate to trigger re-renders when needed (especially for checkbox state changes)
   const [, forceUpdate] = useReducer(x => x + 1, 0);
   
-  // Fetch metal types and stone types from API
+  // Fetch metal types, stone types, and product types from API
   const { data: metalTypes = [], isLoading: isMetalTypesLoading } = useQuery({
     queryKey: ['/api/metal-types'],
     queryFn: async () => {
@@ -50,6 +50,17 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       const response = await fetch('/api/stone-types');
       if (!response.ok) {
         throw new Error('Failed to fetch stone types');
+      }
+      return response.json();
+    }
+  });
+  
+  const { data: productTypes = [], isLoading: isProductTypesLoading } = useQuery({
+    queryKey: ['/api/product-types/active'],
+    queryFn: async () => {
+      const response = await fetch('/api/product-types/active');
+      if (!response.ok) {
+        throw new Error('Failed to fetch product types');
       }
       return response.json();
     }
