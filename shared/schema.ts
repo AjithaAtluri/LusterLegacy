@@ -239,7 +239,7 @@ export const insertCustomizationRequestSchema = createInsertSchema(customization
   imageUrls: true,
 });
 
-// Customization request comments schema
+// Product personalization request comments schema
 export const customizationRequestComments = pgTable("customization_request_comments", {
   id: serial("id").primaryKey(),
   customizationRequestId: integer("customization_request_id").notNull().references(() => customizationRequests.id, { onDelete: 'cascade' }),
@@ -690,9 +690,11 @@ export type InsertDesignRequestComment = z.infer<typeof insertDesignRequestComme
 export type DesignFeedback = typeof designFeedback.$inferSelect;
 export type InsertDesignFeedback = z.infer<typeof insertDesignFeedbackSchema>;
 
+// We're maintaining CustomizationRequest for compatibility, but this represents a Personalization Request
 export type CustomizationRequest = typeof customizationRequests.$inferSelect;
 export type InsertCustomizationRequest = z.infer<typeof insertCustomizationRequestSchema>;
 
+// We're maintaining CustomizationRequestComment for compatibility, but this represents a Personalization Request Comment
 export type CustomizationRequestComment = typeof customizationRequestComments.$inferSelect;
 export type InsertCustomizationRequestComment = z.infer<typeof insertCustomizationRequestCommentSchema>;
 

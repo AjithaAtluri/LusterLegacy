@@ -92,8 +92,8 @@ export default function CustomizeRequest() {
       
       if (isBeadsAndGems) {
         toast({
-          title: "Customization Unavailable",
-          description: "Beads & Gems products cannot be customized. Redirecting to product page.",
+          title: "Personalization Unavailable",
+          description: "Beads & Gems products cannot be personalized. Redirecting to product page.",
           variant: "destructive"
         });
         navigate(`/products/${id}`);
