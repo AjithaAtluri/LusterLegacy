@@ -409,19 +409,33 @@ export class DatabaseStorage implements IStorage {
 
   // Product-Stone methods
   async getProductStones(productId: number): Promise<StoneType[]> {
-    const stones = await db
-      .select({
-        id: stoneTypes.id,
-        name: stoneTypes.name,
-        description: stoneTypes.description,
-        pricePerCarat: stoneTypes.pricePerCarat,
-        createdAt: stoneTypes.createdAt,
-      })
-      .from(productStones)
-      .innerJoin(stoneTypes, eq(productStones.stoneTypeId, stoneTypes.id))
-      .where(eq(productStones.productId, productId));
-    
-    return stones as StoneType[];
+    try {
+      const stones = await db
+        .select({
+          id: stoneTypes.id,
+          name: stoneTypes.name,
+          description: stoneTypes.description,
+          pricePerCarat: stoneTypes.pricePerCarat || sql`0`, // Fix for pricePerCarat possibly being undefined
+          createdAt: stoneTypes.createdAt,
+          imageUrl: stoneTypes.imageUrl,
+          category: stoneTypes.category,
+          displayOrder: stoneTypes.displayOrder,
+          isActive: stoneTypes.isActive,
+          color: stoneTypes.color,
+          size: stoneTypes.size,
+          priceModifier: stoneTypes.priceModifier,
+          stoneForm: stoneTypes.stoneForm,
+          quality: stoneTypes.quality
+        })
+        .from(productStones)
+        .innerJoin(stoneTypes, eq(productStones.stoneTypeId, stoneTypes.id))
+        .where(eq(productStones.productId, productId));
+      
+      return stones;
+    } catch (error) {
+      console.error(`Error fetching stones for product ID ${productId}:`, error);
+      return [];
+    }
   }
 
   async addProductStones(productId: number, stoneTypeIds: number[]): Promise<void> {
