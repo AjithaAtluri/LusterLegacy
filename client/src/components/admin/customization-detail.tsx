@@ -112,7 +112,7 @@ export default function PersonalizationDetail({ customization }: Personalization
   const updateStatus = async (newStatus: string) => {
     setStatusUpdateLoading(true);
     try {
-      const response = await apiRequest("PATCH", `/api/customization-requests/${customization.id}`, {
+      const response = await apiRequest("PATCH", `/api/personalization-requests/${customization.id}`, {
         status: newStatus,
       });
 
@@ -151,7 +151,7 @@ export default function PersonalizationDetail({ customization }: Personalization
     setPriceUpdateLoading(true);
     try {
       const price = parseFloat(quotedPrice);
-      const response = await apiRequest("PATCH", `/api/customization-requests/${customization.id}`, {
+      const response = await apiRequest("PATCH", `/api/personalization-requests/${customization.id}`, {
         quotedPrice: price,
       });
 
