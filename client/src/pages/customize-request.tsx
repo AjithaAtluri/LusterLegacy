@@ -197,7 +197,7 @@ export default function CustomizeRequest() {
         window.location.href = `/auth?returnTo=${encodeURIComponent(returnUrl)}`;
         return;
       } catch (error) {
-        console.error('Error saving form data to session storage', error);
+        console.error('Error saving personalization form data to session storage', error);
       }
       return;
     }
@@ -278,7 +278,7 @@ export default function CustomizeRequest() {
     
     if (savedFormData && user) {
       try {
-        console.log("Found saved customization form data in session storage");
+        console.log("Found saved personalization form data in session storage");
         const parsedData = JSON.parse(savedFormData);
         
         // Only restore data if the product ID matches
@@ -950,13 +950,13 @@ export default function CustomizeRequest() {
                       </div>
                     )}
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="customizationDetails">Customization Details*</Label>
+                      <Label htmlFor="personalizationDetails">Personalization Details*</Label>
                       <Textarea
-                        id="customizationDetails"
-                        placeholder="Describe your customization requirements in detail..."
+                        id="personalizationDetails"
+                        placeholder="Describe your personalization requirements in detail..."
                         className="min-h-[150px]"
-                        value={customizationDetails}
-                        onChange={(e) => setCustomizationDetails(e.target.value)}
+                        value={personalizationDetails}
+                        onChange={(e) => setPersonalizationDetails(e.target.value)}
                         required
                       />
                     </div>
