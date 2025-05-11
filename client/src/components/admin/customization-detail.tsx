@@ -27,10 +27,10 @@ interface PersonalizationDetailProps {
     originalStoneType: string;
     requestedStoneType: string;
     additionalNotes: string | null;
-    customizationType: string;
+    personalizationType: string;
     preferredMetal: string;
     preferredStones: string[];
-    customizationDetails: string;
+    personalizationDetails: string;
     status: string;
     quotedPrice: number | null;
     currency: string | null;
@@ -201,9 +201,9 @@ export default function PersonalizationDetail({ customization }: Personalization
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Get customization type badge label and color
+  // Get personalization type badge label and color
   const getPersonalizationTypeDisplay = () => {
-    switch(customization.customizationType) {
+    switch(customization.personalizationType) {
       case "metal_and_stone":
         return { label: "Metal & Stone", color: "bg-amber-500" };
       case "metal_only":
@@ -277,10 +277,10 @@ export default function PersonalizationDetail({ customization }: Personalization
               )}
             </div>
             
-            {customization.customizationDetails && (
+            {customization.personalizationDetails && (
               <div className="pt-2">
                 <h4 className="font-medium mb-1">Additional Notes:</h4>
-                <p className="text-sm whitespace-pre-wrap">{customization.customizationDetails}</p>
+                <p className="text-sm whitespace-pre-wrap">{customization.personalizationDetails}</p>
               </div>
             )}
           </CardContent>
@@ -520,7 +520,7 @@ export default function PersonalizationDetail({ customization }: Personalization
         <CardHeader>
           <CardTitle>Communication</CardTitle>
           <CardDescription>
-            Exchange messages with the customer regarding their customization request
+            Exchange messages with the customer regarding their personalization request
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
