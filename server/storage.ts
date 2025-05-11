@@ -378,8 +378,22 @@ export class DatabaseStorage implements IStorage {
     try {
       const stoneTypesList = await db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
       
-      // Map each stone type to the correct format
-      return stoneTypesList.map(stone => this.mapDbStoneTypeToStoneType(stone));
+      // Map each stone type to the correct format with safety checks
+      const mappedStoneTypes: StoneType[] = [];
+      
+      for (const stone of stoneTypesList) {
+        if (stone) {
+          try {
+            const mappedStone = this.mapDbStoneTypeToStoneType(stone);
+            mappedStoneTypes.push(mappedStone);
+          } catch (mapError) {
+            console.error(`Error mapping stone type with ID ${stone.id}:`, mapError);
+            // Skip this stone type and continue processing others
+          }
+        }
+      }
+      
+      return mappedStoneTypes;
     } catch (error) {
       console.error("Error fetching all stone types:", error);
       return [];
@@ -435,23 +449,14 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
         
       if (!stoneType) return undefined;
-        
-      // Map to StoneType format with correct property names
-      return {
-        id: stoneType.id,
-        name: stoneType.name,
-        description: stoneType.description,
-        priceModifier: stoneType.price_modifier,
-        displayOrder: stoneType.display_order,
-        isActive: stoneType.is_active,
-        color: stoneType.color,
-        imageUrl: stoneType.image_url,
-        category: stoneType.category,
-        stoneForm: stoneType.stone_form,
-        quality: stoneType.quality,
-        size: stoneType.size,
-        createdAt: stoneType.created_at
-      };
+      
+      try {
+        // Use helper function to map the database result to the StoneType format
+        return this.mapDbStoneTypeToStoneType(stoneType);
+      } catch (mapError) {
+        console.error(`Error mapping stone type with name "${stoneTypeId}":`, mapError);
+        return undefined;
+      }
     } catch (error) {
       console.error("Error fetching stone type by ID/name:", error);
       return undefined;
