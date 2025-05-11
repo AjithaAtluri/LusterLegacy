@@ -25,7 +25,7 @@ export const ChatbotProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      content: "Hello! I'm Luster Legacy's virtual assistant. How can I help you today?",
+      content: "Hello! I'm Luster Legacy's virtual assistant. How can I help you today?\n\nI can assist with information about our services:\n- [Custom Design](/custom-design) - Bespoke jewelry from scratch ($150 consultation fee)\n- [Personalization](/collections) - Modify our existing designs\n- [Request a Quote](/collections) - Get pricing for catalog items\n\nOr visit our [FAQ page](/faq) for common questions.",
       timestamp: new Date(),
     },
   ]);
@@ -97,7 +97,7 @@ export const ChatbotProvider: React.FC<{ children: ReactNode }> = ({ children })
     setMessages([
       {
         role: "assistant",
-        content: "Hello! I'm Luster Legacy's virtual assistant. How can I help you today?",
+        content: "Hello! I'm Luster Legacy's virtual assistant. How can I help you today?\n\nI can assist with information about our services:\n- [Custom Design](/custom-design) - Bespoke jewelry from scratch ($150 consultation fee)\n- [Personalization](/collections) - Modify our existing designs\n- [Request a Quote](/collections) - Get pricing for catalog items\n\nOr visit our [FAQ page](/faq) for common questions.",
         timestamp: new Date(),
       },
     ]);

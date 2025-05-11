@@ -5,12 +5,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { useChatbot } from "@/contexts/ChatbotContext";
 import { Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import ReactMarkdown from "react-markdown";
+import { useLocation } from "wouter";
 
 const ChatbotMessage: React.FC<{
   role: "user" | "assistant";
   content: string;
   timestamp?: Date;
 }> = ({ role, content, timestamp }) => {
+  const [, setLocation] = useLocation();
+  const { closeChat } = useChatbot();
+
+  // Custom link renderer to handle internal navigation
+  const CustomLink = (props: any) => {
+    const { href, children } = props;
+    
+    // Handle internal links (those starting with /)
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (href.startsWith('/')) {
+        e.preventDefault();
+        closeChat(); // Close the chat when navigating to another page
+        setLocation(href); // Use wouter's setLocation for internal links
+      }
+    };
+
+    return (
+      <a 
+        href={href} 
+        onClick={handleClick} 
+        className="text-primary hover:underline"
+        {...(href.startsWith('/') ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+      >
+        {children}
+      </a>
+    );
+  };
+
   return (
     <div
       className={`flex ${
@@ -24,7 +54,20 @@ const ChatbotMessage: React.FC<{
             : "bg-muted text-foreground"
         }`}
       >
-        <div className="text-sm">{content}</div>
+        <div className="text-sm">
+          {role === "user" ? (
+            content
+          ) : (
+            <ReactMarkdown 
+              components={{ 
+                a: CustomLink,
+                p: ({ children }) => <p className="mb-2">{children}</p>
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          )}
+        </div>
         {timestamp && (
           <div className="text-xs mt-1 opacity-70">
             {formatDistanceToNow(timestamp, { addSuffix: true })}
