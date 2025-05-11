@@ -13,7 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText, ArrowRight } from "lucide-react";
 
-interface CustomizationDetailProps {
+interface PersonalizationDetailProps {
   customization: {
     id: number;
     fullName: string;
@@ -48,7 +48,7 @@ interface CustomizationDetailProps {
   };
 }
 
-export default function CustomizationDetail({ customization }: CustomizationDetailProps) {
+export default function PersonalizationDetail({ customization }: PersonalizationDetailProps) {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);

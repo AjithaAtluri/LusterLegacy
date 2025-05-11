@@ -82,7 +82,7 @@ export default function HowItWorks() {
               <div className="bg-accent w-12 h-12 rounded-full flex items-center justify-center mb-4">
                 <Settings className="h-6 w-6 text-white" />
               </div>
-              <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Customization</h4>
+              <h4 className="font-playfair text-lg font-semibold text-primary mb-2 dark:text-white text-center">Personalization</h4>
               <p className="font-montserrat text-foreground/70 dark:text-slate-300 text-center">
                 Personalize our existing designs with your preferred metals, gemstones, and dimensions. 
                 Complimentary consultation service.
