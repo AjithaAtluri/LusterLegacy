@@ -264,7 +264,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
     defaultValues: {
       name: product.name || "",
       description: product.description || "",
-      detailedDescription: stoneDetails.detailedDescription || ""
+      detailedDescription: stoneDetails.detailedDescription || "",
+      productTypeId: product.productTypeId ? String(product.productTypeId) : ""
     }
   });
   
@@ -445,9 +446,13 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         detailedDescription: data.detailedDescription
       }));
       
+      // Convert productTypeId to number if it exists
+      const productTypeId = data.productTypeId ? parseInt(data.productTypeId, 10) : null;
+      
       updateMutation.mutate({
         name: data.name,
         description: data.description,
+        productTypeId,
         details: JSON.stringify(detailsUpdate)
       });
     } catch (error) {
@@ -712,6 +717,18 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-2xl">{product.name}</CardTitle>
+            
+            {/* Product Type Badge */}
+            {product.productTypeId && (
+              <div className="mt-1 mb-2">
+                <Badge variant="outline" className="text-xs">
+                  {isProductTypesLoading 
+                    ? "Loading..." 
+                    : productTypes.find((pt: { id: number, name: string }) => pt.id === product.productTypeId)?.name || "Unknown Type"}
+                </Badge>
+              </div>
+            )}
+            
             <CardDescription className="mt-2">{product.description}</CardDescription>
             
             {stoneDetails.detailedDescription && (
@@ -1080,6 +1097,42 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                     <p className="text-sm text-muted-foreground">
                       Brief description shown in product listings
                     </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={basicInfoForm.control}
+                name="productTypeId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a product type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isProductTypesLoading ? (
+                          <SelectItem value="" disabled>Loading product types...</SelectItem>
+                        ) : (
+                          <>
+                            <SelectItem value="">None</SelectItem>
+                            {productTypes.map((type: { id: number, name: string }) => (
+                              <SelectItem key={type.id} value={String(type.id)}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
