@@ -411,27 +411,30 @@ export class DatabaseStorage implements IStorage {
   async getProductStones(productId: number): Promise<StoneType[]> {
     try {
       const stones = await db
-        .select({
-          id: stoneTypes.id,
-          name: stoneTypes.name,
-          description: stoneTypes.description,
-          pricePerCarat: stoneTypes.pricePerCarat || sql`0`, // Fix for pricePerCarat possibly being undefined
-          createdAt: stoneTypes.createdAt,
-          imageUrl: stoneTypes.imageUrl,
-          category: stoneTypes.category,
-          displayOrder: stoneTypes.displayOrder,
-          isActive: stoneTypes.isActive,
-          color: stoneTypes.color,
-          size: stoneTypes.size,
-          priceModifier: stoneTypes.priceModifier,
-          stoneForm: stoneTypes.stoneForm,
-          quality: stoneTypes.quality
-        })
-        .from(productStones)
-        .innerJoin(stoneTypes, eq(productStones.stoneTypeId, stoneTypes.id))
+        .select()
+        .from(stoneTypes)
+        .innerJoin(
+          productStones, 
+          eq(productStones.stoneTypeId, stoneTypes.id)
+        )
         .where(eq(productStones.productId, productId));
       
-      return stones;
+      // Map the joined results to StoneType format
+      return stones.map(stone => ({
+        id: stone.stone_types.id,
+        name: stone.stone_types.name,
+        description: stone.stone_types.description,
+        priceModifier: stone.stone_types.price_modifier,
+        displayOrder: stone.stone_types.display_order,
+        isActive: stone.stone_types.is_active,
+        color: stone.stone_types.color,
+        imageUrl: stone.stone_types.image_url,
+        category: stone.stone_types.category,
+        stoneForm: stone.stone_types.stone_form,
+        quality: stone.stone_types.quality,
+        size: stone.stone_types.size,
+        createdAt: stone.stone_types.created_at
+      }));
     } catch (error) {
       console.error(`Error fetching stones for product ID ${productId}:`, error);
       return [];
