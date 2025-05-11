@@ -328,28 +328,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Stone Type methods
+  
+  // Helper function to map database stone type to StoneType format
+  private mapDbStoneTypeToStoneType(dbStoneType: any): StoneType {
+    if (!dbStoneType) {
+      throw new Error("Attempted to map a null or undefined database stone type");
+    }
+    
+    // Create the mapped StoneType object with proper property names
+    const stoneTypeObj: StoneType = {
+      id: dbStoneType.id,
+      name: dbStoneType.name,
+      description: dbStoneType.description,
+      priceModifier: dbStoneType.price_modifier,
+      displayOrder: dbStoneType.display_order,
+      isActive: dbStoneType.is_active,
+      color: dbStoneType.color,
+      imageUrl: dbStoneType.image_url,
+      category: dbStoneType.category,
+      stoneForm: dbStoneType.stone_form,
+      quality: dbStoneType.quality,
+      size: dbStoneType.size,
+      createdAt: dbStoneType.created_at
+    };
+    
+    return stoneTypeObj;
+  }
+  
   async getStoneType(id: number): Promise<StoneType | undefined> {
     try {
       const [stoneType] = await db.select().from(stoneTypes).where(eq(stoneTypes.id, id));
       
       if (!stoneType) return undefined;
       
-      // Map to StoneType format with correct property names
-      return {
-        id: stoneType.id,
-        name: stoneType.name,
-        description: stoneType.description,
-        priceModifier: stoneType.price_modifier,
-        displayOrder: stoneType.display_order,
-        isActive: stoneType.is_active,
-        color: stoneType.color,
-        imageUrl: stoneType.image_url,
-        category: stoneType.category,
-        stoneForm: stoneType.stone_form,
-        quality: stoneType.quality,
-        size: stoneType.size,
-        createdAt: stoneType.created_at
-      };
+      try {
+        // Map to StoneType format with correct property names
+        return this.mapDbStoneTypeToStoneType(stoneType);
+      } catch (e) {
+        console.error(`Error mapping stone type with ID ${id}:`, e);
+        return undefined;
+      }
     } catch (error) {
       console.error(`Error fetching stone type with ID ${id}:`, error);
       return undefined;
@@ -361,21 +379,7 @@ export class DatabaseStorage implements IStorage {
       const stoneTypesList = await db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
       
       // Map each stone type to the correct format
-      return stoneTypesList.map(stone => ({
-        id: stone.id,
-        name: stone.name,
-        description: stone.description,
-        priceModifier: stone.price_modifier,
-        displayOrder: stone.display_order,
-        isActive: stone.is_active,
-        color: stone.color,
-        imageUrl: stone.image_url,
-        category: stone.category,
-        stoneForm: stone.stone_form,
-        quality: stone.quality,
-        size: stone.size,
-        createdAt: stone.created_at
-      }));
+      return stoneTypesList.map(stone => this.mapDbStoneTypeToStoneType(stone));
     } catch (error) {
       console.error("Error fetching all stone types:", error);
       return [];
@@ -383,17 +387,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createStoneType(stoneType: InsertStoneType): Promise<StoneType> {
-    const [newStoneType] = await db.insert(stoneTypes).values(stoneType).returning();
-    return newStoneType;
+    try {
+      const [newStoneType] = await db.insert(stoneTypes).values(stoneType).returning();
+      return this.mapDbStoneTypeToStoneType(newStoneType);
+    } catch (error) {
+      console.error("Error creating stone type:", error);
+      throw error;
+    }
   }
 
   async updateStoneType(id: number, stoneTypeUpdate: Partial<InsertStoneType>): Promise<StoneType | undefined> {
-    const [updatedStoneType] = await db
-      .update(stoneTypes)
-      .set(stoneTypeUpdate)
-      .where(eq(stoneTypes.id, id))
-      .returning();
-    return updatedStoneType;
+    try {
+      const [updatedStoneType] = await db
+        .update(stoneTypes)
+        .set(stoneTypeUpdate)
+        .where(eq(stoneTypes.id, id))
+        .returning();
+      
+      if (!updatedStoneType) return undefined;
+      
+      // Map the returned database object to the StoneType format
+      return this.mapDbStoneTypeToStoneType(updatedStoneType);
+    } catch (error) {
+      console.error(`Error updating stone type with ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async deleteStoneType(id: number): Promise<boolean> {
