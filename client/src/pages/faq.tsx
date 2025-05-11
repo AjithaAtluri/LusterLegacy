@@ -26,6 +26,113 @@ export default function FAQ() {
         </p>
         
         <div className="space-y-6 mb-12">
+          <h2 className="font-playfair text-2xl font-semibold">Our Services</h2>
+          <Accordion type="single" collapsible className="bg-card rounded-lg">
+            <AccordionItem value="service-1">
+              <AccordionTrigger className="font-medium px-4">
+                What's the difference between Custom Design, Final Quote, and Personalization services?
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <p className="mb-4">
+                  At Luster Legacy, we offer three distinct services to meet different jewelry needs:
+                </p>
+                <div className="space-y-4">
+                  <div className="border border-primary/20 rounded-lg p-4 bg-primary/5">
+                    <h4 className="font-playfair text-lg font-semibold text-primary mb-2">Custom Design Service</h4>
+                    <p className="text-foreground/80 mb-2">
+                      For creating completely new, unique jewelry pieces from scratch based on your vision.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><strong>Fee:</strong> $150 consultation fee (covers up to 4 design iterations, credited toward final purchase)</li>
+                      <li><strong>Timeline:</strong> 2-3 weeks for design phase, 4-8 weeks for production</li>
+                      <li><strong>Best for:</strong> Dream jewelry pieces that don't exist in our catalog</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="border border-primary/20 rounded-lg p-4 bg-primary/5">
+                    <h4 className="font-playfair text-lg font-semibold text-primary mb-2">Final Quote Service</h4>
+                    <p className="text-foreground/80 mb-2">
+                      For requesting an official price confirmation for catalog items without modifications.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><strong>Fee:</strong> No charge</li>
+                      <li><strong>Timeline:</strong> 1-2 business days for quote generation</li>
+                      <li><strong>Best for:</strong> When you're ready to purchase a catalog item and need exact pricing</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="border border-primary/20 rounded-lg p-4 bg-primary/5">
+                    <h4 className="font-playfair text-lg font-semibold text-primary mb-2">Personalization Service</h4>
+                    <p className="text-foreground/80 mb-2">
+                      For modifying existing catalog pieces to suit your preferences.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><strong>Fee:</strong> No charge for personalization requests</li>
+                      <li><strong>Timeline:</strong> 3-6 weeks for production after approval</li>
+                      <li><strong>Best for:</strong> When you like a catalog piece but want to make changes to metals, gemstones, or dimensions</li>
+                    </ul>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="service-2">
+              <AccordionTrigger className="font-medium px-4">
+                What materials are available for custom designs and personalizations?
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <p className="mb-3">We offer a wide range of high-quality materials:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Precious Metals</h4>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>18K Yellow Gold</li>
+                      <li>18K White Gold</li>
+                      <li>18K Rose Gold</li>
+                      <li>14K Yellow Gold (more affordable option)</li>
+                      <li>Sterling Silver with Gold Accents</li>
+                      <li>Platinum (premium option)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Gemstones</h4>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li>Diamonds (natural and lab-grown)</li>
+                      <li>Precious stones (ruby, sapphire, emerald)</li>
+                      <li>Polki diamonds</li>
+                      <li>Semi-precious stones (amethyst, topaz, aquamarine)</li>
+                      <li>Pearls (freshwater, South Sea, Tahitian)</li>
+                      <li>Rare and specialty stones (available upon request)</li>
+                    </ul>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="service-3">
+              <AccordionTrigger className="font-medium px-4">
+                What does the $150 Custom Design consultation fee include?
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <p className="mb-3">
+                  Our $150 consultation fee for Custom Design requests includes:
+                </p>
+                <ul className="list-disc pl-5 space-y-2">
+                  <li>Professional design consultation with our master jewelers</li>
+                  <li>Up to 4 design iterations to perfect your concept</li>
+                  <li>Detailed material recommendations tailored to your preferences and budget</li>
+                  <li>Digital mockups and renders of your piece</li>
+                  <li>Comprehensive production quote</li>
+                </ul>
+                <p className="mt-3 font-medium">
+                  This fee is credited toward your final purchase when you proceed with production of your custom design.
+                </p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+        
+        <div className="space-y-6 mb-12">
           <h2 className="font-playfair text-2xl font-semibold">Ordering & Payment</h2>
           <Accordion type="single" collapsible className="bg-card rounded-lg">
             <AccordionItem value="item-1">
