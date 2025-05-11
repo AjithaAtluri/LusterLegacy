@@ -73,9 +73,9 @@ export default function FeaturedProducts() {
     
     // Set up polling interval
     const intervalId = setInterval(() => {
-      console.log("Polling for fresh featured products");
+      console.log("Polling for fresh featured products (30-min interval)");
       fetchFeaturedProducts();
-    }, 15000); // Poll every 15 seconds
+    }, 1800000); // Poll every 30 minutes
     
     return () => clearInterval(intervalId);
   }, []);
@@ -148,11 +148,11 @@ export default function FeaturedProducts() {
     // Load products immediately
     loadProductsFromDirectEndpoint();
     
-    // Set up interval to refresh every 30 seconds
+    // Set up interval to refresh every 30 minutes
     const refreshInterval = setInterval(() => {
-      console.log("Refreshing detailed product data...");
+      console.log("Refreshing detailed product data (30-min interval)...");
       loadProductsFromDirectEndpoint();
-    }, 30000);
+    }, 1800000);
     
     return () => clearInterval(refreshInterval);
   }, [productIds]);

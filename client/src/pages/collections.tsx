@@ -77,8 +77,12 @@ export default function Collections() {
     
     fetchProducts();
     
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchProducts, 60000);
+    // Refresh every 30 minutes
+    const interval = setInterval(() => {
+      console.log("Refreshing product list (30-min interval)");
+      fetchProducts();
+    }, 1800000); // 30 minutes in milliseconds
+    
     return () => clearInterval(interval);
   }, []);
   
@@ -124,9 +128,13 @@ export default function Collections() {
       }
     };
     
-    // Load fresh prices immediately and every 60 seconds
+    // Load fresh prices immediately and every 30 minutes
     loadFreshPrices();
-    const interval = setInterval(loadFreshPrices, 60000);
+    const interval = setInterval(() => {
+      console.log("Refreshing product prices (30-min interval)");
+      loadFreshPrices();
+    }, 1800000); // 30 minutes in milliseconds
+    
     return () => clearInterval(interval);
   }, [productIds]);
   
