@@ -107,6 +107,48 @@ export default function Contact() {
         </div>
       </div>
       
+      {/* Chatbot Reference */}
+      <div className="container mx-auto px-4 md:px-8 py-10">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="font-playfair text-2xl font-bold text-foreground mb-4">Need Immediate Assistance?</h2>
+          <p className="font-montserrat text-foreground/80 mb-6">
+            Our virtual assistant is available 24/7 to answer your questions about our services, 
+            products, and processes. Click the chat icon in the bottom right corner to start a conversation.
+          </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="bg-primary/10 px-4 py-3 rounded-lg">
+              <p className="text-sm font-medium text-primary">Get instant answers to common questions</p>
+            </div>
+            <div className="bg-primary/10 px-4 py-3 rounded-lg">
+              <p className="text-sm font-medium text-primary">Available anytime</p>
+            </div>
+            <div className="bg-primary/10 px-4 py-3 rounded-lg">
+              <p className="text-sm font-medium text-primary">No login required</p>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="flex items-center gap-2"
+              onClick={() => {
+                // This will use the ChatbotContext to open the chat
+                // The actual implementation will happen in the Chatbot component
+                const chatButton = document.querySelector('.fixed.bottom-5.right-5.rounded-full');
+                if (chatButton) {
+                  (chatButton as HTMLButtonElement).click();
+                }
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+              </svg>
+              <span>Open Chat Assistant</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+      
       <div className="container mx-auto px-4 md:px-8 py-16">
         {isSubmitted && !user ? (
           <div className="max-w-3xl mx-auto mb-16">

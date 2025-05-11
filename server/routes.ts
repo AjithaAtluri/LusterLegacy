@@ -3799,6 +3799,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * Chatbot API routes
+   * These endpoints are accessible to both logged-in and non-logged-in users
+   */
+  app.post("/api/chatbot", async (req, res) => {
+    try {
+      const { message, chatHistory } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Invalid request. 'message' is required and must be a string." });
+      }
+      
+      // Validate the chat history format if provided
+      if (chatHistory && (!Array.isArray(chatHistory) || 
+          !chatHistory.every(entry => 
+            entry && 
+            typeof entry === 'object' && 
+            (entry.role === 'user' || entry.role === 'assistant') && 
+            typeof entry.content === 'string'
+          ))) {
+        return res.status(400).json({ 
+          message: "Invalid chat history format. Each entry must have 'role' (user/assistant) and 'content' properties." 
+        });
+      }
+      
+      // Generate the chatbot response
+      const response = await generateChatbotResponse(message, chatHistory || []);
+      
+      res.status(200).json({ response });
+    } catch (error) {
+      console.error("Error generating chatbot response:", error);
+      res.status(500).json({ 
+        message: "An error occurred while processing your request. Please try again later." 
+      });
+    }
+  });
+
   // Mark contact message as read (admin only)
   app.put('/api/admin/contact/:id', validateAdmin, async (req, res) => {
     try {

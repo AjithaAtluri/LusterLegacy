@@ -9,6 +9,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useToast } from "@/hooks/use-toast";
+import { ChatbotProvider } from "@/contexts/ChatbotContext";
+import Chatbot from "@/components/chatbot/Chatbot";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("@/pages/home"));
@@ -137,95 +139,100 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark">
       <AuthProvider>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow">
-            <Suspense fallback={<PageLoader />}>
-              <Switch>
-                <Route path="/" component={Home} />
-                <Route path="/collections" component={Collections} />
-                <Route path="/custom-design" component={CustomDesign} />
-                <Route path="/about" component={About} />
-                <Route path="/contact" component={Contact} />
-                <Route path="/client-stories" component={ClientStories} />
-                <Route path="/product/:id" component={Product} />
-                <Route path="/product-detail/:id" component={ProductDetail} />
-                <Route path="/checkout" component={Checkout} />
-                <Route path="/gem-metal-guide" component={GemMetalGuide} />
-                <Route path="/inspiration" component={InspirationGallery} />
-                <ProtectedRoute path="/customer-dashboard" component={CustomerDashboard} />
-                <ProtectedRoute path="/finalize-order/:id" component={FinalizeOrder} />
-                <ProtectedRoute path="/customize-request/:id" component={CustomizeRequest} />
-                <ProtectedRoute path="/custom-designs/:id" component={lazy(() => import("@/pages/custom-designs/[id]"))} />
-                <ProtectedRoute path="/customization-requests/:id" component={lazy(() => import("@/pages/customization-requests/[id]"))} />
-                <ProtectedRoute path="/quote-requests/:id" component={lazy(() => import("@/pages/quote-requests/[id]"))} />
-                <ProtectedRoute path="/payment/design-consultation/:id" component={lazy(() => import("@/pages/payment/design-consultation/[id]"))} />
-                <Route path="/auth" component={AuthPage} />
-                
-                {/* Tools */}
-                <Route path="/tools/image-test" component={ImageTest} />
-                <Route path="/tools/price-calculator" component={PriceCalculator} />
-                
-                {/* Information pages */}
-                <Route path="/privacy" component={Privacy} />
-                <Route path="/terms" component={Terms} />
-                <Route path="/shipping" component={Shipping} />
-                <Route path="/returns" component={Returns} />
-                <Route path="/faq" component={FAQ} />
-                
-                {/* Admin routes - All routes have both regular protected access and direct access */}
-                <Route path="/admin/login" component={AdminLogin} />
-                
-                {/* Direct Access Dashboard - Now using protected routes */}
-                <ProtectedRoute path="/admin/direct-dashboard" component={AdminDashboard} adminOnly />
-                
-                {/* Admin pages - using protected routes */}
-                <ProtectedRoute path="/admin/ai-generator" component={AIContentGenerator} adminOnly />
-                {/* Removed duplicate AI Admin Dashboard route */}
-                <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
-                <ProtectedRoute path="/admin/products/:id" component={lazy(() => import("@/pages/admin/product-detail-page"))} adminOnly />
-                <ProtectedRoute path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} adminOnly />
-                <ProtectedRoute path="/admin/edit-product/:id" component={AdminEditProductNew} adminOnly />
-                
-                {/* Full admin only pages */}
-                <ProtectedRoute path="/admin/metal-types" component={AdminMetalTypes} adminOnly />
-                <ProtectedRoute path="/admin/stone-types" component={AdminStoneTypes} adminOnly />
-                <ProtectedRoute path="/admin/product-types" component={AdminProductTypes} adminOnly />
-                
-                {/* Pages accessible to both admin types */}
-                <ProtectedRoute path="/admin/designs" component={AdminDesigns} adminOnly />
-                <ProtectedRoute path="/admin/designs/:id" component={lazy(() => import("@/pages/admin/design-detail/[id]"))} adminOnly />
-                <ProtectedRoute path="/admin/customizations" component={AdminCustomizations} adminOnly />
-                <ProtectedRoute path="/admin/customizations/:id" component={AdminCustomizationDetail} adminOnly />
-                <ProtectedRoute path="/admin/personalizations" component={AdminPersonalizations} adminOnly />
-                <ProtectedRoute path="/admin/personalizations/:id" component={AdminPersonalizationDetail} adminOnly />
-                <ProtectedRoute path="/admin/quotes" component={AdminQuotes} adminOnly />
-                <ProtectedRoute path="/admin/quotes/:id" component={AdminQuoteDetail} adminOnly />
-                <ProtectedRoute path="/admin/contact-messages" component={AdminContactMessages} adminOnly />
-                <ProtectedRoute path="/admin/users" component={lazy(() => import("@/pages/admin/users"))} adminOnly />
-                <ProtectedRoute path="/admin/testimonials" component={AdminTestimonials} adminOnly />
-                
-                {/* Redirect old add-product URL to the AI generator */}
-                <Route path="/admin/add-product">
-                  {() => {
-                    window.location.replace("/admin/ai-generator");
-                    return null;
-                  }}
-                </Route>
-                
-                {/* Protected Routes for regular admin access */}
-                <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
-                <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly />
-                
-                {/* Fallback to 404 */}
-                <Route component={NotFound} />
-              </Switch>
-            </Suspense>
-          </main>
-          <Footer />
-          {/* WhatsApp button hidden for now */}
-          {/* <WhatsAppButton /> */}
-        </div>
+        <ChatbotProvider>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+              <Suspense fallback={<PageLoader />}>
+                <Switch>
+                  <Route path="/" component={Home} />
+                  <Route path="/collections" component={Collections} />
+                  <Route path="/custom-design" component={CustomDesign} />
+                  <Route path="/about" component={About} />
+                  <Route path="/contact" component={Contact} />
+                  <Route path="/client-stories" component={ClientStories} />
+                  <Route path="/product/:id" component={Product} />
+                  <Route path="/product-detail/:id" component={ProductDetail} />
+                  <Route path="/checkout" component={Checkout} />
+                  <Route path="/gem-metal-guide" component={GemMetalGuide} />
+                  <Route path="/inspiration" component={InspirationGallery} />
+                  <ProtectedRoute path="/customer-dashboard" component={CustomerDashboard} />
+                  <ProtectedRoute path="/finalize-order/:id" component={FinalizeOrder} />
+                  <ProtectedRoute path="/customize-request/:id" component={CustomizeRequest} />
+                  <ProtectedRoute path="/custom-designs/:id" component={lazy(() => import("@/pages/custom-designs/[id]"))} />
+                  <ProtectedRoute path="/customization-requests/:id" component={lazy(() => import("@/pages/customization-requests/[id]"))} />
+                  <ProtectedRoute path="/quote-requests/:id" component={lazy(() => import("@/pages/quote-requests/[id]"))} />
+                  <ProtectedRoute path="/payment/design-consultation/:id" component={lazy(() => import("@/pages/payment/design-consultation/[id]"))} />
+                  <Route path="/auth" component={AuthPage} />
+                  
+                  {/* Tools */}
+                  <Route path="/tools/image-test" component={ImageTest} />
+                  <Route path="/tools/price-calculator" component={PriceCalculator} />
+                  
+                  {/* Information pages */}
+                  <Route path="/privacy" component={Privacy} />
+                  <Route path="/terms" component={Terms} />
+                  <Route path="/shipping" component={Shipping} />
+                  <Route path="/returns" component={Returns} />
+                  <Route path="/faq" component={FAQ} />
+                  
+                  {/* Admin routes - All routes have both regular protected access and direct access */}
+                  <Route path="/admin/login" component={AdminLogin} />
+                  
+                  {/* Direct Access Dashboard - Now using protected routes */}
+                  <ProtectedRoute path="/admin/direct-dashboard" component={AdminDashboard} adminOnly />
+                  
+                  {/* Admin pages - using protected routes */}
+                  <ProtectedRoute path="/admin/ai-generator" component={AIContentGenerator} adminOnly />
+                  {/* Removed duplicate AI Admin Dashboard route */}
+                  <ProtectedRoute path="/admin/products" component={AdminProducts} adminOnly />
+                  <ProtectedRoute path="/admin/products/:id" component={lazy(() => import("@/pages/admin/product-detail-page"))} adminOnly />
+                  <ProtectedRoute path="/admin/add-product-with-unified-generator" component={AdminAddProductUnified} adminOnly />
+                  <ProtectedRoute path="/admin/edit-product/:id" component={AdminEditProductNew} adminOnly />
+                  
+                  {/* Full admin only pages */}
+                  <ProtectedRoute path="/admin/metal-types" component={AdminMetalTypes} adminOnly />
+                  <ProtectedRoute path="/admin/stone-types" component={AdminStoneTypes} adminOnly />
+                  <ProtectedRoute path="/admin/product-types" component={AdminProductTypes} adminOnly />
+                  
+                  {/* Pages accessible to both admin types */}
+                  <ProtectedRoute path="/admin/designs" component={AdminDesigns} adminOnly />
+                  <ProtectedRoute path="/admin/designs/:id" component={lazy(() => import("@/pages/admin/design-detail/[id]"))} adminOnly />
+                  <ProtectedRoute path="/admin/customizations" component={AdminCustomizations} adminOnly />
+                  <ProtectedRoute path="/admin/customizations/:id" component={AdminCustomizationDetail} adminOnly />
+                  <ProtectedRoute path="/admin/personalizations" component={AdminPersonalizations} adminOnly />
+                  <ProtectedRoute path="/admin/personalizations/:id" component={AdminPersonalizationDetail} adminOnly />
+                  <ProtectedRoute path="/admin/quotes" component={AdminQuotes} adminOnly />
+                  <ProtectedRoute path="/admin/quotes/:id" component={AdminQuoteDetail} adminOnly />
+                  <ProtectedRoute path="/admin/contact-messages" component={AdminContactMessages} adminOnly />
+                  <ProtectedRoute path="/admin/users" component={lazy(() => import("@/pages/admin/users"))} adminOnly />
+                  <ProtectedRoute path="/admin/testimonials" component={AdminTestimonials} adminOnly />
+                  
+                  {/* Redirect old add-product URL to the AI generator */}
+                  <Route path="/admin/add-product">
+                    {() => {
+                      window.location.replace("/admin/ai-generator");
+                      return null;
+                    }}
+                  </Route>
+                  
+                  {/* Protected Routes for regular admin access */}
+                  <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
+                  <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly />
+                  
+                  {/* Fallback to 404 */}
+                  <Route component={NotFound} />
+                </Switch>
+              </Suspense>
+            </main>
+            <Footer />
+            {/* WhatsApp button hidden for now */}
+            {/* <WhatsAppButton /> */}
+            
+            {/* Chatbot component - accessible on all pages */}
+            <Chatbot />
+          </div>
+        </ChatbotProvider>
       </AuthProvider>
     </ThemeProvider>
   );
