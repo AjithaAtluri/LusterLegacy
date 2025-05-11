@@ -52,8 +52,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     enabled: !!user?.id
   });
   
+  // Using personalization terminology while keeping the original API endpoint for backward compatibility
   const { data: personalizationRequests } = useQuery({
-    queryKey: ['/api/customization-requests'], // Keep the original API endpoint
+    queryKey: ['/api/customization-requests'], // Original endpoint name preserved for compatibility
     enabled: !!user?.id
   });
   
