@@ -446,8 +446,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         detailedDescription: data.detailedDescription
       }));
       
-      // Convert productTypeId to number if it exists
-      const productTypeId = data.productTypeId ? parseInt(data.productTypeId, 10) : null;
+      // Convert productTypeId to number if it exists, treat "0" as null (no product type)
+      const productTypeId = data.productTypeId && data.productTypeId !== "0" ? parseInt(data.productTypeId, 10) : null;
       
       updateMutation.mutate({
         name: data.name,
@@ -1123,7 +1123,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
                           <SelectItem value="" disabled>Loading product types...</SelectItem>
                         ) : (
                           <>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="0">None</SelectItem>
                             {productTypes.map((type: { id: number, name: string }) => (
                               <SelectItem key={type.id} value={String(type.id)}>
                                 {type.name}
