@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet";
 import ContactSection from "@/components/home/contact-section";
-import { Mail } from "lucide-react";
+import { Mail, Check, UserPlus, Gift, Clock, History, HeartHandshake } from "lucide-react";
 import { COMPANY } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -13,6 +13,9 @@ import { z } from "zod";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/use-auth";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -25,7 +28,9 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -49,6 +54,10 @@ export default function Contact() {
       });
       
       form.reset();
+      
+      if (!user) {
+        setIsSubmitted(true);
+      }
     } catch (error) {
       console.error("Contact form error:", error);
       toast({
@@ -79,152 +88,260 @@ export default function Contact() {
       </div>
       
       <div className="container mx-auto px-4 md:px-8 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          <div>
-            <h2 className="font-playfair text-2xl font-bold text-foreground mb-6">Get In Touch</h2>
-            <p className="font-montserrat text-foreground/80 mb-8">
-              Our team of jewelry experts is ready to assist you with any questions about our collections, custom design process, or special requests. Whether you're looking for a bespoke creation or need guidance on selecting the perfect piece, we're here to help.
-            </p>
-            
-            <div className="space-y-6">
-              <div className="flex">
-                <div className="flex-shrink-0 mr-4">
-                  <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
-                    <Mail className="h-5 w-5 text-background" />
+        {isSubmitted && !user ? (
+          <div className="max-w-3xl mx-auto mb-16">
+            <div className="bg-card rounded-lg shadow-lg p-8">
+              <div className="text-center mb-8">
+                <div className="mb-4 w-20 h-20 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                  <Check className="w-10 h-10" />
+                </div>
+                <h2 className="font-playfair text-2xl font-bold text-foreground mb-2">Message Sent Successfully!</h2>
+                <p className="font-montserrat text-foreground/80">
+                  Thank you for reaching out. Our team will get back to you within 24 hours.
+                </p>
+              </div>
+              
+              <hr className="my-6 border-border" />
+              
+              <div className="mb-8">
+                <h3 className="font-playfair text-xl font-bold text-foreground mb-4 text-center">Create an Account for a Better Experience</h3>
+                <p className="font-montserrat text-center text-foreground/80 mb-6">
+                  Join Luster Legacy today and enjoy these exclusive benefits:
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <History className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <h4 className="font-playfair text-md font-semibold text-foreground">Message History</h4>
+                      <p className="font-montserrat text-sm text-foreground/70">
+                        Keep track of all your previous inquiries and our responses in one place.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Clock className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <h4 className="font-playfair text-md font-semibold text-foreground">Faster Responses</h4>
+                      <p className="font-montserrat text-sm text-foreground/70">
+                        Get priority support and faster responses to all your questions.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <HeartHandshake className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <h4 className="font-playfair text-md font-semibold text-foreground">Personalized Experience</h4>
+                      <p className="font-montserrat text-sm text-foreground/70">
+                        Receive jewelry recommendations based on your preferences and browsing history.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Gift className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <h4 className="font-playfair text-md font-semibold text-foreground">Exclusive Updates</h4>
+                      <p className="font-montserrat text-sm text-foreground/70">
+                        Be the first to know about new collections, special offers, and limited editions.
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-playfair text-lg font-semibold text-foreground mb-1">Email Us</h4>
-                  <p className="font-montserrat text-foreground/80">
-                    <a href={`mailto:${COMPANY.email}`} className="hover:text-primary transition duration-300">
-                      {COMPANY.email}
-                    </a>
-                  </p>
-                  <p className="font-montserrat text-sm text-foreground/60 mt-1">
-                    We usually respond within 24 hours
-                  </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button asChild variant="default" className="flex-1 py-6">
+                  <Link href="/auth?signup=true">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Create an Account
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="flex-1 py-6">
+                  <Link href="/auth">
+                    Sign In
+                  </Link>
+                </Button>
+              </div>
+              
+              <p className="text-center text-sm text-foreground/60 mt-6">
+                Don't worry, you can still browse our collections without an account
+              </p>
+              <div className="flex justify-center mt-4">
+                <Button asChild variant="link" className="text-primary">
+                  <Link href="/">
+                    Return to Homepage
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+            <div>
+              <h2 className="font-playfair text-2xl font-bold text-foreground mb-6">Get In Touch</h2>
+              <p className="font-montserrat text-foreground/80 mb-8">
+                Our team of jewelry experts is ready to assist you with any questions about our collections, custom design process, or special requests. Whether you're looking for a bespoke creation or need guidance on selecting the perfect piece, we're here to help.
+              </p>
+              
+              <div className="space-y-6">
+                <div className="flex">
+                  <div className="flex-shrink-0 mr-4">
+                    <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center">
+                      <Mail className="h-5 w-5 text-background" />
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-playfair text-lg font-semibold text-foreground mb-1">Email Us</h4>
+                    <p className="font-montserrat text-foreground/80">
+                      <a href={`mailto:${COMPANY.email}`} className="hover:text-primary transition duration-300">
+                        {COMPANY.email}
+                      </a>
+                    </p>
+                    <p className="font-montserrat text-sm text-foreground/60 mt-1">
+                      We usually respond within 24 hours
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-10">
+                <h3 className="font-playfair text-xl font-semibold text-foreground mb-6">Follow Us</h3>
+                <div className="flex space-x-6">
+                  <a 
+                    href={COMPANY.social.instagram} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="bg-primary text-background hover:bg-accent transition duration-300 h-12 w-12 rounded-full flex items-center justify-center"
+                    aria-label="Instagram"
+                  >
+                    <i className="fab fa-instagram text-xl"></i>
+                  </a>
+                  <a 
+                    href={COMPANY.social.facebook} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="bg-primary text-background hover:bg-accent transition duration-300 h-12 w-12 rounded-full flex items-center justify-center"
+                    aria-label="Facebook"
+                  >
+                    <i className="fab fa-facebook-f text-xl"></i>
+                  </a>
+                  <a 
+                    href={COMPANY.social.pinterest} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="bg-primary text-background hover:bg-accent transition duration-300 h-12 w-12 rounded-full flex items-center justify-center"
+                    aria-label="Pinterest"
+                  >
+                    <i className="fab fa-pinterest-p text-xl"></i>
+                  </a>
                 </div>
               </div>
             </div>
             
-            <div className="mt-10">
-              <h3 className="font-playfair text-xl font-semibold text-foreground mb-6">Follow Us</h3>
-              <div className="flex space-x-6">
-                <a 
-                  href={COMPANY.social.instagram} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bg-primary text-background hover:bg-accent transition duration-300 h-12 w-12 rounded-full flex items-center justify-center"
-                  aria-label="Instagram"
-                >
-                  <i className="fab fa-instagram text-xl"></i>
-                </a>
-                <a 
-                  href={COMPANY.social.facebook} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bg-primary text-background hover:bg-accent transition duration-300 h-12 w-12 rounded-full flex items-center justify-center"
-                  aria-label="Facebook"
-                >
-                  <i className="fab fa-facebook-f text-xl"></i>
-                </a>
-                <a 
-                  href={COMPANY.social.pinterest} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bg-primary text-background hover:bg-accent transition duration-300 h-12 w-12 rounded-full flex items-center justify-center"
-                  aria-label="Pinterest"
-                >
-                  <i className="fab fa-pinterest-p text-xl"></i>
-                </a>
-              </div>
+            <div>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="bg-card rounded-lg shadow-lg p-8">
+                  <h3 className="font-playfair text-2xl font-semibold text-foreground mb-6">Send Us a Message</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem className="mb-6">
+                        <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                          Your Name*
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="mb-6">
+                        <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                          Email Address*
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                      <FormItem className="mb-6">
+                        <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                          Subject*
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem className="mb-6">
+                        <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                          Message*
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={5}
+                            className="w-full p-3 border border-foreground/20 rounded resize-none font-montserrat text-sm" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-md transition duration-300"
+                  >
+                    {isSubmitting ? "Sending..." : "Send Message"}
+                  </Button>
+                </form>
+              </Form>
             </div>
           </div>
-          
-          <div>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="bg-card rounded-lg shadow-lg p-8">
-                <h3 className="font-playfair text-2xl font-semibold text-foreground mb-6">Send Us a Message</h3>
-                
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="mb-6">
-                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                        Your Name*
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="mb-6">
-                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                        Email Address*
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="subject"
-                  render={({ field }) => (
-                    <FormItem className="mb-6">
-                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                        Subject*
-                      </FormLabel>
-                      <FormControl>
-                        <Input {...field} className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem className="mb-6">
-                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                        Message*
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          rows={5}
-                          className="w-full p-3 border border-foreground/20 rounded resize-none font-montserrat text-sm" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-md transition duration-300"
-                >
-                  {isSubmitting ? "Sending..." : "Send Message"}
-                </Button>
-              </form>
-            </Form>
-          </div>
-        </div>
+        )}
       </div>
     </>
   );
