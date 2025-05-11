@@ -9,7 +9,7 @@ import PersonalizationDetail from "@/components/admin/customization-detail";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 
-export default function AdminCustomizationDetailPage() {
+export default function AdminPersonalizationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
@@ -35,7 +35,7 @@ export default function AdminCustomizationDetailPage() {
 
   if (authLoading || isLoading) {
     return (
-      <AdminLayout>
+      <AdminLayout title="Personalization Request Details">
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
           <p className="mt-4 text-lg">Loading personalization request...</p>
