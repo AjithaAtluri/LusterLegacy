@@ -1,45 +1,57 @@
-import { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "wouter";
 import AdminLayout from "@/components/admin/admin-layout";
 import PersonalizationDetail from "@/components/admin/personalization-detail";
 import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export default function PersonalizationDetailPage() {
-  const [, setLocation] = useLocation();
+export default function AdminPersonalizationDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const [isError, setIsError] = useState(false);
   
-  // Fetch personalization request details
-  const { data, isLoading, isError } = useQuery({
-    queryKey: [`/api/personalization-requests/${id}`],
+  // Fetch personalization request data - keep using original API for backward compatibility
+  const { data: personalization, isLoading, error, refetch } = useQuery({
+    queryKey: [`/api/customization-requests/${id}`],
     queryFn: async () => {
-      const res = await fetch(`/api/personalization-requests/${id}`);
-      if (!res.ok) {
-        if (res.status === 404) {
-          throw new Error("Personalization request not found");
-        }
-        throw new Error("Failed to fetch personalization request details");
+      try {
+        const res = await fetch(`/api/customization-requests/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch personalization request");
+        return res.json();
+      } catch (err) {
+        setIsError(true);
+        throw err;
       }
-      return res.json();
     }
   });
   
-  // Redirect to list page if there's an error
-  useEffect(() => {
-    if (isError) {
-      setLocation("/admin/personalizations");
-    }
-  }, [isError, setLocation]);
+  // Loading state
+  if (isLoading) {
+    return (
+      <AdminLayout title="Personalization Request Detail">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
+  
+  // Error state
+  if (isError || !personalization) {
+    return (
+      <AdminLayout title="Personalization Request Detail">
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <p className="text-destructive">Error loading personalization request details</p>
+          <Button onClick={() => refetch()} variant="outline">Try Again</Button>
+          <Button onClick={() => window.history.back()} variant="ghost">Go Back</Button>
+        </div>
+      </AdminLayout>
+    );
+  }
   
   return (
     <AdminLayout title={`Personalization Request #${id}`}>
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : data ? (
-        <PersonalizationDetail customization={data} />
-      ) : null}
+      <PersonalizationDetail personalization={personalization} />
     </AdminLayout>
   );
 }

@@ -1,40 +1,20 @@
-import { useState } from "react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+import { useState, useRef } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Circle, 
-  MessageSquare, 
-  Clock, 
-  User, 
-  FileText, 
-  Image as ImageIcon, 
-  Send,
-  Upload,
-  DollarSign,
-  PlusCircle
-} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { formatCurrency } from "@/lib/utils";
+import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText, ArrowRight } from "lucide-react";
 
 interface PersonalizationDetailProps {
-  customization: {
+  personalization: {
     id: number;
     fullName: string;
     email: string;
@@ -68,677 +48,571 @@ interface PersonalizationDetailProps {
   };
 }
 
-export default function PersonalizationDetail({ customization }: PersonalizationDetailProps) {
-  const [commentText, setCommentText] = useState("");
-  const [commentImage, setCommentImage] = useState<File | null>(null);
-  const [priceInput, setPriceInput] = useState(
-    customization.quotedPrice?.toString() || ""
-  );
-  const [currencyInput, setCurrencyInput] = useState(
-    customization.currency || "USD"
-  );
-  const [statusInput, setStatusInput] = useState(customization.status);
-  const [isUploading, setIsUploading] = useState(false);
-  
-  const queryClient = useQueryClient();
+export default function PersonalizationDetail({ personalization }: PersonalizationDetailProps) {
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [priceUpdateLoading, setPriceUpdateLoading] = useState(false);
+  const [quotedPrice, setQuotedPrice] = useState(personalization.quotedPrice?.toString() || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Format status for display
-  const formatStatus = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return { label: "Pending", color: "bg-yellow-500 text-white" };
-      case "in_progress":
-        return { label: "In Progress", color: "bg-blue-500 text-white" };
-      case "completed":
-        return { label: "Completed", color: "bg-green-500 text-white" };
-      case "cancelled":
-        return { label: "Cancelled", color: "bg-gray-500 text-white" };
-      case "approved":
-        return { label: "Approved", color: "bg-emerald-500 text-white" };
-      case "rejected":
-        return { label: "Rejected", color: "bg-red-500 text-white" };
-      case "waiting_for_payment":
-        return { label: "Waiting for Payment", color: "bg-purple-500 text-white" };
-      case "in_production":
-        return { label: "In Production", color: "bg-indigo-500 text-white" };
-      case "shipped":
-        return { label: "Shipped", color: "bg-teal-500 text-white" };
-      case "delivered":
-        return { label: "Delivered", color: "bg-green-700 text-white" };
-      default:
-        return { label: status, color: "bg-gray-500 text-white" };
+  // Handle comment submission
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!comment.trim() && !selectedFile) return;
+
+    setIsSubmitting(true);
+    const formData = new FormData();
+    formData.append("content", comment);
+    formData.append("personalizationRequestId", personalization.id.toString());
+    formData.append("isAdmin", "true");
+    
+    if (selectedFile) {
+      formData.append("image", selectedFile);
     }
-  };
 
-  // Add comment mutation
-  const addCommentMutation = useMutation({
-    mutationFn: async ({
-      content,
-      image,
-    }: {
-      content: string;
-      image: File | null;
-    }) => {
-      setIsUploading(true);
-      const formData = new FormData();
-      formData.append("content", content);
-      formData.append("personalizationId", customization.id.toString());
-      if (image) {
-        formData.append("image", image);
-      }
-
-      const res = await fetch("/api/personalization-comments", {
+    try {
+      const response = await fetch("/api/personalization-comments", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to add comment");
-      }
+      if (!response.ok) throw new Error("Failed to submit comment");
 
-      return res.json();
-    },
-    onSuccess: () => {
-      setCommentText("");
-      setCommentImage(null);
-      setIsUploading(false);
-      queryClient.invalidateQueries({
-        queryKey: [`/api/personalization-requests/${customization.id}`],
-      });
       toast({
-        title: "Comment added",
-        description: "Your comment has been added to the personalization request",
+        title: "Comment submitted",
+        description: "Your comment has been added successfully",
       });
-    },
-    onError: (error: Error) => {
-      setIsUploading(false);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
-  // Update status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: async (status: string) => {
-      const res = await apiRequest(
-        "PATCH",
-        `/api/personalization-requests/${customization.id}/status`,
-        { status }
-      );
-      if (!res.ok) {
-        throw new Error("Failed to update status");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [`/api/personalization-requests/${customization.id}`],
-      });
-      toast({
-        title: "Status updated",
-        description: "The personalization request status has been updated",
-      });
-    },
-    onError: (error: Error) => {
+      // Clear form and refresh data
+      setComment("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      
+      // Refresh data using both API endpoints for backward compatibility
+      queryClient.invalidateQueries({ queryKey: ["/api/customization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/customization-requests/${personalization.id}`] });
+      // Also invalidate the personalization endpoints if they exist
+      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${personalization.id}`] });
+    } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to submit comment. Please try again.",
         variant: "destructive",
       });
-    },
-  });
-
-  // Update price mutation
-  const updatePriceMutation = useMutation({
-    mutationFn: async ({
-      price,
-      currency,
-    }: {
-      price: number;
-      currency: string;
-    }) => {
-      const res = await apiRequest(
-        "PATCH",
-        `/api/personalization-requests/${customization.id}/price`,
-        { price, currency }
-      );
-      if (!res.ok) {
-        throw new Error("Failed to update price");
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [`/api/personalization-requests/${customization.id}`],
-      });
-      toast({
-        title: "Price updated",
-        description: "The personalization request price has been updated",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleCommentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim() && !commentImage) return;
-
-    await addCommentMutation.mutate({
-      content: commentText,
-      image: commentImage,
-    });
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setCommentImage(e.target.files[0]);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleUpdateStatus = async () => {
-    await updateStatusMutation.mutate(statusInput);
+  // Handle status update
+  const updateStatus = async (newStatus: string) => {
+    setStatusUpdateLoading(true);
+    try {
+      // Keep using the original API endpoint for backward compatibility
+      const response = await apiRequest("PATCH", `/api/personalization-requests/${personalization.id}`, {
+        status: newStatus,
+      });
+
+      if (!response.ok) throw new Error("Failed to update status");
+
+      toast({
+        title: "Status updated",
+        description: `Request status has been updated to ${newStatus}`,
+      });
+
+      // Refresh data using both API endpoints for backward compatibility
+      queryClient.invalidateQueries({ queryKey: ["/api/customization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/customization-requests/${personalization.id}`] });
+      // Also invalidate the personalization endpoints if they exist
+      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${personalization.id}`] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setStatusUpdateLoading(false);
+    }
   };
 
-  const handleUpdatePrice = async () => {
-    const price = parseFloat(priceInput);
-    if (isNaN(price)) {
+  // Handle price update
+  const updatePrice = async () => {
+    if (!quotedPrice.trim()) {
       toast({
-        title: "Invalid price",
-        description: "Please enter a valid number for the price",
+        title: "Error",
+        description: "Please enter a valid price",
         variant: "destructive",
       });
       return;
     }
-    
-    await updatePriceMutation.mutate({
-      price,
-      currency: currencyInput,
-    });
+
+    setPriceUpdateLoading(true);
+    try {
+      const price = parseFloat(quotedPrice);
+      // Keep using the original API endpoint for backward compatibility
+      const response = await apiRequest("PATCH", `/api/personalization-requests/${personalization.id}`, {
+        quotedPrice: price,
+      });
+
+      if (!response.ok) throw new Error("Failed to update price");
+
+      toast({
+        title: "Price updated",
+        description: `Quoted price has been updated to ${formatCurrency(price, personalization.currency || "USD")}`,
+      });
+
+      // Refresh data using both API endpoints for backward compatibility
+      queryClient.invalidateQueries({ queryKey: ["/api/customization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/customization-requests/${personalization.id}`] });
+      // Also invalidate the personalization endpoints if they exist
+      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${personalization.id}`] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update price. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPriceUpdateLoading(false);
+    }
   };
+
+  // Handle file change for comment attachment
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  // Open image dialog
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setShowImageDialog(true);
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  // Get personalization type badge label and color
+  const getPersonalizationTypeDisplay = () => {
+    switch(personalization.personalizationType) {
+      case "metal_and_stone":
+        return { label: "Metal & Stone", color: "bg-amber-500" };
+      case "metal_only":
+        return { label: "Metal Only", color: "bg-yellow-500" };
+      case "stone_only":
+        return { label: "Stone Only", color: "bg-purple-500" };
+      default:
+        return { label: "Other", color: "bg-slate-500" };
+    }
+  };
+
+  const typeDisplay = getPersonalizationTypeDisplay();
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Customer and Request Details */}
-        <Card className="md:w-1/3">
+      {/* Header Section */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
+        <div>
+          <h2 className="text-2xl font-bold">Personalization Request #{personalization.id}</h2>
+          <p className="text-muted-foreground">
+            Submitted on {formatDate(personalization.createdAt)}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge 
+              className={
+                personalization.status === "completed" ? "bg-green-500" :
+                personalization.status === "in_progress" ? "bg-blue-500" :
+                personalization.status === "quoted" ? "bg-purple-500" :
+                personalization.status === "cancelled" ? "bg-destructive" :
+                "bg-yellow-500"
+              }
+            >
+              {personalization.status.replace("_", " ").toUpperCase()}
+            </Badge>
+            
+            <Badge className={typeDisplay.color}>
+              {typeDisplay.label}
+            </Badge>
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      {/* Customer & Product Details */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
           <CardHeader>
             <CardTitle>Customer Information</CardTitle>
-            <CardDescription>
-              Personalization request #{customization.id}
-            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-muted-foreground">Full Name</Label>
-              <p className="font-medium">{customization.fullName}</p>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="font-medium">Name:</div>
+              <div className="col-span-2">{personalization.fullName}</div>
+              
+              <div className="font-medium">Email:</div>
+              <div className="col-span-2">{personalization.email}</div>
+              
+              {personalization.phone && (
+                <>
+                  <div className="font-medium">Phone:</div>
+                  <div className="col-span-2">{personalization.phone}</div>
+                </>
+              )}
+              
+              {personalization.country && (
+                <>
+                  <div className="font-medium">Country:</div>
+                  <div className="col-span-2">{personalization.country}</div>
+                </>
+              )}
             </div>
-            <div>
-              <Label className="text-muted-foreground">Email</Label>
-              <p className="font-medium">{customization.email}</p>
-            </div>
-            {customization.phone && (
-              <div>
-                <Label className="text-muted-foreground">Phone</Label>
-                <p className="font-medium">{customization.phone}</p>
-              </div>
-            )}
-            {customization.country && (
-              <div>
-                <Label className="text-muted-foreground">Country</Label>
-                <p className="font-medium">{customization.country}</p>
-              </div>
-            )}
-            <div>
-              <Label className="text-muted-foreground">Request Date</Label>
-              <p className="font-medium">
-                {new Date(customization.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {formatDistanceToNow(new Date(customization.createdAt), {
-                  addSuffix: true,
-                })}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Product Details */}
-        <Card className="md:w-2/3">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <div>
-              <CardTitle>Product Details</CardTitle>
-              <CardDescription>
-                Information about the product being personalized
-              </CardDescription>
-            </div>
-            <Badge className={formatStatus(customization.status).color}>
-              {formatStatus(customization.status).label}
-            </Badge>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="sm:w-1/3 h-48 bg-muted rounded-md overflow-hidden">
-                {customization.productImageUrl ? (
-                  <img
-                    src={customization.productImageUrl}
-                    alt={customization.productName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : customization.imageUrls && customization.imageUrls.length > 0 ? (
-                  <img
-                    src={customization.imageUrls[0]}
-                    alt="Personalization request"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    <ImageIcon className="h-12 w-12 opacity-30" />
-                  </div>
-                )}
-              </div>
-              <div className="sm:w-2/3 space-y-3">
-                <div>
-                  <Label className="text-muted-foreground">Product Name</Label>
-                  <p className="font-medium text-lg">{customization.productName}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-muted-foreground">Original Metal</Label>
-                    <p className="font-medium">{customization.originalMetalType}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Requested Metal</Label>
-                    <p className="font-medium">{customization.requestedMetalType || customization.preferredMetal}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Original Stone</Label>
-                    <p className="font-medium">{customization.originalStoneType}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Requested Stone</Label>
-                    <p className="font-medium">{customization.requestedStoneType || customization.preferredStones.join(", ")}</p>
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Personalization Type</Label>
-                  <p className="font-medium capitalize">{customization.personalizationType.replace(/_/g, " ")}</p>
-                </div>
-              </div>
-            </div>
-            <div>
-              <Label className="text-muted-foreground">Personalization Details</Label>
-              <p className="mt-1 whitespace-pre-line">{customization.personalizationDetails}</p>
-            </div>
-            {customization.additionalNotes && (
-              <div>
-                <Label className="text-muted-foreground">Additional Notes</Label>
-                <p className="mt-1 whitespace-pre-line">{customization.additionalNotes}</p>
+            
+            {personalization.personalizationDetails && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Additional Notes:</h4>
+                <p className="text-sm whitespace-pre-wrap">{personalization.personalizationDetails}</p>
               </div>
             )}
           </CardContent>
         </Card>
-      </div>
-
-      {/* Images Section */}
-      {customization.imageUrls && customization.imageUrls.length > 0 && (
+        
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Reference Images</CardTitle>
-            <CardDescription>
-              Images provided by the customer for the personalization request
-            </CardDescription>
+          <CardHeader>
+            <CardTitle>Personalization Details</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {customization.imageUrls.map((url, index) => (
-                <div
-                  key={index}
-                  className="aspect-square rounded-md overflow-hidden border"
-                >
-                  <img
-                    src={url}
-                    alt={`Reference ${index + 1}`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                    onClick={() => window.open(url, "_blank")}
+          <CardContent className="space-y-3">
+            {/* Add product image at the top */}
+            <div className="mb-4 border rounded-md overflow-hidden relative">
+              {/* Display product image if available */}
+              {personalization.productId && (
+                <div className="aspect-square w-full h-64 relative">
+                  <img 
+                    src={personalization.productImageUrl || `/api/products/${personalization.productId}/image`} 
+                    alt={personalization.productName}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/src/assets/product-placeholder.png";
+                    }}
                   />
+                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                    Product ID: {personalization.productId}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Status and Actions */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Price Quote */}
-        <Card className="md:w-1/2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Price Quote
-            </CardTitle>
-            <CardDescription>
-              Set or update the price for this personalization request
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="price">Price Amount</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={priceInput}
-                  onChange={(e) => setPriceInput(e.target.value)}
-                  placeholder="Enter price amount"
-                />
-              </div>
-              <div>
-                <Label htmlFor="currency">Currency</Label>
-                <select
-                  id="currency"
-                  className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={currencyInput}
-                  onChange={(e) => setCurrencyInput(e.target.value)}
-                >
-                  <option value="USD">USD ($)</option>
-                  <option value="INR">INR (₹)</option>
-                </select>
-              </div>
-            </div>
-            <Button
-              onClick={handleUpdatePrice}
-              disabled={updatePriceMutation.isPending}
-            >
-              {updatePriceMutation.isPending ? "Updating..." : "Update Price"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Status Update */}
-        <Card className="md:w-1/2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Circle className="h-5 w-5" />
-              Status Update
-            </CardTitle>
-            <CardDescription>
-              Update the current status of this personalization request
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="status">Current Status</Label>
-              <select
-                id="status"
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={statusInput}
-                onChange={(e) => setStatusInput(e.target.value)}
-              >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="waiting_for_payment">Waiting for Payment</option>
-                <option value="in_production">In Production</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-              </select>
-            </div>
-            <Button
-              onClick={handleUpdateStatus}
-              disabled={updateStatusMutation.isPending}
-            >
-              {updateStatusMutation.isPending ? "Updating..." : "Update Status"}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Communication */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            Communication
-          </CardTitle>
-          <CardDescription>
-            Messages and updates regarding this personalization request
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="comments" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="comments">Comments ({customization.comments?.length || 0})</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            </TabsList>
             
-            <TabsContent value="comments">
-              <div className="space-y-6">
-                {/* Comment List */}
-                <ScrollArea className="h-96 pr-4">
-                  {customization.comments && customization.comments.length > 0 ? (
-                    <div className="space-y-4">
-                      {customization.comments.map((comment) => (
-                        <div
-                          key={comment.id}
-                          className={`flex gap-4 ${
-                            comment.isAdmin ? "justify-start" : "justify-end"
-                          }`}
-                        >
-                          <div
-                            className={`max-w-[80%] space-y-2 ${
-                              comment.isAdmin
-                                ? "order-2"
-                                : "order-1 text-right"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              {comment.isAdmin ? (
-                                <>
-                                  <span className="font-medium text-sm">
-                                    Admin
-                                  </span>
-                                  <Badge variant="outline" className="text-xs">
-                                    Staff
-                                  </Badge>
-                                </>
-                              ) : (
-                                <span className="ml-auto font-medium text-sm">
-                                  {customization.fullName}
-                                </span>
-                              )}
-                            </div>
-                            
-                            <div
-                              className={`rounded-lg p-3 ${
-                                comment.isAdmin
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted"
-                              }`}
-                            >
-                              <p className="whitespace-pre-line">{comment.content}</p>
-                            </div>
-                            
-                            {comment.imageUrl && (
-                              <div className="mt-2">
-                                <img
-                                  src={comment.imageUrl}
-                                  alt="Comment attachment"
-                                  className="rounded-md max-h-60 object-contain"
-                                  onClick={() => window.open(comment.imageUrl, "_blank")}
-                                />
-                              </div>
-                            )}
-                            
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3 mr-1" />
-                              <span>
-                                {formatDistanceToNow(
-                                  new Date(comment.createdAt),
-                                  { addSuffix: true }
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <Avatar
-                            className={`h-8 w-8 ${
-                              comment.isAdmin ? "order-1" : "order-2"
-                            }`}
-                          >
-                            <AvatarFallback>
-                              {comment.isAdmin ? "A" : customization.fullName.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No comments yet. Start the conversation.
-                    </div>
-                  )}
-                </ScrollArea>
-                
-                {/* Add Comment Form */}
-                <form onSubmit={handleCommentSubmit} className="space-y-3">
-                  <Textarea
-                    placeholder="Type your message here..."
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    className="min-h-[100px]"
-                  />
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                      {commentImage && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                          <ImageIcon className="h-4 w-4" />
-                          <span className="truncate">{commentImage.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 p-0"
-                            onClick={() => setCommentImage(null)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Label
-                        htmlFor="comment-image"
-                        className="cursor-pointer text-muted-foreground hover:text-foreground"
-                      >
-                        <Upload className="h-5 w-5" />
-                        <span className="sr-only">Upload image</span>
-                      </Label>
-                      <Input
-                        id="comment-image"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
+            <div className="grid grid-cols-3 gap-2">
+              <div className="font-medium">Product:</div>
+              <div className="col-span-2 font-semibold text-primary">{personalization.productName}</div>
+              
+              <div className="font-medium">Original Metal:</div>
+              <div className="col-span-2 flex items-center">
+                <span>{personalization.originalMetalType || "Not specified"}</span>
+                <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                <span className="text-primary font-medium">{personalization.preferredMetal || personalization.requestedMetalType || "Not specified"}</span>
+              </div>
+              
+              <div className="font-medium">Original Stone:</div>
+              <div className="col-span-2 flex items-center">
+                <span>{personalization.originalStoneType || "Not specified"}</span>
+                <ArrowRight className="mx-2 h-4 w-4 text-muted-foreground" />
+                <span className="text-primary font-medium">
+                  {personalization.preferredStones?.length ? 
+                    personalization.preferredStones.join(', ') : 
+                    (personalization.requestedStoneType || "Not specified")}
+                </span>
+              </div>
+              
+              {personalization.quotedPrice && personalization.currency && (
+                <>
+                  <div className="font-medium">Quoted Price:</div>
+                  <div className="col-span-2 font-bold">
+                    {formatCurrency(personalization.quotedPrice, personalization.currency)}
+                  </div>
+                </>
+              )}
+            </div>
+            
+            {/* Display Reference Images */}
+            {personalization.imageUrls && personalization.imageUrls.length > 0 && (
+              <div className="pt-2">
+                <h4 className="font-medium mb-1">Reference Images:</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {personalization.imageUrls.map((url, index) => (
+                    <div 
+                      key={index}
+                      className="relative aspect-video rounded-md overflow-hidden border cursor-pointer"
+                      onClick={() => handleImageClick(url)}
+                    >
+                      <img 
+                        src={url} 
+                        alt={`Reference ${index + 1}`} 
+                        className="object-cover w-full h-full"
                       />
-                      
-                      <Button
-                        type="submit"
-                        className="gap-2"
-                        disabled={
-                          (!commentText.trim() && !commentImage) ||
-                          addCommentMutation.isPending
-                        }
-                      >
-                        <Send className="h-4 w-4" />
-                        Send Message
-                      </Button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="timeline">
-              <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:h-[calc(100%-16px)] before:w-px before:bg-border">
-                {/* Creation */}
-                <div className="relative">
-                  <div className="absolute left-[-24px] top-0 rounded-full bg-primary p-1">
-                    <PlusCircle className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="font-medium">Request Created</div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(customization.createdAt).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
-                      )}
-                    </div>
-                    <p className="text-sm">
-                      {customization.fullName} submitted a personalization request for {customization.productName}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Status updates - these would be populated from a proper history in a real app */}
-                <div className="relative">
-                  <div className="absolute left-[-24px] top-0 rounded-full bg-blue-500 p-1">
-                    <Circle className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="font-medium">Current Status: {formatStatus(customization.status).label}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Status last updated on (would be from history in a real app)
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Price quote - if exists */}
-                {customization.quotedPrice && (
-                  <div className="relative">
-                    <div className="absolute left-[-24px] top-0 rounded-full bg-green-500 p-1">
-                      <DollarSign className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="font-medium">Price Quote Provided</div>
-                      <div className="text-sm">
-                        A price of {customization.currency === 'USD' ? '$' : '₹'}
-                        {customization.quotedPrice.toLocaleString()} has been quoted for this personalization.
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Eye className="w-6 h-6 text-white" />
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* View Product Details Button */}
+            {personalization.productId && (
+              <div className="pt-4">
+                <Button asChild variant="outline">
+                  <a href={`/product/${personalization.productId}`} target="_blank" rel="noopener noreferrer">
+                    <Eye className="mr-2 h-4 w-4" /> View Product Details
+                  </a>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Admin Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="status">Update Status</Label>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={personalization.status === "pending" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("pending")}
+                  disabled={statusUpdateLoading || personalization.status === "pending"}
+                >
+                  Pending
+                </Button>
+                <Button
+                  variant={personalization.status === "in_progress" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("in_progress")}
+                  disabled={statusUpdateLoading || personalization.status === "in_progress"}
+                >
+                  In Progress
+                </Button>
+                <Button
+                  variant={personalization.status === "quoted" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("quoted")}
+                  disabled={statusUpdateLoading || personalization.status === "quoted"}
+                >
+                  Quoted
+                </Button>
+                <Button
+                  variant={personalization.status === "completed" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("completed")}
+                  disabled={statusUpdateLoading || personalization.status === "completed"}
+                >
+                  Completed
+                </Button>
+                <Button
+                  variant={personalization.status === "cancelled" ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={() => updateStatus("cancelled")}
+                  disabled={statusUpdateLoading || personalization.status === "cancelled"}
+                >
+                  Cancelled
+                </Button>
+                
+                {statusUpdateLoading && (
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2 text-muted-foreground" />
+                    <span className="text-muted-foreground text-sm">Updating...</span>
                   </div>
                 )}
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="quotedPrice">Update Quoted Price (USD)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="quotedPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={quotedPrice}
+                  onChange={(e) => setQuotedPrice(e.target.value)}
+                  placeholder="Enter quoted price"
+                  className="w-full"
+                />
+                <Button 
+                  onClick={updatePrice} 
+                  disabled={priceUpdateLoading || !quotedPrice.trim()}
+                >
+                  {priceUpdateLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Update"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
+      
+      {/* Communication History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Communication History</CardTitle>
+          <CardDescription>
+            Messages between customer and admin
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4 max-h-96 overflow-y-auto p-1">
+            {personalization.comments && personalization.comments.length > 0 ? (
+              personalization.comments.map((comment) => (
+                <div 
+                  key={comment.id} 
+                  className={`p-3 rounded-lg ${
+                    comment.isAdmin 
+                      ? "bg-primary/10 ml-6" 
+                      : "bg-muted mr-6"
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-sm font-medium">
+                      {comment.isAdmin ? "Admin" : personalization.fullName}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(comment.createdAt)}
+                    </span>
+                  </div>
+                  
+                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                  
+                  {comment.imageUrl && (
+                    <div 
+                      className="mt-2 relative aspect-video rounded-md overflow-hidden border cursor-pointer"
+                      onClick={() => handleImageClick(comment.imageUrl!)}
+                    >
+                      <img 
+                        src={comment.imageUrl} 
+                        alt="Comment attachment" 
+                        className="object-contain w-full h-full max-h-48"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Eye className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                <MessageCircle className="mx-auto h-8 w-8 mb-2" />
+                <p>No communication history yet.</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Comment form */}
+          <form onSubmit={handleCommentSubmit} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="comment">Add Comment</Label>
+              <Textarea
+                id="comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Enter your message to the customer..."
+                className="min-h-[100px]"
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="attachment">Attachment (optional)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="attachment"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="w-full"
+                />
+                {selectedFile && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {selectedFile && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                </p>
+              )}
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      
+      {/* Image viewer dialog */}
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Image View</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center items-center">
+            <img 
+              src={selectedImage} 
+              alt="Enlarged view" 
+              className="max-w-full max-h-[70vh] object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
