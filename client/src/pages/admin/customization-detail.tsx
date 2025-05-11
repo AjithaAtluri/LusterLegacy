@@ -46,15 +46,15 @@ export default function AdminPersonalizationDetailPage() {
 
   if (error) {
     return (
-      <AdminLayout>
+      <AdminLayout title="Personalization Request Details">
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <div className="text-center space-y-4">
             <h2 className="text-2xl font-bold text-destructive">Error Loading Request</h2>
             <p className="text-muted-foreground">
-              {error instanceof Error ? error.message : "Failed to load customization request"}
+              {error instanceof Error ? error.message : "Failed to load personalization request"}
             </p>
             <Button onClick={() => navigate("/admin/customizations")}>
-              Back to Customization Requests
+              Back to Personalization Requests
             </Button>
           </div>
         </div>
@@ -64,15 +64,15 @@ export default function AdminPersonalizationDetailPage() {
 
   if (!customization) {
     return (
-      <AdminLayout>
+      <AdminLayout title="Personalization Request Details">
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold">Customization Request Not Found</h2>
+            <h2 className="text-2xl font-bold">Personalization Request Not Found</h2>
             <p className="text-muted-foreground">
-              The requested customization request could not be found
+              The requested personalization request could not be found
             </p>
             <Button onClick={() => navigate("/admin/customizations")}>
-              Back to Customization Requests
+              Back to Personalization Requests
             </Button>
           </div>
         </div>
@@ -81,14 +81,14 @@ export default function AdminPersonalizationDetailPage() {
   }
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Personalization Request Details">
       <div className="container mx-auto py-8">
         <Button
           onClick={() => navigate("/admin/customizations")}
           variant="outline"
           className="mb-6"
         >
-          ← Back to Customization Requests
+          ← Back to Personalization Requests
         </Button>
         
         <PersonalizationDetail customization={customization} />
