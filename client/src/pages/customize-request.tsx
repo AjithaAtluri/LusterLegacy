@@ -406,7 +406,7 @@ export default function CustomizeRequest() {
     }
   }, [user, product, metalTypes, stoneTypes]);
   
-  // Update estimated price based on selected customization options
+  // Update estimated price based on selected personalization options
   useEffect(() => {
     if (product) {
       try {
@@ -421,12 +421,12 @@ export default function CustomizeRequest() {
         const additionalData = details.additionalData || {};
         const aiInputs = additionalData.aiInputs || {};
         
-        // Get stone weights from the product (these don't change in customization)
+        // Get stone weights from the product (these don't change in personalization)
         const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
         const secondaryStoneWeight = aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
         const otherStoneWeight = aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
         
-        // Get metal weight (this doesn't change in customization)
+        // Get metal weight (this doesn't change in personalization)
         const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
         
         // Get original metal and stone types from the product
@@ -699,7 +699,7 @@ export default function CustomizeRequest() {
   return (
     <>
       <Helmet>
-        <title>Customize {product.name} | Luster Legacy</title>
+        <title>Personalize {product.name} | Luster Legacy</title>
       </Helmet>
       
       <div className="container mx-auto px-4 py-8">
@@ -708,9 +708,9 @@ export default function CustomizeRequest() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Product
           </Button>
-          <h1 className="font-playfair text-3xl font-bold mb-2">Request Customization</h1>
+          <h1 className="font-playfair text-3xl font-bold mb-2">Request Personalization</h1>
           <p className="text-foreground/70 mb-6">
-            Fill out the form below to request customization for {product.name}
+            Fill out the form below to request personalization for {product.name}
           </p>
         </div>
         
@@ -772,12 +772,12 @@ export default function CustomizeRequest() {
               )}
               
               <p className="mt-4 text-sm text-foreground/60">
-                * Final price may vary based on customization requests
+                * Final price may vary based on personalization requests
               </p>
             </CardContent>
           </Card>
           
-          {/* Customization Request Form */}
+          {/* Personalization Request Form */}
           <div className="md:col-span-2">
             <Card>
               <CardContent className="p-6">
