@@ -122,7 +122,7 @@ export default function CustomizeRequest() {
       additionalNotes?: string;
       imageUrls?: string[];
     }) => {
-      const response = await apiRequest("POST", "/api/customization-requests", formData);
+      const response = await apiRequest("POST", "/api/personalization-requests", formData);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || "Failed to submit personalization request");
@@ -183,13 +183,13 @@ export default function CustomizeRequest() {
         };
         
         // Save the form data to session storage
-        sessionStorage.setItem('customizationFormData', JSON.stringify(formData));
-        console.log("Customization form data saved to session storage");
+        sessionStorage.setItem('personalizationFormData', JSON.stringify(formData));
+        console.log("Personalization form data saved to session storage");
         
         // Toast notification to inform user
         toast({
           title: "Login required",
-          description: "Your customization details have been saved. Please log in or create an account to continue.",
+          description: "Your personalization details have been saved. Please log in or create an account to continue.",
         });
         
         // Redirect to auth page with detailed return URL
@@ -252,7 +252,7 @@ export default function CustomizeRequest() {
         setRequestedStoneType(originalStoneType);
       }
     } catch (error) {
-      console.error("Error preparing customization data:", error);
+      console.error("Error preparing personalization data:", error);
     }
     
     personalizationMutation.mutate({
@@ -266,7 +266,7 @@ export default function CustomizeRequest() {
       requestedMetalType,
       originalStoneType,
       requestedStoneType,
-      additionalNotes: customizationDetails, // Schema expects additionalNotes
+      additionalNotes: personalizationDetails, // Schema expects additionalNotes
       imageUrls: [] // Required by schema
     });
   };
@@ -274,7 +274,7 @@ export default function CustomizeRequest() {
   // Restore form data from session storage or pre-fill with user data
   useEffect(() => {
     // First, check for saved form data in session storage
-    const savedFormData = sessionStorage.getItem('customizationFormData');
+    const savedFormData = sessionStorage.getItem('personalizationFormData');
     
     if (savedFormData && user) {
       try {
