@@ -154,10 +154,10 @@ export default function CustomizeRequest() {
     e.preventDefault();
     
     // Validate form fields
-    if (!name || !email || !phone || !customizationDetails) {
+    if (!name || !email || !phone || !personalizationDetails) {
       toast({
         title: "Required Fields Missing",
-        description: "Please fill in all required fields (name, email, phone, and customization details).",
+        description: "Please fill in all required fields (name, email, phone, and personalization details).",
         variant: "destructive",
       });
       return;
@@ -172,7 +172,7 @@ export default function CustomizeRequest() {
           name,
           email,
           phone,
-          customizationDetails,
+          personalizationDetails,
           preferredBudget,
           timeline,
           metalTypeId,
@@ -255,7 +255,7 @@ export default function CustomizeRequest() {
       console.error("Error preparing customization data:", error);
     }
     
-    customizationMutation.mutate({
+    personalizationMutation.mutate({
       userId: user?.id,
       productId: Number(id),
       fullName: name, // Schema expects fullName, not name
@@ -1000,9 +1000,9 @@ export default function CustomizeRequest() {
                     <Button 
                       type="submit" 
                       className="bg-primary hover:bg-primary/90"
-                      disabled={customizationMutation.isPending}
+                      disabled={personalizationMutation.isPending}
                     >
-                      {customizationMutation.isPending ? (
+                      {personalizationMutation.isPending ? (
                         <span className="flex items-center">
                           <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
