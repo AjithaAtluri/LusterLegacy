@@ -126,7 +126,7 @@ export default function AdminDashboard() {
   
   // Extract data from combined endpoint or separate queries
   const quoteRequests = dashboardData?.quoteRequests;
-  const customizationRequests = dashboardData?.customizationRequests;
+  const personalizationRequests = dashboardData?.customizationRequests; // Using old API endpoint but with updated variable name
   const designs = dashboardData?.designs;
   const products = dashboardData?.products;
   
@@ -141,9 +141,9 @@ export default function AdminDashboard() {
     refetchOnWindowFocus: false
   });
   
-  const { isLoading: isLoadingCustomizations } = useQuery({
-    queryKey: ['/api/customization-requests'],
-    enabled: !dashboardData?.customizationRequests,
+  const { isLoading: isLoadingPersonalizations } = useQuery({
+    queryKey: ['/api/customization-requests'], // Keep the old API endpoint
+    enabled: !dashboardData?.customizationRequests, // Keep the old property name here for API compatibility
     staleTime: 30000,
     refetchOnWindowFocus: false
   });
@@ -165,8 +165,8 @@ export default function AdminDashboard() {
   // Calculate request statistics
   const calculateRequestStats = () => {
     return {
-      pendingCustomizationRequests: Array.isArray(customizationRequests) ? 
-        customizationRequests.filter((req: any) => req.status === "pending").length : 0,
+      pendingPersonalizationRequests: Array.isArray(personalizationRequests) ? 
+        personalizationRequests.filter((req: any) => req.status === "pending").length : 0,
       pendingQuoteRequests: Array.isArray(quoteRequests) ? 
         quoteRequests.filter((req: any) => req.status === "pending").length : 0,
     };
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
   });
   
   // Loading state - also include the dashboard data loading state
-  const isLoading = isLoadingDashboard || isLoadingQuotes || isLoadingCustomizations || isLoadingDesigns || isLoadingProducts;
+  const isLoading = isLoadingDashboard || isLoadingQuotes || isLoadingPersonalizations || isLoadingDesigns || isLoadingProducts;
   
   // Add a timeout to prevent excessive re-rendering in production
   const [showLoading, setShowLoading] = useState(isLoading);
@@ -324,15 +324,15 @@ export default function AdminDashboard() {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Customization Requests</CardTitle>
+              <CardTitle className="text-sm font-medium">Product Personalization Requests</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <Link 
-                href="/admin/customizations" 
+                href="/admin/personalizations" 
                 className="block hover:opacity-75 transition-opacity cursor-pointer"
               >
-                <div className="text-2xl font-bold">{requestStats.pendingCustomizationRequests || 0}</div>
+                <div className="text-2xl font-bold">{requestStats.pendingPersonalizationRequests || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   <span className="text-orange-500">Need response</span>
                 </p>
