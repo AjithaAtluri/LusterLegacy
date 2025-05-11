@@ -38,6 +38,7 @@ import { generateContent } from "./ai-service";
 import { generateJewelryContent } from "./openai-content-generator";
 import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
+import { generateChatbotResponse } from "./chatbot-service";
 import { generateAITestimonial } from "./openai-service";
 // We don't import processImageForTestimonial because it fails with local image paths
 import { getGoldPrice, fetchGoldPrice } from "./services/gold-price-service";
