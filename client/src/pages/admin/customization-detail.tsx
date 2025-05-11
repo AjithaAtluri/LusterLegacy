@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import AdminLayout from "@/components/admin/admin-layout";
-import CustomizationDetail from "@/components/admin/customization-detail";
+import PersonalizationDetail from "@/components/admin/customization-detail";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 
@@ -27,7 +27,7 @@ export default function AdminCustomizationDetailPage() {
     }
   }, [user, authLoading, navigate, toast]);
 
-  // Fetch customization request
+  // Fetch personalization request
   const { data: customization, isLoading, error } = useQuery({
     queryKey: [`/api/customization-requests/${id}`],
     enabled: !!id && !!user?.role?.includes("admin"),
@@ -38,7 +38,7 @@ export default function AdminCustomizationDetailPage() {
       <AdminLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="mt-4 text-lg">Loading customization request...</p>
+          <p className="mt-4 text-lg">Loading personalization request...</p>
         </div>
       </AdminLayout>
     );
@@ -91,7 +91,7 @@ export default function AdminCustomizationDetailPage() {
           ← Back to Customization Requests
         </Button>
         
-        <CustomizationDetail customization={customization} />
+        <PersonalizationDetail customization={customization} />
       </div>
     </AdminLayout>
   );

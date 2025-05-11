@@ -128,7 +128,7 @@ export default function PersonalizationsPage() {
               <ScrollArea className="h-[calc(100vh-280px)]">
                 <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                   {filteredRequests.map((request: CustomizationRequest) => (
-                    <CustomizationRequestCard key={request.id} request={request} />
+                    <PersonalizationRequestCard key={request.id} request={request} />
                   ))}
                 </div>
               </ScrollArea>
@@ -140,11 +140,11 @@ export default function PersonalizationsPage() {
   );
 }
 
-interface CustomizationRequestCardProps {
+interface PersonalizationRequestCardProps {
   request: CustomizationRequest;
 }
 
-function CustomizationRequestCard({ request }: CustomizationRequestCardProps) {
+function PersonalizationRequestCard({ request }: PersonalizationRequestCardProps) {
   // Format the date
   const formattedDate = request.createdAt 
     ? formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })
@@ -195,7 +195,7 @@ function CustomizationRequestCard({ request }: CustomizationRequestCardProps) {
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
             <div className="text-sm text-muted-foreground">Product:</div>
             <div className="text-sm">{request.productName}</div>
-            <div className="text-sm text-muted-foreground">Customization:</div>
+            <div className="text-sm text-muted-foreground">Personalization:</div>
             <div className="text-sm">{request.customizationType}</div>
           </div>
         </div>
