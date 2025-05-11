@@ -108,11 +108,11 @@ export default function HeroSection() {
             </Button>
             <Button 
               asChild
-              className="font-montserrat font-medium bg-transparent text-white px-6 py-3 md:px-8 md:py-4 rounded-none border-2 border-primary/70 hover:bg-primary/5 hover:text-white hover:border-primary transition duration-300 h-auto group shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+              className="font-montserrat font-medium bg-white text-primary px-6 py-3 md:px-8 md:py-4 rounded-none border-2 border-primary/70 hover:bg-white/90 transition duration-300 h-auto group shadow-[0_0_15px_rgba(212,175,55,0.2)]"
             >
               <Link href="/custom-design" className="flex items-center">
                 <span>Create Custom Design</span>
-                <span className="ml-2 text-white">✦</span>
+                <span className="ml-2 text-primary">✦</span>
               </Link>
             </Button>
           </div>
@@ -126,8 +126,8 @@ export default function HeroSection() {
       {/* Scroll indicator with gold accents - only shows after image loads */}
       <div className={`absolute bottom-6 left-0 right-0 flex justify-center z-20 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <a href="#collections" className="flex flex-col items-center group">
-          <span className="text-xs text-pearl/70 uppercase tracking-widest mb-2 font-montserrat group-hover:text-primary transition-colors duration-300">Discover</span>
-          <div className="relative w-6 h-10 border-2 border-pearl/30 rounded-full flex justify-center p-1">
+          <span className="text-xs bg-white/90 px-3 py-1 rounded-full text-primary uppercase tracking-widest mb-2 font-montserrat font-semibold shadow-lg group-hover:bg-white transition-colors duration-300">Discover</span>
+          <div className="relative w-6 h-10 border-2 border-white/50 rounded-full flex justify-center p-1 bg-black/20 backdrop-blur-sm">
             <div className="w-1 h-2 bg-primary rounded-full animate-scroll"></div>
           </div>
         </a>
