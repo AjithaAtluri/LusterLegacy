@@ -329,12 +329,57 @@ export class DatabaseStorage implements IStorage {
 
   // Stone Type methods
   async getStoneType(id: number): Promise<StoneType | undefined> {
-    const [stoneType] = await db.select().from(stoneTypes).where(eq(stoneTypes.id, id));
-    return stoneType;
+    try {
+      const [stoneType] = await db.select().from(stoneTypes).where(eq(stoneTypes.id, id));
+      
+      if (!stoneType) return undefined;
+      
+      // Map to StoneType format with correct property names
+      return {
+        id: stoneType.id,
+        name: stoneType.name,
+        description: stoneType.description,
+        priceModifier: stoneType.price_modifier,
+        displayOrder: stoneType.display_order,
+        isActive: stoneType.is_active,
+        color: stoneType.color,
+        imageUrl: stoneType.image_url,
+        category: stoneType.category,
+        stoneForm: stoneType.stone_form,
+        quality: stoneType.quality,
+        size: stoneType.size,
+        createdAt: stoneType.created_at
+      };
+    } catch (error) {
+      console.error(`Error fetching stone type with ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async getAllStoneTypes(): Promise<StoneType[]> {
-    return db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
+    try {
+      const stoneTypesList = await db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
+      
+      // Map each stone type to the correct format
+      return stoneTypesList.map(stone => ({
+        id: stone.id,
+        name: stone.name,
+        description: stone.description,
+        priceModifier: stone.price_modifier,
+        displayOrder: stone.display_order,
+        isActive: stone.is_active,
+        color: stone.color,
+        imageUrl: stone.image_url,
+        category: stone.category,
+        stoneForm: stone.stone_form,
+        quality: stone.quality,
+        size: stone.size,
+        createdAt: stone.created_at
+      }));
+    } catch (error) {
+      console.error("Error fetching all stone types:", error);
+      return [];
+    }
   }
 
   async createStoneType(stoneType: InsertStoneType): Promise<StoneType> {
@@ -364,13 +409,31 @@ export class DatabaseStorage implements IStorage {
         return this.getStoneType(id);
       }
       
-      // Otherwise search by name
+      // Otherwise search by name and map the result
       const [stoneType] = await db
         .select()
         .from(stoneTypes)
         .where(eq(stoneTypes.name, stoneTypeId))
         .limit(1);
-      return stoneType;
+        
+      if (!stoneType) return undefined;
+        
+      // Map to StoneType format with correct property names
+      return {
+        id: stoneType.id,
+        name: stoneType.name,
+        description: stoneType.description,
+        priceModifier: stoneType.price_modifier,
+        displayOrder: stoneType.display_order,
+        isActive: stoneType.is_active,
+        color: stoneType.color,
+        imageUrl: stoneType.image_url,
+        category: stoneType.category,
+        stoneForm: stoneType.stone_form,
+        quality: stoneType.quality,
+        size: stoneType.size,
+        createdAt: stoneType.created_at
+      };
     } catch (error) {
       console.error("Error fetching stone type by ID/name:", error);
       return undefined;
@@ -390,7 +453,22 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       
       if (stoneType) {
-        return stoneType;
+        // Map to StoneType format with correct property names
+        return {
+          id: stoneType.id,
+          name: stoneType.name,
+          description: stoneType.description,
+          priceModifier: stoneType.price_modifier,
+          displayOrder: stoneType.display_order,
+          isActive: stoneType.is_active,
+          color: stoneType.color,
+          imageUrl: stoneType.image_url,
+          category: stoneType.category,
+          stoneForm: stoneType.stone_form,
+          quality: stoneType.quality,
+          size: stoneType.size,
+          createdAt: stoneType.created_at
+        };
       }
       
       // Try with case-insensitive search if exact match fails
@@ -400,7 +478,24 @@ export class DatabaseStorage implements IStorage {
         .where(sql`LOWER(${stoneTypes.name}) = LOWER(${name})`)
         .limit(1);
         
-      return stoneTypeCaseInsensitive;
+      if (!stoneTypeCaseInsensitive) return undefined;
+        
+      // Map case-insensitive match to StoneType format
+      return {
+        id: stoneTypeCaseInsensitive.id,
+        name: stoneTypeCaseInsensitive.name,
+        description: stoneTypeCaseInsensitive.description,
+        priceModifier: stoneTypeCaseInsensitive.price_modifier,
+        displayOrder: stoneTypeCaseInsensitive.display_order,
+        isActive: stoneTypeCaseInsensitive.is_active,
+        color: stoneTypeCaseInsensitive.color,
+        imageUrl: stoneTypeCaseInsensitive.image_url,
+        category: stoneTypeCaseInsensitive.category,
+        stoneForm: stoneTypeCaseInsensitive.stone_form,
+        quality: stoneTypeCaseInsensitive.quality,
+        size: stoneTypeCaseInsensitive.size,
+        createdAt: stoneTypeCaseInsensitive.created_at
+      };
     } catch (error) {
       console.error(`Error fetching stone type by name "${name}":`, error);
       return undefined;
