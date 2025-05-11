@@ -469,6 +469,7 @@ export class DatabaseStorage implements IStorage {
         return undefined;
       }
       
+      // First try exact match
       const [stoneType] = await db
         .select()
         .from(stoneTypes)
@@ -476,22 +477,13 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       
       if (stoneType) {
-        // Map to StoneType format with correct property names
-        return {
-          id: stoneType.id,
-          name: stoneType.name,
-          description: stoneType.description,
-          priceModifier: stoneType.price_modifier,
-          displayOrder: stoneType.display_order,
-          isActive: stoneType.is_active,
-          color: stoneType.color,
-          imageUrl: stoneType.image_url,
-          category: stoneType.category,
-          stoneForm: stoneType.stone_form,
-          quality: stoneType.quality,
-          size: stoneType.size,
-          createdAt: stoneType.created_at
-        };
+        try {
+          // Use helper function for consistent mapping
+          return this.mapDbStoneTypeToStoneType(stoneType);
+        } catch (mapError) {
+          console.error(`Error mapping stone type with name "${name}":`, mapError);
+          // Continue to try case-insensitive search
+        }
       }
       
       // Try with case-insensitive search if exact match fails
@@ -502,23 +494,14 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
         
       if (!stoneTypeCaseInsensitive) return undefined;
-        
-      // Map case-insensitive match to StoneType format
-      return {
-        id: stoneTypeCaseInsensitive.id,
-        name: stoneTypeCaseInsensitive.name,
-        description: stoneTypeCaseInsensitive.description,
-        priceModifier: stoneTypeCaseInsensitive.price_modifier,
-        displayOrder: stoneTypeCaseInsensitive.display_order,
-        isActive: stoneTypeCaseInsensitive.is_active,
-        color: stoneTypeCaseInsensitive.color,
-        imageUrl: stoneTypeCaseInsensitive.image_url,
-        category: stoneTypeCaseInsensitive.category,
-        stoneForm: stoneTypeCaseInsensitive.stone_form,
-        quality: stoneTypeCaseInsensitive.quality,
-        size: stoneTypeCaseInsensitive.size,
-        createdAt: stoneTypeCaseInsensitive.created_at
-      };
+      
+      try {
+        // Use helper function for case-insensitive match too
+        return this.mapDbStoneTypeToStoneType(stoneTypeCaseInsensitive);
+      } catch (mapError) {
+        console.error(`Error mapping stone type with case-insensitive name "${name}":`, mapError);
+        return undefined;
+      }
     } catch (error) {
       console.error(`Error fetching stone type by name "${name}":`, error);
       return undefined;
