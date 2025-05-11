@@ -41,7 +41,7 @@ export default function CustomizeRequest() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [customizationDetails, setCustomizationDetails] = useState("");
+  const [personalizationDetails, setPersonalizationDetails] = useState("");
   const [preferredBudget, setPreferredBudget] = useState("");
   const [timeline, setTimeline] = useState("");
   const [metalTypeId, setMetalTypeId] = useState("");
@@ -107,7 +107,7 @@ export default function CustomizeRequest() {
   });
 
   // Handle form submission
-  const customizationMutation = useMutation({
+  const personalizationMutation = useMutation({
     mutationFn: async (formData: {
       userId?: number;
       productId: number;
@@ -125,7 +125,7 @@ export default function CustomizeRequest() {
       const response = await apiRequest("POST", "/api/customization-requests", formData);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to submit customization request");
+        throw new Error(errorData.message || "Failed to submit personalization request");
       }
       return await response.json();
     },
