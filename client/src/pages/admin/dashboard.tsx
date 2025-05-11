@@ -365,7 +365,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="designs" className="space-y-4">
           <TabsList>
             <TabsTrigger value="designs">Custom Design Requests</TabsTrigger>
-            <TabsTrigger value="customizations">Customization Requests</TabsTrigger>
+            <TabsTrigger value="personalizations">Product Personalization Requests</TabsTrigger>
             <TabsTrigger value="quotes">Quote Requests</TabsTrigger>
             <TabsTrigger value="testimonials">Client Stories</TabsTrigger>
           </TabsList>
@@ -429,19 +429,19 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
           
-          {/* Customization Requests Tab */}
-          <TabsContent value="customizations" className="space-y-4">
+          {/* Product Personalization Requests Tab */}
+          <TabsContent value="personalizations" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Product Customization Requests</CardTitle>
+                <CardTitle>Product Personalization Requests</CardTitle>
                 <CardDescription>
                   Requests to modify existing products
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {Array.isArray(customizationRequests) && customizationRequests.length > 0 ? (
+                {Array.isArray(personalizationRequests) && personalizationRequests.length > 0 ? (
                   <div className="space-y-4">
-                    {customizationRequests.map((req: any) => (
+                    {personalizationRequests.map((req: any) => (
                       <div key={req.id} className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 p-4 border rounded-lg">
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 rounded overflow-hidden bg-muted">
@@ -457,7 +457,7 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <div className="font-medium">
-                              Customization Request #{req.id}
+                              Personalization Request #{req.id}
                               <Badge className="ml-2 bg-orange-500 text-white">
                                 {req.status === "pending" ? "Pending" : req.status}
                               </Badge>
@@ -476,7 +476,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex flex-col gap-1">
                           <Button asChild variant="ghost" size="sm">
-                            <Link href={`/admin/customizations/${req.id}`}>
+                            <Link href={`/admin/personalizations/${req.id}`}>
                               <ExternalLink className="h-4 w-4 mr-1" /> View Request
                             </Link>
                           </Button>
@@ -493,14 +493,14 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-4 text-muted-foreground">
-                    No customization requests to display
+                    No personalization requests to display
                   </div>
                 )}
                 
                 <div className="mt-4 text-center">
                   <Button asChild variant="outline">
-                    <Link href="/admin/customizations">
-                      View All Customization Requests
+                    <Link href="/admin/personalizations">
+                      View All Personalization Requests
                     </Link>
                   </Button>
                 </div>
