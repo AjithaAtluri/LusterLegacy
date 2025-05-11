@@ -69,7 +69,7 @@ export default function PersonalizationDetail({ customization }: Personalization
     setIsSubmitting(true);
     const formData = new FormData();
     formData.append("content", comment);
-    formData.append("customizationRequestId", customization.id.toString());
+    formData.append("personalizationRequestId", customization.id.toString());
     formData.append("isAdmin", "true");
     
     if (selectedFile) {
@@ -77,7 +77,7 @@ export default function PersonalizationDetail({ customization }: Personalization
     }
 
     try {
-      const response = await fetch("/api/customization-comments", {
+      const response = await fetch("/api/personalization-comments", {
         method: "POST",
         body: formData,
       });
