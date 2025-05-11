@@ -118,7 +118,7 @@ export default function AdminDashboard() {
     // Provide placeholders when loading to avoid rendering issues
     placeholderData: {
       quoteRequests: [],
-      customizationRequests: [],
+      personalizationRequests: [], // Frontend-facing name but backend still uses customizationRequests
       designs: [],
       products: []
     }
@@ -126,7 +126,8 @@ export default function AdminDashboard() {
   
   // Extract data from combined endpoint or separate queries
   const quoteRequests = dashboardData?.quoteRequests;
-  const personalizationRequests = dashboardData?.customizationRequests; // Using old API endpoint but with updated variable name
+  // @ts-ignore - Support both new and old property names during transition
+  const personalizationRequests = dashboardData?.personalizationRequests || dashboardData?.customizationRequests;
   const designs = dashboardData?.designs;
   const products = dashboardData?.products;
   
@@ -143,7 +144,8 @@ export default function AdminDashboard() {
   
   const { isLoading: isLoadingPersonalizations } = useQuery({
     queryKey: ['/api/customization-requests'], // Keep the old API endpoint
-    enabled: !dashboardData?.customizationRequests, // Keep the old property name here for API compatibility
+    // @ts-ignore - Check both property names during transition period
+    enabled: !(dashboardData?.personalizationRequests || dashboardData?.customizationRequests),
     staleTime: 30000,
     refetchOnWindowFocus: false
   });
