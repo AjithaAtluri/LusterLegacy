@@ -621,12 +621,12 @@ export default function AdminDashboard() {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Product Customization Requests</CardTitle>
+              <CardTitle className="text-sm font-medium">Product Personalization Requests</CardTitle>
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full" variant="outline">
-                <Link href="/admin/customizations">
-                  View Customization Requests
+                <Link href="/admin/personalizations">
+                  View Personalization Requests
                 </Link>
               </Button>
             </CardContent>
