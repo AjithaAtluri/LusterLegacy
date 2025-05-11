@@ -56,6 +56,9 @@ const AdminDesigns = lazy(() => import("@/pages/admin/designs"));
 // New request type pages
 const AdminCustomizations = lazy(() => import("@/pages/admin/customizations"));
 const AdminCustomizationDetail = lazy(() => import("@/pages/admin/customization-detail"));
+// Updated personalization pages
+const AdminPersonalizations = lazy(() => import("@/pages/admin/personalizations"));
+const AdminPersonalizationDetail = lazy(() => import("@/pages/admin/personalization-detail"));
 const AdminQuotes = lazy(() => import("@/pages/admin/quotes"));
 const AdminQuoteDetail = lazy(() => import("@/pages/admin/quote-detail"));
 const AdminContactMessages = lazy(() => import("@/pages/admin/contact-messages"));
@@ -194,6 +197,8 @@ function App() {
                 <ProtectedRoute path="/admin/designs/:id" component={lazy(() => import("@/pages/admin/design-detail/[id]"))} adminOnly />
                 <ProtectedRoute path="/admin/customizations" component={AdminCustomizations} adminOnly />
                 <ProtectedRoute path="/admin/customizations/:id" component={AdminCustomizationDetail} adminOnly />
+                <ProtectedRoute path="/admin/personalizations" component={AdminPersonalizations} adminOnly />
+                <ProtectedRoute path="/admin/personalizations/:id" component={AdminPersonalizationDetail} adminOnly />
                 <ProtectedRoute path="/admin/quotes" component={AdminQuotes} adminOnly />
                 <ProtectedRoute path="/admin/quotes/:id" component={AdminQuoteDetail} adminOnly />
                 <ProtectedRoute path="/admin/contact-messages" component={AdminContactMessages} adminOnly />

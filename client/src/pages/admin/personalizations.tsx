@@ -1,189 +1,250 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/admin-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Search, RefreshCw } from "lucide-react";
-import { SelectSeparator } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, Filter } from "lucide-react";
+import { useLocation } from "wouter";
 import { formatDistanceToNow } from "date-fns";
-import { PersonalizationRequest } from "@shared/schema";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface PersonalizationRequest {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  country: string | null;
+  productId: number;
+  productName: string;
+  originalMetalType: string;
+  requestedMetalType: string;
+  originalStoneType: string;
+  requestedStoneType: string;
+  additionalNotes: string | null;
+  personalizationType: string;
+  preferredMetal: string;
+  preferredStones: string[];
+  personalizationDetails: string;
+  status: string;
+  quotedPrice: number | null;
+  currency: string | null;
+  imageUrls: string[] | null;
+  productImageUrl?: string | null;
+  createdAt: string;
+}
 
 export default function PersonalizationsPage() {
+  const [, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("active");
-  
-  // Fetch all personalization requests
-  const { data: personalizationRequests, isLoading, isError, refetch } = useQuery({
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortedRequests, setSortedRequests] = useState<PersonalizationRequest[]>([]);
+
+  // Fetch personalization requests
+  const { data: requests, isLoading, isError } = useQuery({
     queryKey: ["/api/personalization-requests"],
     queryFn: async () => {
       const res = await fetch("/api/personalization-requests");
-      if (!res.ok) throw new Error("Failed to fetch personalization requests");
+      if (!res.ok) {
+        throw new Error("Failed to fetch personalization requests");
+      }
       return res.json();
     }
   });
-  
-  // Filter requests based on search term and active tab
-  const filteredRequests = personalizationRequests ? personalizationRequests
-    .filter((request: PersonalizationRequest) => {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        request.fullName.toLowerCase().includes(searchLower) ||
-        request.email.toLowerCase().includes(searchLower) ||
-        request.productName?.toLowerCase().includes(searchLower) ||
-        String(request.id).includes(searchTerm)
-      );
-    })
-    .filter((request: PersonalizationRequest) => {
-      // Active tab includes all non-completed and non-cancelled requests
-      if (activeTab === "active") {
-        return !["completed", "cancelled"].includes(request.status);
-      }
-      // Completed tab includes only completed requests
-      else if (activeTab === "completed") {
-        return request.status === "completed";
-      }
-      // Cancelled tab includes only cancelled requests
-      else if (activeTab === "cancelled") {
-        return request.status === "cancelled";
-      }
-      return true;
-    })
-    .sort((a: PersonalizationRequest, b: PersonalizationRequest) => {
-      // Sort by status priority first (pending first, then in_progress, etc.)
-      const statusPriority: { [key: string]: number } = {
-        pending: 0,
-        in_progress: 1,
-        quoted: 2,
-        approved: 3,
-        production: 4,
-        ready: 5,
-        completed: 6,
-        cancelled: 7
-      };
-      
-      const statusDiff = (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99);
-      if (statusDiff !== 0) return statusDiff;
-      
-      // Then sort by date (newest first)
-      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-    })
-    : [];
-  
+
+  useEffect(() => {
+    if (!requests) return;
+
+    // Filter and sort the requests
+    let filtered = [...requests];
+
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((request: PersonalizationRequest) => {
+        return (
+          request.fullName.toLowerCase().includes(term) ||
+          request.email.toLowerCase().includes(term) ||
+          request.productName.toLowerCase().includes(term) ||
+          (request.additionalNotes && request.additionalNotes.toLowerCase().includes(term))
+        );
+      });
+    }
+
+    // Apply status filter
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((request: PersonalizationRequest) => {
+        return request.status === filterStatus;
+      });
+    }
+
+    // Sort by creation date (most recent first)
+    filtered = filtered.sort((a: PersonalizationRequest, b: PersonalizationRequest) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    setSortedRequests(filtered);
+  }, [requests, searchTerm, filterStatus]);
+
   // Format status for display
   const formatStatus = (status: string) => {
-    const statusMap: { [key: string]: { label: string; color: string } } = {
-      pending: { label: "Pending", color: "bg-yellow-500" },
-      in_progress: { label: "In Progress", color: "bg-blue-500" },
-      quoted: { label: "Quoted", color: "bg-purple-500" },
-      approved: { label: "Approved", color: "bg-indigo-500" },
-      production: { label: "In Production", color: "bg-pink-500" },
-      ready: { label: "Ready", color: "bg-orange-500" },
-      completed: { label: "Completed", color: "bg-green-500" },
-      cancelled: { label: "Cancelled", color: "bg-destructive" }
-    };
-    
-    return statusMap[status] || { label: status.charAt(0).toUpperCase() + status.slice(1), color: "bg-slate-500" };
-  };
-  
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-  
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
+    switch (status.toLowerCase()) {
+      case "pending":
+        return { label: "Pending", color: "bg-yellow-500 text-white" };
+      case "in_progress":
+        return { label: "In Progress", color: "bg-blue-500 text-white" };
+      case "completed":
+        return { label: "Completed", color: "bg-green-500 text-white" };
+      case "cancelled":
+        return { label: "Cancelled", color: "bg-gray-500 text-white" };
+      case "approved":
+        return { label: "Approved", color: "bg-emerald-500 text-white" };
+      case "rejected":
+        return { label: "Rejected", color: "bg-red-500 text-white" };
+      case "waiting_for_payment":
+        return { label: "Waiting for Payment", color: "bg-purple-500 text-white" };
+      case "in_production":
+        return { label: "In Production", color: "bg-indigo-500 text-white" };
+      case "shipped":
+        return { label: "Shipped", color: "bg-teal-500 text-white" };
+      case "delivered":
+        return { label: "Delivered", color: "bg-green-700 text-white" };
+      default:
+        return { label: status, color: "bg-gray-500 text-white" };
+    }
   };
 
   return (
     <AdminLayout title="Personalization Requests">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Personalization Requests</h1>
-        <Button onClick={() => refetch()} variant="outline" className="flex items-center gap-1.5">
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </Button>
-      </div>
-      
-      <div className="mb-6">
-        <div className="flex gap-2 items-end">
-          <div className="flex-1">
-            <Label htmlFor="search" className="text-sm font-medium mb-1.5 block">
-              Search
-            </Label>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="search"
-                placeholder="Search by name, email, or product"
-                className="pl-9"
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-            </div>
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-between">
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search requests..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <select
+              className="border rounded-md p-2 text-sm bg-background"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="waiting_for_payment">Waiting for Payment</option>
+              <option value="in_production">In Production</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+            </select>
           </div>
         </div>
+
+        <Tabs defaultValue="grid" className="w-full">
+          <div className="flex justify-between items-center">
+            <TabsList>
+              <TabsTrigger value="grid">Grid View</TabsTrigger>
+              <TabsTrigger value="list">List View</TabsTrigger>
+            </TabsList>
+            <div className="text-sm text-muted-foreground">
+              {sortedRequests ? `${sortedRequests.length} requests found` : "Loading..."}
+            </div>
+          </div>
+
+          <TabsContent value="grid" className="mt-4">
+            <RequestsGrid 
+              requests={sortedRequests} 
+              isLoading={isLoading} 
+              isError={isError}
+              formatStatus={formatStatus}
+            />
+          </TabsContent>
+
+          <TabsContent value="list" className="mt-4">
+            <div className="rounded-md border">
+              <div className="grid grid-cols-7 px-4 py-3 bg-muted/50 text-sm font-medium">
+                <div>Customer</div>
+                <div>Product</div>
+                <div>Type</div>
+                <div>Date</div>
+                <div>Status</div>
+                <div>Price Quote</div>
+                <div></div>
+              </div>
+              <Separator />
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <div key={i} className="grid grid-cols-7 px-4 py-4 items-center">
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-8 w-20 ml-auto" />
+                  </div>
+                ))
+              ) : isError ? (
+                <div className="px-4 py-8 text-center text-muted-foreground">
+                  Failed to load personalization requests
+                </div>
+              ) : sortedRequests && sortedRequests.length > 0 ? (
+                sortedRequests.map((r) => (
+                  <div key={r.id} className="grid grid-cols-7 px-4 py-4 items-center hover:bg-muted/30">
+                    <div className="truncate">
+                      <div className="font-medium truncate">{r.fullName}</div>
+                      <div className="text-xs text-muted-foreground truncate">{r.email}</div>
+                    </div>
+                    <div className="truncate">{r.productName}</div>
+                    <div className="capitalize">{r.personalizationType.replace(/_/g, ' ')}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}
+                    </div>
+                    <div>
+                      <Badge className={formatStatus(r.status).color}>
+                        {formatStatus(r.status).label}
+                      </Badge>
+                    </div>
+                    <div>
+                      {r.quotedPrice ? (
+                        <span className="font-medium">
+                          {r.currency === 'USD' ? '$' : '₹'}{r.quotedPrice.toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Not quoted</span>
+                      )}
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        size="sm" 
+                        onClick={() => setLocation(`/admin/personalizations/${r.id}`)}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center text-muted-foreground">
+                  No personalization requests found
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
-      
-      <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="active">
-            Active
-            {personalizationRequests && (
-              <Badge variant="outline" className="ml-2">
-                {personalizationRequests.filter(r => !["completed", "cancelled"].includes(r.status)).length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            Completed
-            {personalizationRequests && (
-              <Badge variant="outline" className="ml-2">
-                {personalizationRequests.filter(r => r.status === "completed").length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="cancelled">
-            Cancelled
-            {personalizationRequests && (
-              <Badge variant="outline" className="ml-2">
-                {personalizationRequests.filter(r => r.status === "cancelled").length}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="active" className="mt-0">
-          <RequestsGrid 
-            requests={filteredRequests} 
-            isLoading={isLoading} 
-            isError={isError} 
-            formatStatus={formatStatus}
-          />
-        </TabsContent>
-        
-        <TabsContent value="completed" className="mt-0">
-          <RequestsGrid 
-            requests={filteredRequests} 
-            isLoading={isLoading} 
-            isError={isError} 
-            formatStatus={formatStatus}
-          />
-        </TabsContent>
-        
-        <TabsContent value="cancelled" className="mt-0">
-          <RequestsGrid 
-            requests={filteredRequests} 
-            isLoading={isLoading} 
-            isError={isError} 
-            formatStatus={formatStatus}
-          />
-        </TabsContent>
-      </Tabs>
     </AdminLayout>
   );
 }
@@ -196,33 +257,52 @@ type RequestsGridProps = {
 };
 
 const RequestsGrid = ({ requests, isLoading, isError, formatStatus }: RequestsGridProps) => {
+  const [, setLocation] = useLocation();
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array(6).fill(0).map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-4 w-32 mb-2" />
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent className="pb-2">
+              <Skeleton className="h-24 w-full mb-2" />
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Skeleton className="h-9 w-full" />
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     );
   }
-  
+
   if (isError) {
     return (
-      <div className="text-center p-6 border rounded-lg bg-destructive/10 text-destructive">
-        <p>Failed to load personalization requests. Please try again.</p>
+      <div className="text-center p-8 text-muted-foreground">
+        Failed to load personalization requests. Please try again later.
       </div>
     );
   }
-  
-  if (requests.length === 0) {
+
+  if (!requests || requests.length === 0) {
     return (
-      <div className="text-center p-6 border rounded-lg">
-        <p className="text-muted-foreground">No personalization requests found.</p>
+      <div className="text-center p-8 text-muted-foreground">
+        No personalization requests found
       </div>
     );
   }
-  
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {requests.map(request => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {requests.map((request) => (
         <RequestCard key={request.id} request={request} formatStatus={formatStatus} />
       ))}
     </div>
@@ -235,60 +315,66 @@ type RequestCardProps = {
 };
 
 const RequestCard = ({ request, formatStatus }: RequestCardProps) => {
+  const [, setLocation] = useLocation();
   const status = formatStatus(request.status);
-  const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  };
-  
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-base">Request #{request.id}</CardTitle>
-            <CardDescription>
-              {request.createdAt 
-                ? formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })
-                : "Date unknown"}
-            </CardDescription>
-          </div>
+          <CardTitle className="text-lg truncate">{request.fullName}</CardTitle>
           <Badge className={status.color}>{status.label}</Badge>
         </div>
+        <CardDescription className="truncate">
+          {request.email} • {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
+        </CardDescription>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div>
-          <h3 className="font-medium">Customer Details</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
-            <div className="text-sm text-muted-foreground">Name:</div>
-            <div className="text-sm">{request.fullName}</div>
-            <div className="text-sm text-muted-foreground">Email:</div>
-            <div className="text-sm">{request.email}</div>
-          </div>
+      <CardContent className="space-y-2 pb-2">
+        <div className="rounded-md overflow-hidden relative h-24 bg-muted">
+          {request.productImageUrl ? (
+            <img 
+              src={request.productImageUrl} 
+              alt={request.productName} 
+              className="object-cover w-full h-full"
+            />
+          ) : request.imageUrls && request.imageUrls.length > 0 ? (
+            <img 
+              src={request.imageUrls[0]} 
+              alt="Personalization request" 
+              className="object-cover w-full h-full"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              No image available
+            </div>
+          )}
         </div>
-        
-        <SelectSeparator />
-        
         <div>
-          <h3 className="font-medium">Product Details</h3>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
-            <div className="text-sm text-muted-foreground">Product:</div>
-            <div className="text-sm">{request.productName}</div>
-            <div className="text-sm text-muted-foreground">Personalization:</div>
-            <div className="text-sm">{request.personalizationType}</div>
-          </div>
+          <h4 className="font-medium truncate">{request.productName}</h4>
+          <p className="text-sm text-muted-foreground truncate capitalize">
+            {request.personalizationType.replace(/_/g, ' ')}
+          </p>
         </div>
-        
-        <SelectSeparator />
-        
-        <Button className="w-full" variant="outline" asChild>
-          <a href={`/admin/personalizations/${request.id}`}>View Details</a>
-        </Button>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">
+            {request.requestedMetalType} • {request.requestedStoneType}
+          </span>
+          {request.quotedPrice ? (
+            <span className="font-medium">
+              {request.currency === 'USD' ? '$' : '₹'}{request.quotedPrice.toLocaleString()}
+            </span>
+          ) : null}
+        </div>
       </CardContent>
+      <CardFooter>
+        <Button 
+          className="w-full" 
+          variant="default"
+          onClick={() => setLocation(`/admin/personalizations/${request.id}`)}
+        >
+          View Details
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
