@@ -638,23 +638,111 @@ export class DatabaseStorage implements IStorage {
   async getAllCustomizationRequests(): Promise<any[]> { return []; }
   async updateCustomizationRequestStatus(id: number, status: string): Promise<any> { return {}; }
   async getOrdersByUserId(userId: number): Promise<any[]> { return []; }
-  async getDesignRequest(id: number): Promise<DesignRequest | undefined> { return undefined; }
-  async getAllDesignRequests(): Promise<DesignRequest[]> { return []; }
+  
+  async getDesignRequest(id: number): Promise<DesignRequest | undefined> {
+    try {
+      const [request] = await db
+        .select()
+        .from(designRequests)
+        .where(eq(designRequests.id, id))
+        .limit(1);
+      
+      return request;
+    } catch (error) {
+      console.error(`Error fetching design request with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  async getAllDesignRequests(): Promise<DesignRequest[]> {
+    try {
+      const allDesignRequests = await db.select().from(designRequests).orderBy(desc(designRequests.createdAt));
+      return allDesignRequests;
+    } catch (error) {
+      console.error("Error fetching all design requests:", error);
+      return [];
+    }
+  }
   
   async getAllCustomDesigns(): Promise<DesignRequest[]> { 
     // For API consistency, we're using getAllCustomDesigns as an alias for getAllDesignRequests
     return this.getAllDesignRequests(); 
   }
-  async getDesignRequestsByEmail(email: string): Promise<DesignRequest[]> { return []; }
-  async getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]> { return []; }
+  
+  async getDesignRequestsByEmail(email: string): Promise<DesignRequest[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(designRequests)
+        .where(eq(designRequests.email, email))
+        .orderBy(desc(designRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error(`Error fetching design requests for email ${email}:`, error);
+      return [];
+    }
+  }
+  
+  async getDesignRequestsByUserId(userId: number): Promise<DesignRequest[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(designRequests)
+        .where(eq(designRequests.userId, userId))
+        .orderBy(desc(designRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error(`Error fetching design requests for user ID ${userId}:`, error);
+      return [];
+    }
+  }
   
   async getCustomDesignsByStatus(statusList: string[]): Promise<DesignRequest[]> {
-    // For API consistency, returning empty array for now
-    // In a production environment, this would filter by status
-    return [];
+    try {
+      if (!statusList || statusList.length === 0) {
+        return this.getAllDesignRequests();
+      }
+      
+      const requests = await db
+        .select()
+        .from(designRequests)
+        .where(sql`${designRequests.status} IN (${statusList.join(',')})`)
+        .orderBy(desc(designRequests.createdAt));
+      return requests;
+    } catch (error) {
+      console.error(`Error fetching design requests with status in [${statusList}]:`, error);
+      return [];
+    }
   }
-  async createDesignRequest(designRequest: InsertDesignRequest): Promise<DesignRequest> { return {} as DesignRequest; }
-  async updateDesignRequest(id: number, designRequest: Partial<DesignRequest>): Promise<DesignRequest | undefined> { return undefined; }
+  
+  async createDesignRequest(designRequest: InsertDesignRequest): Promise<DesignRequest> {
+    try {
+      const [newRequest] = await db
+        .insert(designRequests)
+        .values(designRequest)
+        .returning();
+      
+      console.log("Created new design request:", newRequest);
+      return newRequest;
+    } catch (error) {
+      console.error("Error creating design request:", error);
+      throw new Error(`Failed to create design request: ${error.message}`);
+    }
+  }
+  
+  async updateDesignRequest(id: number, designRequest: Partial<DesignRequest>): Promise<DesignRequest | undefined> {
+    try {
+      const [updatedRequest] = await db
+        .update(designRequests)
+        .set(designRequest)
+        .where(eq(designRequests.id, id))
+        .returning();
+      
+      return updatedRequest;
+    } catch (error) {
+      console.error(`Error updating design request ID ${id}:`, error);
+      return undefined;
+    }
+  }
   async getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]> { return []; }
   async addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment> { return {} as DesignRequestComment; }
   async getDesignFeedback(designRequestId: number): Promise<DesignFeedback[]> { return []; }
