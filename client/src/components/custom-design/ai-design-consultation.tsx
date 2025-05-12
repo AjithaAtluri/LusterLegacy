@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, Send, Sparkles, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import { createPortal } from "react-dom";
+
 import { DesignFormContext } from "./design-form";
 
 interface Message {
@@ -258,16 +258,8 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     }
   };
   
-  // Render the form button when integrated with the form
-  const FormButton = () => (
-    <Button 
-      onClick={handleStartConsultation} 
-      className="w-full font-montserrat bg-accent hover:bg-accent/90 text-background px-6 py-3 transition-colors flex items-center justify-center gap-2 h-auto"
-    >
-      <Sparkles size={16} />
-      Get AI Design Guidance
-    </Button>
-  );
+  // This function is now triggered through the custom event system
+  // No need for a FormButton component anymore
 
   // Render the standalone consultation button
   const StandaloneCard = () => (
@@ -383,13 +375,7 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
 
   return (
     <>
-      {/* Render the button in the form when integrated */}
-      {integratedWithForm && formDataReady && createPortal(
-        <FormButton />,
-        document.getElementById('ai-consultation-button-container')!
-      )}
-      
-      {/* Render the main consultation interface */}
+      {/* Render the main consultation interface only */}
       {integratedWithForm ? (
         // When integrated with form, only show chat when active
         isActive && <ChatInterface />
