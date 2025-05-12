@@ -195,11 +195,8 @@ export default function AuthPage() {
   };
   
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    const { confirmPassword, acceptTerms, phone, country, ...userData } = data;
-    
-    // Include phone and country in the registration data
-    userData.phone = phone;
-    userData.country = country;
+    // Extract fields we don't want to send directly to the API
+    const { confirmPassword, acceptTerms, ...userData } = data;
     
     // Check if there's a saved form state in the session that we need to return to
     const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;

@@ -1036,7 +1036,8 @@ export default function DesignForm() {
                 )}
               />
             </div>
-          </div>
+            </>
+          )}
         </div>
         
         <FormField
