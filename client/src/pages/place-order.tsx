@@ -423,7 +423,7 @@ export default function FinalizeOrder() {
             
             <Card className="h-fit">
               <CardContent className="p-6">
-                <h2 className="font-playfair text-xl font-semibold mb-4">Payment Method</h2>
+                <h2 className="font-playfair text-xl font-semibold mb-4">Payment Preference</h2>
                 <RadioGroup 
                   defaultValue={paymentMethod} 
                   onValueChange={setPaymentMethod}
@@ -445,7 +445,7 @@ export default function FinalizeOrder() {
                   </div>
                 </RadioGroup>
                 <p className="text-sm text-foreground/60 mt-4">
-                  * Payment instructions will be sent after your order is confirmed
+                  * Payment details will be provided after your quote is approved
                 </p>
               </CardContent>
             </Card>
@@ -597,9 +597,10 @@ export default function FinalizeOrder() {
                   </div>
                   <div className="space-y-6 mt-6">
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-4">
-                      <h3 className="font-playfair text-base font-semibold mb-2">Payment & Shipping Terms</h3>
+                      <h3 className="font-playfair text-base font-semibold mb-2">Quote, Payment & Shipping Terms</h3>
                       <ul className="list-disc list-inside space-y-1 text-sm">
-                        <li>50% advance payment secures your order and initiates crafting</li>
+                        <li>You'll receive a detailed quote within 24-48 hours</li>
+                        <li>50% advance payment secures your order after quote approval</li>
                         <li>Your piece will be handcrafted over 3-4 weeks</li>
                         <li>Remaining 50% payment is due before shipping</li>
                         <li>Free shipping with insurance and tracking</li>
@@ -644,7 +645,7 @@ export default function FinalizeOrder() {
                             Processing...
                           </span>
                         ) : (
-                          <>Make 50% Payment</>
+                          <>Request Quote</>
                         )}
                       </Button>
                     </div>
