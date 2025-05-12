@@ -53,9 +53,9 @@ export default function CustomerDashboard() {
   const [typeFilter, setTypeFilter] = useState("all");
   
   // Form state for profile updates
-  const [nameValue, setNameValue] = useState(user?.username || "");
-  const [phoneValue, setPhoneValue] = useState(user?.phone || "");
-  const [countryValue, setCountryValue] = useState(user?.country || "");
+  const [nameValue, setNameValue] = useState("");
+  const [phoneValue, setPhoneValue] = useState("");
+  const [countryValue, setCountryValue] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
   
@@ -64,11 +64,6 @@ export default function CustomerDashboard() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  
-  // Profile update form field states
-  const [nameValue, setNameValue] = useState("");
-  const [phoneValue, setPhoneValue] = useState("");
-  const [countryValue, setCountryValue] = useState("");
   
   // Update form fields when user data changes
   useEffect(() => {
@@ -218,14 +213,7 @@ export default function CustomerDashboard() {
     }
   };
   
-  // Update form values when user data changes
-  useEffect(() => {
-    if (user) {
-      setNameValue(user.username || "");
-      setPhoneValue(user.phone || "");
-      setCountryValue(user.country || "");
-    }
-  }, [user]);
+  // This useEffect is already defined above
   
   // Redirect to auth page if not logged in
   if (!isLoadingAuth && !user) {
