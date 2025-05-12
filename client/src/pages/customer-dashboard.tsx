@@ -996,14 +996,66 @@ export default function CustomerDashboard() {
                           className="max-w-md bg-muted/20"
                           readOnly
                         />
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="shrink-0 opacity-50 cursor-not-allowed"
-                          disabled={true}
-                        >
-                          Cannot Change
-                        </Button>
+                        {user?.loginID === "Ajitha M" ? (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="shrink-0"
+                            disabled={isUpdatingProfile}
+                            onClick={async () => {
+                              try {
+                                setIsUpdatingProfile(true);
+                                const res = await fetch("/api/user/update-login-id", {
+                                  method: "POST",
+                                  headers: {
+                                    "Content-Type": "application/json"
+                                  },
+                                  body: JSON.stringify({ loginID: "AjithaM" })
+                                });
+                                
+                                if (!res.ok) {
+                                  const errorData = await res.json();
+                                  throw new Error(errorData.message || "Failed to update login ID");
+                                }
+                                
+                                const updatedUser = await res.json();
+                                toast({
+                                  title: "Login ID Updated",
+                                  description: "Your login ID has been updated to AjithaM",
+                                });
+                                
+                                // Force reload to update the session
+                                window.location.reload();
+                              } catch (error: any) {
+                                toast({
+                                  title: "Update Failed",
+                                  description: error.message || "Failed to update login ID",
+                                  variant: "destructive"
+                                });
+                              } finally {
+                                setIsUpdatingProfile(false);
+                              }
+                            }}
+                          >
+                            {isUpdatingProfile ? (
+                              <span className="flex items-center gap-1">
+                                <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                                <span>Updating</span>
+                              </span>
+                            ) : (
+                              "Fix Login ID Format"
+                            )}
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="shrink-0 opacity-50 cursor-not-allowed"
+                            disabled={true}
+                          >
+                            Cannot Change
+                          </Button>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Your login ID cannot be changed and is used to sign in to your account.

@@ -328,6 +328,51 @@ export function setupAuth(app: Express): void {
     }
   });
   
+  // Special endpoint for updating loginID - has additional restrictions
+  app.post("/api/user/update-login-id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const { loginID } = req.body;
+      
+      if (!loginID) {
+        return res.status(400).json({ message: "LoginID is required" });
+      }
+      
+      // Check if loginID already exists for another user
+      const existingUser = await storage.getUserByLoginID(loginID);
+      if (existingUser && existingUser.id !== req.user.id) {
+        return res.status(400).json({ message: "Login ID already in use by another user" });
+      }
+      
+      // Validate loginID format - no spaces allowed
+      if (loginID.includes(' ')) {
+        return res.status(400).json({ message: "Login ID cannot contain spaces" });
+      }
+      
+      console.log(`Updating user ${req.user.id}'s loginID to: ${loginID}`);
+      
+      const updatedUser = await storage.updateUser(req.user.id, { loginID });
+      
+      if (updatedUser) {
+        // Update the session with the latest user data
+        req.login(updatedUser, (err) => {
+          if (err) return res.status(500).json({ message: "Session update failed" });
+          
+          const { password, ...userWithoutPassword } = updatedUser;
+          res.json(userWithoutPassword);
+        });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("LoginID update error:", error);
+      res.status(500).json({ message: "Failed to update login ID" });
+    }
+  });
+  
   // Send verification email
   app.post("/api/user/send-verification", async (req, res) => {
     if (!req.isAuthenticated()) {
