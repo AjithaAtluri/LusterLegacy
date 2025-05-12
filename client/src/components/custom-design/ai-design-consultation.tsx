@@ -240,9 +240,10 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
         const notes = formContext.formValues?.notes;
         
         // Always provide formData, even if empty
+        // Cast selectedStones to string[] to match FormData interface
         formData = {
           metalType: metalType || "",
-          gemstones: selectedStones || [],
+          gemstones: (selectedStones || []) as string[],
           designDescription: notes || ""
         };
         
