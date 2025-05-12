@@ -5638,34 +5638,55 @@ Respond in JSON format:
       // This route is for admin use but avoids the global /api/admin/* middleware authentication
       console.log("ADMIN STONE TYPES WITH ALTERNATIVE ROUTE PATH");
       
+      // Get all stone types from database
       const stoneTypes = await storage.getAllStoneTypes();
       
-      // Ensure price modifiers are numbers and not strings
+      // Debug first few stone types
+      if (stoneTypes.length > 0) {
+        console.log(`Sample stone type data for debugging:`, 
+          stoneTypes.slice(0, 2).map(st => ({
+            id: st.id,
+            name: st.name,
+            price: st.priceModifier
+          }))
+        );
+      }
+      
+      // Ensure price modifiers are numbers and correctly preserved
       const formattedStoneTypes = stoneTypes.map(stone => {
         // Make a copy to avoid mutating the original
         const formattedStone = { ...stone };
         
-        // Ensure priceModifier is a number (handle string, null, undefined cases)
-        if (formattedStone.priceModifier !== undefined) {
-          // Convert to number but ONLY set to 0 if it's actually null, undefined or empty string
-          // This preserves any existing value including legitimate zero values
-          if (formattedStone.priceModifier === null || formattedStone.priceModifier === "") {
-            formattedStone.priceModifier = 0;
-          } else {
-            formattedStone.priceModifier = Number(formattedStone.priceModifier);
-            // If the conversion results in NaN, set to the original value
-            if (isNaN(formattedStone.priceModifier)) {
-              console.warn(`Invalid price modifier value detected: ${stone.priceModifier} for ${stone.name}`);
-              formattedStone.priceModifier = stone.priceModifier || 0;
-            }
+        // Convert priceModifier to a number but preserve the actual value
+        // including legitimate zero and non-zero values
+        if (formattedStone.priceModifier !== undefined && formattedStone.priceModifier !== null) {
+          formattedStone.priceModifier = Number(formattedStone.priceModifier);
+          
+          // If the conversion results in NaN, log warning and preserve original
+          if (isNaN(formattedStone.priceModifier)) {
+            console.warn(`Invalid price modifier value detected: ${stone.priceModifier} for ${stone.name}`);
+            // Try to clean up the value if it's a string with non-numeric characters
+            const cleanedValue = String(stone.priceModifier).replace(/[^0-9.]/g, '');
+            formattedStone.priceModifier = cleanedValue ? Number(cleanedValue) : 0;
           }
         } else {
-          // Only set to zero if truly undefined
+          // Only set to zero if truly undefined or null
           formattedStone.priceModifier = 0;
         }
         
         return formattedStone;
       });
+      
+      // Log sample of formatted data for comparison
+      if (formattedStoneTypes.length > 0) {
+        console.log(`Sample formatted stone type data:`, 
+          formattedStoneTypes.slice(0, 2).map(st => ({
+            id: st.id,
+            name: st.name,
+            price: st.priceModifier
+          }))
+        );
+      }
       
       console.log(`Successfully fetched ${stoneTypes.length} stone types for admin`);
       res.json(formattedStoneTypes);
