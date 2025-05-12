@@ -7196,7 +7196,7 @@ Respond in JSON format:
             const adminUser = await storage.getUser(parsedAdminId);
             
             if (adminUser && (adminUser.role === 'admin' || adminUser.role === 'limited-admin')) {
-              console.log(`Admin auth check - verified ${adminUser.role} user from cookie:`, adminUser.username);
+              console.log(`Admin auth check - verified ${adminUser.role} user from cookie:`, adminUser.loginID || adminUser.name || 'Unknown');
               
               // Return sanitized user data
               const { password, ...userWithoutPassword } = adminUser;
@@ -7275,7 +7275,7 @@ Respond in JSON format:
             
             const legacyUser = await storage.getUser(parsedUserId);
             if (legacyUser && (legacyUser.role === 'admin' || legacyUser.role === 'limited-admin')) {
-              console.log(`Admin auth check - verified ${legacyUser.role} via legacy cookie:`, legacyUser.username);
+              console.log(`Admin auth check - verified ${legacyUser.role} via legacy cookie:`, legacyUser.loginID || legacyUser.name || 'Unknown');
               
               // Set the new admin cookies for future requests
               console.log("Admin auth check - upgrading to dedicated admin cookies");

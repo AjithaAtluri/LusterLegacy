@@ -78,7 +78,7 @@ export default function DirectAdminDashboard() {
         // Also login to admin system
         try {
           await apiRequest("POST", "/api/auth/login", {
-            username: "admin", 
+            loginID: "admin", 
             password: "admin123"
           });
           console.log("Successfully logged in to both auth systems");
