@@ -75,6 +75,15 @@ export default function CustomDesign() {
               onClick={() => {
                 // Log current form state
                 console.log("Starting AI consultation with current form state:", formState);
+                
+                // Check if the global method is available and use it
+                if (typeof (window as any).startAIConsultation === "function") {
+                  (window as any).startAIConsultation(formState);
+                } else {
+                  // Fallback to event dispatch
+                  const event = new CustomEvent('start-ai-consultation');
+                  window.dispatchEvent(event);
+                }
               }}
               className="w-full bg-primary hover:bg-primary/90"
             >

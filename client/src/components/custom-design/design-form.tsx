@@ -1234,8 +1234,8 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
                 console.log("Design Form - Starting AI consultation with state:", formState);
                 
                 // Use the global method if available
-                if (typeof window.startAIConsultation === "function") {
-                  window.startAIConsultation(formState);
+                if (typeof (window as WindowWithAIConsultation).startAIConsultation === "function") {
+                  (window as WindowWithAIConsultation).startAIConsultation(formState);
                 } else {
                   // Fallback to event dispatch
                   console.log("Design Form - Using legacy event approach");
