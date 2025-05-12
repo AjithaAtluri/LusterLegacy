@@ -56,8 +56,9 @@ export default function FinalizeOrder() {
   // Pre-fill form with user data if available
   useEffect(() => {
     if (user) {
-      setName(user.username);
+      setName(user.name || user.loginID);
       setEmail(user.email || "");
+      setPhone(user.phone || "");
     }
   }, [user]);
 
@@ -344,115 +345,111 @@ export default function FinalizeOrder() {
             <Card>
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit}>
-                  <h2 className="font-playfair text-xl font-semibold mb-6">Contact Information</h2>
+                  <h2 className="font-playfair text-xl font-semibold mb-6">Request Information</h2>
+                  
+                  {user && (
+                    <div className="mb-6 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-green-100 dark:bg-green-800 rounded-full p-1.5 mt-0.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600 dark:text-green-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6L9 17l-5-5"></path>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-green-800 dark:text-green-200">
+                            Using your account information
+                          </p>
+                          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                            Your contact details from your Luster Legacy account will be used for this request. Just add any questions or notes you have below.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name*</Label>
-                      <Input
-                        id="name"
-                        placeholder="Enter your full name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address*</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        readOnly={!!user?.email}
-                        className={user?.email ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed" : ""}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number*</Label>
-                      <Input
-                        id="phone"
-                        placeholder="Your contact number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="country">Country*</Label>
-                      <Select 
-                        value={country} 
-                        onValueChange={setCountry}
-                        disabled={currency === "USD" || currency === "INR"} // Lock based on currency
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {currency === "USD" ? (
-                            <SelectItem value="USA">United States</SelectItem>
-                          ) : currency === "INR" ? (
-                            <SelectItem value="India">India</SelectItem>
-                          ) : (
-                            <>
-                              <SelectItem value="USA">United States</SelectItem>
-                              <SelectItem value="India">India</SelectItem>
-                              <SelectItem value="Canada">Canada</SelectItem>
-                              <SelectItem value="UK">United Kingdom</SelectItem>
-                              <SelectItem value="Australia">Australia</SelectItem>
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address*</Label>
-                      <Input
-                        id="address"
-                        placeholder="Street address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City*</Label>
-                      <Input
-                        id="city"
-                        placeholder="City"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State/Province*</Label>
-                      <Input
-                        id="state"
-                        placeholder="State or province"
-                        value={state}
-                        onChange={(e) => setState(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="postalCode">Postal Code*</Label>
-                      <Input
-                        id="postalCode"
-                        placeholder="Postal or ZIP code"
-                        value={postalCode}
-                        onChange={(e) => setPostalCode(e.target.value)}
-                        required
-                      />
-                    </div>
+                    {!user ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Full Name*</Label>
+                          <Input
+                            id="name"
+                            placeholder="Enter your full name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email Address*</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="your@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone Number*</Label>
+                          <Input
+                            id="phone"
+                            placeholder="Your contact number"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="country">Country*</Label>
+                          <Select 
+                            value={country} 
+                            onValueChange={setCountry}
+                            disabled={currency === "USD" || currency === "INR"} // Lock based on currency
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your country" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {currency === "USD" ? (
+                                <SelectItem value="USA">United States</SelectItem>
+                              ) : currency === "INR" ? (
+                                <SelectItem value="India">India</SelectItem>
+                              ) : (
+                                <>
+                                  <SelectItem value="USA">United States</SelectItem>
+                                  <SelectItem value="India">India</SelectItem>
+                                  <SelectItem value="Canada">Canada</SelectItem>
+                                  <SelectItem value="UK">United Kingdom</SelectItem>
+                                  <SelectItem value="Australia">Australia</SelectItem>
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <input type="hidden" name="name" value={name} />
+                        <input type="hidden" name="email" value={email} />
+                        <input type="hidden" name="phone" value={phone} />
+                        <input type="hidden" name="country" value={country} />
+                      </>
+                    )}
                   </div>
                   
+                  {/* Hidden fields for address that we're not collecting */}
+                  <input type="hidden" name="address" value={address} />
+                  <input type="hidden" name="city" value={city} />
+                  <input type="hidden" name="state" value={state} />
+                  <input type="hidden" name="postalCode" value={postalCode} />
+                  
                   <div className="space-y-2 mb-6">
-                    <Label htmlFor="additionalNotes">Additional Notes</Label>
+                    <Label htmlFor="additionalNotes">Questions/Notes</Label>
                     <Textarea
                       id="additionalNotes"
-                      placeholder="Any special instructions or requests"
+                      placeholder="Any questions or special instructions for your order..."
                       value={additionalNotes}
                       onChange={(e) => setAdditionalNotes(e.target.value)}
                       className="h-32"
