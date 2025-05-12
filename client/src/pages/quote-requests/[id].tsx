@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { Helmet } from "react-helmet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, DollarSign, Clock, Package, Tag, MessageSquare, Check } from "lucide-react";
+import { 
+  ArrowLeft, Calendar, DollarSign, Clock, Package, Tag, MessageSquare, 
+  Check, MessageCircle, ImagePlus, X as XIcon, ArrowRight, Loader2 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +23,10 @@ export default function QuoteRequestDetailsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Fetch quote request details
   const { data: quoteRequest, isLoading: isLoadingQuote } = useQuery({
@@ -53,12 +60,20 @@ export default function QuoteRequestDetailsPage() {
   // Add mutation for sending a message
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
+      setIsSubmitting(true);
+      
+      // Create form data for file upload
+      const formData = new FormData();
+      formData.append('content', messageData.content);
+      formData.append('quoteRequestId', messageData.quoteRequestId.toString());
+      
+      if (messageData.image) {
+        formData.append('image', messageData.image);
+      }
+      
       const response = await fetch(`/api/quote-requests/${id}/comments`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messageData),
+        body: formData,
       });
       
       if (!response.ok) {
@@ -68,8 +83,11 @@ export default function QuoteRequestDetailsPage() {
       return response.json();
     },
     onSuccess: () => {
-      // Clear the message input
+      // Clear the message input and reset image state
       setNewMessage('');
+      setUploadedImage(null);
+      setImagePreview(null);
+      setIsSubmitting(false);
       
       // Invalidate and refetch the quote request data to show the new message
       queryClient.invalidateQueries({ queryKey: ["/api/quote-requests", id] });
@@ -83,6 +101,7 @@ export default function QuoteRequestDetailsPage() {
       }, 100);
     },
     onError: (error) => {
+      setIsSubmitting(false);
       toast({
         title: "Failed to send message",
         description: error.message,
@@ -138,15 +157,55 @@ export default function QuoteRequestDetailsPage() {
 
   // Handle sending a new message
   const handleSendMessage = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !uploadedImage) return;
     
     sendMessageMutation.mutate({
       quoteRequestId: parseInt(id as string),
       content: newMessage,
-      createdBy: user?.username || "Customer",
+      createdBy: user?.name || user?.loginID || "Customer",
       isAdmin: false,
-      userId: user?.id
+      userId: user?.id,
+      image: uploadedImage
     });
+  };
+  
+  // Image handling functions
+  const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Check file size (limit to 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Preview the image
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImagePreview(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Store the file for upload
+    setUploadedImage(file);
+  };
+  
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const getStatusColor = (status: string) => {
