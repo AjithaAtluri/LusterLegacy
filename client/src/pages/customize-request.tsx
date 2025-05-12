@@ -286,7 +286,7 @@ export default function CustomizeRequest() {
           setName(parsedData.name || user.name || user.loginID);
           setEmail(parsedData.email || user.email || "");
           setPhone(parsedData.phone || "");
-          setCustomizationDetails(parsedData.customizationDetails || "");
+          setPersonalizationDetails(parsedData.personalizationDetails || "");
           setPreferredBudget(parsedData.preferredBudget || "");
           setTimeline(parsedData.timeline || "");
           setMetalTypeId(parsedData.metalTypeId || "");
