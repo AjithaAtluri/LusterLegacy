@@ -367,22 +367,47 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Attempted to map a null or undefined database stone type");
     }
     
-    // Create the mapped StoneType object with proper property names
+    console.log(`Mapping stone type ${dbStoneType.name} - Raw data:`, JSON.stringify(dbStoneType));
+    
+    // Determine whether we have snake_case or camelCase properties in the source
+    const hasSnakeCase = 'price_modifier' in dbStoneType;
+    const hasCamelCase = 'priceModifier' in dbStoneType;
+    
+    // Handle price depending on which format it's in
+    let price: number;
+    if (hasSnakeCase && dbStoneType.price_modifier !== undefined && dbStoneType.price_modifier !== null) {
+      price = dbStoneType.price_modifier;
+      console.log(`Using snake_case price for ${dbStoneType.name}: ${price}`);
+    } else if (hasCamelCase && dbStoneType.priceModifier !== undefined && dbStoneType.priceModifier !== null) {
+      price = dbStoneType.priceModifier;
+      console.log(`Using camelCase price for ${dbStoneType.name}: ${price}`);
+    } else {
+      // Direct query from SQL might have it as a raw column name
+      price = dbStoneType.price_modifier || 500; // Default if all else fails
+      console.log(`Fallback price for ${dbStoneType.name}: ${price}`);
+    }
+    
+    // Create the mapped StoneType object with proper property names, handling both formats
     const stoneTypeObj: StoneType = {
       id: dbStoneType.id,
       name: dbStoneType.name,
       description: dbStoneType.description,
-      priceModifier: dbStoneType.price_modifier,
-      displayOrder: dbStoneType.display_order,
-      isActive: dbStoneType.is_active,
+      // Use the determined price
+      priceModifier: price,
+      // Handle other fields similarly - try camelCase first, then snake_case
+      displayOrder: dbStoneType.displayOrder || dbStoneType.display_order || 0,
+      isActive: dbStoneType.isActive !== undefined ? dbStoneType.isActive : 
+                dbStoneType.is_active !== undefined ? dbStoneType.is_active : true,
       color: dbStoneType.color,
-      imageUrl: dbStoneType.image_url,
+      imageUrl: dbStoneType.imageUrl || dbStoneType.image_url,
       category: dbStoneType.category,
-      stoneForm: dbStoneType.stone_form,
+      stoneForm: dbStoneType.stoneForm || dbStoneType.stone_form,
       quality: dbStoneType.quality,
       size: dbStoneType.size,
-      createdAt: dbStoneType.created_at
+      createdAt: dbStoneType.createdAt || dbStoneType.created_at
     };
+    
+    console.log(`Mapped stone ${dbStoneType.name} - priceModifier set to: ${stoneTypeObj.priceModifier}`);
     
     return stoneTypeObj;
   }
