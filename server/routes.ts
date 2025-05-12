@@ -3810,6 +3810,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Log the form data for debugging
+      console.log("Design Consultation Route - Received form data:", formData);
+      
       // Generate the design consultation response with form data context
       const response = await generateDesignConsultationResponse(
         message, 

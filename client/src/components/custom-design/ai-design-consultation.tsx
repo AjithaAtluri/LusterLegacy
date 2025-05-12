@@ -198,11 +198,19 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
       console.log("AI Design Consultation - Prepared Form Data:", formData);
       
       // Send message to API with form context data if available
-      const response = await apiRequest("POST", "/api/design-consultation-ai", {
+      // Need to fix the parameter name to match what the server expects
+      const requestBody = {
         message: userMessage.content,
-        history: chatHistory,
+        history: chatHistory.map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
         formData: formData
-      });
+      };
+      
+      console.log("AI Design Consultation - Sending request to API:", requestBody);
+      
+      const response = await apiRequest("POST", "/api/design-consultation-ai", requestBody);
       
       const data = await response.json();
       
