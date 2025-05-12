@@ -5647,7 +5647,8 @@ Respond in JSON format:
           stoneTypes.slice(0, 2).map(st => ({
             id: st.id,
             name: st.name,
-            price: st.priceModifier
+            priceModifier: st.priceModifier,
+            rawValue: JSON.stringify(st)
           }))
         );
       }
@@ -5657,20 +5658,29 @@ Respond in JSON format:
         // Make a copy to avoid mutating the original
         const formattedStone = { ...stone };
         
-        // Convert priceModifier to a number but preserve the actual value
-        // including legitimate zero and non-zero values
-        if (formattedStone.priceModifier !== undefined && formattedStone.priceModifier !== null) {
-          formattedStone.priceModifier = Number(formattedStone.priceModifier);
+        // DIRECT DATABASE ACCESS - Access the price_modifier directly from the database field
+        // to avoid any mapping issues
+        
+        // We know from our SQL query that price_modifier exists in the database and contains correct values
+        // This bypasses any mapping issues in the storage layer
+        if (formattedStone.price_modifier !== undefined && formattedStone.price_modifier !== null) {
+          // We're going to force assign the raw database value to our application field
+          formattedStone.priceModifier = Number(formattedStone.price_modifier);
           
-          // If the conversion results in NaN, log warning and preserve original
+          console.log(`Setting price for ${stone.name}: db value=${formattedStone.price_modifier}, mapped=${formattedStone.priceModifier}`);
+          
+          // If the conversion results in NaN, log warning and try to fix
           if (isNaN(formattedStone.priceModifier)) {
             console.warn(`Invalid price modifier value detected: ${stone.priceModifier} for ${stone.name}`);
             // Try to clean up the value if it's a string with non-numeric characters
-            const cleanedValue = String(stone.priceModifier).replace(/[^0-9.]/g, '');
+            const cleanedValue = String(stone.price_modifier).replace(/[^0-9.]/g, '');
             formattedStone.priceModifier = cleanedValue ? Number(cleanedValue) : 0;
           }
         } else {
-          // Only set to zero if truly undefined or null
+          // Direct query database field for safety
+          console.log(`No price_modifier found for ${stone.name}, checking direct database fields:`, stone);
+          
+          // Only set to zero if truly no value can be found
           formattedStone.priceModifier = 0;
         }
         
@@ -5683,9 +5693,19 @@ Respond in JSON format:
           formattedStoneTypes.slice(0, 2).map(st => ({
             id: st.id,
             name: st.name,
-            price: st.priceModifier
+            priceModifier: st.priceModifier 
           }))
         );
+        
+        // Verify a specific stone type to make sure high-value stones have correct prices
+        const diamond = formattedStoneTypes.find(st => 
+          st.name.toLowerCase().includes('diamond') || 
+          st.name.toLowerCase().includes('emerald')
+        );
+        
+        if (diamond) {
+          console.log(`Precious stone price check - ${diamond.name}: ₹${diamond.priceModifier}`);
+        }
       }
       
       console.log(`Successfully fetched ${stoneTypes.length} stone types for admin`);
