@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText, ArrowRight } from "lucide-react";
+import { ProductDetailCard } from "@/components/admin/product-detail-card";
 
 interface PersonalizationDetailProps {
   personalization: {
@@ -668,96 +669,11 @@ export default function PersonalizationDetail({ personalization }: Personalizati
           </DialogHeader>
           
           {productDetails ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Product Image */}
-              <div className="space-y-4">
-                <div className="overflow-hidden rounded-lg border border-border">
-                  <div 
-                    className="cursor-pointer h-64 bg-cover bg-center bg-no-repeat"
-                    style={{ backgroundImage: `url(${productDetails.imageUrl})` }}
-                    onClick={() => {
-                      setSelectedImage(productDetails.imageUrl);
-                      setShowProductDialog(false);
-                      setShowImageDialog(true);
-                    }}
-                  />
-                </div>
-                
-                {/* Additional Images */}
-                {productDetails.additionalImages && productDetails.additionalImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {productDetails.additionalImages.map((img, idx) => (
-                      <div 
-                        key={idx}
-                        className="cursor-pointer h-20 bg-cover bg-center bg-no-repeat rounded border border-border"
-                        style={{ backgroundImage: `url(${img})` }}
-                        onClick={() => {
-                          setSelectedImage(img);
-                          setShowProductDialog(false);
-                          setShowImageDialog(true);
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Product Info */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-semibold mb-1">{productDetails.name}</h3>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge variant="secondary">{productDetails.category}</Badge>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-lg font-medium">Pricing</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="text-muted-foreground">Base Price:</div>
-                    <div>{formatCurrency(productDetails.basePrice)} USD</div>
-                    <div className="text-muted-foreground">Price (USD):</div>
-                    <div>{formatCurrency(productDetails.calculatedPriceUSD)} USD</div>
-                    <div className="text-muted-foreground">Price (INR):</div>
-                    <div>₹{formatCurrency(productDetails.calculatedPriceINR, "INR")}</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-lg font-medium">Materials</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="text-muted-foreground">Metal Type:</div>
-                    <div>{productDetails.materials?.metalType || 'N/A'}</div>
-                    <div className="text-muted-foreground">Metal Weight:</div>
-                    <div>{productDetails.materials?.metalWeight || 'N/A'} grams</div>
-                    <div className="text-muted-foreground">Primary Gem:</div>
-                    <div>{productDetails.materials?.primaryStone || 'N/A'}</div>
-                    <div className="text-muted-foreground">Primary Gem Weight:</div>
-                    <div>{productDetails.materials?.primaryStoneWeight || 'N/A'} carats</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-lg font-medium">Availability</div>
-                  <Badge 
-                    variant={productDetails.availability === 'In Stock' ? 'outline' : 'secondary'}>
-                    {productDetails.availability || 'Made to Order'}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-lg font-medium">Description</div>
-                  <p className="text-sm text-muted-foreground">{productDetails.description}</p>
-                </div>
-                
-                {productDetails.details && (
-                  <div className="space-y-2">
-                    <div className="text-lg font-medium">Details</div>
-                    <p className="text-sm text-muted-foreground">{productDetails.details}</p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ProductDetailCard 
+              product={productDetails} 
+              onClose={() => setShowProductDialog(false)} 
+              isFullPage={false}
+            />
           ) : (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
