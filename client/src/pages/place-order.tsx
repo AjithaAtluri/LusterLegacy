@@ -514,7 +514,11 @@ export default function FinalizeOrder() {
                         </div>
                       </>
                     ) : (
-                      <input type="hidden" name="name" value={name} />
+                      <>
+                        <input type="hidden" name="name" value={name} />
+                        <input type="hidden" name="email" value={email} />
+                        <input type="hidden" name="phone" value={phone} />
+                      </>
                     )}
                     <div className="space-y-2">
                       <Label htmlFor="country">Country*</Label>
