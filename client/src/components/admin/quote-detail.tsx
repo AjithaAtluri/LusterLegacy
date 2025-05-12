@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { ProductDetailCard } from "@/components/admin/product-detail-card";
 
 interface QuoteDetailProps {
   quote: {
@@ -226,130 +227,17 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
     <div className="space-y-6">
       {/* Product Detail Dialog */}
       <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl">
           <DialogHeader>
             <DialogTitle>Product Details</DialogTitle>
           </DialogHeader>
           
           {productDetails ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Product Image */}
-                <div>
-                  {productDetails.imageUrl && (
-                    <div className="relative rounded-md overflow-hidden aspect-square">
-                      <img 
-                        src={productDetails.imageUrl} 
-                        alt={productDetails.name} 
-                        className="object-cover w-full h-full"
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Additional Images */}
-                  {productDetails.additionalImages && productDetails.additionalImages.length > 0 && (
-                    <div className="mt-4 grid grid-cols-4 gap-2">
-                      {productDetails.additionalImages.map((img, idx) => (
-                        <div key={idx} className="relative rounded-md overflow-hidden aspect-square">
-                          <img 
-                            src={img} 
-                            alt={`${productDetails.name} - view ${idx + 1}`} 
-                            className="object-cover w-full h-full cursor-pointer"
-                            onClick={() => {
-                              setSelectedImage(img);
-                              setShowImageDialog(true);
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Product Details */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold">{productDetails.name}</h2>
-                  
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="font-medium">Base Price:</div>
-                    <div className="col-span-2">
-                      {formatCurrency(productDetails.basePrice, "INR")}
-                      {productDetails.calculatedPriceUSD && (
-                        <span className="text-muted-foreground ml-2">
-                          ({formatCurrency(productDetails.calculatedPriceUSD, "USD")})
-                        </span>
-                      )}
-                    </div>
-                    
-                    {productDetails.category && (
-                      <>
-                        <div className="font-medium">Category:</div>
-                        <div className="col-span-2">{productDetails.category}</div>
-                      </>
-                    )}
-                    
-                    {productDetails.materials?.metalType && (
-                      <>
-                        <div className="font-medium">Metal Type:</div>
-                        <div className="col-span-2">{productDetails.materials.metalType}</div>
-                      </>
-                    )}
-                    
-                    {productDetails.materials?.metalWeight && (
-                      <>
-                        <div className="font-medium">Metal Weight:</div>
-                        <div className="col-span-2">{productDetails.materials.metalWeight} grams</div>
-                      </>
-                    )}
-                    
-                    {productDetails.materials?.primaryStone && (
-                      <>
-                        <div className="font-medium">Primary Stone:</div>
-                        <div className="col-span-2">{productDetails.materials.primaryStone}</div>
-                      </>
-                    )}
-                    
-                    {productDetails.materials?.primaryStoneWeight && (
-                      <>
-                        <div className="font-medium">Primary Stone Weight:</div>
-                        <div className="col-span-2">{productDetails.materials.primaryStoneWeight} carats</div>
-                      </>
-                    )}
-                    
-                    {productDetails.availability && (
-                      <>
-                        <div className="font-medium">Availability:</div>
-                        <div className="col-span-2">
-                          <Badge variant={productDetails.availability === "in_stock" ? "success" : "warning"}>
-                            {productDetails.availability.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium mb-2">Description</h3>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{productDetails.description}</p>
-                  </div>
-                  
-                  {productDetails.details && (
-                    <div>
-                      <h3 className="font-medium mb-2">Details</h3>
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{productDetails.details}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => setShowProductDialog(false)}
-              >
-                Close
-              </Button>
-            </div>
+            <ProductDetailCard 
+              product={productDetails} 
+              onClose={() => setShowProductDialog(false)} 
+              isFullPage={false}
+            />
           ) : (
             <div className="py-8 flex justify-center items-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
