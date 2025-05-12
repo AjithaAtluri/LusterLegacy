@@ -316,6 +316,7 @@ export default function CustomizeRequest() {
     if (user) {
       setName(user.name || user.loginID);
       setEmail(user.email || "");
+      setPhone(user.phone || "");
     }
     
     // Fill product specifications if product is loaded
@@ -782,38 +783,58 @@ export default function CustomizeRequest() {
             <Card>
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit}>
+                  {user && (
+                    <div className="mb-4 p-3 bg-muted/50 rounded-md border border-border">
+                      <p className="text-sm text-muted-foreground">
+                        Your contact information will be automatically used from your account.
+                      </p>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Your Name*</Label>
-                      <Input
-                        id="name"
-                        placeholder="Enter your full name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address*</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number*</Label>
-                      <Input
-                        id="phone"
-                        placeholder="Your contact number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                      />
-                    </div>
+                    {!user ? (
+                      // Show full contact form for non-logged in users
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Your Name*</Label>
+                          <Input
+                            id="name"
+                            placeholder="Enter your full name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email Address*</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="your@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone Number*</Label>
+                          <Input
+                            id="phone"
+                            placeholder="Your contact number"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      // Hidden inputs for logged-in users to maintain the form functionality
+                      <div className="col-span-2">
+                        <Input id="name" type="hidden" value={name} />
+                        <Input id="email" type="hidden" value={email} />
+                        <Input id="phone" type="hidden" value={phone || user.phone || ""} />
+                      </div>
+                    )}
+                  
                     <div className="space-y-2">
                       <Label htmlFor="budget">Preferred Budget (Optional)</Label>
                       <Input
