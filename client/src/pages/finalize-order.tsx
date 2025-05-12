@@ -124,15 +124,28 @@ export default function FinalizeOrder() {
     const formData = new FormData(form);
     const action = formData.get('action')?.toString() || 'request_quote';
     
-    // Validate form fields
-    if (!name || !email || !address || !city || !state || !postalCode || !country) {
-      toast({
-        title: "Required Fields Missing",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
+    // Validate form fields - for quote requests, we only need contact info, not shipping address
+    if (user) {
+      // For logged-in users, all contact info is available from their profile
+      // No validation needed as we use their account info
+    } else {
+      // For guest users, validate basic contact information
+      if (!name || !email || !phone || !country) {
+        toast({
+          title: "Required Fields Missing",
+          description: "Please fill in all required contact information fields.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
+    
+    // Set placeholder values for address fields since we're not collecting them for quote requests
+    // but they're still required by the API
+    if (!address) setAddress("Quote Request - No Address Needed");
+    if (!city) setCity("Quote Request - No City Needed");
+    if (!state) setState("Quote Request - No State Needed");
+    if (!postalCode) setPostalCode("00000");
     
     // Validate country-currency matching
     if ((currency === "INR" && country !== "India") || 
@@ -544,7 +557,7 @@ export default function FinalizeOrder() {
                             Processing...
                           </span>
                         ) : (
-                          <>Request Final Quote</>
+                          <>Request Quote</>
                         )}
                       </Button>
                     </div>
