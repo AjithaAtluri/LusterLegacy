@@ -149,10 +149,16 @@ export function setupAuth(app: Express): void {
   // Registration endpoint
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(req.body.username);
+      // Check if loginID already exists
+      const existingUser = await storage.getUserByLoginID(req.body.loginID);
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        return res.status(400).json({ message: "Login ID already exists" });
+      }
+
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(req.body.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
       }
 
       // Create new user with hashed password
@@ -173,7 +179,7 @@ export function setupAuth(app: Express): void {
             return next(saveErr);
           }
           
-          console.log(`Registration successful - User ${user.username} (ID: ${user.id}) is now logged in with session ID: ${req.sessionID}`);
+          console.log(`Registration successful - User ${user.loginID} (ID: ${user.id}) is now logged in with session ID: ${req.sessionID}`);
           
           // Return user without the password
           const { password, ...userWithoutPassword } = user;
@@ -390,22 +396,29 @@ export function setupAuth(app: Express): void {
         return res.status(403).json({ message: "Only administrators can create admin accounts" });
       }
       
-      const { username, password, email, role } = req.body;
+      const { loginID, name, password, email, role } = req.body;
       
       // Validate role - only "admin" or "limited-admin" allowed for this endpoint
       if (role !== "admin" && role !== "limited-admin") {
         return res.status(400).json({ message: "Invalid role. Must be 'admin' or 'limited-admin'." });
       }
       
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(username);
+      // Check if loginID already exists
+      const existingUser = await storage.getUserByLoginID(loginID);
       if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+        return res.status(400).json({ message: "Login ID already exists" });
+      }
+      
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
       }
       
       // Create new admin user with hashed password
       const newAdmin = await storage.createUser({
-        username,
+        loginID,
+        name,
         password: await hashPassword(password),
         email,
         role

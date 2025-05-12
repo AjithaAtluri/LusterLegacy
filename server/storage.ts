@@ -77,11 +77,12 @@ export interface IStorage {
 
   // User methods
   getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByLoginID(loginID: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getUserByVerificationToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
-  deleteUser(usernameOrId: string | number): Promise<boolean>;
+  deleteUser(loginIDOrId: string | number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
 
   // Customization request methods
