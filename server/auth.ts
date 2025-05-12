@@ -357,12 +357,24 @@ export function setupAuth(app: Express): void {
       const updatedUser = await storage.updateUser(req.user.id, { loginID });
       
       if (updatedUser) {
-        // Update the session with the latest user data
-        req.login(updatedUser, (err) => {
-          if (err) return res.status(500).json({ message: "Session update failed" });
+        // Force reset the session to update with the new loginID
+        req.logout((logoutErr) => {
+          if (logoutErr) {
+            console.error("Error during logout for loginID update:", logoutErr);
+            return res.status(500).json({ message: "Session update failed during logout phase" });
+          }
           
-          const { password, ...userWithoutPassword } = updatedUser;
-          res.json(userWithoutPassword);
+          // Log back in with the updated user data
+          req.login(updatedUser, (loginErr) => {
+            if (loginErr) {
+              console.error("Error during login for loginID update:", loginErr);
+              return res.status(500).json({ message: "Session update failed during login phase" });
+            }
+            
+            const { password, ...userWithoutPassword } = updatedUser;
+            console.log("LoginID updated successfully to:", loginID);
+            res.json(userWithoutPassword);
+          });
         });
       } else {
         res.status(404).json({ message: "User not found" });

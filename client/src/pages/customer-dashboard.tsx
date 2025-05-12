@@ -1005,6 +1005,11 @@ export default function CustomerDashboard() {
                             onClick={async () => {
                               try {
                                 setIsUpdatingProfile(true);
+                                toast({
+                                  title: "Updating Login ID",
+                                  description: "Please wait while we update your login ID...",
+                                });
+                                
                                 const res = await fetch("/api/user/update-login-id", {
                                   method: "POST",
                                   headers: {
@@ -1019,13 +1024,19 @@ export default function CustomerDashboard() {
                                 }
                                 
                                 const updatedUser = await res.json();
+                                console.log("Login ID update successful, received updated user:", updatedUser);
+                                
                                 toast({
                                   title: "Login ID Updated",
-                                  description: "Your login ID has been updated to AjithaM",
+                                  description: "Your login ID has been updated to AjithaM. Redirecting to login...",
                                 });
                                 
-                                // Force reload to update the session
-                                window.location.reload();
+                                // Since we force logout/login on the server, we need to log in again on the client
+                                // Wait a moment before redirecting to ensure toast is visible
+                                setTimeout(() => {
+                                  // Force redirect to login
+                                  window.location.href = "/auth?message=Please+log+in+again+with+your+new+login+ID";
+                                }, 2000);
                               } catch (error: any) {
                                 toast({
                                   title: "Update Failed",
