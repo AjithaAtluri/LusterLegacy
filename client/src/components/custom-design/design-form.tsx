@@ -900,7 +900,8 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
       agreeToTerms: form.getValues('agreeToTerms')
     },
     selectedStones: selectedStones,
-    metalType: watchedMetalType
+    metalType: watchedMetalType,
+    imageDataUrl: previewUrl || undefined
   };
   
   // Debug log for context value updates
@@ -931,7 +932,8 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
         onFormChange({
           metalType: metalType,
           selectedStones: validStones,
-          notes: notes
+          notes: notes,
+          imageDataUrl: previewUrl || undefined
         });
       }
     });

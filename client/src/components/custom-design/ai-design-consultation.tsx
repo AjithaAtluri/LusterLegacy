@@ -341,8 +341,8 @@ export default function AIDesignConsultation({
           formData = {
             metalType: metalType || "",
             gemstones: (selectedStones || []) as string[],
-            designDescription: notes || ""
-            // Note: We don't have imageDataUrl in the context fallback yet
+            designDescription: notes || "",
+            imageDataUrl: formContext.imageDataUrl // Include image from context
           };
         }
         
