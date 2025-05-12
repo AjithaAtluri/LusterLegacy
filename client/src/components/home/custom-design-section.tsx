@@ -19,6 +19,23 @@ import { isImageFile, getFileExtension, cn } from "@/lib/utils";
 import type { SubmitHandler } from "react-hook-form";
 import designProcessImage from "@/assets/amethyst-necklace-design.png";
 
+// Common country codes for phone numbers
+const COUNTRY_CODES = [
+  { code: "+1", country: "US/Canada" },
+  { code: "+44", country: "UK" },
+  { code: "+91", country: "India" },
+  { code: "+61", country: "Australia" },
+  { code: "+64", country: "New Zealand" },
+  { code: "+971", country: "UAE" },
+  { code: "+65", country: "Singapore" },
+  { code: "+852", country: "Hong Kong" },
+  { code: "+33", country: "France" },
+  { code: "+49", country: "Germany" },
+  { code: "+81", country: "Japan" },
+  { code: "+86", country: "China" },
+  { code: "+82", country: "South Korea" },
+];
+
 const designFormSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
@@ -51,7 +68,7 @@ export default function CustomDesignSection() {
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
     defaultValues: {
-      fullName: user?.username || "",
+      fullName: user?.name || "",
       email: user?.email || "",
       metalType: "",
       primaryStones: [],
@@ -66,7 +83,7 @@ export default function CustomDesignSection() {
   // Update the form with user data when user logs in or changes
   useEffect(() => {
     if (user) {
-      form.setValue("fullName", user.username);
+      form.setValue("fullName", user.name || "");
       form.setValue("email", user.email);
     }
   }, [user, form]);
@@ -84,7 +101,8 @@ export default function CustomDesignSection() {
         // Create form data structure that matches the one expected by design-form.tsx
         let formData: any = {
           ...data,
-          phone: data.phone || "", // Use phone from form data
+          // Combine country code with phone number
+          phone: `${data.countryCode || "+1"}${data.phone || ""}`.trim(),
           country: "us", // Default to US
           imageInfo: uploadedImage ? {
             name: uploadedImage.name,
@@ -207,7 +225,8 @@ export default function CustomDesignSection() {
       // Create form data structure that matches the one expected by design-form.tsx
       let formData: any = {
         ...data,
-        phone: data.phone || "", // Use the phone value from the form data
+        // Combine country code with phone number
+        phone: `${data.countryCode || "+1"}${data.phone || ""}`.trim(),
         country: "us", // Default to US
         imageInfo: uploadedImage ? {
           name: uploadedImage.name,
@@ -810,28 +829,56 @@ export default function CustomDesignSection() {
                     />
                   </div>
                   
-                  {/* Phone Field - Added as controlled FormField for better form data persistence */}
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem className="mb-4">
-                        <FormControl>
-                          <Input 
-                            {...field}
-                            id="phone-input"
-                            type="tel"
-                            placeholder="Phone Number" 
-                            className="p-3 border border-foreground/20 rounded font-montserrat text-sm w-full" 
-                          />
-                        </FormControl>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Phone number will be saved with your design request
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Phone Field with Country Code Dropdown */}
+                  <div className="grid grid-cols-[120px_1fr] gap-2 mb-4">
+                    <FormField
+                      control={form.control}
+                      name="countryCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="p-3 border border-foreground/20 rounded font-montserrat text-sm">
+                                <SelectValue placeholder="+1" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {COUNTRY_CODES.map((country) => (
+                                <SelectItem key={country.code} value={country.code}>
+                                  {country.code} {country.country}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input 
+                              {...field}
+                              id="phone-input"
+                              type="tel"
+                              placeholder="Phone Number" 
+                              className="p-3 border border-foreground/20 rounded font-montserrat text-sm w-full" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="col-span-2 text-xs text-muted-foreground">
+                      Phone number will be saved with your design request
+                    </div>
+                  </div>
                 </div>
                 
                 <FormField
