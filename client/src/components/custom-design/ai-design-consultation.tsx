@@ -79,14 +79,14 @@ export default function AIDesignConsultation({
   }, [integratedWithForm, formContext]);
   
   // Helper function for type checking with window
-  interface WindowWithCustomProps extends Window {
-    startAIConsultation: ((state: any) => void) | undefined;
+  interface WindowWithCustomProps {
+    startAIConsultation?: (state: any) => void;
   }
   
   // Create a global method to start the consultation and listen for events
   useEffect(() => {
     // Define a global method to start the consultation
-    (window as WindowWithCustomProps).startAIConsultation = (capturedFormState: any) => {
+    (window as unknown as WindowWithCustomProps).startAIConsultation = (capturedFormState: any) => {
       console.log("AI Design Consultation - Global method trigger received");
       
       if (capturedFormState) {
@@ -115,7 +115,7 @@ export default function AIDesignConsultation({
     
     return () => {
       window.removeEventListener('start-ai-consultation', handleStartEvent);
-      delete (window as WindowWithCustomProps).startAIConsultation;
+      delete (window as unknown as WindowWithCustomProps).startAIConsultation;
     };
   }, [formContext, formState]); // Include both dependencies
   

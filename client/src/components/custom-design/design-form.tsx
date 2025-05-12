@@ -1,8 +1,8 @@
 import React, { useState, useEffect, createContext } from "react";
 
 // Define a custom window interface with our global method
-interface WindowWithAIConsultation extends Window {
-  startAIConsultation: ((state: any) => void) | undefined;
+interface WindowWithAIConsultation {
+  startAIConsultation?: (state: any) => void;
 }
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -1241,7 +1241,7 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
                 console.log("Design Form - Starting AI consultation with state:", formState);
                 
                 // Use the global method if available
-                const windowWithConsultation = window as WindowWithAIConsultation;
+                const windowWithConsultation = window as unknown as WindowWithAIConsultation;
                 if (windowWithConsultation.startAIConsultation && typeof windowWithConsultation.startAIConsultation === "function") {
                   windowWithConsultation.startAIConsultation(formState);
                 } else {
