@@ -1,10 +1,30 @@
 import { Helmet } from "react-helmet";
-import DesignForm from "@/components/custom-design/design-form";
+import DesignForm, { DesignFormContext } from "@/components/custom-design/design-form";
 import AIDesignConsultation from "@/components/custom-design/ai-design-consultation";
 import { CheckCircle, Clock, HelpCircle, FileImage, ArrowRight, PenLine } from "lucide-react";
 import { PAYMENT_TERMS } from "@/lib/constants";
+import { useState } from "react";
 
 export default function CustomDesign() {
+  // Create shared state that will be passed to both components
+  const [formState, setFormState] = useState({
+    metalType: "",
+    selectedStones: [] as string[],
+    notes: ""
+  });
+  
+  // Function to update the shared state
+  const updateFormState = (data: {
+    metalType?: string;
+    selectedStones?: string[];
+    notes?: string;
+  }) => {
+    setFormState(prev => ({
+      ...prev,
+      ...data
+    }));
+  };
+  
   return (
     <>
       <Helmet>
@@ -27,13 +47,19 @@ export default function CustomDesign() {
         {/* Form first - displays prominently on both mobile and desktop */}
         <div className="mx-auto max-w-2xl mb-12">
           <div className="bg-card rounded-lg shadow-lg">
-            <DesignForm />
+            <DesignForm 
+              onFormChange={updateFormState} 
+              formState={formState}
+            />
           </div>
         </div>
         
         {/* AI Design Consultation - integrated with the form and shown here only when active */}
         <div className="mx-auto max-w-2xl mb-16">
-          <AIDesignConsultation integratedWithForm={true} />
+          <AIDesignConsultation 
+            integratedWithForm={true}
+            formState={formState}
+          />
         </div>
         
         {/* Process steps - full width, visually appealing timeline */}

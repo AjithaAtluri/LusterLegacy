@@ -59,7 +59,20 @@ export const DesignFormContext = createContext<{
   metalType: "",
 });
 
-export default function DesignForm() {
+interface DesignFormProps {
+  onFormChange?: (data: {
+    metalType?: string;
+    selectedStones?: string[];
+    notes?: string;
+  }) => void;
+  formState?: {
+    metalType: string;
+    selectedStones: string[];
+    notes: string;
+  };
+}
+
+export default function DesignForm({ onFormChange, formState }: DesignFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<File | null>(null); // Main image (for backward compatibility)
   const [uploadedImages, setUploadedImages] = useState<File[]>([]); // Array to store multiple images

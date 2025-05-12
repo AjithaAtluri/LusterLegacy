@@ -24,9 +24,14 @@ interface FormData {
 
 interface AIDesignConsultationProps {
   integratedWithForm?: boolean;
+  formState?: {
+    metalType: string;
+    selectedStones: string[];
+    notes: string;
+  };
 }
 
-export default function AIDesignConsultation({ integratedWithForm = false }: AIDesignConsultationProps) {
+export default function AIDesignConsultation({ integratedWithForm = false, formState }: AIDesignConsultationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const formContext = useContext(DesignFormContext);
@@ -131,21 +136,26 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     setChatHistory([]);
     setTimeLeft(15);
     
-    // Get a new reference to the form context to ensure we have the latest data
-    const currentContext = formContext;
+    // Use the formState prop directly if available (new approach)
+    // Otherwise fall back to the context (for backward compatibility)
+    const currentFormData = formState || (formContext ? {
+      metalType: formContext.metalType || "",
+      selectedStones: formContext.selectedStones || [],
+      notes: formContext.formValues?.notes || ""
+    } : null);
     
-    // Log the current form context
-    console.log("AI Design Consultation - Starting with form context:", currentContext);
+    // Log the current form data
+    console.log("AI Design Consultation - Starting with form data:", currentFormData);
     
     // Generate a context-aware welcome message
     let welcomeMessage = "Welcome to your AI design consultation! I'm here to help you explore jewelry design ideas, suggest materials, gemstones, and answer your questions about custom jewelry design.";
     
     // Add context from the form if available
-    if (integratedWithForm && currentContext) {
-      // Extract form data - get values directly from the form context
-      const metalType = currentContext.metalType;
-      const selectedStones = currentContext.selectedStones;
-      const notes = currentContext.formValues?.notes;
+    if (integratedWithForm && currentFormData) {
+      // Extract form data
+      const metalType = currentFormData.metalType;
+      const selectedStones = currentFormData.selectedStones;
+      const notes = currentFormData.notes;
       
       console.log("AI Design Consultation - Extracted form data:", {
         metalType,
@@ -225,7 +235,9 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     setIsLoading(true);
     
     try {
-      // Log form context to debug
+      // Use the formState prop directly if available (new approach)
+      // Otherwise fall back to the context (for backward compatibility)
+      console.log("AI Design Consultation - FormState prop:", formState);
       console.log("AI Design Consultation - Form Context:", formContext);
       
       // Prepare form data for context if it exists
@@ -235,21 +247,32 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
         designDescription: ""
       };
       
-      if (integratedWithForm && formContext) {
-        console.log("AI Design Consultation - Using form context:", formContext);
-        
-        // Get current form values directly 
-        const metalType = formContext.metalType;
-        const selectedStones = formContext.selectedStones;
-        const notes = formContext.formValues?.notes;
-        
-        // Always provide formData, even if empty
-        // Cast selectedStones to string[] to match FormData interface
-        formData = {
-          metalType: metalType || "",
-          gemstones: (selectedStones || []) as string[],
-          designDescription: notes || ""
-        };
+      if (integratedWithForm) {
+        if (formState) {
+          console.log("AI Design Consultation - Using formState prop:", formState);
+          
+          // Extract data from the formState prop
+          formData = {
+            metalType: formState.metalType || "",
+            gemstones: (formState.selectedStones || []) as string[],
+            designDescription: formState.notes || ""
+          };
+        } else if (formContext) {
+          console.log("AI Design Consultation - Using form context (fallback):", formContext);
+          
+          // Get current form values directly 
+          const metalType = formContext.metalType;
+          const selectedStones = formContext.selectedStones;
+          const notes = formContext.formValues?.notes;
+          
+          // Always provide formData, even if empty
+          // Cast selectedStones to string[] to match FormData interface
+          formData = {
+            metalType: metalType || "",
+            gemstones: (selectedStones || []) as string[],
+            designDescription: notes || ""
+          };
+        }
         
         console.log("AI Design Consultation - Form data prepared:", formData);
         
