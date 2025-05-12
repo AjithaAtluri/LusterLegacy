@@ -58,10 +58,12 @@ export const DesignFormContext = createContext<{
   formValues: DesignFormValues | null;
   selectedStones: string[];
   metalType: string;
+  imageDataUrl?: string;
 }>({
   formValues: null,
   selectedStones: [],
   metalType: "",
+  imageDataUrl: undefined,
 });
 
 interface DesignFormProps {
