@@ -3784,7 +3784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.post("/api/design-consultation-ai", async (req, res) => {
     try {
-      const { message, history } = req.body;
+      const { message, history, formData } = req.body;
       
       if (!message || typeof message !== 'string') {
         return res.status(400).json({ message: "Invalid request. 'message' is required and must be a string." });
@@ -3803,8 +3803,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Generate the design consultation response
-      const response = await generateDesignConsultationResponse(message, history || []);
+      // Validate the form data if provided
+      if (formData && typeof formData !== 'object') {
+        return res.status(400).json({ 
+          message: "Invalid formData format. Expected an object with design preferences." 
+        });
+      }
+      
+      // Generate the design consultation response with form data context
+      const response = await generateDesignConsultationResponse(
+        message, 
+        history || [],
+        formData || null
+      );
       
       res.status(200).json({ response });
     } catch (error) {

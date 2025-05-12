@@ -10,15 +10,22 @@ interface Message {
   content: string;
 }
 
+interface FormData {
+  metalType?: string;
+  gemstones?: string[];
+  designDescription?: string;
+}
+
 /**
  * Generate a response from the AI about jewelry design
  */
 export async function generateDesignConsultationResponse(
   message: string,
-  history: Message[] = []
+  history: Message[] = [],
+  formData?: FormData | null
 ): Promise<string> {
-  // Create system message with instructions
-  const systemPrompt = `You are an expert jewelry designer and consultant for Luster Legacy, a luxury custom jewelry brand. 
+  // Create system message with instructions and incorporate form data if available
+  let systemPrompt = `You are an expert jewelry designer and consultant for Luster Legacy, a luxury custom jewelry brand. 
 Your role is to help customers explore design ideas, recommend styles, materials, and gemstones for their custom jewelry.
 Be specific, helpful, and inspirational. Provide thoughtful advice about jewelry design options.
 Focus on these key aspects:
@@ -32,6 +39,27 @@ Keep your responses concise and focused on helping the customer refine their des
 Do not provide pricing information - only mention that final quotes will be provided after design consultation.
 
 If you don't know the answer to a specific technical question, be honest and suggest they ask their dedicated designer during the consultation.`;
+
+  // Add context from the form data if available
+  if (formData) {
+    let formContext = "\n\nThe customer has provided the following information in their design form:";
+    
+    if (formData.metalType) {
+      formContext += `\n- Preferred Metal: ${formData.metalType}`;
+    }
+    
+    if (formData.gemstones && formData.gemstones.length > 0) {
+      formContext += `\n- Gemstone Preferences: ${formData.gemstones.join(', ')}`;
+    }
+    
+    if (formData.designDescription) {
+      formContext += `\n- Design Description: "${formData.designDescription}"`;
+    }
+    
+    formContext += "\n\nUse this information to provide more personalized guidance in your responses.";
+    
+    systemPrompt += formContext;
+  }
 
   // Default history with system message if not provided
   if (history.length === 0 || history[0].role !== "system") {

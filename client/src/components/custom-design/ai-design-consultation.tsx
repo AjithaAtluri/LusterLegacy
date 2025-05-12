@@ -157,10 +157,8 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
       // Prepare form data for context if it exists
       const formData = integratedWithForm && formContext ? {
         metalType: formContext.metalType,
-        designType: formContext.formValues?.designType,
-        budget: formContext.formValues?.budget,
         gemstones: formContext.selectedStones,
-        designDescription: formContext.formValues?.designDescription
+        designDescription: formContext.formValues?.notes
       } : null;
       
       // Send message to API with form context data if available
