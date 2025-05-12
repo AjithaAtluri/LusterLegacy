@@ -139,7 +139,12 @@ export default function CustomizeRequest() {
       // Show a dialog confirming successful submission
       setIsSubmitSuccessful(true);
       
-      // Navigation will now be handled by the dialog button
+      // For logged-in users, redirect to dashboard after a short delay
+      if (user) {
+        setTimeout(() => {
+          setLocation('/customer-dashboard');
+        }, 2000);
+      }
     },
     onError: (error) => {
       toast({
@@ -1055,6 +1060,7 @@ export default function CustomizeRequest() {
             </DialogTitle>
             <DialogDescription>
               Your customization request has been submitted. Our designers will review your request and get back to you soon.
+              {user && <span className="block mt-1">Redirecting to your dashboard in a moment...</span>}
             </DialogDescription>
           </DialogHeader>
           <div className="p-4 bg-secondary/20 rounded-lg">
