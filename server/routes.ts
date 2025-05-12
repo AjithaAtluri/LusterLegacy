@@ -2,7 +2,8 @@ import type { Express, Request, Response } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { pool } from "./db"; // Add pool for direct SQL queries
+import { pool, db } from "./db"; // Add pool for direct SQL queries
+import { asc, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 import { setupAuth } from "./auth";
 import passport from "passport";
@@ -24,8 +25,7 @@ import {
   insertCustomizationRequestCommentSchema,
   insertQuoteRequestSchema,
   insertQuoteRequestCommentSchema,
-  eq,
-  inArray
+  stoneTypes
 } from "@shared/schema";
 import multer from "multer";
 import path from "path";
@@ -5638,77 +5638,73 @@ Respond in JSON format:
       // This route is for admin use but avoids the global /api/admin/* middleware authentication
       console.log("ADMIN STONE TYPES WITH ALTERNATIVE ROUTE PATH");
       
-      // Get all stone types from database
-      const stoneTypes = await storage.getAllStoneTypes();
+      // DIRECT QUERY: Skip the storage layer and query the database directly
+      // This will give us access to the raw column names including price_modifier
+      const stoneTypesList = await db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
       
-      // Debug first few stone types
-      if (stoneTypes.length > 0) {
-        console.log(`Sample stone type data for debugging:`, 
-          stoneTypes.slice(0, 2).map(st => ({
-            id: st.id,
-            name: st.name,
-            priceModifier: st.priceModifier,
-            rawValue: JSON.stringify(st)
-          }))
-        );
+      // Debug the direct database results
+      if (stoneTypesList.length > 0) {
+        console.log(`Direct database query sample for first stone type:`, stoneTypesList[0]);
       }
       
-      // Ensure price modifiers are numbers and correctly preserved
-      const formattedStoneTypes = stoneTypes.map(stone => {
-        // Make a copy to avoid mutating the original
-        const formattedStone = { ...stone };
+      // Map the raw database results to application format - with extra logging
+      const formattedStoneTypes = stoneTypesList.map(stone => {
+        // Convert database field names to application field names
+        const formattedStone = {
+          id: stone.id,
+          name: stone.name,
+          description: stone.description,
+          priceModifier: Number(stone.price_modifier || 0), // Direct access to the DB field
+          displayOrder: stone.display_order || 0,
+          isActive: stone.is_active || false,
+          color: stone.color,
+          imageUrl: stone.image_url,
+          category: stone.category,
+          stoneForm: stone.stone_form,
+          quality: stone.quality,
+          size: stone.size,
+          createdAt: stone.created_at
+        };
         
-        // DIRECT DATABASE ACCESS - Access the price_modifier directly from the database field
-        // to avoid any mapping issues
-        
-        // We know from our SQL query that price_modifier exists in the database and contains correct values
-        // This bypasses any mapping issues in the storage layer
-        if (formattedStone.price_modifier !== undefined && formattedStone.price_modifier !== null) {
-          // We're going to force assign the raw database value to our application field
-          formattedStone.priceModifier = Number(formattedStone.price_modifier);
-          
-          console.log(`Setting price for ${stone.name}: db value=${formattedStone.price_modifier}, mapped=${formattedStone.priceModifier}`);
-          
-          // If the conversion results in NaN, log warning and try to fix
-          if (isNaN(formattedStone.priceModifier)) {
-            console.warn(`Invalid price modifier value detected: ${stone.priceModifier} for ${stone.name}`);
-            // Try to clean up the value if it's a string with non-numeric characters
-            const cleanedValue = String(stone.price_modifier).replace(/[^0-9.]/g, '');
-            formattedStone.priceModifier = cleanedValue ? Number(cleanedValue) : 0;
-          }
-        } else {
-          // Direct query database field for safety
-          console.log(`No price_modifier found for ${stone.name}, checking direct database fields:`, stone);
-          
-          // Only set to zero if truly no value can be found
-          formattedStone.priceModifier = 0;
+        // Add debug logging for prices
+        if (stone.price_modifier !== undefined && stone.price_modifier !== null) {
+          console.log(`Stone ${stone.name}: price_modifier=${stone.price_modifier}, converted=${formattedStone.priceModifier}`);
         }
         
         return formattedStone;
       });
       
-      // Log sample of formatted data for comparison
-      if (formattedStoneTypes.length > 0) {
-        console.log(`Sample formatted stone type data:`, 
-          formattedStoneTypes.slice(0, 2).map(st => ({
-            id: st.id,
-            name: st.name,
-            priceModifier: st.priceModifier 
-          }))
-        );
-        
-        // Verify a specific stone type to make sure high-value stones have correct prices
-        const diamond = formattedStoneTypes.find(st => 
-          st.name.toLowerCase().includes('diamond') || 
-          st.name.toLowerCase().includes('emerald')
-        );
-        
-        if (diamond) {
-          console.log(`Precious stone price check - ${diamond.name}: ₹${diamond.priceModifier}`);
-        }
+      // Find some precious stones to verify prices
+      const preciousStones = formattedStoneTypes.filter(st => 
+        st.name.toLowerCase().includes('diamond') || 
+        st.name.toLowerCase().includes('emerald') ||
+        st.name.toLowerCase().includes('ruby') ||
+        st.name.toLowerCase().includes('sapphire') ||
+        (st.category && st.category.toLowerCase().includes('precious'))
+      ).slice(0, 3);
+      
+      if (preciousStones.length > 0) {
+        console.log('Price check for valuable stones:');
+        preciousStones.forEach(stone => {
+          console.log(`${stone.name}: ₹${stone.priceModifier}`);
+        });
       }
       
-      console.log(`Successfully fetched ${stoneTypes.length} stone types for admin`);
+      // Find some regular stones to verify prices
+      const regularStones = formattedStoneTypes.filter(st => 
+        st.name.toLowerCase().includes('quartz') || 
+        st.name.toLowerCase().includes('aquamarine') ||
+        st.name.toLowerCase().includes('turquoise')
+      ).slice(0, 3);
+      
+      if (regularStones.length > 0) {
+        console.log('Price check for regular stones:');
+        regularStones.forEach(stone => {
+          console.log(`${stone.name}: ₹${stone.priceModifier}`);
+        });
+      }
+      
+      console.log(`Successfully fetched ${stoneTypesList.length} stone types for admin`);
       res.json(formattedStoneTypes);
     } catch (error) {
       console.error('Error fetching stone types:', error);
