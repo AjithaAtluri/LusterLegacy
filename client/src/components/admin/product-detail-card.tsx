@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect, useReducer, useRef } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
   const { toast } = useToast();
   const [editSection, setEditSection] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState<number>(0);
-  const contentRef = useState<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
   
   // Add forceUpdate to trigger re-renders when needed (especially for checkbox state changes)
   const [, forceUpdate] = useReducer(x => x + 1, 0);
@@ -770,7 +770,7 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         </div>
       </CardHeader>
       
-      <CardContent>
+      <CardContent ref={contentRef} className="overflow-y-auto max-h-[80vh]">
         {/* Materials Section */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
@@ -1075,6 +1075,28 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
           <Button variant="outline" onClick={onClose}>Close</Button>
         )}
       </CardFooter>
+      
+      {/* Scroll navigation buttons (only in dialog mode, not full page) */}
+      {!isFullPage && (
+        <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            onClick={scrollUp}
+            className="rounded-full shadow-lg"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            onClick={scrollDown}
+            className="rounded-full shadow-lg"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
       
       {/* Edit Dialogs */}
       
