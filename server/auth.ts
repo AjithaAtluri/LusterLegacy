@@ -388,6 +388,63 @@ export function setupAuth(app: Express): void {
     }
   });
   
+  // Password change endpoint
+  app.post("/api/user/change-password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+      
+      // Validate new password
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "New password must be at least 8 characters long" });
+      }
+      
+      // Verify current password is correct
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const passwordMatch = await comparePasswords(currentPassword, user.password);
+      if (!passwordMatch) {
+        console.log("[AUTH] Password change failed: Current password is incorrect");
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update the user's password
+      console.log(`[AUTH] Changing password for user ${user.id} (${user.loginID})`);
+      const updatedUser = await storage.updateUser(user.id, { password: hashedPassword });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update password" });
+      }
+      
+      // Update the session
+      req.login(updatedUser, (err) => {
+        if (err) {
+          console.error("Session update error after password change:", err);
+          return res.status(500).json({ message: "Password updated but session refresh failed" });
+        }
+        
+        console.log(`[AUTH] Password changed successfully for user ${user.id}`);
+        res.json({ message: "Password changed successfully" });
+      });
+    } catch (error) {
+      console.error("Password change error:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
   // Send verification email
   app.post("/api/user/send-verification", async (req, res) => {
     if (!req.isAuthenticated()) {
