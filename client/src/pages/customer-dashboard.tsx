@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,6 +51,162 @@ export default function CustomerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  
+  // Form state for profile updates
+  const [nameValue, setNameValue] = useState(user?.username || "");
+  const [phoneValue, setPhoneValue] = useState(user?.phone || "");
+  const [countryValue, setCountryValue] = useState(user?.country || "");
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
+  // Update user profile fields
+  const updateProfile = async (field: string, value: string) => {
+    if (!user) return;
+    
+    try {
+      setIsUpdatingProfile(true);
+      const res = await fetch("/api/user/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ field, value })
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Failed to update ${field}`);
+      }
+      
+      const data = await res.json();
+      
+      toast({
+        title: "Profile Updated",
+        description: `Your ${field} has been updated successfully.`,
+        variant: "default"
+      });
+      
+      // Refresh user data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Update Failed",
+        description: error.message || "There was an error updating your profile.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+  
+  // Send email verification
+  const sendVerificationEmail = async () => {
+    if (!user) return;
+    
+    try {
+      setIsVerifyingEmail(true);
+      const res = await fetch("/api/user/verify-email", {
+        method: "POST"
+      });
+      
+      if (!res.ok) {
+        throw new Error("Failed to send verification email");
+      }
+      
+      toast({
+        title: "Verification Email Sent",
+        description: "A verification link has been sent to your email address.",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      toast({
+        title: "Verification Failed",
+        description: error.message || "There was an error sending the verification email.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsVerifyingEmail(false);
+    }
+  };
+  
+  // Change password
+  const changePassword = async () => {
+    if (!user) return;
+    
+    // Password validation
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "New password and confirmation do not match.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (newPassword.length < 8) {
+      toast({
+        title: "Password Too Short",
+        description: "New password must be at least 8 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsChangingPassword(true);
+      const res = await fetch("/api/user/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ 
+          currentPassword, 
+          newPassword 
+        })
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to change password");
+      }
+      
+      toast({
+        title: "Password Changed",
+        description: "Your password has been updated successfully.",
+        variant: "default"
+      });
+      
+      // Clear password fields
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast({
+        title: "Password Change Failed",
+        description: error.message || "There was an error changing your password.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+  
+  // Update form values when user data changes
+  useEffect(() => {
+    if (user) {
+      setNameValue(user.username || "");
+      setPhoneValue(user.phone || "");
+      setCountryValue(user.country || "");
+    }
+  }, [user]);
   
   // Redirect to auth page if not logged in
   if (!isLoadingAuth && !user) {
@@ -799,10 +955,25 @@ export default function CustomerDashboard() {
                       <div className="flex items-center gap-2">
                         <Input 
                           placeholder="Enter your full name" 
-                          defaultValue={user?.username || ""} 
+                          value={nameValue}
+                          onChange={(e) => setNameValue(e.target.value)}
                           className="max-w-md"
                         />
-                        <Button size="sm" variant="outline" className="shrink-0">Update</Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="shrink-0" 
+                          onClick={() => updateProfile("username", nameValue)}
+                          disabled={isUpdatingProfile || nameValue === user?.username || !nameValue.trim()}
+                        >
+                          {isUpdatingProfile ? 
+                            <span className="flex items-center gap-1">
+                              <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                              <span>Saving</span>
+                            </span> : 
+                            "Update"
+                          }
+                        </Button>
                       </div>
                     </div>
                     
@@ -816,11 +987,24 @@ export default function CustomerDashboard() {
                         <p className="text-sm text-muted-foreground px-3 py-2 border rounded-md flex-grow bg-muted/10">
                           {user?.email || "Not provided"}
                         </p>
-                        <Button size="sm" variant="outline" className="shrink-0">
-                          <span className="flex items-center gap-1">
-                            <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                            Verify
-                          </span>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="shrink-0"
+                          onClick={sendVerificationEmail}
+                          disabled={isVerifyingEmail}
+                        >
+                          {isVerifyingEmail ? (
+                            <span className="flex items-center gap-1">
+                              <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                              <span>Sending</span>
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                              Verify
+                            </span>
+                          )}
                         </Button>
                       </div>
                     </div>
