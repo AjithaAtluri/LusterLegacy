@@ -476,6 +476,13 @@ export function setupAuth(app: Express): void {
       // Generate verification link
       const verificationLink = `${req.protocol}://${req.get('host')}/verify-email?token=${token}`;
       
+      console.log(`[AUTH] Generating verification link: ${verificationLink}`);
+      
+      // For development convenience - provide direct verification option
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[AUTH-DEV] Direct verification link: ${verificationLink}`);
+      }
+      
       // Send verification email
       let emailResult = { success: false, message: "Email service not initialized" };
       
@@ -486,6 +493,8 @@ export function setupAuth(app: Express): void {
           req.user.name,
           verificationLink
         );
+        
+        console.log(`[AUTH] Email service result:`, emailResult);
       } catch (emailError) {
         console.error("Failed to send verification email:", emailError);
         emailResult = { 
@@ -494,24 +503,44 @@ export function setupAuth(app: Express): void {
         };
       }
       
-      if (emailResult.success) {
-        console.log(`[AUTH] Verification email sent to ${req.user.email}`);
-        res.json({ 
+      // If we're in development mode, consider it a success even if the email fails
+      // This allows testing without actual email sending
+      const isDevelopmentMode = process.env.NODE_ENV === 'development';
+      
+      if (emailResult.success || (isDevelopmentMode && !process.env.SEND_REAL_EMAILS)) {
+        console.log(`[AUTH] Verification process completed for ${req.user.email}`);
+        
+        // For convenience in development, include the verification link in the response
+        const responseData: any = { 
           message: "Verification email sent successfully",
           success: true
-        });
+        };
+        
+        if (isDevelopmentMode) {
+          responseData.verificationLink = verificationLink;
+          responseData.note = "Development mode: use this link to verify your email";
+        }
+        
+        res.json(responseData);
       } else {
         console.error(`[AUTH] Failed to send verification email: ${emailResult.message}`);
-        res.status(500).json({ 
+        
+        // In development, still provide the verification link even if email fails
+        const responseData: any = { 
           message: "Failed to send verification email", 
           error: emailResult.message,
-          // Include link in response for demo/testing purposes
-          verificationLink
-        });
+        };
+        
+        if (isDevelopmentMode) {
+          responseData.verificationLink = verificationLink;
+          responseData.note = "Development mode: use this link to verify your email despite send failure";
+        }
+        
+        res.status(500).json(responseData);
       }
     } catch (error) {
       console.error("Email verification error:", error);
-      res.status(500).json({ message: "Failed to send verification email" });
+      res.status(500).json({ message: "Failed to send verification email", error: String(error) });
     }
   });
   

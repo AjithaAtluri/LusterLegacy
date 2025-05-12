@@ -120,15 +120,32 @@ export default function CustomerDashboard() {
     
     try {
       setIsVerifyingEmail(true);
+      
       const res = await fetch("/api/user/send-verification", {
         method: "POST"
       });
       
-      if (!res.ok) {
-        throw new Error("Failed to send verification email");
-      }
-      
       const data = await res.json();
+      
+      if (!res.ok) {
+        const errorMessage = data.error || data.message || "Failed to send verification email";
+        
+        // In development mode, if there's a verification link despite the error, provide it
+        if (data.verificationLink) {
+          console.log("Development mode - verification link (despite error):", data.verificationLink);
+          
+          toast({
+            title: "Email Server Issue",
+            description: "There's an issue with the email server, but you can verify your email using the link in the console (development mode only).",
+            variant: "warning",
+            duration: 10000
+          });
+          
+          return;
+        }
+        
+        throw new Error(errorMessage);
+      }
       
       toast({
         title: "Verification Email Sent",
@@ -137,9 +154,20 @@ export default function CustomerDashboard() {
       });
       
       // For development and testing, show the verification link in console
-      console.log("Verification link (for development only):", data.verificationLink);
+      if (data.verificationLink) {
+        console.log("Development mode - verification link:", data.verificationLink);
+        
+        // In development mode, offer direct verification
+        toast({
+          title: "Development Mode",
+          description: "For testing, you can use the verification link in the browser console.",
+          variant: "default",
+          duration: 8000
+        });
+      }
     } catch (error) {
       console.error("Error sending verification email:", error);
+      
       toast({
         title: "Verification Failed",
         description: error.message || "There was an error sending the verification email.",

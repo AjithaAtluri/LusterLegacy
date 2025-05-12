@@ -9,6 +9,13 @@ if (process.env.SENDGRID_API_KEY) {
   mailService.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
+// Default configuration values
+const DEFAULT_SENDER_NAME = 'Luster Legacy';
+const DEFAULT_SENDER_EMAIL = 'noreply@lusterlegacy.com';
+
+// Use verified sender email from environment variable if available
+const VERIFIED_SENDER_EMAIL = process.env.VERIFIED_SENDER_EMAIL || DEFAULT_SENDER_EMAIL;
+
 interface EmailData {
   to: string;
   subject: string;
@@ -30,9 +37,29 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       };
     }
     
+    // Format sender with name and email
+    const sender = data.from || `${DEFAULT_SENDER_NAME} <${VERIFIED_SENDER_EMAIL}>`;
+    
+    console.log(`Attempting to send email from: ${sender} to: ${data.to}`);
+    
+    // In development/test mode, log email content but don't actually send
+    if (process.env.NODE_ENV === 'development' && !process.env.SEND_REAL_EMAILS) {
+      console.log('Development mode - not sending real email. Would send:');
+      console.log(`From: ${sender}`);
+      console.log(`To: ${data.to}`);
+      console.log(`Subject: ${data.subject}`);
+      console.log('Text:', data.text);
+      console.log('HTML:', data.html?.substring(0, 100) + '...');
+      
+      return { 
+        success: true, 
+        message: "Email sending simulated (development mode)" 
+      };
+    }
+    
     await mailService.send({
       to: data.to,
-      from: data.from || 'noreply@lusterlegacy.com',
+      from: sender,
       subject: data.subject,
       text: data.text,
       html: data.html,
