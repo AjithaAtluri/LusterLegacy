@@ -478,12 +478,27 @@ export async function getGemPricePerCaratFromName(gemName: string): Promise<numb
   try {
     // Try to find in database first
     const stoneTypes = await storage.getAllStoneTypes();
-    const matchingStone = stoneTypes.find(st => 
-      gemName.toLowerCase().includes(st.name.toLowerCase())
+    
+    // First try exact name match
+    let matchingStone = stoneTypes.find(st => 
+      st.name && st.name.toLowerCase() === gemName.toLowerCase()
     );
+
+    // If no exact match, try partial name match in either direction
+    if (!matchingStone) {
+      matchingStone = stoneTypes.find(st =>
+        st.name && (
+          st.name.toLowerCase().includes(gemName.toLowerCase()) ||
+          gemName.toLowerCase().includes(st.name.toLowerCase())
+        )
+      );
+    }
     
     if (matchingStone?.priceModifier) {
+      console.log(`Found matching stone in DB: "${matchingStone.name}" with price ₹${matchingStone.priceModifier} for query "${gemName}"`);
       return matchingStone.priceModifier;
+    } else {
+      console.log(`No matching stone found in DB for: "${gemName}"`);
     }
   } catch (error) {
     console.error("Error querying stone types:", error);
