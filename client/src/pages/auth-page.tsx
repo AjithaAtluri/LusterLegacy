@@ -553,53 +553,67 @@ export default function AuthPage() {
                     )}
                   />
                   
-                  <FormField
-                    control={registerForm.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="tel" 
-                            placeholder="Your phone number" 
-                            {...field} 
-                            disabled={registerMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          disabled={registerMutation.isPending}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a country" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {COUNTRIES.map((country) => (
-                              <SelectItem key={country.id} value={country.id}>
-                                {country.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-2">
+                    <FormField
+                      control={registerForm.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Country and Phone</FormLabel>
+                          <div className="flex flex-row space-x-2 items-start">
+                            <div className="w-1/2">
+                              <Select
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  // Find the selected country to display the code
+                                  const selectedCountry = COUNTRIES.find(c => c.id === value);
+                                  if (selectedCountry) {
+                                    // Update the phone field with the country code prefix
+                                    const phoneField = registerForm.getValues('phone') || '';
+                                    if (!phoneField.startsWith(selectedCountry.code)) {
+                                      registerForm.setValue('phone', selectedCountry.code + ' ');
+                                    }
+                                  }
+                                }}
+                                value={field.value}
+                                disabled={registerMutation.isPending}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a country" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {COUNTRIES.map((country) => (
+                                    <SelectItem key={country.id} value={country.id}>
+                                      {country.code} {country.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="w-1/2">
+                              <FormField
+                                control={registerForm.control}
+                                name="phone"
+                                render={({ field }) => (
+                                  <FormControl>
+                                    <Input 
+                                      type="tel" 
+                                      placeholder="Your phone number" 
+                                      {...field} 
+                                      disabled={registerMutation.isPending}
+                                    />
+                                  </FormControl>
+                                )}
+                              />
+                            </div>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   
                   <FormField
                     control={registerForm.control}

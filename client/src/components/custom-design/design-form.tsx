@@ -1065,7 +1065,6 @@ export default function DesignForm() {
             </p>
           </div>
         )}
-      </form>
-    </Form>
+      </Form>
   );
 }

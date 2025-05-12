@@ -1,27 +1,27 @@
 // This file contains application-wide constants
 
-// Country list for dropdowns
+// Country list for dropdowns with their calling codes
 export const COUNTRIES = [
-  { id: "in", name: "India" },
-  { id: "us", name: "United States" },
-  { id: "ae", name: "United Arab Emirates" },
-  { id: "gb", name: "United Kingdom" },
-  { id: "ca", name: "Canada" },
-  { id: "au", name: "Australia" },
-  { id: "sg", name: "Singapore" },
-  { id: "hk", name: "Hong Kong" },
-  { id: "my", name: "Malaysia" },
-  { id: "sa", name: "Saudi Arabia" },
-  { id: "qa", name: "Qatar" },
-  { id: "kw", name: "Kuwait" },
-  { id: "th", name: "Thailand" },
-  { id: "jp", name: "Japan" },
-  { id: "kr", name: "South Korea" },
-  { id: "de", name: "Germany" },
-  { id: "fr", name: "France" },
-  { id: "ch", name: "Switzerland" },
-  { id: "it", name: "Italy" },
-  { id: "es", name: "Spain" }
+  { id: "in", name: "India", code: "+91" },
+  { id: "us", name: "United States", code: "+1" },
+  { id: "ae", name: "United Arab Emirates", code: "+971" },
+  { id: "gb", name: "United Kingdom", code: "+44" },
+  { id: "ca", name: "Canada", code: "+1" },
+  { id: "au", name: "Australia", code: "+61" },
+  { id: "sg", name: "Singapore", code: "+65" },
+  { id: "hk", name: "Hong Kong", code: "+852" },
+  { id: "my", name: "Malaysia", code: "+60" },
+  { id: "sa", name: "Saudi Arabia", code: "+966" },
+  { id: "qa", name: "Qatar", code: "+974" },
+  { id: "kw", name: "Kuwait", code: "+965" },
+  { id: "th", name: "Thailand", code: "+66" },
+  { id: "jp", name: "Japan", code: "+81" },
+  { id: "kr", name: "South Korea", code: "+82" },
+  { id: "de", name: "Germany", code: "+49" },
+  { id: "fr", name: "France", code: "+33" },
+  { id: "ch", name: "Switzerland", code: "+41" },
+  { id: "it", name: "Italy", code: "+39" },
+  { id: "es", name: "Spain", code: "+34" }
 ];
 
 // Customization options
