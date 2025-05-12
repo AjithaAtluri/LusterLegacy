@@ -932,82 +932,92 @@ export default function DesignForm() {
           
           {user ? (
             <div className="bg-accent/10 rounded-md p-4 mb-4">
-              <p className="text-sm text-muted-foreground">
-                Your contact information will be automatically used from your account.
+              <p className="text-sm text-muted-foreground font-medium mb-2">
+                Your contact information will be used from your account:
               </p>
+              <div className="space-y-1 text-sm">
+                <p><span className="font-semibold">Name:</span> {user.username}</p>
+                <p><span className="font-semibold">Email:</span> {user.email}</p>
+                {user.phone && <p><span className="font-semibold">Phone:</span> {user.phone}</p>}
+                {user.country && (
+                  <p><span className="font-semibold">Country:</span> {
+                    COUNTRIES.find(c => c.id === user.country)?.name || user.country
+                  }</p>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        placeholder="Full Name" 
-                        className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="Full Name" 
+                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="Email Address" 
+                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input 
-                        {...field} 
-                        placeholder="Email Address" 
-                        className="p-3 border border-foreground/20 rounded font-montserrat text-sm"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                    Phone Number*
-                  </FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      type="tel"
-                      placeholder="Phone Number" 
-                      className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                    Country*
-                  </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                        Phone Number*
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="tel"
+                          placeholder="Phone Number" 
+                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                        Country*
+                      </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                       <FormControl>
                         <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
                           <SelectValue placeholder="Select your country" />
