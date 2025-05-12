@@ -253,7 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Show toast first
         toast({
           title: "Admin login successful",
-          description: `Welcome back, ${userData.username}!`,
+          description: `Welcome back, ${userData.name || userData.loginID}!`,
         });
         
         // Use a longer timeout to ensure the user data is set in queryClient
@@ -272,7 +272,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         toast({
           title: "Login successful",
-          description: `Welcome ${userData.username}!`,
+          description: `Welcome ${userData.name || userData.loginID}!`,
         });
         
         // Check for returnTo parameter in URL
@@ -358,7 +358,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       toast({
         title: "Registration successful",
-        description: `Welcome to Luster Legacy, ${userData.username}!`,
+        description: `Welcome to Luster Legacy, ${userData.name || userData.loginID}!`,
       });
       
       // Check for returnTo parameter in URL, also for registration
