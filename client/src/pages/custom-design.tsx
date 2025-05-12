@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet";
 import DesignForm from "@/components/custom-design/design-form";
+import AIDesignConsultation from "@/components/custom-design/ai-design-consultation";
 import { CheckCircle, Clock, HelpCircle, FileImage, ArrowRight, PenLine } from "lucide-react";
 import { PAYMENT_TERMS } from "@/lib/constants";
 
@@ -24,10 +25,15 @@ export default function CustomDesign() {
       
       <div className="container mx-auto px-4 md:px-8 py-12">
         {/* Form first - displays prominently on both mobile and desktop */}
-        <div className="mx-auto max-w-2xl mb-16">
+        <div className="mx-auto max-w-2xl mb-12">
           <div className="bg-card rounded-lg shadow-lg">
             <DesignForm />
           </div>
+        </div>
+        
+        {/* AI Design Consultation - placed between form and process steps */}
+        <div className="mx-auto max-w-2xl mb-16">
+          <AIDesignConsultation />
         </div>
         
         {/* Process steps - full width, visually appealing timeline */}
