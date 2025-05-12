@@ -88,24 +88,24 @@ export default function FinalizeOrder() {
     onSuccess: (result) => {
       const { action } = result;
       
-      if (action === "request_quote") {
-        toast({
-          title: "Quote Request Submitted!",
-          description: "We've received your request for a final quote and will contact you shortly with details.",
-          variant: "default",
-        });
-      } else {
-        toast({
-          title: "Order Request Successful!",
-          description: "We've received your order request. Please proceed to make the 50% advance payment to begin crafting your piece.",
-          variant: "default",
-        });
-      }
+      toast({
+        title: "Quote Request Submitted!",
+        description: "We've received your request for a final quote and will contact you shortly with details.",
+        variant: "default",
+      });
       
-      // Navigate back to product detail page after successful submission
+      // Navigate to appropriate page after successful submission:
+      // - Logged-in users go to dashboard
+      // - Guest users go back to product detail page
       setTimeout(() => {
-        setLocation(`/product-detail/${id}`);
-      }, 2500);
+        if (user) {
+          // Redirect logged-in users to the customer dashboard
+          setLocation('/customer-dashboard');
+        } else {
+          // Redirect guest users back to the product detail page
+          setLocation(`/product-detail/${id}`);
+        }
+      }, 2000);
     },
     onError: (error) => {
       toast({
