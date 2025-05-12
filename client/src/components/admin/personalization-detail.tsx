@@ -421,7 +421,7 @@ export default function PersonalizationDetail({ personalization }: Personalizati
             {personalization.productId && (
               <div className="pt-4">
                 <Button asChild variant="outline">
-                  <a href={`/product/${personalization.productId}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`/product-detail/${personalization.productId}`} target="_blank" rel="noopener noreferrer">
                     <Eye className="mr-2 h-4 w-4" /> View Product Details
                   </a>
                 </Button>
