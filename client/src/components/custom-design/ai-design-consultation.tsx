@@ -23,6 +23,7 @@ interface AIDesignConsultationProps {
 export default function AIDesignConsultation({ integratedWithForm = false }: AIDesignConsultationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const formContext = useContext(DesignFormContext);
   const [isActive, setIsActive] = useState(false);
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
@@ -153,10 +154,20 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     setIsLoading(true);
     
     try {
-      // Send message to API
+      // Prepare form data for context if it exists
+      const formData = integratedWithForm && formContext ? {
+        metalType: formContext.metalType,
+        designType: formContext.formValues?.designType,
+        budget: formContext.formValues?.budget,
+        gemstones: formContext.selectedStones,
+        designDescription: formContext.formValues?.designDescription
+      } : null;
+      
+      // Send message to API with form context data if available
       const response = await apiRequest("POST", "/api/design-consultation-ai", {
         message: userMessage.content,
-        history: chatHistory
+        history: chatHistory,
+        formData: formData
       });
       
       const data = await response.json();

@@ -860,7 +860,7 @@ export default function DesignForm() {
     );
   };
   
-  // Create a context provider value
+  // Create a context provider value for the AI consultation component
   const contextValue = {
     formValues: currentFormValues,
     selectedStones: selectedStones,
@@ -873,30 +873,16 @@ export default function DesignForm() {
       setCurrentFormValues(value as DesignFormValues);
     });
     return () => subscription.unsubscribe();
-  }, [form.watch]);
-
-  // Create a context provider value that will be used by the AIDesignConsultation component
-  const contextValue = {
-    formValues: currentFormValues,
-    selectedStones: selectedStones,
-    metalType: form.watch('metalType') || ""
-  };
-
-  // Watch for form changes to update the current form values
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      setCurrentFormValues(value as DesignFormValues);
-    });
-    return () => subscription.unsubscribe();
   }, [form]);
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-8">
-        <h3 className="font-playfair text-2xl font-semibold text-foreground mb-3">Submit Your Design</h3>
-        {!user && (
-          <p className="font-montserrat text-sm text-foreground/70 mb-6">Login required. Your design details will be saved when you submit.</p>
-        )}
+    <DesignFormContext.Provider value={contextValue}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-8">
+          <h3 className="font-playfair text-2xl font-semibold text-foreground mb-3">Submit Your Design</h3>
+          {!user && (
+            <p className="font-montserrat text-sm text-foreground/70 mb-6">Login required. Your design details will be saved when you submit.</p>
+          )}
         
         <div className="mb-6">
           <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
@@ -1183,5 +1169,6 @@ export default function DesignForm() {
         )}
       </form>
     </Form>
+    </DesignFormContext.Provider>
   );
 }
