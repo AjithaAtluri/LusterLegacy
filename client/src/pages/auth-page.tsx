@@ -195,7 +195,7 @@ export default function AuthPage() {
   };
   
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    // Extract fields we don't want to send directly to the API
+    // Extract fields we don't want to send directly to the API but keep all required user fields
     const { confirmPassword, acceptTerms, ...userData } = data;
     
     // Check if there's a saved form state in the session that we need to return to
