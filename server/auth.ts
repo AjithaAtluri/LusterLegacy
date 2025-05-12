@@ -269,6 +269,49 @@ export function setupAuth(app: Express): void {
     }
   });
   
+  // Additional endpoint for field-by-field profile updates from the customer dashboard
+  app.post("/api/user/update", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const { field, value } = req.body;
+      
+      if (!field || value === undefined) {
+        return res.status(400).json({ message: "Field and value are required" });
+      }
+      
+      // Only allow updating certain fields
+      const allowedFields = ["name", "email", "phone", "country"];
+      if (!allowedFields.includes(field)) {
+        return res.status(400).json({ message: `Cannot update field: ${field}` });
+      }
+      
+      // Create an update object with just the requested field
+      const updates = { [field]: value };
+      
+      console.log(`Updating user ${req.user.id}'s ${field} to: ${value}`);
+      
+      const updatedUser = await storage.updateUser(req.user.id, updates);
+      
+      if (updatedUser) {
+        // Update the session with the latest user data
+        req.login(updatedUser, (err) => {
+          if (err) return res.status(500).json({ message: "Session update failed" });
+          
+          const { password, ...userWithoutPassword } = updatedUser;
+          res.json(userWithoutPassword);
+        });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+  
   // Send verification email
   app.post("/api/user/send-verification", async (req, res) => {
     if (!req.isAuthenticated()) {
