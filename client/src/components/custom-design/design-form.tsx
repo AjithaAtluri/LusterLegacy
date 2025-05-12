@@ -864,16 +864,31 @@ export default function DesignForm() {
   };
   
   // Create a context provider value for the AI consultation component
+  const currentMetalType = form.watch('metalType');
+  const currentNotes = form.watch('notes');
+  
   const contextValue = {
-    formValues: currentFormValues,
+    formValues: currentFormValues || {
+      fullName: form.getValues('fullName'),
+      email: form.getValues('email'),
+      phone: form.getValues('phone'),
+      country: form.getValues('country'),
+      metalType: form.getValues('metalType'),
+      primaryStones: form.getValues('primaryStones'),
+      notes: form.getValues('notes'),
+      agreeToTerms: form.getValues('agreeToTerms')
+    },
     selectedStones: selectedStones,
-    metalType: form.watch('metalType') || ""
+    metalType: currentMetalType || ""
   };
   
   // Debug log for context value updates
   useEffect(() => {
     console.log("Design Form - Context Value Updated:", contextValue);
-  }, [contextValue.formValues, contextValue.selectedStones, contextValue.metalType]);
+    console.log("Design Form - Current metal type:", currentMetalType);
+    console.log("Design Form - Current notes:", currentNotes);
+    console.log("Design Form - Selected stones:", selectedStones);
+  }, [currentMetalType, currentNotes, selectedStones]);
 
   // Watch form changes to update currentFormValues
   useEffect(() => {
