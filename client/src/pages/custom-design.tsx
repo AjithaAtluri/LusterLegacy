@@ -85,55 +85,22 @@ export default function CustomDesign() {
               </div>
             </div>
             
-            <div className="mt-12">
-              <h2 className="font-playfair text-2xl font-bold text-foreground mb-6">Frequently Asked Questions</h2>
-              
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1">
-                  <AccordionTrigger className="font-playfair text-lg font-medium">
-                    What types of custom jewelry can you create?
-                  </AccordionTrigger>
-                  <AccordionContent className="font-montserrat text-foreground/70">
-                    We can create virtually any type of fine jewelry, including necklaces, earrings, rings, bracelets, and pendants. Our expertise spans traditional designs with modern touches to completely contemporary pieces.
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="item-2">
-                  <AccordionTrigger className="font-playfair text-lg font-medium">
-                    How long does the custom design process take?
-                  </AccordionTrigger>
-                  <AccordionContent className="font-montserrat text-foreground/70">
-                    The timeline varies by complexity, but typically includes: 3-5 days for initial CAD design, 1-2 days for revisions, and 3-4 weeks for crafting after approval. Complex pieces may take longer.
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="item-3">
-                  <AccordionTrigger className="font-playfair text-lg font-medium">
-                    Can you recreate a piece from a photograph?
-                  </AccordionTrigger>
-                  <AccordionContent className="font-montserrat text-foreground/70">
-                    Yes, we can recreate pieces from clear photographs or sketches. We can also incorporate modifications to make the piece uniquely yours while honoring the original design's essence.
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="item-4">
-                  <AccordionTrigger className="font-playfair text-lg font-medium">
-                    What if I'm not satisfied with the final piece?
-                  </AccordionTrigger>
-                  <AccordionContent className="font-montserrat text-foreground/70">
-                    Customer satisfaction is our priority. If there are manufacturing defects, we offer free repairs. We work closely with clients at the CAD approval stage to ensure the final piece meets expectations, as custom pieces cannot be returned once approved and created.
-                  </AccordionContent>
-                </AccordionItem>
-                
-                <AccordionItem value="item-5">
-                  <AccordionTrigger className="font-playfair text-lg font-medium">
-                    Do you provide certificates for gemstones?
-                  </AccordionTrigger>
-                  <AccordionContent className="font-montserrat text-foreground/70">
-                    Yes, we provide certification for all precious gemstones from internationally recognized laboratories. For custom pieces with client-provided stones, we can arrange certification services at an additional cost.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+            <div className="mt-12 bg-muted/30 p-6 rounded-lg">
+              <h2 className="font-playfair text-2xl font-bold text-foreground mb-3">Have Questions?</h2>
+              <p className="font-montserrat text-foreground/70 mb-4">
+                Visit our FAQ page for answers to common questions about custom design process, 
+                materials, timelines, and more.
+              </p>
+              <a 
+                href="/faq" 
+                className="inline-flex items-center px-6 py-3 rounded-md bg-primary text-background hover:bg-primary/90 font-medium transition-colors"
+              >
+                View FAQ
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2">
+                  <path d="M5 12h14"></path>
+                  <path d="m12 5 7 7-7 7"></path>
+                </svg>
+              </a>
             </div>
           </div>
           
