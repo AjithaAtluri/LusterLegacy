@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Form,
   FormControl,
@@ -21,6 +22,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { devHelpers } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { COUNTRIES } from "@/lib/constants";
 
 // Login form validation schema
 const loginSchema = z.object({
@@ -193,7 +195,11 @@ export default function AuthPage() {
   };
   
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    const { confirmPassword, acceptTerms, ...userData } = data;
+    const { confirmPassword, acceptTerms, phone, country, ...userData } = data;
+    
+    // Include phone and country in the registration data
+    userData.phone = phone;
+    userData.country = country;
     
     // Check if there's a saved form state in the session that we need to return to
     const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
@@ -542,6 +548,54 @@ export default function AuthPage() {
                             disabled={registerMutation.isPending}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={registerForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="tel" 
+                            placeholder="Your phone number" 
+                            {...field} 
+                            disabled={registerMutation.isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={registerForm.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                          disabled={registerMutation.isPending}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {COUNTRIES.map((country) => (
+                              <SelectItem key={country.id} value={country.id}>
+                                {country.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
