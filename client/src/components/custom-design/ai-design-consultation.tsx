@@ -76,11 +76,36 @@ export default function AIDesignConsultation({
     }
   }, [integratedWithForm, formContext]);
   
-  // Listen for the custom event to start the consultation
+  // Helper function for type checking with window
+  interface WindowWithCustomProps extends Window {
+    startAIConsultation?: (state: any) => void;
+  }
+  
+  // Create a global method to start the consultation and listen for events
   useEffect(() => {
+    // Define a global method to start the consultation
+    (window as WindowWithCustomProps).startAIConsultation = (capturedFormState: any) => {
+      console.log("AI Design Consultation - Global method trigger received");
+      
+      if (capturedFormState) {
+        console.log("AI Design Consultation - Using captured form state:", capturedFormState);
+        // Use the captured form state to override the existing state 
+        const updatedFormState = {
+          ...formState,
+          ...capturedFormState
+        };
+        
+        // Start consultation with updated form state
+        handleStartConsultationWithState(updatedFormState);
+      } else {
+        // Start with existing form state
+        handleStartConsultation();
+      }
+    };
+    
+    // Legacy event listener for backward compatibility
     const handleStartEvent = () => {
       console.log("AI Design Consultation - Received start event");
-      // Create new function reference that captures latest form context
       handleStartConsultation();
     };
     
@@ -88,8 +113,9 @@ export default function AIDesignConsultation({
     
     return () => {
       window.removeEventListener('start-ai-consultation', handleStartEvent);
+      delete (window as WindowWithCustomProps).startAIConsultation;
     };
-  }, [formContext]); // Add formContext as a dependency
+  }, [formContext, formState]); // Include both dependencies
   
   // Timer for the 15-minute consultation limit
   useEffect(() => {
@@ -146,6 +172,70 @@ export default function AIDesignConsultation({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
   
+  // Interface for our form data structure
+  interface FormDataType {
+    metalType: string;
+    selectedStones: string[];
+    notes: string;
+  }
+  
+  // Generate a welcome message based on the form data
+  const generateWelcomeMessage = (data: FormDataType) => {
+    // Generate a context-aware welcome message
+    let welcomeMessage = "Welcome to your AI design consultation! I'm here to help you explore jewelry design ideas, suggest materials, gemstones, and answer your questions about custom jewelry design.";
+    
+    // Add context from the form data
+    if (data.metalType) {
+      welcomeMessage += ` I see you're interested in ${data.metalType} for your piece.`;
+    }
+    
+    if (data.selectedStones && data.selectedStones.length > 0) {
+      welcomeMessage += ` You've selected ${data.selectedStones.join(", ")} for gemstones.`;
+    }
+    
+    if (data.notes) {
+      welcomeMessage += ` I'll keep in mind your design notes: "${data.notes}"`;
+    }
+    
+    welcomeMessage += " What specific questions do you have about your jewelry design?";
+    
+    // Create the system message
+    const systemMessage: Message = {
+      role: "assistant",
+      content: welcomeMessage,
+      timestamp: new Date()
+    };
+    
+    // Set the chat history with this welcome message
+    setChatHistory([systemMessage]);
+    
+    // Log the message
+    console.log("AI Design Consultation - Initial message set:", systemMessage);
+  };
+  
+  // New function that accepts explicit form state
+  const handleStartConsultationWithState = (explicitFormState: any) => {
+    setIsActive(true);
+    setStartTime(new Date());
+    setChatHistory([]);
+    setTimeLeft(15);
+    
+    console.log("AI Consultation - Using explicit form state:", explicitFormState);
+    
+    // Make sure we have valid data by filtering out undefined values
+    const currentFormData: FormDataType = {
+      metalType: explicitFormState?.metalType || "",
+      selectedStones: (explicitFormState?.selectedStones || []).filter((stone: any) => stone),
+      notes: explicitFormState?.notes || ""
+    };
+    
+    console.log("AI Consultation - Form data extracted from explicit state:", currentFormData);
+    
+    // Generate welcome message and initialize chat
+    generateWelcomeMessage(currentFormData);
+  };
+  
+  // Original function that uses the component props and context
   const handleStartConsultation = () => {
     setIsActive(true);
     setStartTime(new Date());
@@ -154,8 +244,6 @@ export default function AIDesignConsultation({
     
     // Use the formState prop directly if available (new approach)
     // Otherwise fall back to the context (for backward compatibility)
-    // Capture the form state directly from the prop
-    // And log both the incoming prop and what we're actually using
     console.log("AI Consultation - Form state prop received:", formState);
     
     // Make sure we have valid data by filtering out undefined values

@@ -63,6 +63,26 @@ export default function CustomDesign() {
         
         {/* AI Design Consultation - integrated with the form and shown here only when active */}
         <div className="mx-auto max-w-2xl mb-16">
+          <div className="bg-card rounded-lg shadow-md p-6 mb-8">
+            <h3 className="text-xl font-semibold mb-3 flex items-center">
+              <Sparkles className="h-5 w-5 text-primary mr-2" />
+              AI Design Assistant
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Our AI can help you refine your design ideas and suggest materials that work well together. Start a consultation to get personalized advice.
+            </p>
+            <Button 
+              onClick={() => {
+                // Log current form state
+                console.log("Starting AI consultation with current form state:", formState);
+              }}
+              className="w-full bg-primary hover:bg-primary/90"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Start AI Design Consultation
+            </Button>
+          </div>
+          
           <AIDesignConsultation 
             integratedWithForm={true}
             formState={formState}
