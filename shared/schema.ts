@@ -39,16 +39,8 @@ export const insertUserSchema = createInsertSchema(users)
     role: true,
   })
   .extend({
-    // Set username as a required field that defaults to loginID
-    username: z.string()
-      .optional()
-      .transform((val, ctx) => {
-        if (!val && ctx.data) {
-          // If username isn't provided, use loginID
-          return (ctx.data as any).loginID || '';
-        }
-        return val || '';
-      })
+    // Add username field that synchronizes with loginID
+    username: z.string().min(1, "Username is required")
   });
 
 // Products schema
