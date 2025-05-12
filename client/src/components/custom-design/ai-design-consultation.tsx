@@ -61,50 +61,7 @@ export default function AIDesignConsultation({
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   
-  // Helper function to format AI messages with better styling
-  const formatAIMessage = (content: string) => {
-    // Split the content by double newlines to separate paragraphs
-    const paragraphs = content.split(/\n\n+/);
-    
-    return (
-      <>
-        {paragraphs.map((paragraph, i) => {
-          // Check if the paragraph is a list
-          if (paragraph.includes("\n- ")) {
-            const [listTitle, ...items] = paragraph.split("\n- ");
-            return (
-              <div key={i} className="mb-3 last:mb-0">
-                {listTitle && <p className="mb-1">{listTitle}</p>}
-                <ul className="pl-4 list-disc">
-                  {items.map((item, j) => (
-                    <li key={j} className="mb-1">{item}</li>
-                  ))}
-                </ul>
-              </div>
-            );
-          } 
-          // Check if the paragraph is a numbered list
-          else if (paragraph.includes("\n1. ")) {
-            const [listTitle, ...items] = paragraph.split(/\n\d+\.\s/);
-            return (
-              <div key={i} className="mb-3 last:mb-0">
-                {listTitle && <p className="mb-1">{listTitle}</p>}
-                <ol className="pl-4 list-decimal">
-                  {items.map((item, j) => (
-                    <li key={j} className="mb-1">{item}</li>
-                  ))}
-                </ol>
-              </div>
-            );
-          }
-          // Regular paragraph
-          else {
-            return <p key={i} className="mb-3 last:mb-0">{paragraph}</p>;
-          }
-        })}
-      </>
-    );
-  };
+
   const [formDataReady, setFormDataReady] = useState(false);
   
   // Initialize the session timer when chat becomes active
@@ -506,9 +463,10 @@ export default function AIDesignConsultation({
                   : "bg-card border border-border"
               }`}>
                 <div className="text-sm leading-relaxed">
-                  {/* Format AI messages with paragraph separation and formatting */}
                   {msg.role === "assistant" 
-                    ? formatAIMessage(msg.content)
+                    ? msg.content.split("\n\n").map((paragraph, idx) => (
+                        <p key={idx} className="mb-3 last:mb-0">{paragraph}</p>
+                      ))
                     : <p>{msg.content}</p>
                   }
                 </div>

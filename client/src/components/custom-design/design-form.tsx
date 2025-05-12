@@ -1062,6 +1062,9 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
               <FormLabel className="font-montserrat text-sm font-medium text-foreground">
                 Additional Notes
               </FormLabel>
+              <FormDescription className="text-xs italic text-muted-foreground mb-1">
+                These notes will be used by our AI consultant as a prompt and guidance. The more details you provide, the better your consultation experience will be.
+              </FormDescription>
               <FormControl>
                 <Textarea 
                   {...field} 
