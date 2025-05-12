@@ -37,6 +37,11 @@ interface PersonalizationDetailProps {
     imageUrls: string[] | null;
     productImageUrl?: string | null;
     createdAt: string;
+    product?: {
+      basePrice?: number;
+      calculatedPriceUSD?: number;
+      calculatedPriceINR?: number;
+    };
     comments?: Array<{
       id: number;
       content: string;
@@ -115,8 +120,8 @@ export default function PersonalizationDetail({ personalization }: Personalizati
   const updateStatus = async (newStatus: string) => {
     setStatusUpdateLoading(true);
     try {
-      // Keep using the original API endpoint for backward compatibility
-      const response = await apiRequest("PATCH", `/api/personalization-requests/${personalization.id}`, {
+      // Use correct API endpoint for customization requests
+      const response = await apiRequest("PATCH", `/api/customization-requests/${personalization.id}`, {
         status: newStatus,
       });
 
@@ -127,13 +132,11 @@ export default function PersonalizationDetail({ personalization }: Personalizati
         description: `Request status has been updated to ${newStatus}`,
       });
 
-      // Refresh data using both API endpoints for backward compatibility
+      // Refresh data using correct API endpoints
       queryClient.invalidateQueries({ queryKey: ["/api/customization-requests"] });
       queryClient.invalidateQueries({ queryKey: [`/api/customization-requests/${personalization.id}`] });
-      // Also invalidate the personalization endpoints if they exist
-      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${personalization.id}`] });
     } catch (error) {
+      console.error("Status update error:", error);
       toast({
         title: "Error",
         description: "Failed to update status. Please try again.",
@@ -158,8 +161,8 @@ export default function PersonalizationDetail({ personalization }: Personalizati
     setPriceUpdateLoading(true);
     try {
       const price = parseFloat(quotedPrice);
-      // Keep using the original API endpoint for backward compatibility
-      const response = await apiRequest("PATCH", `/api/personalization-requests/${personalization.id}`, {
+      // Use correct API endpoint for customization requests
+      const response = await apiRequest("PATCH", `/api/customization-requests/${personalization.id}`, {
         quotedPrice: price,
       });
 
@@ -170,13 +173,11 @@ export default function PersonalizationDetail({ personalization }: Personalizati
         description: `Quoted price has been updated to ${formatCurrency(price, personalization.currency || "USD")}`,
       });
 
-      // Refresh data using both API endpoints for backward compatibility
+      // Refresh data using correct API endpoints
       queryClient.invalidateQueries({ queryKey: ["/api/customization-requests"] });
       queryClient.invalidateQueries({ queryKey: [`/api/customization-requests/${personalization.id}`] });
-      // Also invalidate the personalization endpoints if they exist
-      queryClient.invalidateQueries({ queryKey: ["/api/personalization-requests"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/personalization-requests/${personalization.id}`] });
     } catch (error) {
+      console.error("Price update error:", error);
       toast({
         title: "Error",
         description: "Failed to update price. Please try again.",
@@ -345,10 +346,46 @@ export default function PersonalizationDetail({ personalization }: Personalizati
                 </span>
               </div>
               
+              {/* Original Product Price Information */}
+              {personalization.product?.basePrice && (
+                <>
+                  <div className="font-medium">Original Base Price:</div>
+                  <div className="col-span-2">
+                    {formatCurrency(personalization.product.basePrice, "INR")} 
+                    {personalization.product.calculatedPriceUSD && (
+                      <span className="text-muted-foreground ml-2">
+                        ({formatCurrency(personalization.product.calculatedPriceUSD, "USD")})
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+              
+              {personalization.product?.calculatedPriceUSD && personalization.product?.calculatedPriceINR && (
+                <>
+                  <div className="font-medium">Original Calculated Price:</div>
+                  <div className="col-span-2">
+                    {formatCurrency(personalization.product.calculatedPriceINR, "INR")}
+                    <span className="text-muted-foreground ml-2">
+                      ({formatCurrency(personalization.product.calculatedPriceUSD, "USD")})
+                    </span>
+                  </div>
+                </>
+              )}
+              
+              {/* Divider before quoted price */}
+              {(personalization.product?.basePrice || personalization.product?.calculatedPriceUSD) && 
+               personalization.quotedPrice && (
+                <div className="col-span-3 py-1">
+                  <Separator className="my-2" />
+                </div>
+              )}
+              
+              {/* Quoted Price */}
               {personalization.quotedPrice && personalization.currency && (
                 <>
                   <div className="font-medium">Quoted Price:</div>
-                  <div className="col-span-2 font-bold">
+                  <div className="col-span-2 font-bold text-primary">
                     {formatCurrency(personalization.quotedPrice, personalization.currency)}
                   </div>
                 </>
