@@ -1189,7 +1189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Add a comment to a quote request
-  app.post("/api/quote-requests/:id/comments", async (req: Request, res: Response) => {
+  app.post("/api/quote-requests/:id/comments", upload.single('image'), async (req: Request, res: Response) => {
     try {
       const quoteRequestId = parseInt(req.params.id);
       if (isNaN(quoteRequestId)) {
@@ -1211,22 +1211,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Extract data from request body
-      const { content, createdBy, isAdmin: isAdminComment = false, imageUrl } = req.body;
+      const { content, createdBy, isAdmin: isAdminComment = false } = req.body;
       
       // Validate required fields
       if (!content) {
         return res.status(400).json({ message: "Comment content is required" });
       }
       
-      // Create the comment
-      const comment = await storage.addQuoteRequestComment({
+      // Create comment data
+      const commentData: any = {
         quoteRequestId,
         content,
-        createdBy: createdBy || (req.user ? req.user.username : "Customer"),
-        isAdmin: isAdmin ? isAdminComment : false, // Only allow isAdmin=true if the user is actually an admin
-        imageUrl: imageUrl || null,
+        createdBy: createdBy || (req.user ? (req.user.name || req.user.loginID || req.user.username) : "Customer"),
+        isAdmin: isAdmin ? (isAdminComment === 'true' || isAdminComment === true) : false, // Only allow isAdmin=true if the user is actually an admin
         userId: req.user ? req.user.id : null
-      });
+      };
+      
+      // Add image URL if file was uploaded
+      if (req.file) {
+        commentData.imageUrl = `/uploads/${req.file.filename}`;
+      }
+      
+      // Create the comment
+      const comment = await storage.addQuoteRequestComment(commentData);
       
       res.status(201).json(comment);
     } catch (error) {
