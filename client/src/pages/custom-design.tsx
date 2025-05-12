@@ -11,7 +11,8 @@ export default function CustomDesign() {
   const [formState, setFormState] = useState({
     metalType: "",
     selectedStones: [] as string[],
-    notes: ""
+    notes: "",
+    imageDataUrl: undefined as string | undefined
   });
   
   // Function to update the shared state
@@ -19,6 +20,7 @@ export default function CustomDesign() {
     metalType?: string;
     selectedStones?: string[];
     notes?: string;
+    imageDataUrl?: string;
   }) => {
     setFormState(prev => {
       const updatedState = {

@@ -69,11 +69,13 @@ interface DesignFormProps {
     metalType?: string;
     selectedStones?: string[];
     notes?: string;
+    imageDataUrl?: string;
   }) => void;
   formState?: {
     metalType: string;
     selectedStones: string[];
     notes: string;
+    imageDataUrl?: string;
   };
 }
 
