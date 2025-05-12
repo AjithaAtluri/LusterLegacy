@@ -65,6 +65,20 @@ export default function CustomerDashboard() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
+  // Profile update form field states
+  const [nameValue, setNameValue] = useState("");
+  const [phoneValue, setPhoneValue] = useState("");
+  const [countryValue, setCountryValue] = useState("");
+  
+  // Update form fields when user data changes
+  useEffect(() => {
+    if (user) {
+      setNameValue(user.username || "");
+      setPhoneValue(user.phone || "");
+      setCountryValue(user.country || "");
+    }
+  }, [user]);
+  
   // Update user profile fields
   const updateProfile = async (field: string, value: string) => {
     if (!user) return;
@@ -1036,9 +1050,25 @@ export default function CustomerDashboard() {
                         <Input 
                           placeholder="Enter your phone number" 
                           defaultValue={user?.phone || ""} 
+                          value={phoneValue}
+                          onChange={(e) => setPhoneValue(e.target.value)}
                           className="max-w-md"
                         />
-                        <Button size="sm" variant="outline" className="shrink-0">Update</Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="shrink-0"
+                          onClick={() => updateProfile("phone", phoneValue)}
+                          disabled={isUpdatingProfile || phoneValue === user?.phone}
+                        >
+                          {isUpdatingProfile ? 
+                            <span className="flex items-center gap-1">
+                              <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                              <span>Saving</span>
+                            </span> : 
+                            "Update"
+                          }
+                        </Button>
                       </div>
                     </div>
                     
@@ -1049,7 +1079,11 @@ export default function CustomerDashboard() {
                         <h3 className="text-sm font-medium">Country</h3>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Select defaultValue={user?.country || ""}>
+                        <Select 
+                          defaultValue={user?.country || ""} 
+                          value={countryValue}
+                          onValueChange={setCountryValue}
+                        >
                           <SelectTrigger className="max-w-md">
                             <SelectValue placeholder="Select your country" />
                           </SelectTrigger>
@@ -1064,7 +1098,21 @@ export default function CustomerDashboard() {
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button size="sm" variant="outline" className="shrink-0">Update</Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="shrink-0"
+                          onClick={() => updateProfile("country", countryValue)}
+                          disabled={isUpdatingProfile || countryValue === user?.country || !countryValue}
+                        >
+                          {isUpdatingProfile ? 
+                            <span className="flex items-center gap-1">
+                              <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                              <span>Saving</span>
+                            </span> : 
+                            "Update"
+                          }
+                        </Button>
                       </div>
                     </div>
                   </CardContent>

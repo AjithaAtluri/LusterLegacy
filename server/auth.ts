@@ -283,7 +283,7 @@ export function setupAuth(app: Express): void {
       }
       
       // Only allow updating certain fields
-      const allowedFields = ["name", "email", "phone", "country"];
+      const allowedFields = ["name", "username", "email", "phone", "country"];
       if (!allowedFields.includes(field)) {
         return res.status(400).json({ message: `Cannot update field: ${field}` });
       }
