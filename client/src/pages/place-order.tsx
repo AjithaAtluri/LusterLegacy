@@ -456,7 +456,7 @@ export default function FinalizeOrder() {
             <Card>
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit}>
-                  <h2 className="font-playfair text-xl font-semibold mb-6">Shipping Information</h2>
+                  <h2 className="font-playfair text-xl font-semibold mb-6">Request Information</h2>
                   
                   {user && (
                     <div className="mb-6 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
@@ -471,7 +471,7 @@ export default function FinalizeOrder() {
                             Using your account information
                           </p>
                           <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                            Your contact details from your Luster Legacy account will be used for this request. Please provide your shipping address below.
+                            Your contact details from your Luster Legacy account will be used for this request. Just add any questions or notes you have below.
                           </p>
                         </div>
                       </div>
@@ -520,75 +520,11 @@ export default function FinalizeOrder() {
                         <input type="hidden" name="phone" value={phone} />
                       </>
                     )}
-                    <div className="space-y-2">
-                      <Label htmlFor="country">Country*</Label>
-                      <Select 
-                        value={country} 
-                        onValueChange={setCountry}
-                        disabled={currency === "USD" || currency === "INR"} // Lock based on currency
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {currency === "USD" ? (
-                            <SelectItem value="USA">United States</SelectItem>
-                          ) : currency === "INR" ? (
-                            <SelectItem value="India">India</SelectItem>
-                          ) : (
-                            <>
-                              <SelectItem value="USA">United States</SelectItem>
-                              <SelectItem value="India">India</SelectItem>
-                            </>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      {(currency === "USD" || currency === "INR") && (
-                        <p className="text-xs text-foreground/60 mt-1">
-                          Country is set based on your currency selection
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="address">Street Address*</Label>
-                      <Textarea
-                        id="address"
-                        placeholder="Enter your street address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City*</Label>
-                      <Input
-                        id="city"
-                        placeholder="City"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State/Province*</Label>
-                      <Input
-                        id="state"
-                        placeholder="State or Province"
-                        value={state}
-                        onChange={(e) => setState(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="postalCode">Postal/ZIP Code*</Label>
-                      <Input
-                        id="postalCode"
-                        placeholder="Postal or ZIP code"
-                        value={postalCode}
-                        onChange={(e) => setPostalCode(e.target.value)}
-                        required
-                      />
-                    </div>
+                    <input type="hidden" name="country" value={country} />
+                    <input type="hidden" name="address" value={address} />
+                    <input type="hidden" name="city" value={city} />
+                    <input type="hidden" name="state" value={state} />
+                    <input type="hidden" name="postalCode" value={postalCode} />
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="additionalNotes">Questions/Notes</Label>
                       <Textarea
