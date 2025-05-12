@@ -165,8 +165,10 @@ export function setupAuth(app: Express): void {
       }
 
       // Create new user with hashed password
+      // Important: We need to set both username and loginID since the database requires both fields
       const user = await storage.createUser({
         ...req.body,
+        username: req.body.loginID, // Set username field to match loginID for backward compatibility
         password: await hashPassword(req.body.password),
         role: req.body.role || "customer" // Default role is customer
       });
