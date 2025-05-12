@@ -1038,14 +1038,126 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`Failed to add customization request comment: ${error.message}`);
     }
   }
-  async getQuoteRequest(id: number): Promise<QuoteRequest | undefined> { return undefined; }
-  async getAllQuoteRequests(): Promise<QuoteRequest[]> { return []; }
-  async getQuoteRequestsByEmail(email: string): Promise<QuoteRequest[]> { return []; }
-  async getQuoteRequestsByUserId(userId: number): Promise<QuoteRequest[]> { return []; }
-  async createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest> { return {} as QuoteRequest; }
-  async updateQuoteRequest(id: number, request: Partial<QuoteRequest>): Promise<QuoteRequest | undefined> { return undefined; }
-  async getQuoteRequestComments(requestId: number): Promise<QuoteRequestComment[]> { return []; }
-  async addQuoteRequestComment(comment: InsertQuoteRequestComment): Promise<QuoteRequestComment> { return {} as QuoteRequestComment; }
+  async getQuoteRequest(id: number): Promise<QuoteRequest | undefined> {
+    try {
+      const [request] = await db
+        .select()
+        .from(quoteRequests)
+        .where(eq(quoteRequests.id, id))
+        .limit(1);
+      
+      return request;
+    } catch (error) {
+      console.error(`Error fetching quote request with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async getAllQuoteRequests(): Promise<QuoteRequest[]> {
+    try {
+      const allRequests = await db
+        .select()
+        .from(quoteRequests)
+        .orderBy(desc(quoteRequests.createdAt));
+        
+      console.log(`Found ${allRequests.length} total quote requests`);
+      return allRequests;
+    } catch (error) {
+      console.error("Error fetching all quote requests:", error);
+      return [];
+    }
+  }
+  
+  async getQuoteRequestsByEmail(email: string): Promise<QuoteRequest[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(quoteRequests)
+        .where(eq(quoteRequests.email, email))
+        .orderBy(desc(quoteRequests.createdAt));
+        
+      console.log(`Found ${requests.length} quote requests for email ${email}`);
+      return requests;
+    } catch (error) {
+      console.error(`Error fetching quote requests for email ${email}:`, error);
+      return [];
+    }
+  }
+  
+  async getQuoteRequestsByUserId(userId: number): Promise<QuoteRequest[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(quoteRequests)
+        .where(eq(quoteRequests.userId, userId))
+        .orderBy(desc(quoteRequests.createdAt));
+        
+      console.log(`Found ${requests.length} quote requests for user ID ${userId}`);
+      return requests;
+    } catch (error) {
+      console.error(`Error fetching quote requests for user ID ${userId}:`, error);
+      return [];
+    }
+  }
+  
+  async createQuoteRequest(request: InsertQuoteRequest): Promise<QuoteRequest> {
+    try {
+      const [newRequest] = await db
+        .insert(quoteRequests)
+        .values(request)
+        .returning();
+      
+      console.log("Created new quote request:", newRequest);
+      return newRequest;
+    } catch (error) {
+      console.error("Error creating quote request:", error);
+      throw new Error(`Failed to create quote request: ${(error as Error).message}`);
+    }
+  }
+  
+  async updateQuoteRequest(id: number, request: Partial<QuoteRequest>): Promise<QuoteRequest | undefined> {
+    try {
+      const [updatedRequest] = await db
+        .update(quoteRequests)
+        .set(request)
+        .where(eq(quoteRequests.id, id))
+        .returning();
+      
+      return updatedRequest;
+    } catch (error) {
+      console.error(`Error updating quote request ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async getQuoteRequestComments(requestId: number): Promise<QuoteRequestComment[]> {
+    try {
+      const comments = await db
+        .select()
+        .from(quoteRequestComments)
+        .where(eq(quoteRequestComments.quoteRequestId, requestId))
+        .orderBy(asc(quoteRequestComments.id));
+      
+      return comments;
+    } catch (error) {
+      console.error(`Error fetching comments for quote request ID ${requestId}:`, error);
+      return [];
+    }
+  }
+  
+  async addQuoteRequestComment(comment: InsertQuoteRequestComment): Promise<QuoteRequestComment> {
+    try {
+      const [newComment] = await db
+        .insert(quoteRequestComments)
+        .values(comment)
+        .returning();
+      
+      return newComment;
+    } catch (error) {
+      console.error("Error adding quote request comment:", error);
+      throw new Error(`Failed to add quote request comment: ${(error as Error).message}`);
+    }
+  }
   async getCartItem(id: number): Promise<CartItem | undefined> { return undefined; }
   async getCartItemsBySession(sessionId: string): Promise<CartItem[]> { return []; }
   async getCartItemsByUser(userId: number): Promise<CartItem[]> { return []; }
