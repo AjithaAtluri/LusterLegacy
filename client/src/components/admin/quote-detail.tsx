@@ -34,6 +34,11 @@ interface QuoteDetailProps {
     imageUrl: string | null;
     isReadyToShip?: boolean;
     createdAt: string;
+    product?: {
+      basePrice?: number;
+      calculatedPriceUSD?: number;
+      calculatedPriceINR?: number;
+    };
     comments?: Array<{
       id: number;
       content: string;
@@ -292,10 +297,46 @@ export default function QuoteDetail({ quote }: QuoteDetailProps) {
               <div className="font-medium">Quantity:</div>
               <div className="col-span-2">{quote.quantity}</div>
               
+              {/* Original Product Price Information */}
+              {quote.product?.basePrice && (
+                <>
+                  <div className="font-medium">Original Base Price:</div>
+                  <div className="col-span-2">
+                    {formatCurrency(quote.product.basePrice, "INR")} 
+                    {quote.product.calculatedPriceUSD && (
+                      <span className="text-muted-foreground ml-2">
+                        ({formatCurrency(quote.product.calculatedPriceUSD, "USD")})
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+              
+              {quote.product?.calculatedPriceUSD && quote.product?.calculatedPriceINR && (
+                <>
+                  <div className="font-medium">Original Calculated Price:</div>
+                  <div className="col-span-2">
+                    {formatCurrency(quote.product.calculatedPriceINR, "INR")}
+                    <span className="text-muted-foreground ml-2">
+                      ({formatCurrency(quote.product.calculatedPriceUSD, "USD")})
+                    </span>
+                  </div>
+                </>
+              )}
+              
+              {/* Divider before quoted price */}
+              {(quote.product?.basePrice || quote.product?.calculatedPriceUSD) && 
+               quote.quotedPrice && (
+                <div className="col-span-3 py-1">
+                  <Separator className="my-2" />
+                </div>
+              )}
+              
+              {/* Quoted Price */}
               {quote.quotedPrice && quote.currency && (
                 <>
                   <div className="font-medium">Quoted Price:</div>
-                  <div className="col-span-2 font-bold">
+                  <div className="col-span-2 font-bold text-primary">
                     {formatCurrency(quote.quotedPrice, quote.currency)}
                     {quote.isReadyToShip && (
                       <Badge className="ml-2 bg-green-600">Ready to Ship</Badge>
