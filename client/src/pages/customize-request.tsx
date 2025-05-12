@@ -122,14 +122,28 @@ export default function CustomizeRequest() {
       additionalNotes?: string;
       imageUrls?: string[];
     }) => {
+      console.log("Submitting personalization request with form data:", formData);
       const response = await apiRequest("POST", "/api/personalization-requests", formData);
+      console.log("Personalization request response status:", response.status, response.ok);
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error("Personalization request failed:", errorData);
         throw new Error(errorData.message || "Failed to submit personalization request");
       }
-      return await response.json();
+      
+      try {
+        const data = await response.json();
+        console.log("Personalization request successful with data:", data);
+        return data;
+      } catch (jsonError) {
+        console.log("Response received but couldn't parse JSON. This may be expected if response is empty:", jsonError);
+        // Return an empty object as success if the response can't be parsed
+        return {};
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Personalization mutation onSuccess called with data:", data);
       toast({
         title: "Customization Request Sent!",
         description: "We've received your request and will contact you soon.",
@@ -141,12 +155,15 @@ export default function CustomizeRequest() {
       
       // For logged-in users, redirect to dashboard after a short delay
       if (user) {
+        console.log("User is logged in, setting up redirect timer");
         setTimeout(() => {
+          console.log("Redirect timer fired, navigating to dashboard");
           setLocation('/customer-dashboard');
         }, 2000);
       }
     },
     onError: (error) => {
+      console.error("Personalization mutation onError called with error:", error);
       toast({
         title: "Error",
         description: error.message || "Something went wrong. Please try again.",
