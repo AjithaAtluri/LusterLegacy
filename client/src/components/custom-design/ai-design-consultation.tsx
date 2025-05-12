@@ -31,7 +31,7 @@ interface AIDesignConsultationProps {
   };
 }
 
-export default function AIDesignConsultation({ integratedWithForm = false, formState }: AIDesignConsultationProps) {
+export default function AIDesignConsultation({ integratedWithForm = false, formState = { metalType: "", selectedStones: [], notes: "" } }: AIDesignConsultationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const formContext = useContext(DesignFormContext);

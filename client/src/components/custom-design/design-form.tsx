@@ -876,8 +876,8 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
   };
   
   // Create a context provider value for the AI consultation component
-  const currentMetalType = form.watch('metalType');
-  const currentNotes = form.watch('notes');
+  const watchedMetalType = form.watch('metalType') || "";
+  const watchedNotes = form.watch('notes') || "";
   
   const contextValue = {
     formValues: currentFormValues || {
@@ -891,16 +891,16 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
       agreeToTerms: form.getValues('agreeToTerms')
     },
     selectedStones: selectedStones,
-    metalType: currentMetalType || ""
+    metalType: watchedMetalType
   };
   
   // Debug log for context value updates
   useEffect(() => {
     console.log("Design Form - Context Value Updated:", contextValue);
-    console.log("Design Form - Current metal type:", currentMetalType);
-    console.log("Design Form - Current notes:", currentNotes);
+    console.log("Design Form - Current metal type:", watchedMetalType);
+    console.log("Design Form - Current notes:", watchedNotes);
     console.log("Design Form - Selected stones:", selectedStones);
-  }, [currentMetalType, currentNotes, selectedStones]);
+  }, [contextValue, watchedMetalType, watchedNotes, selectedStones]);
 
   // Watch form changes to update currentFormValues and parent component
   useEffect(() => {
@@ -913,16 +913,15 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
       const notes = value.notes;
       const primaryStones = value.primaryStones || [];
       
-      // Update local tracking variables
-      setCurrentMetalType(metalType || "");
-      setCurrentNotes(notes || "");
-      setSelectedStones(primaryStones);
+      // Update selected stones, filtering out undefined values
+      const validStones = primaryStones.filter(stone => stone !== undefined) as string[];
+      setSelectedStones(validStones);
       
       // Update parent component if callback is provided
       if (onFormChange) {
         onFormChange({
           metalType: metalType,
-          selectedStones: primaryStones,
+          selectedStones: validStones,
           notes: notes
         });
       }
