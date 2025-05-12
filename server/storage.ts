@@ -510,8 +510,21 @@ export class DatabaseStorage implements IStorage {
       
       if (stoneType) {
         try {
+          console.log(`RAW STONE TYPE DATA for ${name}:`, stoneType);
+          
+          // Check if price data exists and is accessible
+          if (stoneType.priceModifier) {
+            console.log(`Found price in field 'priceModifier' with value: ${stoneType.priceModifier}`);
+          } else if (stoneType.price_modifier) {
+            console.log(`Found price in field 'price_modifier' with value: ${stoneType.price_modifier}`);
+          } else {
+            console.log(`No price found in either 'priceModifier' or 'price_modifier' for ${name}`);
+          }
+          
           // Use helper function for consistent mapping
-          return this.mapDbStoneTypeToStoneType(stoneType);
+          const result = this.mapDbStoneTypeToStoneType(stoneType);
+          console.log(`Formatted stone ${name} with price: ${result.priceModifier}`);
+          return result;
         } catch (mapError) {
           console.error(`Error mapping stone type with name "${name}":`, mapError);
           // Continue to try case-insensitive search
