@@ -866,24 +866,6 @@ export default function CustomerDashboard() {
                         <Button size="sm" variant="outline" className="shrink-0">Update</Button>
                       </div>
                     </div>
-                    
-                    <Separator className="my-2" />
-                    
-                    {/* Password Change */}
-                    <div className="flex flex-col space-y-3">
-                      <div className="flex items-center">
-                        <Lock className="h-5 w-5 text-muted-foreground mr-2" />
-                        <h3 className="text-sm font-medium">Change Password</h3>
-                      </div>
-                      <div className="grid gap-2 max-w-md">
-                        <Input type="password" placeholder="Current password" />
-                        <Input type="password" placeholder="New password" />
-                        <Input type="password" placeholder="Confirm new password" />
-                        <Button variant="outline" className="mt-1">
-                          Update Password
-                        </Button>
-                      </div>
-                    </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
                     <Button variant="default">
