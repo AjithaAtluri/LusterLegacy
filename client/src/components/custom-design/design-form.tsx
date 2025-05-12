@@ -1,4 +1,9 @@
 import React, { useState, useEffect, createContext } from "react";
+
+// Define a custom window interface with our global method
+interface WindowWithAIConsultation extends Window {
+  startAIConsultation?: (state: any) => void;
+}
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1213,9 +1218,30 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
             <Button 
               type="button"
               onClick={() => {
-                // Find the AI consultation component and tell it to start
-                const event = new CustomEvent('start-ai-consultation');
-                window.dispatchEvent(event);
+                // Get current form state to pass to the AI consultation
+                const currentMetalType = form.getValues("metalType");
+                const selectedStones = form.getValues("primaryStones");
+                const notes = form.getValues("notes") || "";
+                
+                // Prepare form data for AI consultation
+                const formState = {
+                  metalType: currentMetalType,
+                  selectedStones: selectedStones,
+                  notes: notes
+                };
+                
+                // Log what we're passing to the consultation
+                console.log("Design Form - Starting AI consultation with state:", formState);
+                
+                // Use the global method if available
+                if (typeof window.startAIConsultation === "function") {
+                  window.startAIConsultation(formState);
+                } else {
+                  // Fallback to event dispatch
+                  console.log("Design Form - Using legacy event approach");
+                  const event = new CustomEvent('start-ai-consultation');
+                  window.dispatchEvent(event);
+                }
               }} 
               className="w-full font-montserrat bg-accent hover:bg-accent/90 text-background px-6 py-3 transition-colors flex items-center justify-center gap-2 h-auto"
             >

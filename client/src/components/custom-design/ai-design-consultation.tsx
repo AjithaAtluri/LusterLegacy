@@ -247,60 +247,17 @@ export default function AIDesignConsultation({
     console.log("AI Consultation - Form state prop received:", formState);
     
     // Make sure we have valid data by filtering out undefined values
-    const currentFormData = {
+    const currentFormData: FormDataType = {
       metalType: formState?.metalType || formContext?.metalType || "",
-      selectedStones: (formState?.selectedStones || formContext?.selectedStones || []).filter(stone => stone),
+      selectedStones: (formState?.selectedStones || formContext?.selectedStones || []).filter((stone: any) => stone),
       notes: formState?.notes || formContext?.formValues?.notes || ""
     };
     
     console.log("AI Consultation - Form data extracted:", currentFormData);
-    
-    // Log the current form data
     console.log("AI Design Consultation - Starting with form data:", currentFormData);
     
-    // Generate a context-aware welcome message
-    let welcomeMessage = "Welcome to your AI design consultation! I'm here to help you explore jewelry design ideas, suggest materials, gemstones, and answer your questions about custom jewelry design.";
-    
-    // Add context from the form if available
-    if (integratedWithForm && currentFormData) {
-      // Extract form data
-      const metalType = currentFormData.metalType;
-      const selectedStones = currentFormData.selectedStones;
-      const notes = currentFormData.notes;
-      
-      console.log("AI Design Consultation - Extracted form data:", {
-        metalType,
-        selectedStones,
-        notes
-      });
-      
-      // Add context to welcome message
-      if (metalType) {
-        welcomeMessage += ` I see you're interested in ${metalType} jewelry.`;
-      }
-      
-      if (selectedStones && selectedStones.length > 0) {
-        welcomeMessage += ` You've selected ${selectedStones.join(", ")} gemstones.`;
-      }
-      
-      if (notes) {
-        welcomeMessage += ` I'll keep in mind your design notes: "${notes}"`;
-      }
-    }
-    
-    welcomeMessage += " What specific questions do you have about your jewelry design?";
-    
-    // Initial system message to explain the consultation
-    const systemMessage: Message = {
-      role: "assistant",
-      content: welcomeMessage,
-      timestamp: new Date()
-    };
-    
-    setChatHistory([systemMessage]);
-    
-    // Include additional logging
-    console.log("AI Design Consultation - Initial message set:", systemMessage);
+    // Use the shared function to generate welcome message
+    generateWelcomeMessage(currentFormData);
   };
   
   const handleEndConsultation = async () => {
