@@ -338,14 +338,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Mutation for registration
   const registerMutation = useMutation<Omit<User, "password">, Error, RegisterData>({
     mutationFn: async (userData: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", userData);
+      console.log("Attempting to register with data:", {
+        ...userData,
+        password: userData.password ? "REDACTED" : undefined,
+        hasPassword: !!userData.password,
+        passwordLength: userData.password?.length || 0
+      });
       
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Registration failed");
+      try {
+        const res = await apiRequest("POST", "/api/register", userData);
+        console.log("Registration API response status:", res.status);
+        
+        if (!res.ok) {
+          let errorMessage = "Registration failed";
+          try {
+            const errorData = await res.json();
+            console.error("Registration API error details:", errorData);
+            errorMessage = errorData.message || `Registration failed with status: ${res.status}`;
+          } catch (parseError) {
+            console.error("Failed to parse error response:", parseError);
+            errorMessage = `Registration failed with status: ${res.status}`;
+          }
+          throw new Error(errorMessage);
+        }
+        
+        const data = await res.json();
+        console.log("Registration success response:", {
+          id: data.id,
+          name: data.name,
+          loginID: data.loginID,
+          role: data.role
+        });
+        return data;
+      } catch (error) {
+        console.error("Registration request error:", error);
+        throw error;
       }
-      
-      return await res.json();
     },
     onSuccess: (userData) => {
       console.log("Registration success - user data:", userData);
@@ -405,9 +433,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }, 300);
     },
     onError: (error: Error) => {
+      console.error("Registration error handler received:", error);
+      
+      // Extract specific error message or use a generic one
+      let errorMessage = error.message || "An error occurred during registration. Please try again.";
+      
+      // Log detailed error information
+      console.error({
+        errorMessage,
+        errorObject: error,
+        errorStack: error.stack
+      });
+      
+      // Show toast with error details
       toast({
         title: "Registration failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     },
