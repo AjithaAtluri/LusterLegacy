@@ -436,6 +436,21 @@ export function setupAuth(app: Express): void {
           return res.status(500).json({ message: "Password updated but session refresh failed" });
         }
         
+        // Send password change confirmation email
+        import('./services/email-service').then(({ sendPasswordChangeEmail }) => {
+          sendPasswordChangeEmail(user.email, user.name)
+            .then(result => {
+              if (!result.success) {
+                console.warn(`Failed to send password change confirmation email: ${result.message}`);
+              }
+            })
+            .catch(err => {
+              console.error("Error sending password change email:", err);
+            });
+        }).catch(err => {
+          console.error("Failed to import email service:", err);
+        });
+        
         console.log(`[AUTH] Password changed successfully for user ${user.id}`);
         res.json({ message: "Password changed successfully" });
       });
@@ -458,16 +473,42 @@ export function setupAuth(app: Express): void {
       // Store the token in the user record
       await storage.updateUser(req.user.id, { verificationToken: token });
       
-      // In a real application, you would send an email here with a verification link
-      // For demo purposes, just return the verification link
+      // Generate verification link
       const verificationLink = `${req.protocol}://${req.get('host')}/verify-email?token=${token}`;
       
-      res.json({ 
-        message: "Verification email would be sent in production",
-        // Note: In production, don't include token in response for security
-        // This is just for demonstration purposes
-        verificationLink
-      });
+      // Send verification email
+      let emailResult = { success: false, message: "Email service not initialized" };
+      
+      try {
+        const { sendVerificationEmail } = await import('./services/email-service');
+        emailResult = await sendVerificationEmail(
+          req.user.email,
+          req.user.name,
+          verificationLink
+        );
+      } catch (emailError) {
+        console.error("Failed to send verification email:", emailError);
+        emailResult = { 
+          success: false, 
+          message: emailError instanceof Error ? emailError.message : 'Unknown email error'
+        };
+      }
+      
+      if (emailResult.success) {
+        console.log(`[AUTH] Verification email sent to ${req.user.email}`);
+        res.json({ 
+          message: "Verification email sent successfully",
+          success: true
+        });
+      } else {
+        console.error(`[AUTH] Failed to send verification email: ${emailResult.message}`);
+        res.status(500).json({ 
+          message: "Failed to send verification email", 
+          error: emailResult.message,
+          // Include link in response for demo/testing purposes
+          verificationLink
+        });
+      }
     } catch (error) {
       console.error("Email verification error:", error);
       res.status(500).json({ message: "Failed to send verification email" });
