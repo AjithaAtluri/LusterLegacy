@@ -774,10 +774,67 @@ export class DatabaseStorage implements IStorage {
   
   // Placeholder implementations for other required methods
   // This will be implemented in the real code, we'll just add stubs here to make TypeScript happy
-  async createCustomizationRequest(request: any): Promise<any> { return {}; }
-  async getCustomizationRequestsByUserId(userId: number): Promise<any[]> { return []; }
-  async getAllCustomizationRequests(): Promise<any[]> { return []; }
-  async updateCustomizationRequestStatus(id: number, status: string): Promise<any> { return {}; }
+  async createCustomizationRequest(request: any): Promise<any> {
+    try {
+      const [newRequest] = await db
+        .insert(customizationRequests)
+        .values(request)
+        .returning();
+      
+      console.log("Created new customization request:", newRequest);
+      return newRequest;
+    } catch (error) {
+      console.error("Error creating customization request:", error);
+      throw new Error(`Failed to create customization request: ${error.message}`);
+    }
+  }
+  
+  async getCustomizationRequestsByUserId(userId: number): Promise<any[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(customizationRequests)
+        .where(eq(customizationRequests.userId, userId))
+        .orderBy(desc(customizationRequests.createdAt));
+        
+      console.log(`Found ${requests.length} customization requests for user ID ${userId}`);
+      return requests;
+    } catch (error) {
+      console.error(`Error fetching customization requests for user ID ${userId}:`, error);
+      return [];
+    }
+  }
+  
+  async getAllCustomizationRequests(): Promise<any[]> {
+    try {
+      const allRequests = await db
+        .select()
+        .from(customizationRequests)
+        .orderBy(desc(customizationRequests.createdAt));
+        
+      console.log(`Found ${allRequests.length} total customization requests`);
+      return allRequests;
+    } catch (error) {
+      console.error("Error fetching all customization requests:", error);
+      return [];
+    }
+  }
+  
+  async updateCustomizationRequestStatus(id: number, status: string): Promise<any> {
+    try {
+      const [updatedRequest] = await db
+        .update(customizationRequests)
+        .set({ status })
+        .where(eq(customizationRequests.id, id))
+        .returning();
+        
+      console.log(`Updated customization request ${id} status to ${status}`);
+      return updatedRequest;
+    } catch (error) {
+      console.error(`Error updating customization request status for ID ${id}:`, error);
+      return {};
+    }
+  }
   async getOrdersByUserId(userId: number): Promise<any[]> { return []; }
   
   async getDesignRequest(id: number): Promise<DesignRequest | undefined> {
@@ -891,12 +948,96 @@ export class DatabaseStorage implements IStorage {
   async getDesignPayments(designRequestId: number): Promise<DesignPayment[]> { return []; }
   async addDesignPayment(payment: InsertDesignPayment): Promise<DesignPayment> { return {} as DesignPayment; }
   async updateDesignPaymentStatus(id: number, status: string): Promise<DesignPayment | undefined> { return undefined; }
-  async getCustomizationRequest(id: number): Promise<CustomizationRequest | undefined> { return undefined; }
-  async getCustomizationRequestsByEmail(email: string): Promise<CustomizationRequest[]> { return []; }
-  async createCustomizationRequest(request: InsertCustomizationRequest): Promise<CustomizationRequest> { return {} as CustomizationRequest; }
-  async updateCustomizationRequest(id: number, request: Partial<CustomizationRequest>): Promise<CustomizationRequest | undefined> { return undefined; }
-  async getCustomizationRequestComments(requestId: number): Promise<CustomizationRequestComment[]> { return []; }
-  async addCustomizationRequestComment(comment: InsertCustomizationRequestComment): Promise<CustomizationRequestComment> { return {} as CustomizationRequestComment; }
+  async getCustomizationRequest(id: number): Promise<CustomizationRequest | undefined> {
+    try {
+      const [request] = await db
+        .select()
+        .from(customizationRequests)
+        .where(eq(customizationRequests.id, id))
+        .limit(1);
+      
+      return request;
+    } catch (error) {
+      console.error(`Error fetching customization request with ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async getCustomizationRequestsByEmail(email: string): Promise<CustomizationRequest[]> {
+    try {
+      const requests = await db
+        .select()
+        .from(customizationRequests)
+        .where(eq(customizationRequests.email, email))
+        .orderBy(desc(customizationRequests.createdAt));
+        
+      console.log(`Found ${requests.length} customization requests for email ${email}`);
+      return requests;
+    } catch (error) {
+      console.error(`Error fetching customization requests for email ${email}:`, error);
+      return [];
+    }
+  }
+  
+  async createCustomizationRequest(request: InsertCustomizationRequest): Promise<CustomizationRequest> {
+    // This will supersede the earlier method once TypeScript has been fully migrated
+    try {
+      const [newRequest] = await db
+        .insert(customizationRequests)
+        .values(request)
+        .returning();
+      
+      console.log("Created new customization request with typed schema:", newRequest);
+      return newRequest;
+    } catch (error) {
+      console.error("Error creating customization request with typed schema:", error);
+      throw new Error(`Failed to create customization request: ${error.message}`);
+    }
+  }
+  
+  async updateCustomizationRequest(id: number, request: Partial<CustomizationRequest>): Promise<CustomizationRequest | undefined> {
+    try {
+      const [updatedRequest] = await db
+        .update(customizationRequests)
+        .set(request)
+        .where(eq(customizationRequests.id, id))
+        .returning();
+      
+      return updatedRequest;
+    } catch (error) {
+      console.error(`Error updating customization request ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
+  async getCustomizationRequestComments(requestId: number): Promise<CustomizationRequestComment[]> {
+    try {
+      const comments = await db
+        .select()
+        .from(customizationRequestComments)
+        .where(eq(customizationRequestComments.customizationRequestId, requestId))
+        .orderBy(asc(customizationRequestComments.id));
+      
+      return comments;
+    } catch (error) {
+      console.error(`Error fetching comments for customization request ID ${requestId}:`, error);
+      return [];
+    }
+  }
+  
+  async addCustomizationRequestComment(comment: InsertCustomizationRequestComment): Promise<CustomizationRequestComment> {
+    try {
+      const [newComment] = await db
+        .insert(customizationRequestComments)
+        .values(comment)
+        .returning();
+      
+      return newComment;
+    } catch (error) {
+      console.error("Error adding customization request comment:", error);
+      throw new Error(`Failed to add customization request comment: ${error.message}`);
+    }
+  }
   async getQuoteRequest(id: number): Promise<QuoteRequest | undefined> { return undefined; }
   async getAllQuoteRequests(): Promise<QuoteRequest[]> { return []; }
   async getQuoteRequestsByEmail(email: string): Promise<QuoteRequest[]> { return []; }

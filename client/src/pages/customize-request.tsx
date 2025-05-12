@@ -123,7 +123,7 @@ export default function CustomizeRequest() {
       imageUrls?: string[];
     }) => {
       console.log("Submitting personalization request with form data:", formData);
-      const response = await apiRequest("POST", "/api/personalization-requests", formData);
+      const response = await apiRequest("POST", "/api/customization-requests", formData);
       console.log("Personalization request response status:", response.status, response.ok);
       
       if (!response.ok) {
