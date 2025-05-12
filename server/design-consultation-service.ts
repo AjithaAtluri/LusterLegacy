@@ -14,6 +14,7 @@ interface FormData {
   metalType?: string;
   gemstones?: string[];
   designDescription?: string;
+  imageDataUrl?: string; // Base64 encoded image data
 }
 
 /**
@@ -61,7 +62,55 @@ If you don't know the answer to a specific technical question, be honest and sug
       console.log("Design Consultation Service - Using design description:", formData.designDescription);
     }
     
-    formContext += "\n\nUse this information to provide more personalized guidance in your responses.";
+    // Set up OpenAI API call to analyze image if provided
+    if (formData.imageDataUrl) {
+      try {
+        console.log("Design Consultation Service - Image provided, analyzing...");
+        
+        // If image is base64, extract content part (removing data:image/jpeg;base64, etc.)
+        let imageContent = formData.imageDataUrl;
+        if (imageContent.includes('base64,')) {
+          imageContent = imageContent.split('base64,')[1];
+        }
+        
+        // Send image for analysis to vision model
+        const imageAnalysisResponse = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+          messages: [
+            {
+              role: "system",
+              content: "You are a luxury jewelry expert analyzing design inspiration images. Describe the image in detail, focusing on jewelry design elements relevant to creating a custom piece. Identify metals, gemstones, setting styles, and unique design features. Organize your analysis into sections: Overall Style, Metal Elements, Gemstones, Setting Type, and Special Design Features. Be concise but detailed."
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:image/jpeg;base64,${imageContent}`
+                  }
+                },
+                {
+                  type: "text",
+                  text: "Analyze this jewelry image for custom design inspiration. Describe what you see in detail."
+                }
+              ]
+            }
+          ],
+          max_tokens: 500
+        });
+        
+        // Add the image analysis to the form context
+        const imageAnalysis = imageAnalysisResponse.choices[0].message.content;
+        formContext += "\n\n- Image Analysis:\n" + imageAnalysis;
+        console.log("Design Consultation Service - Image analysis added to context");
+      } catch (error) {
+        console.error("Design Consultation Service - Error analyzing image:", error);
+        formContext += "\n\n- Image was provided but could not be analyzed due to technical issues.";
+      }
+    }
+    
+    formContext += "\n\nUse this information to provide more personalized guidance in your responses. If an image was analyzed, refer to specific elements from the image analysis in your recommendations.";
     console.log("Design Consultation Service - Form context appended to prompt");
     
     systemPrompt += formContext;

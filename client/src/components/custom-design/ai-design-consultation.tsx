@@ -20,6 +20,7 @@ interface FormData {
   metalType: string;
   gemstones: string[];
   designDescription: string;
+  imageDataUrl?: string; // Base64 encoded image data
 }
 
 interface AIDesignConsultationProps {
@@ -28,6 +29,7 @@ interface AIDesignConsultationProps {
     metalType: string;
     selectedStones: string[];
     notes: string;
+    imageDataUrl?: string; // Base64 encoded image
   };
 }
 
@@ -323,7 +325,8 @@ export default function AIDesignConsultation({
           formData = {
             metalType: formState.metalType || "",
             gemstones: (formState.selectedStones || []) as string[],
-            designDescription: formState.notes || ""
+            designDescription: formState.notes || "",
+            imageDataUrl: formState.imageDataUrl // Include image data if available
           };
         } else if (formContext) {
           console.log("AI Design Consultation - Using form context (fallback):", formContext);
@@ -339,6 +342,7 @@ export default function AIDesignConsultation({
             metalType: metalType || "",
             gemstones: (selectedStones || []) as string[],
             designDescription: notes || ""
+            // Note: We don't have imageDataUrl in the context fallback yet
           };
         }
         
