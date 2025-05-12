@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext } from "react";
 
 // Define a custom window interface with our global method
 interface WindowWithAIConsultation extends Window {
-  startAIConsultation?: (state: any) => void;
+  startAIConsultation: ((state: any) => void) | undefined;
 }
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -1233,15 +1233,17 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
                 const formState = {
                   metalType: currentMetalType,
                   selectedStones: selectedStones,
-                  notes: notes
+                  notes: notes,
+                  imageDataUrl: previewUrl || undefined
                 };
                 
                 // Log what we're passing to the consultation
                 console.log("Design Form - Starting AI consultation with state:", formState);
                 
                 // Use the global method if available
-                if (typeof (window as WindowWithAIConsultation).startAIConsultation === "function") {
-                  (window as WindowWithAIConsultation).startAIConsultation(formState);
+                const windowWithConsultation = window as WindowWithAIConsultation;
+                if (windowWithConsultation.startAIConsultation && typeof windowWithConsultation.startAIConsultation === "function") {
+                  windowWithConsultation.startAIConsultation(formState);
                 } else {
                   // Fallback to event dispatch
                   console.log("Design Form - Using legacy event approach");

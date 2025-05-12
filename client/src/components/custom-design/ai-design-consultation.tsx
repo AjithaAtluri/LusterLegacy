@@ -80,7 +80,7 @@ export default function AIDesignConsultation({
   
   // Helper function for type checking with window
   interface WindowWithCustomProps extends Window {
-    startAIConsultation?: (state: any) => void;
+    startAIConsultation: ((state: any) => void) | undefined;
   }
   
   // Create a global method to start the consultation and listen for events
