@@ -142,10 +142,10 @@ export default function FinalizeOrder() {
     
     // Set placeholder values for address fields since we're not collecting them for quote requests
     // but they're still required by the API
-    if (!address) setAddress("Quote Request - No Address Needed");
-    if (!city) setCity("Quote Request - No City Needed");
-    if (!state) setState("Quote Request - No State Needed");
-    if (!postalCode) setPostalCode("00000");
+    setAddress("Quote Request - No Address Needed");
+    setCity("Quote Request - No City Needed");
+    setState("Quote Request - No State Needed");
+    setPostalCode("00000");
     
     // Validate country-currency matching
     if ((currency === "INR" && country !== "India") || 
@@ -158,21 +158,21 @@ export default function FinalizeOrder() {
       return;
     }
     
-    // Submit the form
+    // Submit the form - ensuring all fields have values
     orderMutation.mutate({
       productId: Number(id),
       name,
       email,
       phone,
-      address,
-      city,
-      state,
-      postalCode,
+      address: address || "Quote Request - No Address Needed",
+      city: city || "Quote Request - No City Needed",
+      state: state || "Quote Request - No State Needed",
+      postalCode: postalCode || "00000",
       country,
       additionalNotes,
       paymentMethod,
       currency,
-      action, // Add the action parameter
+      action: "request_quote", // Force action to be quote request
     });
   };
 
