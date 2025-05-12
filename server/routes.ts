@@ -5647,8 +5647,20 @@ Respond in JSON format:
         
         // Ensure priceModifier is a number (handle string, null, undefined cases)
         if (formattedStone.priceModifier !== undefined) {
-          formattedStone.priceModifier = Number(formattedStone.priceModifier);
+          // Convert to number but ONLY set to 0 if it's actually null, undefined or empty string
+          // This preserves any existing value including legitimate zero values
+          if (formattedStone.priceModifier === null || formattedStone.priceModifier === "") {
+            formattedStone.priceModifier = 0;
+          } else {
+            formattedStone.priceModifier = Number(formattedStone.priceModifier);
+            // If the conversion results in NaN, set to the original value
+            if (isNaN(formattedStone.priceModifier)) {
+              console.warn(`Invalid price modifier value detected: ${stone.priceModifier} for ${stone.name}`);
+              formattedStone.priceModifier = stone.priceModifier || 0;
+            }
+          }
         } else {
+          // Only set to zero if truly undefined
           formattedStone.priceModifier = 0;
         }
         
