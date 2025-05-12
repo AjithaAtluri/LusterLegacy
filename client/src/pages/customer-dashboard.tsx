@@ -984,6 +984,32 @@ export default function CustomerDashboard() {
                       </div>
                     </div>
                     
+                    {/* Login ID Field (Read-only) */}
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center">
+                        <User className="h-5 w-5 text-muted-foreground mr-2" />
+                        <h3 className="text-sm font-medium">Login ID</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          value={user?.loginID || ""}
+                          className="max-w-md bg-muted/20"
+                          readOnly
+                        />
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="shrink-0 opacity-50 cursor-not-allowed"
+                          disabled={true}
+                        >
+                          Cannot Change
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Your login ID cannot be changed and is used to sign in to your account.
+                      </p>
+                    </div>
+                    
                     {/* Email Field with Verify Button */}
                     <div className="flex flex-col space-y-3">
                       <div className="flex items-center">
