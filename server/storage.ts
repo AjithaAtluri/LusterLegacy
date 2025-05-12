@@ -287,27 +287,83 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    console.log("createUser - Received user data:", {
-      hasLoginID: !!insertUser.loginID,
-      loginID: insertUser.loginID
-    });
-    
-    // Make sure username is explicitly set - this matches what's in the database
-    // We're creating a raw object instead of using the InsertUser type
-    // to bypass TypeScript's strict checking since the schema doesn't match the DB exactly
-    const userData: any = {
-      ...insertUser,
-      username: insertUser.loginID // Set username explicitly equal to loginID
-    };
-    
-    console.log("createUser - Data being inserted:", {
-      hasLoginID: !!userData.loginID,
-      hasUsername: !!userData.username,
-      username: userData.username
-    });
-    
-    const [user] = await db.insert(users).values(userData).returning();
-    return user;
+    try {
+      console.log("createUser - Received user data:", {
+        hasLoginID: !!insertUser.loginID,
+        loginID: insertUser.loginID,
+        name: insertUser.name,
+        email: insertUser.email,
+        hasPhone: !!insertUser.phone,
+        hasCountry: !!insertUser.country,
+        role: insertUser.role || 'customer'
+      });
+      
+      // Database requires both username and loginID fields
+      // Our schema uses loginID but the database expects username too
+      if (!insertUser.loginID) {
+        throw new Error("LoginID is required");
+      }
+      
+      // Create a complete user object with all required fields
+      const userData = {
+        name: insertUser.name,
+        email: insertUser.email,
+        phone: insertUser.phone || '',
+        country: insertUser.country || 'us',
+        loginID: insertUser.loginID,
+        username: insertUser.loginID, // Explicitly set username to match loginID
+        password: insertUser.password,
+        role: insertUser.role || 'customer',
+        emailVerified: false,
+        verificationToken: null,
+        createdAt: new Date()
+      };
+      
+      console.log("createUser - Full data being inserted:", {
+        ...userData,
+        password: userData.password ? '[REDACTED]' : undefined,
+        hasPassword: !!userData.password,
+        passwordLength: userData.password?.length,
+        hasLoginID: !!userData.loginID,
+        hasUsername: !!userData.username,
+        username: userData.username
+      });
+      
+      // Perform the database insertion with explicit field mapping
+      const [user] = await db.insert(users).values(userData).returning();
+      console.log("User created successfully with ID:", user.id);
+      
+      return user;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      
+      // Check for specific database errors and provide better error messages
+      if (error instanceof Error) {
+        // Check for duplicate key violations
+        if (error.message.includes("duplicate key value violates unique constraint")) {
+          if (error.message.includes("users_login_id_unique")) {
+            throw new Error("Login ID already exists");
+          }
+          if (error.message.includes("users_email_unique")) {
+            throw new Error("Email already exists");
+          }
+          if (error.message.includes("users_username_unique")) {
+            throw new Error("Username already exists");
+          }
+        }
+        
+        // Check for not-null constraint violations
+        if (error.message.includes("violates not-null constraint")) {
+          const match = error.message.match(/column "(.*?)" of relation/);
+          if (match && match[1]) {
+            throw new Error(`${match[1]} is required`);
+          }
+        }
+      }
+      
+      // If we couldn't determine a specific error, rethrow the original
+      throw error;
+    }
   }
 
   async getAllUsers(): Promise<User[]> {

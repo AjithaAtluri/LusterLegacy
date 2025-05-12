@@ -368,10 +368,20 @@ export default function AuthPage() {
       }
     }
     
-    // Set the default role to "customer"
+    // Log the data we're sending to the registration API
+    console.log("Registering with data:", {
+      ...userData,
+      loginID: userData.loginID,
+      hasLoginID: !!userData.loginID,
+      password: userData.password ? "REDACTED" : undefined,
+      hasPassword: !!userData.password
+    });
+    
+    // Set the default role to "customer" and add username field explicitly matching loginID
     registerMutation.mutate({
       ...userData,
-      role: "customer"
+      role: "customer",
+      username: userData.loginID // Set username explicitly to match loginID
     });
   };
   

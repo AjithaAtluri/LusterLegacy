@@ -37,8 +37,20 @@ export const insertUserSchema = createInsertSchema(users)
     role: true,
   })
   .extend({
-    // Add username field even though it's not in the schema - needed for database compatibility
+    // Add username field - this is required for database compatibility
+    // The values must match loginID for consistency
     username: z.string().optional()
+      .transform((val, ctx) => {
+        // If no username is provided, use the loginID value
+        // This is required for database consistency
+        if (!val && ctx && ctx.path && ctx.path.length > 0) {
+          const obj = ctx.parent as any;
+          if (obj && obj.loginID) {
+            return obj.loginID;
+          }
+        }
+        return val || "";
+      })
   });
 
 // Products schema
