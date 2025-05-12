@@ -348,7 +348,7 @@ export default function QuoteRequestDetailsPage() {
                     <span className="font-medium">Original Price:</span>
                     {product?.basePrice ? (
                       <span className={quoteRequest.quotedPrice ? "text-muted-foreground line-through" : "font-semibold text-purple-500"}>
-                        {formatCurrency(product.basePrice)}
+                        {formatCurrency(product.calculatedPriceUSD || product.basePrice)}
                       </span>
                     ) : (
                       <span className="text-muted-foreground">Unavailable</span>
@@ -420,6 +420,10 @@ export default function QuoteRequestDetailsPage() {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Phone:</span>
                         <span>{quoteRequest.phone}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Country:</span>
+                        <span>{quoteRequest.country ? quoteRequest.country.toUpperCase() : 'Not specified'}</span>
                       </div>
                     </div>
                   </div>
