@@ -233,7 +233,7 @@ export default function AdminStoneTypes() {
                     <h3 className="font-playfair font-medium">{stoneType.name}</h3>
                   </div>
                   <span className="text-sm font-medium">
-                    ₹{stoneType.priceModifier !== undefined ? 
+                    ₹{stoneType.priceModifier !== undefined && stoneType.priceModifier !== null ? 
                         Number(stoneType.priceModifier).toLocaleString('en-IN') : 
                         '0'}/ct
                   </span>

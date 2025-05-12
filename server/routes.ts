@@ -5688,10 +5688,23 @@ Respond in JSON format:
           RETURNING *
         `;
         
+        // Parse price modifier with proper handling for zero values
+        let priceModifier = 0; // Default to zero
+        if (req.body.priceModifier !== undefined && req.body.priceModifier !== null) {
+          if (req.body.priceModifier === "" || req.body.priceModifier === "0") {
+            priceModifier = 0;
+          } else {
+            priceModifier = parseFloat(req.body.priceModifier);
+            if (isNaN(priceModifier)) priceModifier = 0;
+          }
+        }
+        
+        console.log(`Parsed price modifier for stone type creation: ${priceModifier} (from ${req.body.priceModifier})`);
+        
         const params = [
           req.body.name,
           req.body.description || "",
-          parseFloat(req.body.priceModifier),
+          priceModifier, // Use our properly parsed value
           parseInt(req.body.displayOrder || "0"),
           req.body.isActive === 'true' || req.body.isActive === true,
           req.body.color || "",
@@ -5808,9 +5821,18 @@ Respond in JSON format:
       // Parse update data
       let updateData: any = { ...req.body };
       
-      // Convert price modifier to number - handle '0' value cases
+      // Convert price modifier to number - handle '0' value cases properly
       if (updateData.priceModifier !== undefined) {
-        updateData.priceModifier = parseFloat(updateData.priceModifier);
+        // When price modifier is empty string or null, set to 0
+        if (updateData.priceModifier === "" || updateData.priceModifier === null) {
+          updateData.priceModifier = 0;
+        } else {
+          updateData.priceModifier = parseFloat(updateData.priceModifier);
+          // Check for NaN after parsing and convert to 0 if needed
+          if (isNaN(updateData.priceModifier)) {
+            updateData.priceModifier = 0;
+          }
+        }
         console.log("Parsed price modifier:", updateData.priceModifier);
       }
       
@@ -5855,8 +5877,11 @@ Respond in JSON format:
           RETURNING *
         `;
         
-        // Properly handle number values including 0
-        const priceModifierValue = updateData.priceModifier !== undefined ? updateData.priceModifier : null;
+        // Properly handle number values including 0, ensuring zero is stored as 0 and not null
+        // Using direct comparison ensures explicitly set zero values are preserved
+        const priceModifierValue = updateData.priceModifier !== undefined ? 
+              (updateData.priceModifier === 0 || updateData.priceModifier === "0" ? 0 : updateData.priceModifier) : 
+              null;
         
         const params = [
           updateData.name || null,
