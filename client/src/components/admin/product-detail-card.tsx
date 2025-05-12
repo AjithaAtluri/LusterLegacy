@@ -736,8 +736,8 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
           <div>
             <CardTitle className="text-2xl">{product.name}</CardTitle>
             
-            {/* Product Type Badge */}
-            {product.productTypeId && (
+            {/* Product Type Badge - only shown in full page mode */}
+            {isFullPage && product.productTypeId && (
               <div className="mt-1 mb-2">
                 <Badge variant="outline" className="text-xs">
                   {isProductTypesLoading 
@@ -996,77 +996,79 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
             </>
           )}
         </div>
-        {/* Product Flags Section */}
-        <div className="space-y-4 mt-8">
-          <h3 className="text-lg font-medium">Product Flags</h3>
-          <div className="space-y-4 bg-muted/50 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <Checkbox 
-                id="isNew" 
-                checked={product.isNew || false}
-                onCheckedChange={(checked) => {
-                  // Update the local product state immediately for the UI
-                  product.isNew = checked === true;
-                  // Force a re-render
-                  forceUpdate();
-                  
-                  // Then send the update to the server
-                  updateMutation.mutate({
-                    isNew: checked === true
-                  });
-                }}
-              />
-              <div className="space-y-1">
-                <Label htmlFor="isNew" className="font-medium">Mark as New</Label>
-                <p className="text-sm text-muted-foreground">Adds a "New" badge to the product in the catalog</p>
+        {/* Product Flags Section - only shown in full page mode */}
+        {isFullPage && (
+          <div className="space-y-4 mt-8">
+            <h3 className="text-lg font-medium">Product Flags</h3>
+            <div className="space-y-4 bg-muted/50 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="isNew" 
+                  checked={product.isNew || false}
+                  onCheckedChange={(checked) => {
+                    // Update the local product state immediately for the UI
+                    product.isNew = checked === true;
+                    // Force a re-render
+                    forceUpdate();
+                    
+                    // Then send the update to the server
+                    updateMutation.mutate({
+                      isNew: checked === true
+                    });
+                  }}
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="isNew" className="font-medium">Mark as New</Label>
+                  <p className="text-sm text-muted-foreground">Adds a "New" badge to the product in the catalog</p>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <Checkbox 
-                id="isBestseller" 
-                checked={product.isBestseller || false}
-                onCheckedChange={(checked) => {
-                  // Update the local product state immediately for the UI
-                  product.isBestseller = checked === true;
-                  // Force a re-render
-                  forceUpdate();
-                  
-                  // Then send the update to the server
-                  updateMutation.mutate({
-                    isBestseller: checked === true
-                  });
-                }}
-              />
-              <div className="space-y-1">
-                <Label htmlFor="isBestseller" className="font-medium">Mark as Bestseller</Label>
-                <p className="text-sm text-muted-foreground">Adds a "Bestseller" badge to the product in the catalog</p>
+              
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="isBestseller" 
+                  checked={product.isBestseller || false}
+                  onCheckedChange={(checked) => {
+                    // Update the local product state immediately for the UI
+                    product.isBestseller = checked === true;
+                    // Force a re-render
+                    forceUpdate();
+                    
+                    // Then send the update to the server
+                    updateMutation.mutate({
+                      isBestseller: checked === true
+                    });
+                  }}
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="isBestseller" className="font-medium">Mark as Bestseller</Label>
+                  <p className="text-sm text-muted-foreground">Adds a "Bestseller" badge to the product in the catalog</p>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <Checkbox 
-                id="isFeatured" 
-                checked={product.isFeatured || false}
-                onCheckedChange={(checked) => {
-                  // Update the local product state immediately for the UI
-                  product.isFeatured = checked === true;
-                  // Force a re-render
-                  forceUpdate();
-                  
-                  // Then send the update to the server
-                  updateMutation.mutate({
-                    isFeatured: checked === true
-                  });
-                }}
-              />
-              <div className="space-y-1">
-                <Label htmlFor="isFeatured" className="font-medium">Featured on Homepage</Label>
-                <p className="text-sm text-muted-foreground">Shows this product in the featured section on the homepage</p>
+              
+              <div className="flex items-start space-x-3">
+                <Checkbox 
+                  id="isFeatured" 
+                  checked={product.isFeatured || false}
+                  onCheckedChange={(checked) => {
+                    // Update the local product state immediately for the UI
+                    product.isFeatured = checked === true;
+                    // Force a re-render
+                    forceUpdate();
+                    
+                    // Then send the update to the server
+                    updateMutation.mutate({
+                      isFeatured: checked === true
+                    });
+                  }}
+                />
+                <div className="space-y-1">
+                  <Label htmlFor="isFeatured" className="font-medium">Featured on Homepage</Label>
+                  <p className="text-sm text-muted-foreground">Shows this product in the featured section on the homepage</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </CardContent>
       
       <CardFooter className="flex justify-between border-t p-4">
