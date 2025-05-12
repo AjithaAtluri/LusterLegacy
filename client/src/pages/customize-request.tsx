@@ -314,7 +314,7 @@ export default function CustomizeRequest() {
     
     // If no saved data or error occurred, fill with user data
     if (user) {
-      setName(user.username);
+      setName(user.name || user.loginID);
       setEmail(user.email || "");
     }
     
