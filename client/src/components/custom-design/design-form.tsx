@@ -1118,13 +1118,19 @@ export default function DesignForm() {
           )}
         />
         
-        <Button 
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full font-montserrat font-medium bg-primary text-background px-6 py-3 rounded hover:bg-accent transition duration-300 h-auto"
-        >
-          {isSubmitting ? "Submitting..." : "Submit Design Request"}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button 
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 font-montserrat font-medium bg-primary text-background px-6 py-3 rounded hover:bg-accent transition duration-300 h-auto"
+          >
+            {isSubmitting ? "Submitting..." : "Submit Design Request"}
+          </Button>
+          
+          <div className="flex-1" id="ai-consultation-button-container">
+            {/* This container will be used by the AI consultation component */}
+          </div>
+        </div>
         
         {!user && (
           <div className="mt-2 text-center">

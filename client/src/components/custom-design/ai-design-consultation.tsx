@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, Send, Sparkles, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { createPortal } from "react-dom";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -24,6 +25,7 @@ export default function AIDesignConsultation() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [formDataReady, setFormDataReady] = useState(false);
   
   // Initialize the session timer when chat becomes active
   useEffect(() => {
@@ -67,6 +69,15 @@ export default function AIDesignConsultation() {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [chatHistory]);
+  
+  // Add effect to check for DOM element for button placement
+  useEffect(() => {
+    // Check if the button container exists in the DOM
+    const buttonContainer = document.getElementById('ai-consultation-button-container');
+    if (buttonContainer) {
+      setFormDataReady(true);
+    }
+  }, []);
   
   // Format time left for display
   const formatTimeLeft = () => {
