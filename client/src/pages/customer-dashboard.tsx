@@ -180,7 +180,7 @@ export default function CustomerDashboard() {
   const formatRequestType = (type) => {
     switch(type) {
       case 'design': return 'Custom Design';
-      case 'customization': return 'Product Customization';
+      case 'customization': return 'Product Personalization';
       case 'quote': return 'Quote Request';
       default: return type;
     }
@@ -381,10 +381,10 @@ export default function CustomerDashboard() {
                         <div className="p-2 bg-amber-100 dark:bg-amber-800/20 rounded-full">
                           <Palette className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                         </div>
-                        <h3 className="font-medium">Product Customization</h3>
+                        <h3 className="font-medium">Product Personalization</h3>
                       </div>
                       <p className="text-sm text-muted-foreground mb-3">
-                        Customize existing catalog pieces to your preferences.
+                        Personalize existing catalog pieces to your preferences.
                       </p>
                       <ul className="text-xs space-y-1.5 text-foreground/80">
                         <li className="flex items-start">
@@ -397,12 +397,12 @@ export default function CustomerDashboard() {
                         </li>
                         <li className="flex items-start">
                           <span className="text-amber-500 mr-1.5">•</span>
-                          <span>Receive customization quote before committing</span>
+                          <span>Receive personalization quote before committing</span>
                         </li>
                       </ul>
                       <Button variant="link" className="text-amber-600 dark:text-amber-400 p-0 h-auto mt-4">
                         <Link href="/collections">
-                          Browse Products to Customize <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                          Browse Products to Personalize <ArrowRight className="ml-1 h-3.5 w-3.5" />
                         </Link>
                       </Button>
                     </div>

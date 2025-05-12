@@ -2497,6 +2497,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: "pending" as const,
         };
         
+        // Enhanced logging for design request validation
+        console.log("Design request data validation:", {
+          userId: req.user.id,
+          username: req.user.username,
+          fullName: validatedData.fullName || "MISSING",
+          email: validatedData.email || "MISSING",
+          phone: validatedData.phone || "MISSING",
+          country: validatedData.country || "MISSING",
+          metalType: validatedData.metalType || "MISSING",
+          primaryStone: validatedData.primaryStone || "MISSING",
+          primaryStonesCount: validatedData.primaryStones?.length || 0,
+          notesLength: validatedData.notes?.length || 0,
+          mainImageUrl: validatedData.imageUrl || "MISSING",
+          additionalImagesCount: validatedData.imageUrls?.length || 0
+        });
+        
         console.log("Manually constructed validated data:", JSON.stringify(validatedData, null, 2));
         
         // Validate required fields

@@ -63,8 +63,8 @@ export default function DesignForm() {
     defaultValues: {
       fullName: user?.username || "",
       email: user?.email || "",
-      phone: "",
-      country: "us", // Default to United States
+      phone: user?.phone || "",
+      country: user?.country || "us", // Default to United States if not available
       metalType: "",
       primaryStones: [],
       notes: "",
@@ -495,6 +495,12 @@ export default function DesignForm() {
       console.log("User authentication state:", user ? `Authenticated as ${user.username} (${user.id})` : "Not authenticated");
       console.log("Uploaded images count:", uploadedImages.length);
       
+      // Print out form validation information
+      console.log("Form validation state:", form.formState.isValid ? "Valid" : "Invalid");
+      if (!form.formState.isValid) {
+        console.log("Form validation errors:", form.formState.errors);
+      }
+      
       // Create FormData for file upload
       const formData = new FormData();
       
@@ -509,6 +515,7 @@ export default function DesignForm() {
       });
       
       // Convert complex fields to strings to avoid issues
+      // For logged-in users, make sure we include their profile information
       const dataToSend = {
         ...processedData,
         // Ensure primaryStones is a simple string array
@@ -516,6 +523,44 @@ export default function DesignForm() {
           ? processedData.primaryStones 
           : []
       };
+      
+      // If user is logged in but form fields are empty (because they're hidden in the UI),
+      // populate them from the user profile
+      if (user) {
+        if (!dataToSend.fullName || dataToSend.fullName.trim() === '') {
+          dataToSend.fullName = user.username;
+          console.log("Using username from profile:", user.username);
+        }
+        
+        if (!dataToSend.email || dataToSend.email.trim() === '') {
+          dataToSend.email = user.email;
+          console.log("Using email from profile:", user.email);
+        }
+        
+        // Phone handling - either use from profile or set a placeholder if missing
+        if (!dataToSend.phone || dataToSend.phone.trim() === '') {
+          if (user.phone) {
+            dataToSend.phone = user.phone;
+            console.log("Using phone from profile:", user.phone);
+          } else {
+            // Set placeholder for required field
+            dataToSend.phone = "Not provided";
+            console.log("Using placeholder for missing phone number");
+          }
+        }
+        
+        // Country handling - either use from profile or set a default if missing
+        if (!dataToSend.country || dataToSend.country.trim() === '') {
+          if (user.country) {
+            dataToSend.country = user.country;
+            console.log("Using country from profile:", user.country);
+          } else {
+            // Set default country code
+            dataToSend.country = "us";
+            console.log("Using default country code: us");
+          }
+        }
+      }
       
       // Make 100% sure primaryStones is properly serialized as an array
       if (!Array.isArray(dataToSend.primaryStones)) {
@@ -573,7 +618,17 @@ export default function DesignForm() {
       });
       
       // Reset form and uploaded images
-      form.reset();
+      form.reset({
+        // Reset form to initial state with default values
+        fullName: user?.username || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+        country: user?.country || "us",
+        metalType: "",
+        primaryStones: [],
+        notes: "",
+        agreeToTerms: false
+      });
       
       // Clean up all image preview URLs to prevent memory leaks
       if (previewUrl) {
