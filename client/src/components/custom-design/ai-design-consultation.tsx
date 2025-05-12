@@ -304,6 +304,14 @@ export default function AIDesignConsultation({
     setMessage("");
     setIsLoading(true);
     
+    // Keep focus on the textarea after sending a message
+    setTimeout(() => {
+      const chatInput = document.getElementById('chat-input');
+      if (chatInput) {
+        chatInput.focus();
+      }
+    }, 0);
+    
     try {
       // Use the formState prop directly if available (new approach)
       // Otherwise fall back to the context (for backward compatibility)
@@ -383,7 +391,8 @@ export default function AIDesignConsultation({
         formData: {
           metalType: formData.metalType,
           gemstones: formData.gemstones,
-          designDescription: formData.designDescription
+          designDescription: formData.designDescription,
+          imageDataUrl: formData.imageDataUrl // Include the image data
         }
       };
       
@@ -518,6 +527,9 @@ export default function AIDesignConsultation({
             onChange={(e) => setMessage(e.target.value)}
             className="flex-1 min-h-[60px] max-h-[120px]"
             disabled={isLoading}
+            autoComplete="off"
+            id="chat-input"
+            onFocus={(e) => e.target.focus()}
           />
           <Button type="submit" size="icon" disabled={isLoading || !message.trim()}>
             <Send className="h-4 w-4" />
