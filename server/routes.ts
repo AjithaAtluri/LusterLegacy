@@ -5702,10 +5702,16 @@ Respond in JSON format:
         
         // Parse price modifier with proper handling for zero values
         let priceModifier = 0; // Default to zero
+        
+        // Enhanced handling for various forms of zero and empty values
         if (req.body.priceModifier !== undefined && req.body.priceModifier !== null) {
-          if (req.body.priceModifier === "" || req.body.priceModifier === "0") {
+          // Check for zero values in various formats
+          if (req.body.priceModifier === "" || 
+              req.body.priceModifier === "0" || 
+              req.body.priceModifier === 0) {
             priceModifier = 0;
           } else {
+            // Parse the value, ensuring NaN becomes 0
             priceModifier = parseFloat(req.body.priceModifier);
             if (isNaN(priceModifier)) priceModifier = 0;
           }
