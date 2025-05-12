@@ -5647,29 +5647,62 @@ Respond in JSON format:
         console.log(`Direct database query sample for first stone type:`, stoneTypesList[0]);
       }
       
-      // Map the raw database results to application format - with extra logging
+      // DEBUG: Let's trace what's happening with our pricing field data
+      console.log("DEBUG - Raw database fields on first stone:", Object.keys(stoneTypesList[0]));
+      
+      // Check if the price_modifier column exists in the data
+      const hasPriceModifier = stoneTypesList[0] && 'price_modifier' in stoneTypesList[0];
+      console.log("Does the price_modifier field exist in the DB results?", hasPriceModifier);
+      
+      // If it doesn't exist, we need to determine what the actual field name is
+      if (stoneTypesList[0]) {
+        const possibleFields = Object.keys(stoneTypesList[0]).filter(key => 
+          key.includes('price') || key.includes('modifier') || key.includes('cost')
+        );
+        console.log("Possible price-related fields:", possibleFields);
+      }
+      
+      // Map the raw database results to application format - using very verbose logging
       const formattedStoneTypes = stoneTypesList.map(stone => {
+        // Let's output the RAW stone data to see what fields we actually have 
+        console.log(`RAW STONE TYPE DATA for ${stone.name}:`, stone);
+        
+        // Determine the price value from whatever field is available
+        const priceField = stone.price_modifier !== undefined ? 'price_modifier' : 
+                          stone.priceModifier !== undefined ? 'priceModifier' :
+                          stone.price !== undefined ? 'price' : null;
+        
+        let priceValue = 0;
+        if (priceField) {
+          console.log(`Found price in field '${priceField}' with value:`, stone[priceField]);
+          priceValue = Number(stone[priceField]);
+          if (isNaN(priceValue)) {
+            console.log(`Value in ${priceField} is not a number, defaulting to 0`);
+            priceValue = 0;
+          }
+        } else {
+          console.log(`No price field found for ${stone.name}`);
+        }
+        
         // Convert database field names to application field names
         const formattedStone = {
           id: stone.id,
           name: stone.name,
           description: stone.description,
-          priceModifier: Number(stone.price_modifier || 0), // Direct access to the DB field
+          // Use the determined price value - this is the critical field that's not working
+          priceModifier: priceValue,
           displayOrder: stone.display_order || 0,
           isActive: stone.is_active || false,
           color: stone.color,
           imageUrl: stone.image_url,
           category: stone.category,
-          stoneForm: stone.stone_form,
+          stoneForm: stone.stone_form, 
           quality: stone.quality,
           size: stone.size,
           createdAt: stone.created_at
         };
         
-        // Add debug logging for prices
-        if (stone.price_modifier !== undefined && stone.price_modifier !== null) {
-          console.log(`Stone ${stone.name}: price_modifier=${stone.price_modifier}, converted=${formattedStone.priceModifier}`);
-        }
+        console.log(`Formatted stone ${stone.name} with price: ${formattedStone.priceModifier}`);
         
         return formattedStone;
       });
