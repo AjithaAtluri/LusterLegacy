@@ -71,63 +71,6 @@ export default function CustomDesign() {
           />
         </div>
         
-        {/* Process steps - full width, visually appealing timeline */}
-        <div className="mb-16">
-          <h2 className="font-playfair text-2xl font-bold text-foreground mb-8 text-center">
-            How Our Custom Design Process Works
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-card/50 rounded-lg p-6 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary w-12 h-12 rounded-full flex items-center justify-center">
-                <FileImage className="h-6 w-6 text-background" />
-              </div>
-              <div className="mt-6 text-center">
-                <h3 className="font-playfair text-lg font-semibold text-foreground mb-3">1. Share Your Vision</h3>
-                <p className="font-montserrat text-foreground/70">
-                  Upload a sketch, reference photo, or inspiration for your dream jewelry piece. Include as many details as possible.
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-card/50 rounded-lg p-6 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary w-12 h-12 rounded-full flex items-center justify-center">
-                <PenLine className="h-6 w-6 text-background" />
-              </div>
-              <div className="mt-6 text-center">
-                <h3 className="font-playfair text-lg font-semibold text-foreground mb-3">2. CAD Model & Quote</h3>
-                <p className="font-montserrat text-foreground/70">
-                  Our design team will create a detailed CAD model and provide a quote. A ${PAYMENT_TERMS.cadFee} {PAYMENT_TERMS.cadFeeDescription} applies.
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-card/50 rounded-lg p-6 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary w-12 h-12 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-background" />
-              </div>
-              <div className="mt-6 text-center">
-                <h3 className="font-playfair text-lg font-semibold text-foreground mb-3">3. Approval & Payment</h3>
-                <p className="font-montserrat text-foreground/70">
-                  Once you approve the design, a 50% advance payment begins the crafting process. Remaining balance due before shipping.
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-card/50 rounded-lg p-6 relative">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-primary w-12 h-12 rounded-full flex items-center justify-center">
-                <Clock className="h-6 w-6 text-background" />
-              </div>
-              <div className="mt-6 text-center">
-                <h3 className="font-playfair text-lg font-semibold text-foreground mb-3">4. Creation & Delivery</h3>
-                <p className="font-montserrat text-foreground/70">
-                  Our master artisans handcraft your jewelry with meticulous attention to detail. Typical creation time: 3-4 weeks.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
         {/* FAQ Section - at the bottom */}
         <div className="bg-muted/30 p-8 rounded-lg max-w-4xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between">
