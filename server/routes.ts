@@ -1170,7 +1170,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...quoteRequest,
         productName: product ? product.name : "Unknown Product",
         productImageUrl: product ? product.imageUrl : null,
-        product: product || null, // Include full product data
+        product: {
+          // Include specific pricing information
+          basePrice: product?.basePrice || null,
+          calculatedPriceUSD: product?.calculatedPriceUSD || null,
+          calculatedPriceINR: product?.calculatedPriceINR || null,
+          // Include full product data as well
+          ...product
+        } || null,
         quantity: 1, // Default quantity
         specialRequirements: quoteRequest.additionalNotes,
         preferredCurrency: "USD", // Default currency
