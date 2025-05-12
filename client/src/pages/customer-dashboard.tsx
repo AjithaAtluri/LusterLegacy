@@ -1285,17 +1285,38 @@ export default function CustomerDashboard() {
                         <div className="space-y-3 bg-muted/10 p-4 rounded-md border">
                           <div className="space-y-1">
                             <Label htmlFor="current-password">Current Password</Label>
-                            <Input id="current-password" type="password" />
+                            <Input 
+                              id="current-password" 
+                              type="password"
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                            />
                           </div>
                           <div className="space-y-1">
                             <Label htmlFor="new-password">New Password</Label>
-                            <Input id="new-password" type="password" />
+                            <Input 
+                              id="new-password" 
+                              type="password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                            />
                           </div>
                           <div className="space-y-1">
                             <Label htmlFor="confirm-password">Confirm New Password</Label>
-                            <Input id="confirm-password" type="password" />
+                            <Input 
+                              id="confirm-password" 
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
                           </div>
-                          <Button className="mt-2 w-full">Update Password</Button>
+                          <Button 
+                            className="mt-2 w-full" 
+                            onClick={changePassword}
+                            disabled={isChangingPassword}
+                          >
+                            {isChangingPassword ? "Updating..." : "Update Password"}
+                          </Button>
                         </div>
                       </div>
                       
