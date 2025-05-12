@@ -377,12 +377,25 @@ export default function AuthPage() {
       hasPassword: !!userData.password
     });
     
-    // Set the default role to "customer" and add username field explicitly matching loginID
-    registerMutation.mutate({
+    // Create the complete registration data with all required fields
+    const registrationData = {
       ...userData,
       role: "customer",
-      username: userData.loginID // Set username explicitly to match loginID
+      username: userData.loginID, // Set username explicitly to match loginID
+    };
+    
+    // Add additional debug log
+    console.log("Attempting to register with data:", {
+      ...registrationData,
+      password: "REDACTED",
+      passwordLength: registrationData.password?.length,
+      hasPassword: !!registrationData.password, 
+      username: registrationData.username,
+      hasUsername: !!registrationData.username
     });
+    
+    // Submit the registration data
+    registerMutation.mutate(registrationData);
   };
   
   // We'll handle redirects in a separate useEffect to avoid the "rendered fewer hooks" error

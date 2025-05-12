@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name"), // Full name of the user
   loginID: text("login_id").notNull().unique(), // Changed from username to loginID
+  username: text("username").notNull(), // Username field (required by the database)
   password: text("password").notNull(),
   email: text("email").notNull(),
   emailVerified: boolean("email_verified").default(false), // Track email verification status
@@ -25,11 +26,12 @@ export const usersRelations = relations(users, ({ many }) => ({
   testimonials: many(testimonials)
 }));
 
-// Add username field to the schema for backward compatibility with the database
+// Ensure the username field is properly included in the schema
 export const insertUserSchema = createInsertSchema(users)
   .pick({
     name: true,
     loginID: true,
+    username: true, // Include username in the picked fields
     password: true,
     email: true,
     phone: true,
@@ -37,15 +39,15 @@ export const insertUserSchema = createInsertSchema(users)
     role: true,
   })
   .extend({
-    // Add username field - this is required for database compatibility
-    // The values must match loginID for consistency
-    username: z.string().optional()
+    // Set username as a required field that defaults to loginID
+    username: z.string()
+      .optional()
       .transform((val, ctx) => {
-        // If username isn't set, we'll use loginID to maintain consistency
-        if (!val) {
-          return "";  // Default empty string that will be set in the controller
+        if (!val && ctx.data) {
+          // If username isn't provided, use loginID
+          return (ctx.data as any).loginID || '';
         }
-        return val;
+        return val || '';
       })
   });
 
