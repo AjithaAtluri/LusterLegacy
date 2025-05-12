@@ -7,7 +7,7 @@ interface WindowWithAIConsultation {
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -1062,9 +1062,9 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
               <FormLabel className="font-montserrat text-sm font-medium text-foreground">
                 Additional Notes
               </FormLabel>
-              <FormDescription className="text-xs italic text-muted-foreground mb-1">
+              <p className="text-xs italic text-muted-foreground mb-1">
                 These notes will be used by our AI consultant as a prompt and guidance. The more details you provide, the better your consultation experience will be.
-              </FormDescription>
+              </p>
               <FormControl>
                 <Textarea 
                   {...field} 
