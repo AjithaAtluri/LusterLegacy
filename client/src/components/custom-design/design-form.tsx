@@ -61,7 +61,7 @@ export default function DesignForm() {
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
     defaultValues: {
-      fullName: user?.username || "",
+      fullName: user?.name || user?.username || "",
       email: user?.email || "",
       phone: user?.phone || "",
       country: user?.country || "us", // Default to United States if not available
@@ -100,7 +100,7 @@ export default function DesignForm() {
   // Update the form with user data when user loads
   useEffect(() => {
     if (user) {
-      form.setValue("fullName", user.username);
+      form.setValue("fullName", user.name || user.loginID);
       form.setValue("email", user.email);
       
       // First, always check session storage
@@ -171,13 +171,13 @@ export default function DesignForm() {
           }
           
           // Restore form fields - make sure to set these right away
-          form.setValue("fullName", user.username); // Always use logged-in username
+          form.setValue("fullName", user.name || user.loginID); // Always use logged-in name or loginID
           form.setValue("email", user.email); // Always use logged-in email
           
           // Important: Use reset function to update all form values at once
           // This helps ensure the Select components are properly updated
           form.reset({
-            fullName: user.username,
+            fullName: user.name || user.loginID,
             email: user.email,
             phone: parsedData.phone || "",
             country: parsedData.country || "us",
@@ -991,7 +991,7 @@ export default function DesignForm() {
                 Your contact information will be used from your account:
               </p>
               <div className="space-y-1 text-sm">
-                <p><span className="font-semibold">Name:</span> {user.username}</p>
+                <p><span className="font-semibold">Name:</span> {user.name || user.username}</p>
                 <p><span className="font-semibold">Email:</span> {user.email}</p>
                 {user.phone && <p><span className="font-semibold">Phone:</span> {user.phone}</p>}
                 {user.country && (
