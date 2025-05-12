@@ -65,7 +65,7 @@ export default function FinalizeOrder() {
         
         // Only restore data if the product ID matches
         if (parsedData.productId && parsedData.productId === Number(id)) {
-          setName(parsedData.name || user.username);
+          setName(parsedData.name || user.name || user.loginID);
           setEmail(parsedData.email || user.email || "");
           setPhone(parsedData.phone || "");
           setAddress(parsedData.address || "");
@@ -457,38 +457,65 @@ export default function FinalizeOrder() {
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit}>
                   <h2 className="font-playfair text-xl font-semibold mb-6">Shipping Information</h2>
+                  
+                  {user && (
+                    <div className="mb-6 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="bg-green-100 dark:bg-green-800 rounded-full p-1.5 mt-0.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600 dark:text-green-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6L9 17l-5-5"></path>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium text-green-800 dark:text-green-200">
+                            Using your account information
+                          </p>
+                          <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                            Your contact details from your Luster Legacy account will be used for this request.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name*</Label>
-                      <Input
-                        id="name"
-                        placeholder="Enter your full name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address*</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number*</Label>
-                      <Input
-                        id="phone"
-                        placeholder="Your contact number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                      />
-                    </div>
+                    {!user ? (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Full Name*</Label>
+                          <Input
+                            id="name"
+                            placeholder="Enter your full name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email Address*</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="your@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone Number*</Label>
+                          <Input
+                            id="phone"
+                            placeholder="Your contact number"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <input type="hidden" name="name" value={name} />
+                    )}
                     <div className="space-y-2">
                       <Label htmlFor="country">Country*</Label>
                       <Select 

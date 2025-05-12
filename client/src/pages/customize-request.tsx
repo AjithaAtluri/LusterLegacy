@@ -283,7 +283,7 @@ export default function CustomizeRequest() {
         
         // Only restore data if the product ID matches
         if (parsedData.productId && parsedData.productId === Number(id)) {
-          setName(parsedData.name || user.username);
+          setName(parsedData.name || user.name || user.loginID);
           setEmail(parsedData.email || user.email || "");
           setPhone(parsedData.phone || "");
           setCustomizationDetails(parsedData.customizationDetails || "");
