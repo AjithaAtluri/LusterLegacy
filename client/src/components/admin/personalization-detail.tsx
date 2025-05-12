@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Eye, Loader2, MessageCircle, ImageIcon, X, FileText, ArrowRight } from "lucide-react";
 
@@ -61,10 +62,17 @@ export default function PersonalizationDetail({ personalization }: Personalizati
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   const [priceUpdateLoading, setPriceUpdateLoading] = useState(false);
   const [quotedPrice, setQuotedPrice] = useState(personalization.quotedPrice?.toString() || "");
+  const [showProductDialog, setShowProductDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Fetch product details for the dialog
+  const { data: productDetails } = useQuery({
+    queryKey: [`/api/products/${personalization.productId}`],
+    enabled: showProductDialog && !!personalization.productId,
+  });
 
   // Handle comment submission
   const handleCommentSubmit = async (e: React.FormEvent) => {
@@ -420,10 +428,11 @@ export default function PersonalizationDetail({ personalization }: Personalizati
             {/* View Product Details Button */}
             {personalization.productId && (
               <div className="pt-4">
-                <Button asChild variant="outline">
-                  <a href={`/product-detail/${personalization.productId}`} target="_blank" rel="noopener noreferrer">
-                    <Eye className="mr-2 h-4 w-4" /> View Product Details
-                  </a>
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowProductDialog(true)}
+                >
+                  <Eye className="mr-2 h-4 w-4" /> View Product Details
                 </Button>
               </div>
             )}
