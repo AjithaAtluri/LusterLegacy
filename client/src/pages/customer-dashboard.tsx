@@ -68,7 +68,7 @@ export default function CustomerDashboard() {
   // Update form fields when user data changes
   useEffect(() => {
     if (user) {
-      setNameValue(user.username || "");
+      setNameValue(user.name || "");
       setPhoneValue(user.phone || "");
       setCountryValue(user.country || "");
     }
@@ -414,11 +414,11 @@ export default function CustomerDashboard() {
               <div className="flex items-center bg-background rounded-lg p-3 border shadow-sm">
                 <Avatar className="h-12 w-12 mr-3">
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    {user.username.substring(0, 2).toUpperCase()}
+                    {((user.name || user.loginID || user.email || "User")).substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-montserrat font-medium">{user.username}</p>
+                  <p className="font-montserrat font-medium">{user.name || user.loginID}</p>
                   <p className="text-sm text-foreground/60">{user.email}</p>
                 </div>
               </div>
@@ -970,8 +970,8 @@ export default function CustomerDashboard() {
                           size="sm" 
                           variant="outline" 
                           className="shrink-0" 
-                          onClick={() => updateProfile("username", nameValue)}
-                          disabled={isUpdatingProfile || nameValue === user?.username || !nameValue.trim()}
+                          onClick={() => updateProfile("name", nameValue)}
+                          disabled={isUpdatingProfile || nameValue === user?.name || !nameValue.trim()}
                         >
                           {isUpdatingProfile ? 
                             <span className="flex items-center gap-1">
