@@ -104,7 +104,9 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
   const processedInitialData = initialData ? {
     name: initialData.name || "",
     description: initialData.description !== null ? initialData.description : "",
-    priceModifier: initialData.priceModifier || 0,
+    // Handle priceModifier correctly, considering 0 is a valid value
+    priceModifier: initialData.priceModifier !== undefined ? 
+                  initialData.priceModifier : 0,
     imageUrl: initialData.imageUrl !== null ? initialData.imageUrl : "",
     color: initialData.color !== null ? initialData.color : "",
     category: initialData.category !== null ? initialData.category : "",
