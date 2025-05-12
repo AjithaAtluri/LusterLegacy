@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { METAL_TYPES, STONE_TYPES, PAYMENT_TERMS, COUNTRIES } from "@/lib/constants";
 import { useDropzone } from "react-dropzone";
-import { Upload, X, Image as ImageIcon, CheckCircle, Check, ChevronsUpDown, Plus } from "lucide-react";
+import { Upload, X, Image as ImageIcon, CheckCircle, Check, ChevronsUpDown, Plus, Sparkles } from "lucide-react";
 import { isImageFile, getFileExtension, cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -1178,8 +1178,19 @@ export default function DesignForm() {
             {isSubmitting ? "Submitting..." : "Submit Design Request"}
           </Button>
           
-          <div className="flex-1" id="ai-consultation-button-container">
-            {/* This container will be used by the AI consultation component */}
+          <div className="flex-1">
+            <Button 
+              type="button"
+              onClick={() => {
+                // Find the AI consultation component and tell it to start
+                const event = new CustomEvent('start-ai-consultation');
+                window.dispatchEvent(event);
+              }} 
+              className="w-full font-montserrat bg-accent hover:bg-accent/90 text-background px-6 py-3 transition-colors flex items-center justify-center gap-2 h-auto"
+            >
+              <Sparkles size={16} />
+              Get AI Design Guidance
+            </Button>
           </div>
         </div>
         

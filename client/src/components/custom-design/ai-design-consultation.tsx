@@ -49,6 +49,20 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     }
   }, [integratedWithForm, formContext]);
   
+  // Listen for the custom event to start the consultation
+  useEffect(() => {
+    const handleStartEvent = () => {
+      console.log("AI Design Consultation - Received start event");
+      handleStartConsultation();
+    };
+    
+    window.addEventListener('start-ai-consultation', handleStartEvent);
+    
+    return () => {
+      window.removeEventListener('start-ai-consultation', handleStartEvent);
+    };
+  }, []);
+  
   // Timer for the 15-minute consultation limit
   useEffect(() => {
     if (!startTime) return;
