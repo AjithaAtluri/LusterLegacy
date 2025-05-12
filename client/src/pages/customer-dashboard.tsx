@@ -1193,11 +1193,7 @@ export default function CustomerDashboard() {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="default">
-                      Save All Changes
-                    </Button>
-                  </CardFooter>
+                  {/* Footer removed to streamline UI */}
                 </Card>
                 
                 <Card>
@@ -1265,9 +1261,7 @@ export default function CustomerDashboard() {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter>
-                    <Button>Save Notification Preferences</Button>
-                  </CardFooter>
+                  {/* Footer removed to streamline UI */}
                 </Card>
                 
                 <Card className="md:col-span-2">
@@ -1305,46 +1299,17 @@ export default function CustomerDashboard() {
                         </div>
                       </div>
                       
-                      {/* Right Column - Verification */}
+                      {/* Right column - simplified */}
                       <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-5 w-5 text-muted-foreground" />
-                          <h3 className="text-sm font-medium">Account Verification</h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="h-5 w-5 text-muted-foreground" />
+                          <h3 className="text-sm font-medium">Login Activity</h3>
                         </div>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between py-3 px-4 bg-amber-50 dark:bg-amber-900/10 rounded-md border border-amber-200 dark:border-amber-900/50">
-                            <div className="flex items-center gap-2">
-                              <div className="h-2 w-2 rounded-full bg-amber-500"></div>
-                              <div>
-                                <p className="text-sm font-medium">Email Verification</p>
-                                <p className="text-xs text-muted-foreground">Verify your email address</p>
-                              </div>
-                            </div>
-                            <Button size="sm" variant="outline">Verify</Button>
-                          </div>
-                          
-                          <div className="flex items-center justify-between py-3 px-4 bg-muted/10 rounded-md border">
-                            <div className="flex items-center gap-2">
-                              <div className="h-2 w-2 rounded-full bg-slate-400"></div>
-                              <div>
-                                <p className="text-sm font-medium">Phone Verification</p>
-                                <p className="text-xs text-muted-foreground">Verify your phone number</p>
-                              </div>
-                            </div>
-                            <Button size="sm" variant="outline">Verify</Button>
-                          </div>
+                        <div className="bg-muted/10 p-3 rounded-md border">
+                          <p className="text-xs text-muted-foreground">Last login: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
+                          <p className="text-xs text-muted-foreground">Device: Web Browser</p>
+                          <p className="text-xs text-muted-foreground mt-1">Location: Unknown</p>
                         </div>
-                        
-                        <div className="mt-4">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-5 w-5 text-muted-foreground" />
-                            <h3 className="text-sm font-medium">Login Activity</h3>
-                          </div>
-                          <div className="mt-2 bg-muted/10 p-3 rounded-md border">
-                            <p className="text-xs text-muted-foreground">Last login: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
-                            <p className="text-xs text-muted-foreground">Device: Web Browser</p>
-                            <p className="text-xs text-muted-foreground mt-1">Location: Unknown</p>
-                          </div>
                         </div>
                       </div>
                     </div>
