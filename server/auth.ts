@@ -87,7 +87,10 @@ export function setupAuth(app: Express): void {
 
   // Configure local authentication strategy
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({
+      usernameField: 'loginID', // Use loginID field from request body as username
+      passwordField: 'password'
+    }, async (username, password, done) => {
       try {
         // Try to determine if the identifier is an email
         const isEmail = username.includes('@');
