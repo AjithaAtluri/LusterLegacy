@@ -40,6 +40,7 @@ import { analyzeJewelryImage } from "./direct-vision-api";
 import { generateProductContent } from "./generate-product-content";
 import { generateChatbotResponse } from "./chatbot-service";
 import { generateAITestimonial } from "./openai-service";
+import { generateDesignConsultationResponse } from "./design-consultation-service";
 // We don't import processImageForTestimonial because it fails with local image paths
 import { getGoldPrice, fetchGoldPrice } from "./services/gold-price-service";
 
@@ -3773,6 +3774,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error generating chatbot response:", error);
       res.status(500).json({ 
         message: "An error occurred while processing your request. Please try again later." 
+      });
+    }
+  });
+
+  /**
+   * AI Design Consultation API Endpoints
+   * These endpoints provide design inspiration and consultation for customers
+   */
+  app.post("/api/design-consultation-ai", async (req, res) => {
+    try {
+      const { message, history } = req.body;
+      
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Invalid request. 'message' is required and must be a string." });
+      }
+      
+      // Validate the chat history format if provided
+      if (history && (!Array.isArray(history) || 
+          !history.every(entry => 
+            entry && 
+            typeof entry === 'object' && 
+            (entry.role === 'user' || entry.role === 'assistant' || entry.role === 'system') && 
+            typeof entry.content === 'string'
+          ))) {
+        return res.status(400).json({ 
+          message: "Invalid history format. Each entry must have 'role' (user/assistant/system) and 'content' properties." 
+        });
+      }
+      
+      // Generate the design consultation response
+      const response = await generateDesignConsultationResponse(message, history || []);
+      
+      res.status(200).json({ response });
+    } catch (error) {
+      console.error("Error generating design consultation response:", error);
+      res.status(500).json({ 
+        message: "An error occurred while processing your request. Please try again later." 
+      });
+    }
+  });
+  
+  // Save design consultation history
+  app.post("/api/design-consultations", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const { messages, userId } = req.body;
+      
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({ message: "Valid message history is required" });
+      }
+      
+      // Store consultation history in the database
+      // This can be expanded later to store in a proper consultation table
+      // For now, we'll just store it as a custom design note
+      const consultationText = messages
+        .map(m => `${m.role === 'user' ? 'Customer' : 'AI Consultant'}: ${m.content}`)
+        .join('\n\n');
+      
+      const designRequest = {
+        userId: userId || req.user.id,
+        fullName: req.user.name || req.user.loginID,
+        email: req.user.email,
+        phone: req.user.phone || "",
+        country: req.user.country || "us",
+        metalType: "Not specified",
+        primaryStones: [],
+        notes: `AI Design Consultation Summary:\n\n${consultationText}`,
+        images: [],
+        status: "consultation"
+      };
+      
+      await storage.createDesignRequest(designRequest);
+      
+      res.status(200).json({ message: "Design consultation saved successfully" });
+    } catch (error) {
+      console.error("Error saving design consultation:", error);
+      res.status(500).json({ 
+        message: "An error occurred while saving your consultation. Please try again later." 
       });
     }
   });
