@@ -31,6 +31,18 @@ interface AIDesignConsultationProps {
   };
 }
 
+function StartConsultationButton({ onStart }: { onStart: () => void }) {
+  return (
+    <Button 
+      onClick={onStart}
+      className="w-full mb-4 bg-primary hover:bg-primary/90"
+    >
+      <Sparkles className="w-4 h-4 mr-2" />
+      Start AI Design Consultation
+    </Button>
+  );
+}
+
 export default function AIDesignConsultation({ integratedWithForm = false, formState = { metalType: "", selectedStones: [], notes: "" } }: AIDesignConsultationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -138,11 +150,12 @@ export default function AIDesignConsultation({ integratedWithForm = false, formS
     
     // Use the formState prop directly if available (new approach)
     // Otherwise fall back to the context (for backward compatibility)
-    const currentFormData = formState || (formContext ? {
-      metalType: formContext.metalType || "",
-      selectedStones: formContext.selectedStones || [],
-      notes: formContext.formValues?.notes || ""
-    } : null);
+    // Make sure we have valid data by filtering out undefined values
+    const currentFormData = {
+      metalType: formState?.metalType || formContext?.metalType || "",
+      selectedStones: (formState?.selectedStones || formContext?.selectedStones || []).filter(stone => stone),
+      notes: formState?.notes || formContext?.formValues?.notes || ""
+    };
     
     // Log the current form data
     console.log("AI Design Consultation - Starting with form data:", currentFormData);
@@ -359,9 +372,7 @@ export default function AIDesignConsultation({ integratedWithForm = false, formS
         </CardDescription>
       </CardHeader>
       <CardFooter>
-        <Button onClick={handleStartConsultation} className="w-full">
-          Start Free AI Consultation (15 min)
-        </Button>
+        <StartConsultationButton onStart={handleStartConsultation} />
       </CardFooter>
     </Card>
   );
