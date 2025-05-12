@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Save, X, RefreshCcw } from "lucide-react";
+import { Pencil, Save, X, RefreshCcw, ChevronUp, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -26,11 +26,29 @@ interface ProductDetailCardProps {
 }
 
 export function ProductDetailCard({ product, onClose, isFullPage = false }: ProductDetailCardProps) {
+  // When not in full page mode (i.e., in a dialog), we'll hide descriptions
   const { toast } = useToast();
   const [editSection, setEditSection] = useState<string | null>(null);
+  const [scrollPosition, setScrollPosition] = useState<number>(0);
+  const contentRef = useState<HTMLDivElement | null>(null);
   
   // Add forceUpdate to trigger re-renders when needed (especially for checkbox state changes)
   const [, forceUpdate] = useReducer(x => x + 1, 0);
+  
+  // Scroll functions
+  const scrollUp = () => {
+    if (contentRef.current) {
+      contentRef.current.scrollBy({ top: -300, behavior: 'smooth' });
+      setScrollPosition(contentRef.current.scrollTop - 300);
+    }
+  };
+  
+  const scrollDown = () => {
+    if (contentRef.current) {
+      contentRef.current.scrollBy({ top: 300, behavior: 'smooth' });
+      setScrollPosition(contentRef.current.scrollTop + 300);
+    }
+  };
   
   // Fetch metal types, stone types, and product types from API
   const { data: metalTypes = [], isLoading: isMetalTypesLoading } = useQuery({
@@ -729,13 +747,17 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
               </div>
             )}
             
-            <CardDescription className="mt-2">{product.description}</CardDescription>
-            
-            {stoneDetails.detailedDescription && (
-              <div className="mt-4 text-sm text-muted-foreground">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-1">Detailed Description:</h4>
-                <p className="whitespace-pre-wrap">{stoneDetails.detailedDescription}</p>
-              </div>
+            {isFullPage && (
+              <>
+                <CardDescription className="mt-2">{product.description}</CardDescription>
+                
+                {stoneDetails.detailedDescription && (
+                  <div className="mt-4 text-sm text-muted-foreground">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-1">Detailed Description:</h4>
+                    <p className="whitespace-pre-wrap">{stoneDetails.detailedDescription}</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
           <Button 
