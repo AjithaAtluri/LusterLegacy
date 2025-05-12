@@ -5864,6 +5864,22 @@ Respond in JSON format:
       const hasAdminApiKey = req.headers['x-admin-api-key'] === 'dev_admin_key_12345';
       const adminUsername = req.headers['x-admin-username'];
       
+      // Debug the incoming request data
+      console.log("STONE TYPE UPDATE REQUEST RECEIVED:");
+      console.log("Request body keys:", Object.keys(req.body));
+      console.log("Request body stoneForm:", req.body.stoneForm);
+      console.log("Request body stone_form:", req.body.stone_form);
+      console.log("Request body values for all fields:", {
+        name: req.body.name,
+        description: req.body.description,
+        priceModifier: req.body.priceModifier,
+        color: req.body.color,
+        category: req.body.category,
+        stoneForm: req.body.stoneForm, // This is what we should be receiving
+        quality: req.body.quality,
+        size: req.body.size,
+      });
+      
       // Allow access either through our standard validateAdmin or through headers
       if (hasAdminDebugHeader && hasAdminApiKey) {
         console.log("Stone type update - direct API key authentication");
@@ -5984,6 +6000,18 @@ Respond in JSON format:
         
         console.log(`Price modifier handling: Original=${updateData.priceModifier}, Processed=${priceModifierValue}`);
         
+        // Special handling for stoneForm - make sure we're keeping existing value if not provided
+        // Note: NULL in SQL means "keep current value" due to our COALESCE function
+        const stoneFormValue = updateData.stoneForm !== undefined ? 
+                              (updateData.stoneForm || null) : 
+                              null;
+                              
+        // Log specific field values before adding to params
+        console.log("Stone Form special handling:");
+        console.log("- Original value from request:", updateData.stoneForm);
+        console.log("- Value to be used in SQL:", stoneFormValue);
+        console.log("- Existing value in database:", existingStoneType.stoneForm);
+        
         const params = [
           updateData.name || null,
           updateData.description || null,
@@ -5991,7 +6019,7 @@ Respond in JSON format:
           updateData.color || null,
           updateData.imageUrl || null,
           updateData.category || null,
-          updateData.stoneForm || null,
+          stoneFormValue, // Using our special handling for stone form
           updateData.quality || null,
           updateData.size || null,
           id
