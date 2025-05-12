@@ -164,14 +164,26 @@ export function setupAuth(app: Express): void {
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      // Create new user with hashed password
-      // Important: We need to set both username and loginID since the database requires both fields
-      const user = await storage.createUser({
+      // Add debug logs to help diagnose the problem
+      console.log("Registration payload:", {
+        loginID: req.body.loginID,
+        email: req.body.email,
+        name: req.body.name,
+        role: req.body.role || "customer"
+      });
+      
+      // Prepare user data with both username and loginID fields explicitly set
+      const userData = {
         ...req.body,
-        username: req.body.loginID, // Set username field to match loginID for backward compatibility
+        username: req.body.loginID, // Explicitly set username to loginID value
         password: await hashPassword(req.body.password),
         role: req.body.role || "customer" // Default role is customer
-      });
+      };
+      
+      console.log("User data being sent to database includes username:", !!userData.username);
+      
+      // Create new user with hashed password
+      const user = await storage.createUser(userData);
 
       // Log the user in after registration
       req.login(user, (err) => {

@@ -287,7 +287,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    console.log("createUser - Received user data:", {
+      hasLoginID: !!insertUser.loginID,
+      loginID: insertUser.loginID
+    });
+    
+    // Make sure username is explicitly set - this matches what's in the database
+    // We're creating a raw object instead of using the InsertUser type
+    // to bypass TypeScript's strict checking since the schema doesn't match the DB exactly
+    const userData: any = {
+      ...insertUser,
+      username: insertUser.loginID // Set username explicitly equal to loginID
+    };
+    
+    console.log("createUser - Data being inserted:", {
+      hasLoginID: !!userData.loginID,
+      hasUsername: !!userData.username,
+      username: userData.username
+    });
+    
+    const [user] = await db.insert(users).values(userData).returning();
     return user;
   }
 

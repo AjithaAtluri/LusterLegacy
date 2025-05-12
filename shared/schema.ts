@@ -25,15 +25,21 @@ export const usersRelations = relations(users, ({ many }) => ({
   testimonials: many(testimonials)
 }));
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  name: true,
-  loginID: true,
-  password: true,
-  email: true,
-  phone: true,
-  country: true,
-  role: true,
-});
+// Add username field to the schema for backward compatibility with the database
+export const insertUserSchema = createInsertSchema(users)
+  .pick({
+    name: true,
+    loginID: true,
+    password: true,
+    email: true,
+    phone: true,
+    country: true,
+    role: true,
+  })
+  .extend({
+    // Add username field even though it's not in the schema - needed for database compatibility
+    username: z.string().optional()
+  });
 
 // Products schema
 // Define the AI inputs interface
