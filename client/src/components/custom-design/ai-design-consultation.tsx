@@ -60,6 +60,51 @@ export default function AIDesignConsultation({
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Helper function to format AI messages with better styling
+  const formatAIMessage = (content: string) => {
+    // Split the content by double newlines to separate paragraphs
+    const paragraphs = content.split(/\n\n+/);
+    
+    return (
+      <>
+        {paragraphs.map((paragraph, i) => {
+          // Check if the paragraph is a list
+          if (paragraph.includes("\n- ")) {
+            const [listTitle, ...items] = paragraph.split("\n- ");
+            return (
+              <div key={i} className="mb-3 last:mb-0">
+                {listTitle && <p className="mb-1">{listTitle}</p>}
+                <ul className="pl-4 list-disc">
+                  {items.map((item, j) => (
+                    <li key={j} className="mb-1">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          } 
+          // Check if the paragraph is a numbered list
+          else if (paragraph.includes("\n1. ")) {
+            const [listTitle, ...items] = paragraph.split(/\n\d+\.\s/);
+            return (
+              <div key={i} className="mb-3 last:mb-0">
+                {listTitle && <p className="mb-1">{listTitle}</p>}
+                <ol className="pl-4 list-decimal">
+                  {items.map((item, j) => (
+                    <li key={j} className="mb-1">{item}</li>
+                  ))}
+                </ol>
+              </div>
+            );
+          }
+          // Regular paragraph
+          else {
+            return <p key={i} className="mb-3 last:mb-0">{paragraph}</p>;
+          }
+        })}
+      </>
+    );
+  };
   const [formDataReady, setFormDataReady] = useState(false);
   
   // Initialize the session timer when chat becomes active
@@ -442,11 +487,11 @@ export default function AIDesignConsultation({
       </CardHeader>
       
       <CardContent>
-        <div className="h-[350px] overflow-y-auto mb-4 pr-2">
+        <div className="h-[400px] overflow-y-auto mb-4 pr-2 space-y-6">
           {chatHistory.map((msg, index) => (
             <div 
               key={`${index}-${msg.timestamp.getTime()}`} 
-              className={`flex mb-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role !== "user" && (
                 <Avatar className="w-8 h-8 mr-2">
@@ -455,12 +500,18 @@ export default function AIDesignConsultation({
                 </Avatar>
               )}
               
-              <div className={`max-w-[80%] px-4 py-2 rounded-lg ${
+              <div className={`max-w-[80%] px-5 py-4 rounded-lg shadow-sm ${
                 msg.role === "user" 
                   ? "bg-primary text-primary-foreground" 
-                  : "bg-secondary"
+                  : "bg-card border border-border"
               }`}>
-                <p className="text-sm">{msg.content}</p>
+                <div className="text-sm leading-relaxed">
+                  {/* Format AI messages with paragraph separation and formatting */}
+                  {msg.role === "assistant" 
+                    ? formatAIMessage(msg.content)
+                    : <p>{msg.content}</p>
+                  }
+                </div>
               </div>
               
               {msg.role === "user" && (
