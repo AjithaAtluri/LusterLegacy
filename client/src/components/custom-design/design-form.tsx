@@ -83,8 +83,7 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Debug log - new variable to track context values
-  const [contextMetalType, setContextMetalType] = useState<string>("");
+  // Variables to track form values for context and parent updates
   
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
@@ -903,13 +902,33 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
     console.log("Design Form - Selected stones:", selectedStones);
   }, [currentMetalType, currentNotes, selectedStones]);
 
-  // Watch form changes to update currentFormValues
+  // Watch form changes to update currentFormValues and parent component
   useEffect(() => {
     const subscription = form.watch((value) => {
+      // Update local state
       setCurrentFormValues(value as DesignFormValues);
+      
+      // Extract relevant fields for parent update
+      const metalType = value.metalType;
+      const notes = value.notes;
+      const primaryStones = value.primaryStones || [];
+      
+      // Update local tracking variables
+      setCurrentMetalType(metalType || "");
+      setCurrentNotes(notes || "");
+      setSelectedStones(primaryStones);
+      
+      // Update parent component if callback is provided
+      if (onFormChange) {
+        onFormChange({
+          metalType: metalType,
+          selectedStones: primaryStones,
+          notes: notes
+        });
+      }
     });
     return () => subscription.unsubscribe();
-  }, [form]);
+  }, [form, onFormChange]);
 
   return (
     <DesignFormContext.Provider value={contextValue}>
