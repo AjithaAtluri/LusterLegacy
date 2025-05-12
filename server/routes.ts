@@ -5891,9 +5891,22 @@ Respond in JSON format:
         
         // Properly handle number values including 0, ensuring zero is stored as 0 and not null
         // Using direct comparison ensures explicitly set zero values are preserved
-        const priceModifierValue = updateData.priceModifier !== undefined ? 
-              (updateData.priceModifier === 0 || updateData.priceModifier === "0" ? 0 : updateData.priceModifier) : 
-              null;
+        let priceModifierValue;
+        if (updateData.priceModifier !== undefined) {
+          // Check for zero values in various formats
+          if (updateData.priceModifier === 0 || 
+              updateData.priceModifier === "0" || 
+              updateData.priceModifier === "" || 
+              updateData.priceModifier === null) {
+            priceModifierValue = 0;
+          } else {
+            priceModifierValue = updateData.priceModifier;
+          }
+        } else {
+          priceModifierValue = null;
+        }
+        
+        console.log(`Price modifier handling: Original=${updateData.priceModifier}, Processed=${priceModifierValue}`);
         
         const params = [
           updateData.name || null,
