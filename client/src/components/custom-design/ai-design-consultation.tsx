@@ -16,6 +16,12 @@ interface Message {
   timestamp: Date;
 }
 
+interface FormData {
+  metalType: string;
+  gemstones: string[];
+  designDescription: string;
+}
+
 interface AIDesignConsultationProps {
   integratedWithForm?: boolean;
 }
@@ -124,14 +130,52 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     setChatHistory([]);
     setTimeLeft(15);
     
+    // Log the current form context
+    console.log("AI Design Consultation - Starting with form context:", formContext);
+    
+    // Generate a context-aware welcome message
+    let welcomeMessage = "Welcome to your AI design consultation! I'm here to help you explore jewelry design ideas, suggest materials, gemstones, and answer your questions about custom jewelry design.";
+    
+    // Add context from the form if available
+    if (integratedWithForm && formContext) {
+      // Extract form data
+      const metalType = formContext.metalType;
+      const selectedStones = formContext.selectedStones;
+      const notes = formContext.formValues?.notes;
+      
+      console.log("AI Design Consultation - Extracted form data:", {
+        metalType,
+        selectedStones,
+        notes
+      });
+      
+      // Add context to welcome message
+      if (metalType) {
+        welcomeMessage += ` I see you're interested in ${metalType} jewelry.`;
+      }
+      
+      if (selectedStones && selectedStones.length > 0) {
+        welcomeMessage += ` You've selected ${selectedStones.join(", ")} gemstones.`;
+      }
+      
+      if (notes) {
+        welcomeMessage += ` I'll keep in mind your design notes: "${notes}"`;
+      }
+    }
+    
+    welcomeMessage += " What specific questions do you have about your jewelry design?";
+    
     // Initial system message to explain the consultation
     const systemMessage: Message = {
       role: "assistant",
-      content: "Welcome to your AI design consultation! I'm here to help you explore jewelry design ideas, suggest materials, gemstones, and answer your questions about custom jewelry design. What kind of jewelry piece are you interested in creating?",
+      content: welcomeMessage,
       timestamp: new Date()
     };
     
     setChatHistory([systemMessage]);
+    
+    // Include additional logging
+    console.log("AI Design Consultation - Initial message set:", systemMessage);
   };
   
   const handleEndConsultation = async () => {
@@ -181,7 +225,11 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
       console.log("AI Design Consultation - Form Context:", formContext);
       
       // Prepare form data for context if it exists
-      let formData = null;
+      let formData: FormData = {
+        metalType: "",
+        gemstones: [],
+        designDescription: ""
+      };
       
       if (integratedWithForm && formContext) {
         console.log("AI Design Consultation - Using form context:", formContext);
@@ -191,11 +239,14 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
         const selectedStones = formContext.selectedStones;
         const notes = formContext.formValues?.notes;
         
+        // Always provide formData, even if empty
         formData = {
           metalType: metalType || "",
           gemstones: selectedStones || [],
           designDescription: notes || ""
         };
+        
+        console.log("AI Design Consultation - Form data prepared:", formData);
         
         // Make sure we have non-empty values to include
         if (!formData.metalType) {
@@ -221,14 +272,19 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
       console.log("AI Design Consultation - Prepared Form Data:", formData);
       
       // Send message to API with form context data if available
-      // Need to fix the parameter name to match what the server expects
+      // Build the request body with the correct parameter names
       const requestBody = {
         message: userMessage.content,
         history: chatHistory.map(msg => ({
           role: msg.role,
           content: msg.content
         })),
-        formData: formData
+        // Always include formData with defined values
+        formData: {
+          metalType: formData.metalType,
+          gemstones: formData.gemstones,
+          designDescription: formData.designDescription
+        }
       };
       
       console.log("AI Design Consultation - Sending request to API:", requestBody);
