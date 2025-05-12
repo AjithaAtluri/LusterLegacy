@@ -98,17 +98,17 @@ export function setupAuth(app: Express): void {
           console.log(`[AUTH DEBUG] Looking up user with email: "${username}"`);
           user = await storage.getUserByEmail(username);
         } else {
-          // Look up user by username
-          console.log(`[AUTH DEBUG] Looking up user with username: "${username}"`);
-          user = await storage.getUserByUsername(username);
+          // Look up user by loginID
+          console.log(`[AUTH DEBUG] Looking up user with loginID: "${username}"`);
+          user = await storage.getUserByLoginID(username);
         }
         
         if (!user) {
           console.log(`[AUTH DEBUG] User with identifier "${username}" not found in database`);
-          return done(null, false, { message: "Incorrect username/email or password" });
+          return done(null, false, { message: "Incorrect login ID/email or password" });
         }
         
-        console.log(`[AUTH DEBUG] Found user: ${user.username} (ID: ${user.id}), role: ${user.role}, checking password...`);
+        console.log(`[AUTH DEBUG] Found user: ${user.loginID} (ID: ${user.id}), role: ${user.role}, checking password...`);
         
         // If password doesn't match
         const passwordMatches = await comparePasswords(password, user.password);
@@ -116,11 +116,11 @@ export function setupAuth(app: Express): void {
         
         if (!passwordMatches) {
           console.log(`[AUTH DEBUG] Password mismatch for ${username}`);
-          return done(null, false, { message: "Incorrect username/email or password" });
+          return done(null, false, { message: "Incorrect login ID/email or password" });
         }
         
         // Authentication successful
-        console.log(`[AUTH DEBUG] Authentication successful for ${user.username} (${user.email})`);
+        console.log(`[AUTH DEBUG] Authentication successful for ${user.loginID} (${user.email})`);
         return done(null, user);
       } catch (error) {
         console.error(`[AUTH DEBUG] Error during authentication:`, error);

@@ -478,13 +478,13 @@ export default function AuthPage() {
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
                   <FormField
                     control={registerForm.control}
-                    name="username"
+                    name="loginID"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Login ID</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="Choose a username" 
+                            placeholder="Choose a login ID" 
                             {...field} 
                             disabled={registerMutation.isPending}
                           />
