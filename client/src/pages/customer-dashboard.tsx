@@ -1050,24 +1050,12 @@ export default function CustomerDashboard() {
                         <h3 className="text-sm font-medium">Account Data & Privacy</h3>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-center justify-between py-3 px-4 bg-muted/10 rounded-md border">
-                          <div className="space-y-0.5">
-                            <p className="text-sm font-medium">Download your data</p>
-                            <p className="text-xs text-muted-foreground">
-                              Get a copy of your personal information
-                            </p>
-                          </div>
-                          <Button variant="outline" size="sm">
-                            Download
-                          </Button>
-                        </div>
-                        
+                      <div className="grid gap-4">
                         <div className="flex items-center justify-between py-3 px-4 bg-red-50 dark:bg-red-900/10 rounded-md border border-red-200 dark:border-red-900/50">
                           <div className="space-y-0.5">
                             <p className="text-sm font-medium text-red-600 dark:text-red-400">Delete account</p>
                             <p className="text-xs text-muted-foreground">
-                              Permanently remove your account
+                              Permanently remove your account and all associated data
                             </p>
                           </div>
                           <Button variant="destructive" size="sm">
