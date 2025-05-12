@@ -66,7 +66,7 @@ export default function DirectAdminDashboard() {
         // If not logged in, auto-login with admin credentials
         console.log("Not logged in, attempting auto login");
         const loginRes = await apiRequest("POST", "/api/login", {
-          username: "admin", 
+          loginID: "admin", 
           password: "admin123"
         });
         

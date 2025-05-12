@@ -13,7 +13,7 @@ import { Loader2, Lock, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  username: z.string().min(1, "Login ID is required"),
   password: z.string().min(1, "Password is required")
 });
 
@@ -61,8 +61,14 @@ export default function AdminLogin() {
   const onSubmit = async (data: LoginFormValues) => {
     console.log("ADMIN LOGIN - Using central auth system for login");
     
+    // Transform data to match LoginData type (username → loginID)
+    const loginData = {
+      loginID: data.username, // Map username field to loginID for API
+      password: data.password
+    };
+    
     // Use the mutation from useAuth hook
-    loginMutation.mutate(data, {
+    loginMutation.mutate(loginData, {
       onSuccess: (userData) => {
         // Check if user has admin role
         if (userData.role !== 'admin') {
@@ -138,9 +144,9 @@ export default function AdminLogin() {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username</FormLabel>
+                      <FormLabel>Login ID</FormLabel>
                       <FormControl>
-                        <Input {...field} className="font-montserrat" />
+                        <Input {...field} className="font-montserrat" placeholder="Enter your login ID" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
