@@ -48,6 +48,17 @@ const designFormSchema = z.object({
 
 type DesignFormValues = z.infer<typeof designFormSchema>;
 
+// Define a context to share form data with AI consultation component
+export const DesignFormContext = React.createContext<{
+  formValues: DesignFormValues | null;
+  selectedStones: string[];
+  metalType: string;
+}>({
+  formValues: null,
+  selectedStones: [],
+  metalType: "",
+});
+
 export default function DesignForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<File | null>(null); // Main image (for backward compatibility)
@@ -55,6 +66,7 @@ export default function DesignForm() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null); // Main image preview
   const [previewUrls, setPreviewUrls] = useState<string[]>([]); // Array to store multiple image previews
   const [selectedStones, setSelectedStones] = useState<string[]>([]);
+  const [currentFormValues, setCurrentFormValues] = useState<DesignFormValues | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -848,13 +860,29 @@ export default function DesignForm() {
     );
   };
   
+  // Create a context provider value
+  const contextValue = {
+    formValues: currentFormValues,
+    selectedStones: selectedStones,
+    metalType: form.watch('metalType') || ""
+  };
+
+  // Watch form changes to update currentFormValues
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      setCurrentFormValues(value as DesignFormValues);
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-8">
-        <h3 className="font-playfair text-2xl font-semibold text-foreground mb-3">Submit Your Design</h3>
-        {!user && (
-          <p className="font-montserrat text-sm text-foreground/70 mb-6">Login required. Your design details will be saved when you submit.</p>
-        )}
+    <DesignFormContext.Provider value={contextValue}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-8">
+          <h3 className="font-playfair text-2xl font-semibold text-foreground mb-3">Submit Your Design</h3>
+          {!user && (
+            <p className="font-montserrat text-sm text-foreground/70 mb-6">Login required. Your design details will be saved when you submit.</p>
+          )}
         
         <div className="mb-6">
           <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
