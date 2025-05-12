@@ -194,7 +194,36 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
       
       // Collect possible values from different sources
       const metalType = details.metalType || aiInputs.metalType || additionalData.metalType || "Unknown";
-      const metalWeight = details.metalWeight || aiInputs.metalWeight || additionalData.metalWeight || 0;
+      
+      // Process metalWeight - ensure it's a number and use proper priority
+      console.log("Admin product detail card - raw metal weight values:", {
+        rootLevel: details.metalWeight,
+        typeOfRootLevel: typeof details.metalWeight,
+        aiLevel: aiInputs.metalWeight,
+        typeOfAiLevel: typeof aiInputs.metalWeight,
+        additionalDataLevel: additionalData.metalWeight,
+        typeOfAdditionalDataLevel: typeof additionalData.metalWeight
+      });
+      
+      let metalWeight = 0;
+      // First check root-level metalWeight (highest priority)
+      if (details.metalWeight) {
+        // Handle case where metalWeight might be a string or a number
+        const parsedWeight = typeof details.metalWeight === 'string' 
+          ? parseFloat(details.metalWeight) 
+          : details.metalWeight;
+        console.log("Admin using root-level metal weight:", parsedWeight);
+        metalWeight = parsedWeight;
+      } 
+      // Fall back to other sources if root level is not available or is NaN
+      else if (aiInputs.metalWeight) {
+        console.log("Admin using AI-level metal weight:", aiInputs.metalWeight);
+        metalWeight = aiInputs.metalWeight;
+      } 
+      else if (additionalData.metalWeight) {
+        console.log("Admin using additional data metal weight:", additionalData.metalWeight);
+        metalWeight = additionalData.metalWeight;
+      }
       const primaryStone = details.primaryStone || aiInputs.primaryStone || additionalData.mainStoneType || details.mainStoneType || aiInputs.mainStoneType || "None";
       const primaryStoneWeight = details.primaryStoneWeight || aiInputs.primaryStoneWeight || additionalData.mainStoneWeight || details.mainStoneWeight || aiInputs.mainStoneWeight || 0;
       const secondaryStone = details.secondaryStone || aiInputs.secondaryStone || additionalData.secondaryStone || additionalData.secondaryStoneType || "None";
