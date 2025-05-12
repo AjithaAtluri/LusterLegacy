@@ -929,59 +929,24 @@ export default function DesignForm() {
           <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
             Contact Information*
           </FormLabel>
-          <div className="grid grid-cols-1 gap-4">
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Full Name" 
-                      className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input 
-                      {...field} 
-                      placeholder="Email Address" 
-                      readOnly={user !== null}
-                      className={`p-3 border border-foreground/20 rounded font-montserrat text-sm ${user ? 'bg-accent/5' : ''}`}
-                    />
-                  </FormControl>
-                  {user && (
-                    <p className="text-xs text-muted-foreground mt-1">Email is auto-filled from your account</p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {user ? (
+            <div className="bg-accent/10 rounded-md p-4 mb-4">
+              <p className="text-sm text-muted-foreground">
+                Your contact information will be automatically used from your account.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
-                name="phone"
+                name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                      Phone Number*
-                    </FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
-                        type="tel"
-                        placeholder="Phone Number" 
+                        placeholder="Full Name" 
                         className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
                       />
                     </FormControl>
@@ -992,12 +957,53 @@ export default function DesignForm() {
               
               <FormField
                 control={form.control}
-                name="country"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                      Country*
-                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Email Address" 
+                        className="p-3 border border-foreground/20 rounded font-montserrat text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                    Phone Number*
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="tel"
+                      placeholder="Phone Number" 
+                      className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                    Country*
+                  </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}

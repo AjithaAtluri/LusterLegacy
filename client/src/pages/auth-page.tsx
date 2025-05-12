@@ -34,6 +34,8 @@ const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
   email: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(8, "Phone number must be at least 8 characters"),
+  country: z.string().min(2, "Country is required"),
   acceptTerms: z.boolean().refine(val => val === true, {
     message: "You must accept the terms and conditions"
   })
@@ -140,6 +142,8 @@ export default function AuthPage() {
       password: "",
       confirmPassword: "",
       email: "",
+      phone: "",
+      country: "us", // Default to United States
       acceptTerms: false
     }
   });
