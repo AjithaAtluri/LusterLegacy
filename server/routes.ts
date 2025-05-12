@@ -3103,99 +3103,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   /**
-   * Customization Request routes
+   * Note: Duplicate customization request routes were removed here
+   * The primary implementations for /api/customization-requests POST and GET
+   * are already defined above around line 712.
    */
-  app.post("/api/customization-requests", async (req: Request, res: Response) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-
-    try {
-      const { 
-        productId, 
-        name, 
-        email, 
-        phone, 
-        customizationDetails, 
-        preferredBudget, 
-        timeline,
-        metalTypeId,
-        primaryStoneId,
-        secondaryStoneId,
-        otherStoneId
-      } = req.body;
-      
-      // Ensure the product exists
-      const product = await storage.getProduct(Number(productId));
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-      
-      const customizationRequest = await storage.createCustomizationRequest({
-        userId: req.user.id,
-        productId: Number(productId),
-        name,
-        email,
-        phone,
-        customizationDetails,
-        preferredBudget,
-        timeline,
-        metalTypeId: metalTypeId || null,
-        primaryStoneId: primaryStoneId || null,
-        secondaryStoneId: secondaryStoneId || null,
-        otherStoneId: otherStoneId || null,
-        status: "new", // Default status
-        createdAt: new Date(),
-      });
-      
-      res.status(201).json({ 
-        success: true, 
-        message: "Customization request created successfully",
-        request: customizationRequest
-      });
-    } catch (error) {
-      console.error("Error creating customization request:", error);
-      res.status(500).json({ message: "Server error creating customization request" });
-    }
-  });
-
-  app.get("/api/customization-requests", async (req: Request, res: Response) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-
-    try {
-      let requests;
-      // Admin users get all requests, regular users get only their own
-      if (req.user.role === "admin") {
-        requests = await storage.getAllCustomizationRequests();
-      } else {
-        requests = await storage.getCustomizationRequestsByUserId(req.user.id);
-      }
-      
-      // Get product details for each request
-      const requestsWithProducts = await Promise.all(
-        requests.map(async (request) => {
-          const product = await storage.getProduct(request.productId);
-          return {
-            ...request,
-            product: product ? {
-              id: product.id,
-              name: product.name,
-              description: product.description,
-              imageUrl: product.imageUrl,
-              basePrice: product.basePrice,
-            } : null
-          };
-        })
-      );
-      
-      res.json(requestsWithProducts);
-    } catch (error) {
-      console.error("Error fetching customization requests:", error);
-      res.status(500).json({ message: "Server error fetching customization requests" });
-    }
-  });
 
   /**
    * Order routes
