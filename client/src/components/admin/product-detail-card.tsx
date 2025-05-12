@@ -713,22 +713,24 @@ export function ProductDetailCard({ product, onClose, isFullPage = false }: Prod
         </div>
       )}
       
-      {/* Product Image */}
-      <div className="w-full h-64 overflow-hidden bg-muted relative">
-        <img 
-          src={product.imageUrl} 
-          alt={product.name} 
-          className="w-full h-full object-cover"
-        />
-        <Button 
-          variant="secondary" 
-          size="default" 
-          className="absolute top-2 right-2 bg-amber-400 hover:bg-amber-500 text-black font-medium shadow-md border border-amber-600"
-          onClick={() => setEditSection('image')}
-        >
-          <Pencil className="h-4 w-4 mr-2" /> Edit Image
-        </Button>
-      </div>
+      {/* Product Image - only shown in full page mode */}
+      {isFullPage && (
+        <div className="w-full h-64 overflow-hidden bg-muted relative">
+          <img 
+            src={product.imageUrl} 
+            alt={product.name} 
+            className="w-full h-full object-cover"
+          />
+          <Button 
+            variant="secondary" 
+            size="default" 
+            className="absolute top-2 right-2 bg-amber-400 hover:bg-amber-500 text-black font-medium shadow-md border border-amber-600"
+            onClick={() => setEditSection('image')}
+          >
+            <Pencil className="h-4 w-4 mr-2" /> Edit Image
+          </Button>
+        </div>
+      )}
       
       {/* Basic Info Section */}
       <CardHeader className="relative">
