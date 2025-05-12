@@ -195,24 +195,95 @@ export default function AIDesignConsultation({
       welcomeMessage += ` You've selected ${data.selectedStones.join(", ")} for gemstones.`;
     }
     
-    if (data.notes) {
-      welcomeMessage += ` I'll keep in mind your design notes: "${data.notes}"`;
-    }
-    
-    welcomeMessage += " What specific questions do you have about your jewelry design?";
-    
-    // Create the system message
+    // Create the system message for welcome
     const systemMessage: Message = {
       role: "assistant",
       content: welcomeMessage,
       timestamp: new Date()
     };
     
-    // Set the chat history with this welcome message
-    setChatHistory([systemMessage]);
+    // Initialize with the welcome message
+    const initialMessages = [systemMessage];
     
-    // Log the message
-    console.log("AI Design Consultation - Initial message set:", systemMessage);
+    // If there are design notes, automatically send them as the first user message
+    if (data.notes && data.notes.trim()) {
+      console.log("AI Design Consultation - Using notes as initial prompt:", data.notes);
+      
+      // Add the notes as a user message
+      const notesMessage: Message = {
+        role: "user",
+        content: data.notes,
+        timestamp: new Date()
+      };
+      
+      // Add to initial messages
+      initialMessages.push(notesMessage);
+      
+      // Since we already have a user message with design notes, immediately send it to the API
+      sendMessageToAPI(notesMessage, initialMessages);
+    } else {
+      // Set the chat history with just the welcome message if no notes
+      setChatHistory(initialMessages);
+      console.log("AI Design Consultation - Initial message set:", systemMessage);
+    }
+  };
+  
+  // Helper function to send messages to API
+  const sendMessageToAPI = async (userMessage: Message, history: Message[]) => {
+    setIsLoading(true);
+    
+    try {
+      // Prepare form data
+      let formData: FormData = {
+        metalType: formState?.metalType || formContext?.metalType || "",
+        gemstones: (formState?.selectedStones || formContext?.selectedStones || []) as string[],
+        designDescription: formState?.notes || formContext?.formValues?.notes || "",
+        imageDataUrl: formState?.imageDataUrl || formContext?.imageDataUrl
+      };
+      
+      // Build the request body
+      const requestBody = {
+        message: userMessage.content,
+        history: history.filter(msg => msg.role !== userMessage.role).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        formData: {
+          metalType: formData.metalType,
+          gemstones: formData.gemstones,
+          designDescription: formData.designDescription,
+          imageDataUrl: formData.imageDataUrl
+        }
+      };
+      
+      console.log("AI Design Consultation - Sending initial request to API:", requestBody);
+      
+      const response = await apiRequest("POST", "/api/design-consultation-ai", requestBody);
+      const data = await response.json();
+      
+      // Add AI response to chat
+      const aiMessage: Message = {
+        role: "assistant",
+        content: data.response,
+        timestamp: new Date()
+      };
+      
+      // Set the complete chat history with welcome, user's notes, and AI response
+      setChatHistory([...history, aiMessage]);
+    } catch (error) {
+      console.error("Error sending initial message:", error);
+      
+      // If error, just show the welcome and user messages without AI response
+      setChatHistory(history);
+      
+      toast({
+        title: "Error",
+        description: "Failed to get a response. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // New function that accepts explicit form state
@@ -300,9 +371,12 @@ export default function AIDesignConsultation({
       timestamp: new Date()
     };
     
-    setChatHistory((prev) => [...prev, userMessage]);
+    // Update chat history to include the new user message
+    const updatedHistory = [...chatHistory, userMessage];
+    setChatHistory(updatedHistory);
+    
+    // Clear input field
     setMessage("");
-    setIsLoading(true);
     
     // Keep focus on the textarea after sending a message
     setTimeout(() => {
@@ -312,115 +386,8 @@ export default function AIDesignConsultation({
       }
     }, 0);
     
-    try {
-      // Use the formState prop directly if available (new approach)
-      // Otherwise fall back to the context (for backward compatibility)
-      console.log("AI Design Consultation - FormState prop:", formState);
-      console.log("AI Design Consultation - Form Context:", formContext);
-      
-      // Prepare form data for context if it exists
-      let formData: FormData = {
-        metalType: "",
-        gemstones: [],
-        designDescription: ""
-      };
-      
-      if (integratedWithForm) {
-        if (formState) {
-          console.log("AI Design Consultation - Using formState prop:", formState);
-          
-          // Extract data from the formState prop
-          formData = {
-            metalType: formState.metalType || "",
-            gemstones: (formState.selectedStones || []) as string[],
-            designDescription: formState.notes || "",
-            imageDataUrl: formState.imageDataUrl // Include image data if available
-          };
-        } else if (formContext) {
-          console.log("AI Design Consultation - Using form context (fallback):", formContext);
-          
-          // Get current form values directly 
-          const metalType = formContext.metalType;
-          const selectedStones = formContext.selectedStones;
-          const notes = formContext.formValues?.notes;
-          
-          // Always provide formData, even if empty
-          // Cast selectedStones to string[] to match FormData interface
-          formData = {
-            metalType: metalType || "",
-            gemstones: (selectedStones || []) as string[],
-            designDescription: notes || "",
-            imageDataUrl: formContext.imageDataUrl // Include image from context
-          };
-        }
-        
-        console.log("AI Design Consultation - Form data prepared:", formData);
-        
-        // Make sure we have non-empty values to include
-        if (!formData.metalType) {
-          console.log("AI Design Consultation - No metal type in form context");
-        } else {
-          console.log("AI Design Consultation - Using metal type:", formData.metalType);
-        }
-        
-        if (!formData.gemstones || formData.gemstones.length === 0) {
-          console.log("AI Design Consultation - No gemstones in form context");
-        } else {
-          console.log("AI Design Consultation - Using gemstones:", formData.gemstones);
-        }
-        
-        if (!formData.designDescription) {
-          console.log("AI Design Consultation - No design description in form context");
-        } else {
-          console.log("AI Design Consultation - Using description:", formData.designDescription);
-        }
-      }
-      
-      // Log the prepared form data
-      console.log("AI Design Consultation - Prepared Form Data:", formData);
-      
-      // Send message to API with form context data if available
-      // Build the request body with the correct parameter names
-      const requestBody = {
-        message: userMessage.content,
-        history: chatHistory.map(msg => ({
-          role: msg.role,
-          content: msg.content
-        })),
-        // Always include formData with defined values
-        formData: {
-          metalType: formData.metalType,
-          gemstones: formData.gemstones,
-          designDescription: formData.designDescription,
-          imageDataUrl: formData.imageDataUrl // Include the image data
-        }
-      };
-      
-      console.log("AI Design Consultation - Sending request to API:", requestBody);
-      
-      const response = await apiRequest("POST", "/api/design-consultation-ai", requestBody);
-      
-      const data = await response.json();
-      
-      // Add AI response to chat
-      const aiMessage: Message = {
-        role: "assistant",
-        content: data.response,
-        timestamp: new Date()
-      };
-      
-      setChatHistory((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      
-      toast({
-        title: "Error",
-        description: "Failed to get a response. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Use the helper function to send the message to the API
+    await sendMessageToAPI(userMessage, updatedHistory);
   };
   
   // This function is now triggered through the custom event system
@@ -478,7 +445,7 @@ export default function AIDesignConsultation({
         <div className="h-[350px] overflow-y-auto mb-4 pr-2">
           {chatHistory.map((msg, index) => (
             <div 
-              key={index} 
+              key={`${index}-${msg.timestamp.getTime()}`} 
               className={`flex mb-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
               {msg.role !== "user" && (
