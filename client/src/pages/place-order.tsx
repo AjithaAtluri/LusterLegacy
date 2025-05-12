@@ -471,7 +471,7 @@ export default function FinalizeOrder() {
                             Using your account information
                           </p>
                           <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                            Your contact details from your Luster Legacy account will be used for this request.
+                            Your contact details from your Luster Legacy account will be used for this request. Please provide your shipping address below.
                           </p>
                         </div>
                       </div>
@@ -586,10 +586,10 @@ export default function FinalizeOrder() {
                       />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="additionalNotes">Additional Notes</Label>
+                      <Label htmlFor="additionalNotes">Questions/Notes</Label>
                       <Textarea
                         id="additionalNotes"
-                        placeholder="Any special instructions for your order..."
+                        placeholder="Any questions or special instructions for your order..."
                         value={additionalNotes}
                         onChange={(e) => setAdditionalNotes(e.target.value)}
                       />
