@@ -6,6 +6,7 @@ import { relations } from "drizzle-orm";
 // Users schema (for authentication)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  name: text("name"), // Full name of the user
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull(),

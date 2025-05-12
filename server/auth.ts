@@ -89,13 +89,23 @@ export function setupAuth(app: Express): void {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        // Look up user by username
-        console.log(`[AUTH DEBUG] Looking up user with username: "${username}"`);
-        const user = await storage.getUserByUsername(username);
+        // Try to determine if the identifier is an email
+        const isEmail = username.includes('@');
+        let user = null;
+        
+        if (isEmail) {
+          // Look up user by email
+          console.log(`[AUTH DEBUG] Looking up user with email: "${username}"`);
+          user = await storage.getUserByEmail(username);
+        } else {
+          // Look up user by username
+          console.log(`[AUTH DEBUG] Looking up user with username: "${username}"`);
+          user = await storage.getUserByUsername(username);
+        }
         
         if (!user) {
-          console.log(`[AUTH DEBUG] User "${username}" not found in database`);
-          return done(null, false, { message: "Incorrect username or password" });
+          console.log(`[AUTH DEBUG] User with identifier "${username}" not found in database`);
+          return done(null, false, { message: "Incorrect username/email or password" });
         }
         
         console.log(`[AUTH DEBUG] Found user: ${user.username} (ID: ${user.id}), role: ${user.role}, checking password...`);
@@ -106,11 +116,11 @@ export function setupAuth(app: Express): void {
         
         if (!passwordMatches) {
           console.log(`[AUTH DEBUG] Password mismatch for ${username}`);
-          return done(null, false, { message: "Incorrect username or password" });
+          return done(null, false, { message: "Incorrect username/email or password" });
         }
         
         // Authentication successful
-        console.log(`[AUTH DEBUG] Authentication successful for ${username}`);
+        console.log(`[AUTH DEBUG] Authentication successful for ${user.username} (${user.email})`);
         return done(null, user);
       } catch (error) {
         console.error(`[AUTH DEBUG] Error during authentication:`, error);
