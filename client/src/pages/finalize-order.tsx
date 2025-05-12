@@ -309,8 +309,12 @@ export default function FinalizeOrder() {
                         const additionalData = details.additionalData || {};
                         const aiInputs = additionalData.aiInputs || {};
                         
+                        // First check for root-level metalWeight field which is the authoritative source
+                        const rootLevelWeight = details.metalWeight ? parseFloat(details.metalWeight) : 0;
+                        
                         const metalType = aiInputs.metalType || additionalData.metalType || "";
-                        const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
+                        // Prioritize root-level metalWeight over aiInputs and additionalData
+                        const metalWeight = rootLevelWeight || aiInputs.metalWeight || additionalData.metalWeight || 0;
                         const mainStoneType = aiInputs.mainStoneType || additionalData.mainStoneType || "";
                         const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
                         const secondaryStoneType = aiInputs.secondaryStoneType || additionalData.secondaryStoneType || "";

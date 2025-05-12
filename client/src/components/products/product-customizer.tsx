@@ -68,11 +68,18 @@ export default function ProductCustomizer({
         setParsedDetails(parsed);
         
         // Set individual fields from parsed data
+        
+        // First check for root-level metalWeight field which is the authoritative source
+        const rootLevelWeight = parsed.metalWeight ? parseFloat(parsed.metalWeight) : 0;
+        
         if (parsed.additionalData) {
           setTagline(parsed.additionalData.tagline || "");
           setProductStones(parsed.additionalData.stoneTypes || []);
           setProductMetalType(parsed.additionalData.metalType || "");
-          setProductMetalWeight(parsed.additionalData.metalWeight || 0);
+          
+          // Prioritize root-level metalWeight over additionalData
+          const aiInputs = parsed.additionalData.aiInputs || {};
+          setProductMetalWeight(rootLevelWeight || aiInputs.metalWeight || parsed.additionalData.metalWeight || 0);
         }
         
         if (parsed.detailedDescription) {
