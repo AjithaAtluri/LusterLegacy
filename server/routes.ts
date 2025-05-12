@@ -5639,8 +5639,24 @@ Respond in JSON format:
       console.log("ADMIN STONE TYPES WITH ALTERNATIVE ROUTE PATH");
       
       const stoneTypes = await storage.getAllStoneTypes();
+      
+      // Ensure price modifiers are numbers and not strings
+      const formattedStoneTypes = stoneTypes.map(stone => {
+        // Make a copy to avoid mutating the original
+        const formattedStone = { ...stone };
+        
+        // Ensure priceModifier is a number (handle string, null, undefined cases)
+        if (formattedStone.priceModifier !== undefined) {
+          formattedStone.priceModifier = Number(formattedStone.priceModifier);
+        } else {
+          formattedStone.priceModifier = 0;
+        }
+        
+        return formattedStone;
+      });
+      
       console.log(`Successfully fetched ${stoneTypes.length} stone types for admin`);
-      res.json(stoneTypes);
+      res.json(formattedStoneTypes);
     } catch (error) {
       console.error('Error fetching stone types:', error);
       res.status(500).json({ 

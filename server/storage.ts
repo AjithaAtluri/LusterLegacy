@@ -262,6 +262,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
   
+  async getUserByUsername(usernameOrLoginID: string): Promise<User | undefined> {
+    // First try to match by loginID (preferred)
+    const userByLoginID = await this.getUserByLoginID(usernameOrLoginID);
+    if (userByLoginID) return userByLoginID;
+
+    // If no match by loginID, try the email field as fallback
+    return await this.getUserByEmail(usernameOrLoginID);
+  }
+  
   async getUserByVerificationToken(token: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.verificationToken, token));
     return user;

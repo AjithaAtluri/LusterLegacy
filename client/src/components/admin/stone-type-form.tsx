@@ -179,7 +179,15 @@ export default function StoneTypeForm({ initialData, stoneTypeId, onSuccess }: S
     try {
       const formData = new FormData();
       formData.append("name", data.name);
-      formData.append("priceModifier", data.priceModifier.toString());
+      
+      // Ensure priceModifier is properly handled (including zero values)
+      const priceModValue = data.priceModifier !== undefined ? 
+                          data.priceModifier.toString() : 
+                          "0";
+      formData.append("priceModifier", priceModValue);
+      
+      // Log to verify what's being sent
+      console.log(`Stone type form - price modifier being submitted: ${priceModValue} (original value: ${data.priceModifier})`);
       
       // Always include optional fields, even if empty
       formData.append("description", data.description || "");
