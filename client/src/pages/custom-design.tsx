@@ -31,9 +31,9 @@ export default function CustomDesign() {
           </div>
         </div>
         
-        {/* AI Design Consultation - placed between form and process steps */}
+        {/* AI Design Consultation - integrated with the form and shown here only when active */}
         <div className="mx-auto max-w-2xl mb-16">
-          <AIDesignConsultation />
+          <AIDesignConsultation integratedWithForm={true} />
         </div>
         
         {/* Process steps - full width, visually appealing timeline */}

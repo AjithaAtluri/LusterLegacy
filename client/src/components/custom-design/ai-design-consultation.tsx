@@ -15,7 +15,11 @@ interface Message {
   timestamp: Date;
 }
 
-export default function AIDesignConsultation() {
+interface AIDesignConsultationProps {
+  integratedWithForm?: boolean;
+}
+
+export default function AIDesignConsultation({ integratedWithForm = false }: AIDesignConsultationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isActive, setIsActive] = useState(false);
@@ -72,12 +76,14 @@ export default function AIDesignConsultation() {
   
   // Add effect to check for DOM element for button placement
   useEffect(() => {
-    // Check if the button container exists in the DOM
-    const buttonContainer = document.getElementById('ai-consultation-button-container');
-    if (buttonContainer) {
-      setFormDataReady(true);
+    if (integratedWithForm) {
+      // Check if the button container exists in the DOM
+      const buttonContainer = document.getElementById('ai-consultation-button-container');
+      if (buttonContainer) {
+        setFormDataReady(true);
+      }
     }
-  }, []);
+  }, [integratedWithForm]);
   
   // Format time left for display
   const formatTimeLeft = () => {
@@ -175,29 +181,40 @@ export default function AIDesignConsultation() {
     }
   };
   
-  if (!isActive) {
-    return (
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Sparkles className="h-5 w-5 mr-2 text-primary" />
-            AI Design Consultation
-          </CardTitle>
-          <CardDescription>
-            Get instant design ideas and inspiration from our AI design consultant. 
-            Explore materials, gemstones, and styles for your custom jewelry piece.
-          </CardDescription>
-        </CardHeader>
-        <CardFooter>
-          <Button onClick={handleStartConsultation} className="w-full">
-            Start Free AI Consultation (15 min)
-          </Button>
-        </CardFooter>
-      </Card>
-    );
-  }
-  
-  return (
+  // Render the form button when integrated with the form
+  const FormButton = () => (
+    <Button 
+      onClick={handleStartConsultation} 
+      className="w-full font-montserrat bg-accent hover:bg-accent/90 text-background px-6 py-3 transition-colors flex items-center justify-center gap-2 h-auto"
+    >
+      <Sparkles size={16} />
+      Get AI Design Guidance
+    </Button>
+  );
+
+  // Render the standalone consultation button
+  const StandaloneCard = () => (
+    <Card className="mb-8">
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Sparkles className="h-5 w-5 mr-2 text-primary" />
+          AI Design Consultation
+        </CardTitle>
+        <CardDescription>
+          Get instant design ideas and inspiration from our AI design consultant. 
+          Explore materials, gemstones, and styles for your custom jewelry piece.
+        </CardDescription>
+      </CardHeader>
+      <CardFooter>
+        <Button onClick={handleStartConsultation} className="w-full">
+          Start Free AI Consultation (15 min)
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+
+  // Render the consultation chat interface when active
+  const ChatInterface = () => (
     <Card className="mb-8">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
@@ -285,5 +302,24 @@ export default function AIDesignConsultation() {
         </form>
       </CardContent>
     </Card>
+  );
+
+  return (
+    <>
+      {/* Render the button in the form when integrated */}
+      {integratedWithForm && formDataReady && createPortal(
+        <FormButton />,
+        document.getElementById('ai-consultation-button-container')!
+      )}
+      
+      {/* Render the main consultation interface */}
+      {integratedWithForm ? (
+        // When integrated with form, only show chat when active
+        isActive && <ChatInterface />
+      ) : (
+        // When standalone, show either the card or the chat
+        isActive ? <ChatInterface /> : <StandaloneCard />
+      )}
+    </>
   );
 }
