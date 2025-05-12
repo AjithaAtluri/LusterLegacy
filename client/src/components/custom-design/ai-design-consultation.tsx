@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, Send, Sparkles, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { createPortal } from "react-dom";
+import { DesignFormContext } from "./design-form";
 
 interface Message {
   role: "user" | "assistant" | "system";
