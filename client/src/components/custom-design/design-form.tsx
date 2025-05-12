@@ -61,7 +61,7 @@ export default function DesignForm() {
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
     defaultValues: {
-      fullName: user?.name || user?.username || "",
+      fullName: user?.name || user?.loginID || "",
       email: user?.email || "",
       phone: user?.phone || "",
       country: user?.country || "us", // Default to United States if not available
@@ -492,7 +492,7 @@ export default function DesignForm() {
       
       // Log the form data for debugging
       console.log("Submitting design form with data:", JSON.stringify(processedData, null, 2));
-      console.log("User authentication state:", user ? `Authenticated as ${user.username} (${user.id})` : "Not authenticated");
+      console.log("User authentication state:", user ? `Authenticated as ${user.name || user.loginID} (${user.id})` : "Not authenticated");
       console.log("Uploaded images count:", uploadedImages.length);
       
       // Print out form validation information
@@ -528,8 +528,8 @@ export default function DesignForm() {
       // populate them from the user profile
       if (user) {
         if (!dataToSend.fullName || dataToSend.fullName.trim() === '') {
-          dataToSend.fullName = user.username;
-          console.log("Using username from profile:", user.username);
+          dataToSend.fullName = user.name || user.loginID;
+          console.log("Using name from profile:", user.name || user.loginID);
         }
         
         if (!dataToSend.email || dataToSend.email.trim() === '') {
@@ -620,7 +620,7 @@ export default function DesignForm() {
       // Reset form and uploaded images
       form.reset({
         // Reset form to initial state with default values
-        fullName: user?.username || "",
+        fullName: (user?.name || user?.loginID) || "",
         email: user?.email || "",
         phone: user?.phone || "",
         country: user?.country || "us",
@@ -991,7 +991,7 @@ export default function DesignForm() {
                 Your contact information will be used from your account:
               </p>
               <div className="space-y-1 text-sm">
-                <p><span className="font-semibold">Name:</span> {user.name || user.username}</p>
+                <p><span className="font-semibold">Name:</span> {user.name || user.loginID}</p>
                 <p><span className="font-semibold">Email:</span> {user.email}</p>
                 {user.phone && <p><span className="font-semibold">Phone:</span> {user.phone}</p>}
                 {user.country && (
