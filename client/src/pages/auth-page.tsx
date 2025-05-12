@@ -26,13 +26,14 @@ import { COUNTRIES } from "@/lib/constants";
 
 // Login form validation schema
 const loginSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  loginID: z.string().min(3, "Login ID must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters")
 });
 
 // Registration form validation schema
 const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  name: z.string().min(2, "Full name must be at least 2 characters").nonempty("Full name is required"),
+  loginID: z.string().min(3, "Login ID must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Password must be at least 6 characters"),
   email: z.string().email("Please enter a valid email address"),
@@ -406,13 +407,13 @@ export default function AuthPage() {
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
                   <FormField
                     control={loginForm.control}
-                    name="username"
+                    name="loginID"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Login ID</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="Enter your username" 
+                            placeholder="Enter your login ID" 
                             {...field} 
                             disabled={loginMutation.isPending}
                           />

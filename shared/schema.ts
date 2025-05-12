@@ -7,7 +7,7 @@ import { relations } from "drizzle-orm";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name"), // Full name of the user
-  username: text("username").notNull().unique(),
+  loginID: text("login_id").notNull().unique(), // Changed from username to loginID
   password: text("password").notNull(),
   email: text("email").notNull(),
   emailVerified: boolean("email_verified").default(false), // Track email verification status
@@ -26,7 +26,8 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
+  name: true,
+  loginID: true,
   password: true,
   email: true,
   phone: true,
