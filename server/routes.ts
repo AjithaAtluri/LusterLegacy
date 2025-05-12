@@ -5792,9 +5792,10 @@ Respond in JSON format:
       // Parse update data
       let updateData: any = { ...req.body };
       
-      // Convert price modifier to number
-      if (updateData.priceModifier) {
+      // Convert price modifier to number - handle '0' value cases
+      if (updateData.priceModifier !== undefined) {
         updateData.priceModifier = parseFloat(updateData.priceModifier);
+        console.log("Parsed price modifier:", updateData.priceModifier);
       }
       
       // Handle image update
@@ -5838,10 +5839,13 @@ Respond in JSON format:
           RETURNING *
         `;
         
+        // Properly handle number values including 0
+        const priceModifierValue = updateData.priceModifier !== undefined ? updateData.priceModifier : null;
+        
         const params = [
           updateData.name || null,
           updateData.description || null,
-          updateData.priceModifier || null,
+          priceModifierValue, // This handles 0 values correctly
           updateData.color || null,
           updateData.imageUrl || null,
           updateData.category || null,
@@ -5869,8 +5873,27 @@ Respond in JSON format:
       if (!updatedStoneType) {
         throw new Error("No stone type was returned from the database after update");
       }
-
-      res.json(updatedStoneType);
+      
+      // Transform snake_case keys to camelCase before sending back to client
+      const camelCaseStoneType = {
+        id: updatedStoneType.id,
+        name: updatedStoneType.name,
+        description: updatedStoneType.description,
+        priceModifier: updatedStoneType.price_modifier, // Convert price_modifier to priceModifier
+        displayOrder: updatedStoneType.display_order,
+        isActive: updatedStoneType.is_active,
+        color: updatedStoneType.color,
+        imageUrl: updatedStoneType.image_url,
+        category: updatedStoneType.category,
+        stoneForm: updatedStoneType.stone_form,
+        quality: updatedStoneType.quality,
+        size: updatedStoneType.size,
+        createdAt: updatedStoneType.created_at
+      };
+      
+      console.log("Transformed stone type for response:", camelCaseStoneType);
+      
+      res.json(camelCaseStoneType);
     } catch (error) {
       console.error('Error updating stone type via alternative route:', error);
       res.status(500).json({ message: 'Failed to update stone type' });
