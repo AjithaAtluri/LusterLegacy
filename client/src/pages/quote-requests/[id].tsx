@@ -787,28 +787,44 @@ export default function QuoteRequestDetailsPage() {
                       {quoteRequest.comments.map((comment, index) => (
                         <div 
                           key={index} 
-                          className={`flex ${comment.isAdmin ? 'justify-start' : 'justify-end'}`}
+                          className={`${comment.isAdmin ? 'justify-start' : 'justify-end'} mb-4`}
                         >
                           <div 
-                            className={`max-w-[80%] p-3 rounded-lg ${
+                            className={`p-3 rounded-lg ${
                               comment.isAdmin 
-                                ? 'bg-slate-100 dark:bg-slate-800 text-foreground' 
-                                : 'bg-primary/10 text-primary-foreground'
+                                ? 'bg-accent/5 ml-6' 
+                                : 'bg-primary/5 mr-6'
                             }`}
                           >
-                            <div className="flex items-center mb-1 text-xs">
-                              <span className="font-medium">{comment.createdBy}</span>
-                              <span className="ml-2 text-muted-foreground">
-                                {formatDate(comment.createdAt)}
-                              </span>
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="font-medium flex items-center">
+                                {comment.isAdmin && (
+                                  <Badge variant="outline" className="mr-2 bg-amber-500/10 text-amber-700 border-amber-200 dark:border-amber-800/30 dark:text-amber-400">
+                                    Admin
+                                  </Badge>
+                                )}
+                                {comment.createdBy}
+                              </div>
+                              <div className="text-xs text-foreground/60">
+                                {new Date(comment.createdAt).toLocaleString([], {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
                             </div>
-                            <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                            <p className="whitespace-pre-wrap">{comment.content}</p>
+                            
+                            {/* Display image if available */}
                             {comment.imageUrl && (
-                              <div className="mt-2">
-                                <img 
-                                  src={comment.imageUrl} 
-                                  alt="Attached image" 
-                                  className="max-h-32 rounded-md object-cover"
+                              <div className="mt-3">
+                                <img
+                                  src={comment.imageUrl}
+                                  alt="Attached image"
+                                  className="max-h-60 rounded-md cursor-pointer"
+                                  onClick={() => window.open(comment.imageUrl, '_blank')}
                                 />
                               </div>
                             )}
@@ -817,42 +833,79 @@ export default function QuoteRequestDetailsPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center">
-                      <MessageSquare className="h-10 w-10 text-muted-foreground/40 mb-2" />
-                      <p className="text-center text-muted-foreground text-sm">No messages yet</p>
-                      <p className="text-center text-muted-foreground/60 text-xs mt-1">
-                        Start a conversation with our team about your quote request
-                      </p>
+                    <div className="text-center py-8">
+                      <MessageCircle className="h-12 w-12 mx-auto mb-3 text-foreground/20" />
+                      <p className="text-foreground/60">No messages yet</p>
                     </div>
                   )}
                 </div>
                 
-                <div className="space-y-4">
-                  <Textarea
-                    placeholder="Type your message here..."
-                    className="min-h-24 resize-none"
-                    value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
-                  />
-                  <div className="flex items-center justify-between">
-                    <Button 
-                      type="button" 
-                      size="sm" 
-                      variant="outline"
-                      className="text-muted-foreground"
-                      onClick={() => toast({
-                        title: "Coming soon",
-                        description: "File attachments will be available soon"
-                      })}
-                    >
-                      Attach File
-                    </Button>
+                {/* New message input */}
+                <div className="mt-6">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Textarea
+                      placeholder="Type your message here..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      className="flex-1 min-h-[100px]"
+                    />
+                  </div>
+                  
+                  {/* Image upload preview */}
+                  {imagePreview && (
+                    <div className="relative inline-block mt-2 mb-3">
+                      <div className="group relative">
+                        <img 
+                          src={imagePreview} 
+                          alt="Upload preview" 
+                          className="h-20 rounded-md object-cover"
+                        />
+                        <button 
+                          onClick={handleRemoveImage}
+                          className="absolute -top-2 -right-2 bg-foreground text-background rounded-full p-1 shadow-sm"
+                        >
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageSelection}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        variant="outline"
+                        onClick={triggerImageUpload}
+                      >
+                        <ImagePlus className="h-4 w-4 mr-2" />
+                        Add Image
+                      </Button>
+                    </div>
+                    
                     <Button 
                       type="button"
                       onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
+                      disabled={isSubmitting || (!newMessage.trim() && !uploadedImage)}
                     >
-                      Send Message
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          Send Message
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
