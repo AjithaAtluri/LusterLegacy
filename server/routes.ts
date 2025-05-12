@@ -3818,17 +3818,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('DIRECT ADMIN LOGIN - New dedicated lightweight admin auth');
       
-      // Destructure credentials from request body
-      const { username, password: providedPassword } = req.body;
+      // Destructure credentials from request body - support both username and loginID for compatibility
+      const { username, password: providedPassword, loginID } = req.body;
+      const identifier = loginID || username; // Use loginID if provided, otherwise fallback to username
       
-      if (!username || !providedPassword) {
-        return res.status(400).json({ message: 'Username and password are required' });
+      if (!identifier || !providedPassword) {
+        return res.status(400).json({ message: 'Login ID/username and password are required' });
       }
       
-      console.log(`Admin login attempt for username: ${username}`);
+      console.log(`Admin login attempt for identifier: ${identifier}`);
       
-      // Look up the user directly from database
-      const user = await storage.getUserByUsername(username);
+      // Try to look up user by loginID first (preferred)
+      let user = await storage.getUserByLoginID(identifier);
+      
+      // If not found, try by username for backward compatibility
+      if (!user) {
+        console.log(`Admin login - user not found by loginID, trying username lookup for: ${identifier}`);
+        user = await storage.getUserByUsername(identifier);
+      }
       
       if (!user) {
         console.log('Admin login failed - user not found:', username);

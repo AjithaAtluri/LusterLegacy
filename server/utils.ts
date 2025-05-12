@@ -24,10 +24,17 @@ export const validateAdmin = async (
       // Try to set the admin user from the header
       if (adminUsername && typeof adminUsername === 'string') {
         try {
-          const adminUser = await storage.getUserByUsername(adminUsername);
+          // First try using username as loginID since we've migrated to loginID
+          let adminUser = await storage.getUserByLoginID(adminUsername);
+          
+          // Fallback to username lookup if not found (for backward compatibility)
+          if (!adminUser) {
+            adminUser = await storage.getUserByUsername(adminUsername);
+          }
+          
           if (adminUser) {
             req.user = adminUser;
-            console.log("Admin auth via headers - set admin user:", adminUser.username);
+            console.log("Admin auth via headers - set admin user:", adminUser.loginID || adminUser.username);
           }
         } catch (error) {
           console.log("Admin auth via headers - error finding specified admin user:", error);
@@ -44,10 +51,17 @@ export const validateAdmin = async (
     
     // Try to set a default admin user
     try {
-      const adminUser = await storage.getUserByUsername('admin');
+      // First try by loginID (new system)
+      let adminUser = await storage.getUserByLoginID('admin');
+      
+      // Fallback to username (old system)
+      if (!adminUser) {
+        adminUser = await storage.getUserByUsername('admin');
+      }
+      
       if (adminUser) {
         req.user = adminUser;
-        console.log("Admin auth bypassed - set default admin user:", adminUser.username);
+        console.log("Admin auth bypassed - set default admin user:", adminUser.loginID || adminUser.username);
       } else {
         console.log("Admin auth bypassed - could not find admin user, but still allowing access");
       }
