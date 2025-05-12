@@ -24,7 +24,13 @@ import {
   Search,
   Filter,
   ShoppingBag,
-  Palette
+  Palette,
+  Check,
+  Mail,
+  Phone,
+  MapPin,
+  Lock,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, Redirect, useLocation } from "wouter";
@@ -34,6 +40,8 @@ import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 export default function CustomerDashboard() {
   const { user, isLoading: isLoadingAuth } = useAuth();
@@ -782,27 +790,32 @@ export default function CustomerDashboard() {
                     <CardDescription>Update your personal details</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium leading-none">Full Name</h3>
+                    {/* Name Field */}
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center">
+                        <User className="h-5 w-5 text-muted-foreground mr-2" />
+                        <h3 className="text-sm font-medium">Name</h3>
+                      </div>
                       <div className="flex items-center gap-2">
                         <Input 
                           placeholder="Enter your full name" 
-                          defaultValue={user?.fullName || ""} 
+                          defaultValue={user?.username || ""} 
                           className="max-w-md"
                         />
-                        <Button size="sm" variant="outline" className="shrink-0">Save</Button>
+                        <Button size="sm" variant="outline" className="shrink-0">Update</Button>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium leading-none">Username</h3>
-                      <p className="text-sm text-muted-foreground">{user?.username}</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium leading-none">Email</h3>
+                    {/* Email Field with Verify Button */}
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center">
+                        <Mail className="h-5 w-5 text-muted-foreground mr-2" />
+                        <h3 className="text-sm font-medium">Email</h3>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm text-muted-foreground flex-grow">{user?.email}</p>
+                        <p className="text-sm text-muted-foreground px-3 py-2 border rounded-md flex-grow bg-muted/10">
+                          {user?.email || "Not provided"}
+                        </p>
                         <Button size="sm" variant="outline" className="shrink-0">
                           <span className="flex items-center gap-1">
                             <span className="h-2 w-2 rounded-full bg-amber-500"></span>
@@ -812,20 +825,28 @@ export default function CustomerDashboard() {
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium leading-none">Phone Number</h3>
+                    {/* Phone Number Field */}
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center">
+                        <Phone className="h-5 w-5 text-muted-foreground mr-2" />
+                        <h3 className="text-sm font-medium">Phone Number</h3>
+                      </div>
                       <div className="flex items-center gap-2">
                         <Input 
                           placeholder="Enter your phone number" 
                           defaultValue={user?.phone || ""} 
                           className="max-w-md"
                         />
-                        <Button size="sm" variant="outline" className="shrink-0">Save</Button>
+                        <Button size="sm" variant="outline" className="shrink-0">Update</Button>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium leading-none">Country</h3>
+                    {/* Country Field */}
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center">
+                        <MapPin className="h-5 w-5 text-muted-foreground mr-2" />
+                        <h3 className="text-sm font-medium">Country</h3>
+                      </div>
                       <div className="flex items-center gap-2">
                         <Select defaultValue={user?.country || ""}>
                           <SelectTrigger className="max-w-md">
@@ -842,31 +863,30 @@ export default function CustomerDashboard() {
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button size="sm" variant="outline" className="shrink-0">Save</Button>
+                        <Button size="sm" variant="outline" className="shrink-0">Update</Button>
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium leading-none">Account Created</h3>
-                      <p className="text-sm text-muted-foreground">{user?.createdAt ? formatDate(user.createdAt) : 'N/A'}</p>
                     </div>
                     
                     <Separator className="my-2" />
                     
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium leading-none">Change Password</h3>
+                    {/* Password Change */}
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-center">
+                        <Lock className="h-5 w-5 text-muted-foreground mr-2" />
+                        <h3 className="text-sm font-medium">Change Password</h3>
+                      </div>
                       <div className="grid gap-2 max-w-md">
-                        <Input type="password" placeholder="Current password" className="mt-1" />
+                        <Input type="password" placeholder="Current password" />
                         <Input type="password" placeholder="New password" />
                         <Input type="password" placeholder="Confirm new password" />
-                        <Button variant="outline" className="mt-1 w-full sm:w-auto">
+                        <Button variant="outline" className="mt-1">
                           Update Password
                         </Button>
                       </div>
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
-                    <Button variant="default" className="w-full sm:w-auto">
+                    <Button variant="default">
                       Save All Changes
                     </Button>
                   </CardFooter>
@@ -874,25 +894,41 @@ export default function CustomerDashboard() {
                 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Notifications</CardTitle>
-                    <CardDescription>Manage your notification preferences</CardDescription>
+                    <div className="flex items-center gap-2">
+                      <Bell className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <CardTitle>Notifications</CardTitle>
+                        <CardDescription>Manage your notification preferences</CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-sm font-medium mb-2">Email Notifications</h3>
-                        <div className="grid gap-2">
-                          <div className="flex items-center space-x-2">
+                        <h3 className="text-sm font-medium mb-3">Email Notifications</h3>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between py-2 px-3 bg-muted/10 rounded-md">
+                            <div>
+                              <p className="text-sm font-medium">Custom Design Updates</p>
+                              <p className="text-xs text-muted-foreground">Get notified when your design is reviewed or updated</p>
+                            </div>
                             <Switch id="email-design-updates" defaultChecked />
-                            <Label htmlFor="email-design-updates">Custom design updates</Label>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          
+                          <div className="flex items-center justify-between py-2 px-3 bg-muted/10 rounded-md">
+                            <div>
+                              <p className="text-sm font-medium">Order Status Changes</p>
+                              <p className="text-xs text-muted-foreground">Receive notifications about your order status</p>
+                            </div>
                             <Switch id="email-order-updates" defaultChecked />
-                            <Label htmlFor="email-order-updates">Order status changes</Label>
                           </div>
-                          <div className="flex items-center space-x-2">
+                          
+                          <div className="flex items-center justify-between py-2 px-3 bg-muted/10 rounded-md">
+                            <div>
+                              <p className="text-sm font-medium">Quote Responses</p>
+                              <p className="text-xs text-muted-foreground">Get notified when you receive a quote</p>
+                            </div>
                             <Switch id="email-quote-updates" defaultChecked />
-                            <Label htmlFor="email-quote-updates">Quote responses</Label>
                           </div>
                         </div>
                       </div>
@@ -900,34 +936,23 @@ export default function CustomerDashboard() {
                       <Separator />
                       
                       <div>
-                        <h3 className="text-sm font-medium mb-2">Marketing Communications</h3>
-                        <div className="grid gap-2">
-                          <div className="flex items-center space-x-2">
+                        <h3 className="text-sm font-medium mb-3">Marketing Communications</h3>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between py-2 px-3 bg-muted/10 rounded-md">
+                            <div>
+                              <p className="text-sm font-medium">Promotions and Discounts</p>
+                              <p className="text-xs text-muted-foreground">Special offers and limited-time discounts</p>
+                            </div>
                             <Switch id="marketing-promotions" />
-                            <Label htmlFor="marketing-promotions">Promotions and discounts</Label>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Switch id="marketing-newsletters" />
-                            <Label htmlFor="marketing-newsletters">Newsletters</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
+                          
+                          <div className="flex items-center justify-between py-2 px-3 bg-muted/10 rounded-md">
+                            <div>
+                              <p className="text-sm font-medium">New Collection Updates</p>
+                              <p className="text-xs text-muted-foreground">Be the first to know about new jewelry collections</p>
+                            </div>
                             <Switch id="marketing-new-collections" defaultChecked />
-                            <Label htmlFor="marketing-new-collections">New collections</Label>
                           </div>
-                        </div>
-                      </div>
-                      
-                      <Separator />
-                      
-                      <div>
-                        <h3 className="text-sm font-medium mb-2">SMS Notifications</h3>
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <p className="text-xs text-muted-foreground">
-                              Receive text message alerts for important updates
-                            </p>
-                          </div>
-                          <Switch id="sms-notifications" />
                         </div>
                       </div>
                     </div>
@@ -939,14 +964,23 @@ export default function CustomerDashboard() {
                 
                 <Card className="md:col-span-2">
                   <CardHeader>
-                    <CardTitle>Privacy & Security</CardTitle>
-                    <CardDescription>Manage your account security</CardDescription>
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <CardTitle>Privacy & Security</CardTitle>
+                        <CardDescription>Manage your account security</CardDescription>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
+                      {/* Left Column - Password Change */}
                       <div className="space-y-4">
-                        <h3 className="text-sm font-medium">Change Password</h3>
-                        <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Lock className="h-5 w-5 text-muted-foreground" />
+                          <h3 className="text-sm font-medium">Change Password</h3>
+                        </div>
+                        <div className="space-y-3 bg-muted/10 p-4 rounded-md border">
                           <div className="space-y-1">
                             <Label htmlFor="current-password">Current Password</Label>
                             <Input id="current-password" type="password" />
@@ -963,64 +997,83 @@ export default function CustomerDashboard() {
                         </div>
                       </div>
                       
+                      {/* Right Column - Verification */}
                       <div className="space-y-4">
-                        <h3 className="text-sm font-medium">Account Verification</h3>
-                        <Card className="bg-muted/20 border-muted">
-                          <CardContent className="p-4 space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-amber-500"></div>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-5 w-5 text-muted-foreground" />
+                          <h3 className="text-sm font-medium">Account Verification</h3>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between py-3 px-4 bg-amber-50 dark:bg-amber-900/10 rounded-md border border-amber-200 dark:border-amber-900/50">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-amber-500"></div>
+                              <div>
                                 <p className="text-sm font-medium">Email Verification</p>
+                                <p className="text-xs text-muted-foreground">Verify your email address</p>
                               </div>
-                              <Button size="sm" variant="outline">Verify Email</Button>
                             </div>
-                            
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-slate-400"></div>
+                            <Button size="sm" variant="outline">Verify</Button>
+                          </div>
+                          
+                          <div className="flex items-center justify-between py-3 px-4 bg-muted/10 rounded-md border">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-slate-400"></div>
+                              <div>
                                 <p className="text-sm font-medium">Phone Verification</p>
+                                <p className="text-xs text-muted-foreground">Verify your phone number</p>
                               </div>
-                              <Button size="sm" variant="outline">Verify Phone</Button>
                             </div>
-                          </CardContent>
-                        </Card>
+                            <Button size="sm" variant="outline">Verify</Button>
+                          </div>
+                        </div>
                         
-                        <h3 className="text-sm font-medium">Login Activity</h3>
-                        <div className="bg-muted/20 p-3 rounded-md">
-                          <p className="text-xs text-muted-foreground">Last login: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
-                          <p className="text-xs text-muted-foreground">Device: Web Browser</p>
+                        <div className="mt-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-muted-foreground" />
+                            <h3 className="text-sm font-medium">Login Activity</h3>
+                          </div>
+                          <div className="mt-2 bg-muted/10 p-3 rounded-md border">
+                            <p className="text-xs text-muted-foreground">Last login: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
+                            <p className="text-xs text-muted-foreground">Device: Web Browser</p>
+                            <p className="text-xs text-muted-foreground mt-1">Location: Unknown</p>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
                     <Separator />
                     
+                    {/* Account Data & Privacy Section */}
                     <div>
-                      <h3 className="text-sm font-medium mb-3">Account Data & Privacy</h3>
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <p className="text-sm">Download your data</p>
-                          <p className="text-xs text-muted-foreground">
-                            Get a copy of all your personal information and order history
-                          </p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          Download Data
-                        </Button>
+                      <div className="flex items-center gap-2 mb-3">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                        <h3 className="text-sm font-medium">Account Data & Privacy</h3>
                       </div>
                       
-                      <Separator className="my-3" />
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <p className="text-sm text-destructive">Delete your account</p>
-                          <p className="text-xs text-muted-foreground">
-                            Permanently remove your account and all associated data
-                          </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between py-3 px-4 bg-muted/10 rounded-md border">
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-medium">Download your data</p>
+                            <p className="text-xs text-muted-foreground">
+                              Get a copy of your personal information
+                            </p>
+                          </div>
+                          <Button variant="outline" size="sm">
+                            Download
+                          </Button>
                         </div>
-                        <Button variant="destructive" size="sm">
-                          Delete Account
-                        </Button>
+                        
+                        <div className="flex items-center justify-between py-3 px-4 bg-red-50 dark:bg-red-900/10 rounded-md border border-red-200 dark:border-red-900/50">
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-medium text-red-600 dark:text-red-400">Delete account</p>
+                            <p className="text-xs text-muted-foreground">
+                              Permanently remove your account
+                            </p>
+                          </div>
+                          <Button variant="destructive" size="sm">
+                            Delete
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
