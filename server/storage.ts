@@ -410,6 +410,21 @@ export class DatabaseStorage implements IStorage {
     try {
       const stoneTypesList = await db.select().from(stoneTypes).orderBy(asc(stoneTypes.name));
       
+      console.log(`Retrieved ${stoneTypesList.length} raw stone types from DB`);
+      
+      // Log raw data for first few items to see field names
+      for (let i = 0; i < Math.min(3, stoneTypesList.length); i++) {
+        const stone = stoneTypesList[i];
+        console.log(`Raw stone data ${i + 1}:`, JSON.stringify(stone));
+        // Check if fields are accessed via snake_case or camelCase
+        const hasSnakeCase = 'price_modifier' in stone;
+        const hasCamelCase = 'priceModifier' in stone;
+        console.log(`Stone ${stone.name} has snake_case fields: ${hasSnakeCase}, camelCase fields: ${hasCamelCase}`);
+        
+        // Logging the actual value regardless of property name
+        console.log(`Stone ${stone.name} price value: snake_case=${stone.price_modifier}, camelCase=${stone.priceModifier}`);
+      }
+      
       // Map each stone type to the correct format with safety checks
       const mappedStoneTypes: StoneType[] = [];
       
@@ -418,6 +433,11 @@ export class DatabaseStorage implements IStorage {
           try {
             const mappedStone = this.mapDbStoneTypeToStoneType(stone);
             mappedStoneTypes.push(mappedStone);
+            
+            // Debug the mapping to see if priceModifier is preserved
+            if (mappedStone.name === "Semi-Precious Beads") {
+              console.log(`Special debug - Semi-Precious Beads: Original price_modifier=${stone.price_modifier}, Mapped priceModifier=${mappedStone.priceModifier}`);
+            }
           } catch (mapError) {
             console.error(`Error mapping stone type with ID ${stone.id}:`, mapError);
             // Skip this stone type and continue processing others

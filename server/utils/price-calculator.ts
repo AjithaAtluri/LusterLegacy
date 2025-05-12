@@ -476,13 +476,22 @@ export async function calculateJewelryPrice(
  */
 export async function getGemPricePerCaratFromName(gemName: string): Promise<number> {
   try {
-    // Try to find in database first
+    // Try to find in database first 
     const stoneTypes = await storage.getAllStoneTypes();
+    
+    console.log(`Searching for stone "${gemName}" among ${stoneTypes.length} stone types from DB`);
+    
+    // Log all stones for debugging
+    stoneTypes.forEach(st => {
+      console.log(`Stone type in DB: ${st.name}, price: ${st.priceModifier}`);
+    });
     
     // First try exact name match
     let matchingStone = stoneTypes.find(st => 
       st.name && st.name.toLowerCase() === gemName.toLowerCase()
     );
+    
+    console.log(`Exact match result for "${gemName}": ${matchingStone ? matchingStone.name : 'none'}`);
 
     // If no exact match, try partial name match in either direction
     if (!matchingStone) {
@@ -492,11 +501,21 @@ export async function getGemPricePerCaratFromName(gemName: string): Promise<numb
           gemName.toLowerCase().includes(st.name.toLowerCase())
         )
       );
+      
+      if (matchingStone) {
+        console.log(`Found partial match: "${matchingStone.name}" for query "${gemName}"`);
+      }
     }
     
-    if (matchingStone?.priceModifier) {
-      console.log(`Found matching stone in DB: "${matchingStone.name}" with price ₹${matchingStone.priceModifier} for query "${gemName}"`);
-      return matchingStone.priceModifier;
+    if (matchingStone) {
+      console.log(`Raw stone data: ${JSON.stringify(matchingStone)}`);
+      
+      if (matchingStone.priceModifier !== undefined && matchingStone.priceModifier !== null) {
+        console.log(`Found matching stone in DB: "${matchingStone.name}" with price ₹${matchingStone.priceModifier} for query "${gemName}"`);
+        return matchingStone.priceModifier;
+      } else {
+        console.log(`Stone "${matchingStone.name}" found but price is undefined`);
+      }
     } else {
       console.log(`No matching stone found in DB for: "${gemName}"`);
     }
