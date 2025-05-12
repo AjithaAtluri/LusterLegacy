@@ -59,11 +59,12 @@ export default function AuthPage() {
   const [location] = useLocation();
   const [returnPath, setReturnPath] = useState<string>("/");
   
-  // Parse returnTo parameter from URL
+  // Parse returnTo parameter from URL and check for prefilled data
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get("returnTo");
     const shareStory = params.get("shareStory") === "true";
+    let hasPrefilledData = false;
     
     if (returnTo) {
       // For client stories page with share=true, we want to redirect to the share tab
@@ -87,6 +88,11 @@ export default function AuthPage() {
               hasImage: !!parsedData.imageDataUrl,
               imageInfo: parsedData.imageInfo
             });
+            
+            // Check if we have enough data to consider it "prefilled"
+            if (parsedData.fullName || parsedData.email) {
+              hasPrefilledData = true;
+            }
           } catch (e) {
             console.error("Auth page - error parsing saved form data:", e);
           }
@@ -103,6 +109,11 @@ export default function AuthPage() {
               customizationType: parsedData.customizationType,
               hasRequirements: !!parsedData.requirements
             });
+            
+            // Check if we have enough data to consider it "prefilled"
+            if (parsedData.fullName || parsedData.email) {
+              hasPrefilledData = true;
+            }
           } catch (e) {
             console.error("Auth page - error parsing saved customization form data:", e);
           }
@@ -120,13 +131,42 @@ export default function AuthPage() {
               email: parsedData.email,
               currency: parsedData.currency
             });
+            
+            // Check if we have enough data to consider it "prefilled"
+            if (parsedData.fullName || parsedData.email) {
+              hasPrefilledData = true;
+            }
           } catch (e) {
             console.error("Auth page - error parsing saved quote form data:", e);
           }
         }
       }
+    } else {
+      // Even if no returnTo is in the URL, check if we have saved form data
+      // that might contain prefillable information
+      const hasDesignData = sessionStorage.getItem('designFormData') !== null;
+      const hasCustomizationData = sessionStorage.getItem('customizationFormData') !== null;
+      const hasQuoteData = sessionStorage.getItem('quoteFormData') !== null;
+      
+      if (hasDesignData || hasCustomizationData || hasQuoteData) {
+        console.log("Auth page - found saved form data without returnTo param");
+        hasPrefilledData = true;
+      }
     }
-  }, []);
+    
+    // If we have prefilled data, automatically switch to the register tab
+    if (hasPrefilledData) {
+      console.log("Auth page - automatically switching to register tab due to prefilled data");
+      setActiveTab("register");
+      
+      // Show toast with helpful message
+      toast({
+        title: "Form data transferred",
+        description: "We've prefilled the registration form with your information for convenience.",
+        duration: 5000,
+      });
+    }
+  }, [toast]);
   
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -137,10 +177,9 @@ export default function AuthPage() {
     }
   });
   
-  // Registration form
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
+  // Get prefilled values from stored form data
+  const getPrefilledFormValues = () => {
+    let prefilledValues = {
       name: "",
       loginID: "",
       password: "",
@@ -149,7 +188,97 @@ export default function AuthPage() {
       phone: "",
       country: "us", // Default to United States
       acceptTerms: false
+    };
+    
+    try {
+      // Check for design form data
+      const designFormData = sessionStorage.getItem('designFormData');
+      if (designFormData) {
+        const parsedData = JSON.parse(designFormData);
+        console.log("Attempting to prefill registration form with design form data");
+        
+        if (parsedData.fullName) prefilledValues.name = parsedData.fullName;
+        if (parsedData.email) prefilledValues.email = parsedData.email;
+        if (parsedData.phone) prefilledValues.phone = parsedData.phone;
+        if (parsedData.country) prefilledValues.country = parsedData.country;
+        
+        // Generate a suggested login ID from the name if available
+        if (parsedData.fullName && !prefilledValues.loginID) {
+          const nameParts = parsedData.fullName.split(' ');
+          if (nameParts.length >= 2) {
+            // Use first name + first letter of last name
+            prefilledValues.loginID = (nameParts[0] + nameParts[nameParts.length - 1][0]).replace(/[^a-zA-Z0-9]/g, '');
+          } else if (nameParts.length === 1) {
+            prefilledValues.loginID = nameParts[0].replace(/[^a-zA-Z0-9]/g, '');
+          }
+        }
+      }
+      
+      // Check for customization form data
+      const customizationFormData = sessionStorage.getItem('customizationFormData');
+      if (customizationFormData) {
+        const parsedData = JSON.parse(customizationFormData);
+        console.log("Attempting to prefill registration form with customization form data");
+        
+        if (parsedData.fullName) prefilledValues.name = parsedData.fullName;
+        if (parsedData.email) prefilledValues.email = parsedData.email;
+        if (parsedData.phone) prefilledValues.phone = parsedData.phone;
+        if (parsedData.country) prefilledValues.country = parsedData.country;
+        
+        // Generate a suggested login ID from the name if available
+        if (parsedData.fullName && !prefilledValues.loginID) {
+          const nameParts = parsedData.fullName.split(' ');
+          if (nameParts.length >= 2) {
+            // Use first name + first letter of last name
+            prefilledValues.loginID = (nameParts[0] + nameParts[nameParts.length - 1][0]).replace(/[^a-zA-Z0-9]/g, '');
+          } else if (nameParts.length === 1) {
+            prefilledValues.loginID = nameParts[0].replace(/[^a-zA-Z0-9]/g, '');
+          }
+        }
+      }
+      
+      // Check for quote form data
+      const quoteFormData = sessionStorage.getItem('quoteFormData');
+      if (quoteFormData) {
+        const parsedData = JSON.parse(quoteFormData);
+        console.log("Attempting to prefill registration form with quote form data");
+        
+        if (parsedData.fullName) prefilledValues.name = parsedData.fullName;
+        if (parsedData.email) prefilledValues.email = parsedData.email;
+        if (parsedData.phone) prefilledValues.phone = parsedData.phone;
+        if (parsedData.country) prefilledValues.country = parsedData.country;
+        
+        // Generate a suggested login ID from the name if available
+        if (parsedData.fullName && !prefilledValues.loginID) {
+          const nameParts = parsedData.fullName.split(' ');
+          if (nameParts.length >= 2) {
+            // Use first name + first letter of last name
+            prefilledValues.loginID = (nameParts[0] + nameParts[nameParts.length - 1][0]).replace(/[^a-zA-Z0-9]/g, '');
+          } else if (nameParts.length === 1) {
+            prefilledValues.loginID = nameParts[0].replace(/[^a-zA-Z0-9]/g, '');
+          }
+        }
+      }
+      
+      // Log the prefilled values
+      console.log("Prefilled registration form values:", {
+        name: prefilledValues.name ? "✓" : "✗",
+        email: prefilledValues.email ? "✓" : "✗",
+        phone: prefilledValues.phone ? "✓" : "✗", 
+        country: prefilledValues.country,
+        loginID: prefilledValues.loginID ? "✓" : "✗"
+      });
+    } catch (error) {
+      console.error("Error getting prefilled form values:", error);
     }
+    
+    return prefilledValues;
+  };
+  
+  // Registration form with prefilled values
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: getPrefilledFormValues()
   });
   
   // Submit handlers
