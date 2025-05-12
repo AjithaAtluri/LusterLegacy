@@ -29,6 +29,8 @@ const designFormSchema = z.object({
   notes: z.string().optional(),
   // Phone field is added for compatibility with full design form
   phone: z.string().optional(),
+  // Country code for phone number
+  countryCode: z.string().default("+1"),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: "You must agree to the terms to continue"
   })
@@ -56,6 +58,7 @@ export default function CustomDesignSection() {
       primaryStone: "",
       notes: "",
       phone: "", // Added phone field with empty default
+      countryCode: "+1", // Default country code for US
       agreeToTerms: false
     }
   });
