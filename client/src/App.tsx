@@ -26,6 +26,7 @@ const GemMetalGuide = lazy(() => import("@/pages/gem-metal-guide"));
 const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard"));
 const AuthPage = lazy(() => import("@/pages/auth-page"));
+const VerifyEmail = lazy(() => import("@/pages/verify-email"));
 const FinalizeOrder = lazy(() => import("@/pages/finalize-order"));
 const CustomizeRequest = lazy(() => import("@/pages/customize-request"));
 
@@ -164,6 +165,7 @@ function App() {
                   <ProtectedRoute path="/quote-requests/:id" component={lazy(() => import("@/pages/quote-requests/[id]"))} />
                   <ProtectedRoute path="/payment/design-consultation/:id" component={lazy(() => import("@/pages/payment/design-consultation/[id]"))} />
                   <Route path="/auth" component={AuthPage} />
+                  <Route path="/verify-email" component={VerifyEmail} />
                   
                   {/* Tools */}
                   <Route path="/tools/image-test" component={ImageTest} />

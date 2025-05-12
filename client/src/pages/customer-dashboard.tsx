@@ -111,7 +111,7 @@ export default function CustomerDashboard() {
     
     try {
       setIsVerifyingEmail(true);
-      const res = await fetch("/api/user/verify-email", {
+      const res = await fetch("/api/user/send-verification", {
         method: "POST"
       });
       
@@ -119,11 +119,16 @@ export default function CustomerDashboard() {
         throw new Error("Failed to send verification email");
       }
       
+      const data = await res.json();
+      
       toast({
         title: "Verification Email Sent",
         description: "A verification link has been sent to your email address.",
         variant: "default"
       });
+      
+      // For development and testing, show the verification link in console
+      console.log("Verification link (for development only):", data.verificationLink);
     } catch (error) {
       console.error("Error sending verification email:", error);
       toast({
@@ -982,30 +987,42 @@ export default function CustomerDashboard() {
                       <div className="flex items-center">
                         <Mail className="h-5 w-5 text-muted-foreground mr-2" />
                         <h3 className="text-sm font-medium">Email</h3>
+                        {user?.emailVerified ? (
+                          <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
+                            <Check className="h-3 w-3 mr-1" />
+                            Verified
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                            Unverified
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <p className="text-sm text-muted-foreground px-3 py-2 border rounded-md flex-grow bg-muted/10">
                           {user?.email || "Not provided"}
                         </p>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="shrink-0"
-                          onClick={sendVerificationEmail}
-                          disabled={isVerifyingEmail}
-                        >
-                          {isVerifyingEmail ? (
-                            <span className="flex items-center gap-1">
-                              <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
-                              <span>Sending</span>
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1">
-                              <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                              Verify
-                            </span>
-                          )}
-                        </Button>
+                        {!user?.emailVerified && (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="shrink-0"
+                            onClick={sendVerificationEmail}
+                            disabled={isVerifyingEmail}
+                          >
+                            {isVerifyingEmail ? (
+                              <span className="flex items-center gap-1">
+                                <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin"></span>
+                                <span>Sending</span>
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1">
+                                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                                Verify
+                              </span>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
                     
