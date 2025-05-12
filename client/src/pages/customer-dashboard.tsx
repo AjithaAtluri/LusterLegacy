@@ -87,7 +87,7 @@ export default function CustomerDashboard() {
       description: 'Price quote for a catalog item without modifications.'
     }));
     
-    // Process customization requests (modifications to existing products)
+    // Process personalization requests (modifications to existing products)
     // Filter out any duplicates that match design request IDs
     const customizations = (customizationRequests || [])
       .filter(req => !designs.some(design => design.id === req.id))
@@ -95,7 +95,7 @@ export default function CustomerDashboard() {
         ...req, 
         requestType: 'customization',
         needsConsultationFee: false,
-        description: 'Product customization request for modifying an existing product.'
+        description: 'Product personalization request for modifying an existing product.'
       }));
     
     // Combine all requests
@@ -581,7 +581,7 @@ export default function CustomerDashboard() {
                       <SelectContent>
                         <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="design">Custom Design</SelectItem>
-                        <SelectItem value="customization">Product Customization</SelectItem>
+                        <SelectItem value="customization">Product Personalization</SelectItem>
                         <SelectItem value="quote">Quote Request</SelectItem>
                       </SelectContent>
                     </Select>
