@@ -59,6 +59,7 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
   useEffect(() => {
     const handleStartEvent = () => {
       console.log("AI Design Consultation - Received start event");
+      // Create new function reference that captures latest form context
       handleStartConsultation();
     };
     
@@ -67,7 +68,7 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     return () => {
       window.removeEventListener('start-ai-consultation', handleStartEvent);
     };
-  }, []);
+  }, [formContext]); // Add formContext as a dependency
   
   // Timer for the 15-minute consultation limit
   useEffect(() => {
@@ -130,18 +131,21 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     setChatHistory([]);
     setTimeLeft(15);
     
+    // Get a new reference to the form context to ensure we have the latest data
+    const currentContext = formContext;
+    
     // Log the current form context
-    console.log("AI Design Consultation - Starting with form context:", formContext);
+    console.log("AI Design Consultation - Starting with form context:", currentContext);
     
     // Generate a context-aware welcome message
     let welcomeMessage = "Welcome to your AI design consultation! I'm here to help you explore jewelry design ideas, suggest materials, gemstones, and answer your questions about custom jewelry design.";
     
     // Add context from the form if available
-    if (integratedWithForm && formContext) {
-      // Extract form data
-      const metalType = formContext.metalType;
-      const selectedStones = formContext.selectedStones;
-      const notes = formContext.formValues?.notes;
+    if (integratedWithForm && currentContext) {
+      // Extract form data - get values directly from the form context
+      const metalType = currentContext.metalType;
+      const selectedStones = currentContext.selectedStones;
+      const notes = currentContext.formValues?.notes;
       
       console.log("AI Design Consultation - Extracted form data:", {
         metalType,
