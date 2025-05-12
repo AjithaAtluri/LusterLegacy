@@ -943,243 +943,48 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
   return (
     <DesignFormContext.Provider value={contextValue}>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-8">
-          <h3 className="font-playfair text-2xl font-semibold text-foreground mb-3">Submit Your Design</h3>
-          {!user && (
-            <p className="font-montserrat text-sm text-foreground/70 mb-6">Login required. Your design details will be saved when you submit.</p>
-          )}
-        
-        <div className="mb-6">
-          <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
-            Upload Reference Image*
-          </FormLabel>
-          {renderUploadArea()}
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <FormField
-            control={form.control}
-            name="metalType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                  Metal Type*
-                </FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
-                      <SelectValue placeholder="Select metal type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {METAL_TYPES.map((metal) => (
-                      <SelectItem key={metal.id} value={metal.id}>
-                        {metal.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="primaryStones"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                  Stone Types* (Select one or more)
-                </FormLabel>
-                <div className="relative">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className={cn(
-                            "w-full justify-between p-3 border border-foreground/20 rounded font-montserrat text-sm",
-                            !field.value.length && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value.length > 0
-                            ? `${field.value.length} stone${field.value.length > 1 ? "s" : ""} selected`
-                            : "Select stone types"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0" align="start">
-                      <Command className="w-full">
-                        <CommandInput placeholder="Search stone types..." />
-                        <CommandEmpty>No stone type found.</CommandEmpty>
-                        <CommandGroup className="max-h-64 overflow-y-auto">
-                          {STONE_TYPES.map((stone) => {
-                            const isSelected = field.value.includes(stone.id);
-                            return (
-                              <CommandItem
-                                key={stone.id}
-                                value={stone.id}
-                                onSelect={() => {
-                                  const updatedValue = isSelected
-                                    ? field.value.filter((value) => value !== stone.id)
-                                    : [...field.value, stone.id];
-                                  field.onChange(updatedValue);
-                                  setSelectedStones(updatedValue);
-                                }}
-                              >
-                                <div className={cn(
-                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                  isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
-                                )}>
-                                  {isSelected && <Check className="h-3 w-3" />}
-                                </div>
-                                <span>{stone.name}</span>
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem className="mb-6">
-              <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                Additional Notes
-              </FormLabel>
-              <p className="text-xs italic text-muted-foreground mb-1">
-                These notes will be used by our AI consultant as a prompt and guidance. The more details you provide, the better your consultation experience will be.
-              </p>
-              <FormControl>
-                <Textarea 
-                  {...field} 
-                  rows={4}
-                  placeholder="Share specific details about your vision, size requirements, or any other preferences..."
-                  className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm" 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="mb-6">
-          <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
-            Contact Information*
-          </FormLabel>
-          
-          {user ? (
-            <div className="bg-accent/10 rounded-md p-4 mb-4">
-              <p className="text-sm text-muted-foreground font-medium mb-2">
-                Your contact information will be used from your account:
-              </p>
-              <div className="space-y-1 text-sm">
-                <p><span className="font-semibold">Name:</span> {user.name || user.loginID}</p>
-                <p><span className="font-semibold">Email:</span> {user.email}</p>
-                {user.phone && <p><span className="font-semibold">Phone:</span> {user.phone}</p>}
-                {user.country && (
-                  <p><span className="font-semibold">Country:</span> {
-                    COUNTRIES.find(c => c.id === user.country)?.name || user.country
-                  }</p>
-                )}
-              </div>
+        <form onSubmit={form.handleSubmit(onSubmit as any)} className="bg-background rounded-lg shadow-lg p-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4">
+            <div>
+              <h3 className="font-playfair text-2xl font-semibold text-foreground">Submit Your Design</h3>
+              {!user && (
+                <p className="font-montserrat text-sm text-foreground/70 mt-1">Login required. Your design details will be saved when you submit.</p>
+              )}
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-4">
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Left column with upload area */}
+            <div className="md:col-span-1">
+              <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
+                Upload Reference Image*
+              </FormLabel>
+              {renderUploadArea()}
+            </div>
+            
+            {/* Right columns with material selections */}
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="metalType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                      Metal Type*
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="Full Name" 
-                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="Email Address" 
-                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                        Phone Number*
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="tel"
-                          placeholder="Phone Number" 
-                          className="p-3 border border-foreground/20 rounded font-montserrat text-sm" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-montserrat text-sm font-medium text-foreground">
-                        Country*
-                      </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                      <FormControl>
-                        <SelectTrigger className="w-full p-3 border border-foreground/20 rounded font-montserrat text-sm">
-                          <SelectValue placeholder="Select your country" />
+                        <SelectTrigger className="w-full p-2.5 border border-foreground/20 rounded font-montserrat text-sm">
+                          <SelectValue placeholder="Select metal type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {COUNTRIES.map((country) => (
-                          <SelectItem key={country.id} value={country.id}>
-                            {country.name}
+                        {METAL_TYPES.map((metal) => (
+                          <SelectItem key={metal.id} value={metal.id}>
+                            {metal.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1188,16 +993,211 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
                   </FormItem>
                 )}
               />
+              
+              <FormField
+                control={form.control}
+                name="primaryStones"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                      Stone Types* (Select one or more)
+                    </FormLabel>
+                    <div className="relative">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between p-2.5 border border-foreground/20 rounded font-montserrat text-sm",
+                                !field.value.length && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value.length > 0
+                                ? `${field.value.length} stone${field.value.length > 1 ? "s" : ""} selected`
+                                : "Select stone types"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start">
+                          <Command className="w-full">
+                            <CommandInput placeholder="Search stone types..." />
+                            <CommandEmpty>No stone type found.</CommandEmpty>
+                            <CommandGroup className="max-h-64 overflow-y-auto">
+                              {STONE_TYPES.map((stone) => {
+                                const isSelected = field.value.includes(stone.id);
+                                return (
+                                  <CommandItem
+                                    key={stone.id}
+                                    value={stone.id}
+                                    onSelect={() => {
+                                      const updatedValue = isSelected
+                                        ? field.value.filter((value) => value !== stone.id)
+                                        : [...field.value, stone.id];
+                                      field.onChange(updatedValue);
+                                      setSelectedStones(updatedValue);
+                                    }}
+                                  >
+                                    <div className={cn(
+                                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                      isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
+                                    )}>
+                                      {isSelected && <Check className="h-3 w-3" />}
+                                    </div>
+                                    <span>{stone.name}</span>
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            </>
-          )}
-        </div>
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem className="mb-4">
+                <FormLabel className="font-montserrat text-sm font-medium text-foreground">
+                  Additional Notes
+                </FormLabel>
+                <p className="text-xs italic text-muted-foreground mb-1">
+                  These notes will be used by our AI consultant as a prompt and guidance. The more details you provide, the better your consultation experience will be.
+                </p>
+                <FormControl>
+                  <Textarea 
+                    {...field} 
+                    rows={3}
+                    placeholder="Share specific details about your vision, size requirements, or any other preferences..."
+                    className="w-full p-2.5 border border-foreground/20 rounded font-montserrat text-sm" 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="mb-4">
+            <FormLabel className="block font-montserrat text-sm font-medium text-foreground mb-2">
+              Contact Information*
+            </FormLabel>
+            
+            {user ? (
+              <div className="bg-accent/10 rounded-md p-3">
+                <p className="text-sm text-muted-foreground font-medium mb-1">
+                  Your contact information will be used from your account:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 text-sm">
+                  <p><span className="font-semibold">Name:</span> {user.name || user.loginID}</p>
+                  <p><span className="font-semibold">Email:</span> {user.email}</p>
+                  {user.phone && <p><span className="font-semibold">Phone:</span> {user.phone}</p>}
+                  {user.country && (
+                    <p><span className="font-semibold">Country:</span> {
+                      COUNTRIES.find(c => c.id === user.country)?.name || user.country
+                    }</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Full Name" 
+                            className="p-2.5 border border-foreground/20 rounded font-montserrat text-sm" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Email Address" 
+                            className="p-2.5 border border-foreground/20 rounded font-montserrat text-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            type="tel"
+                            placeholder="Phone Number" 
+                            className="p-2.5 border border-foreground/20 rounded font-montserrat text-sm" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full p-2.5 border border-foreground/20 rounded font-montserrat text-sm">
+                              <SelectValue placeholder="Select your country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {COUNTRIES.map((country) => (
+                              <SelectItem key={country.id} value={country.id}>
+                                {country.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </>
+            )}
+          </div>
         
         <FormField
           control={form.control}
           name="agreeToTerms"
           render={({ field }) => (
-            <FormItem className="mb-6 flex items-start space-x-2">
+            <FormItem className="mb-4 flex items-start space-x-2">
               <FormControl>
                 <Checkbox 
                   checked={field.value} 
@@ -1214,52 +1214,50 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
           )}
         />
         
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Button 
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 font-montserrat font-medium bg-primary text-background px-6 py-3 rounded hover:bg-accent transition duration-300 h-auto"
+            className="font-montserrat font-medium bg-primary text-background px-5 py-2.5 rounded hover:bg-accent transition duration-300 h-auto"
           >
             {isSubmitting ? "Submitting..." : "Submit Design Request"}
           </Button>
           
-          <div className="flex-1">
-            <Button 
-              type="button"
-              onClick={() => {
-                // Get current form state to pass to the AI consultation
-                const currentMetalType = form.getValues("metalType");
-                const selectedStones = form.getValues("primaryStones");
-                const notes = form.getValues("notes") || "";
-                
-                // Prepare form data for AI consultation
-                const formState = {
-                  metalType: currentMetalType,
-                  selectedStones: selectedStones,
-                  notes: notes,
-                  imageDataUrl: previewUrl || undefined
-                };
-                
-                // Log what we're passing to the consultation
-                console.log("Design Form - Starting AI consultation with state:", formState);
-                
-                // Use the global method if available
-                const windowWithConsultation = window as unknown as WindowWithAIConsultation;
-                if (windowWithConsultation.startAIConsultation && typeof windowWithConsultation.startAIConsultation === "function") {
-                  windowWithConsultation.startAIConsultation(formState);
-                } else {
-                  // Fallback to event dispatch
-                  console.log("Design Form - Using legacy event approach");
-                  const event = new CustomEvent('start-ai-consultation');
-                  window.dispatchEvent(event);
-                }
-              }} 
-              className="w-full font-montserrat bg-accent hover:bg-accent/90 text-background px-6 py-3 transition-colors flex items-center justify-center gap-2 h-auto"
-            >
-              <Sparkles size={16} />
-              Get AI Design Guidance
-            </Button>
-          </div>
+          <Button 
+            type="button"
+            onClick={() => {
+              // Get current form state to pass to the AI consultation
+              const currentMetalType = form.getValues("metalType");
+              const selectedStones = form.getValues("primaryStones");
+              const notes = form.getValues("notes") || "";
+              
+              // Prepare form data for AI consultation
+              const formState = {
+                metalType: currentMetalType,
+                selectedStones: selectedStones,
+                notes: notes,
+                imageDataUrl: previewUrl || undefined
+              };
+              
+              // Log what we're passing to the consultation
+              console.log("Design Form - Starting AI consultation with state:", formState);
+              
+              // Use the global method if available
+              const windowWithConsultation = window as unknown as WindowWithAIConsultation;
+              if (windowWithConsultation.startAIConsultation && typeof windowWithConsultation.startAIConsultation === "function") {
+                windowWithConsultation.startAIConsultation(formState);
+              } else {
+                // Fallback to event dispatch
+                console.log("Design Form - Using legacy event approach");
+                const event = new CustomEvent('start-ai-consultation');
+                window.dispatchEvent(event);
+              }
+            }} 
+            className="font-montserrat font-medium bg-accent/10 hover:bg-accent/20 text-foreground px-5 py-2.5 rounded transition duration-300 h-auto flex items-center justify-center"
+          >
+            <Sparkles className="w-4 h-4 mr-2 text-primary" />
+            Ask AI Design Assistant
+          </Button>
         </div>
         
         {!user && (
