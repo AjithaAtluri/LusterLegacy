@@ -40,6 +40,15 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     }
   }, [isActive, startTime]);
   
+  // Ensure the form data ready flag is set
+  useEffect(() => {
+    // Set form data as ready if we have any context
+    if (integratedWithForm && formContext) {
+      console.log("AI Design Consultation - Setting form data ready");
+      setFormDataReady(true);
+    }
+  }, [integratedWithForm, formContext]);
+  
   // Timer for the 15-minute consultation limit
   useEffect(() => {
     if (!startTime) return;
