@@ -233,7 +233,7 @@ export default function AdminStoneTypes() {
                     <h3 className="font-playfair font-medium">{stoneType.name}</h3>
                   </div>
                   <span className="text-sm font-medium">
-                    ₹{Number(stoneType.priceModifier || 0).toLocaleString('en-IN')}/ct
+                    ₹{Number(stoneType.priceModifier !== undefined ? stoneType.priceModifier : 0).toLocaleString('en-IN')}/ct
                   </span>
                 </div>
                 
@@ -367,7 +367,7 @@ export default function AdminStoneTypes() {
               )}
               <div>
                 <h3 className="font-medium">{selectedStoneType.name}</h3>
-                <p className="text-sm text-muted-foreground">Price per Carat: ₹{Number(selectedStoneType.priceModifier || 0).toLocaleString('en-IN')}</p>
+                <p className="text-sm text-muted-foreground">Price per Carat: ₹{Number(selectedStoneType.priceModifier !== undefined ? selectedStoneType.priceModifier : 0).toLocaleString('en-IN')}</p>
                 <div className="text-xs text-muted-foreground mt-1">
                   {selectedStoneType.category && <span className="mr-2">Category: {selectedStoneType.category}</span>}
                   {selectedStoneType.stoneForm && <span>Form: {selectedStoneType.stoneForm}</span>}
