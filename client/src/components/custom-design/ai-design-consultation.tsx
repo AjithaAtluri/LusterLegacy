@@ -158,11 +158,28 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
       console.log("AI Design Consultation - Form Context:", formContext);
       
       // Prepare form data for context if it exists
-      const formData = integratedWithForm && formContext ? {
-        metalType: formContext.metalType,
-        gemstones: formContext.selectedStones,
-        designDescription: formContext.formValues?.notes
-      } : null;
+      let formData = null;
+      
+      if (integratedWithForm && formContext) {
+        formData = {
+          metalType: formContext.metalType || "",
+          gemstones: formContext.selectedStones || [],
+          designDescription: formContext.formValues?.notes || ""
+        };
+        
+        // Make sure we have non-empty values to include
+        if (!formData.metalType) {
+          console.log("AI Design Consultation - No metal type in form context");
+        }
+        
+        if (!formData.gemstones || formData.gemstones.length === 0) {
+          console.log("AI Design Consultation - No gemstones in form context");
+        }
+        
+        if (!formData.designDescription) {
+          console.log("AI Design Consultation - No design description in form context");
+        }
+      }
       
       // Log the prepared form data
       console.log("AI Design Consultation - Prepared Form Data:", formData);

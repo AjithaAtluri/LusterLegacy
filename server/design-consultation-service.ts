@@ -41,24 +41,32 @@ Do not provide pricing information - only mention that final quotes will be prov
 If you don't know the answer to a specific technical question, be honest and suggest they ask their dedicated designer during the consultation.`;
 
   // Add context from the form data if available
+  console.log("Design Consultation Service - Form Data received:", formData);
+  
   if (formData) {
     let formContext = "\n\nThe customer has provided the following information in their design form:";
     
     if (formData.metalType) {
       formContext += `\n- Preferred Metal: ${formData.metalType}`;
+      console.log("Design Consultation Service - Using metal type:", formData.metalType);
     }
     
     if (formData.gemstones && formData.gemstones.length > 0) {
       formContext += `\n- Gemstone Preferences: ${formData.gemstones.join(', ')}`;
+      console.log("Design Consultation Service - Using gemstones:", formData.gemstones);
     }
     
     if (formData.designDescription) {
       formContext += `\n- Design Description: "${formData.designDescription}"`;
+      console.log("Design Consultation Service - Using design description:", formData.designDescription);
     }
     
     formContext += "\n\nUse this information to provide more personalized guidance in your responses.";
+    console.log("Design Consultation Service - Form context appended to prompt");
     
     systemPrompt += formContext;
+  } else {
+    console.log("Design Consultation Service - No form data provided");
   }
 
   // Default history with system message if not provided
