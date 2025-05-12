@@ -151,36 +151,54 @@ export function setupAuth(app: Express): void {
 
   // Registration endpoint
   app.post("/api/register", async (req, res, next) => {
+    console.log("====== REGISTRATION ATTEMPT ======");
+    console.log("Registration request received with body:", {
+      loginID: req.body.loginID,
+      email: req.body.email,
+      name: req.body.name,
+      hasPassword: !!req.body.password,
+      passwordLength: req.body.password ? req.body.password.length : 0
+    });
+    
     try {
       // Check if loginID already exists
       const existingUser = await storage.getUserByLoginID(req.body.loginID);
       if (existingUser) {
+        console.log("Registration failed: Login ID already exists");
         return res.status(400).json({ message: "Login ID already exists" });
       }
 
       // Check if email already exists
       const existingEmail = await storage.getUserByEmail(req.body.email);
       if (existingEmail) {
+        console.log("Registration failed: Email already exists");
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      // Add debug logs to help diagnose the problem
-      console.log("Registration payload:", {
-        loginID: req.body.loginID,
-        email: req.body.email,
-        name: req.body.name,
-        role: req.body.role || "customer"
-      });
+      // Direct insertion with explicit username field
+      console.log("No existing user found with same loginID or email");
+      console.log("Creating user with loginID:", req.body.loginID);
       
-      // Prepare user data with both username and loginID fields explicitly set
+      // Explicitly create a new object with all required fields including 'username'
+      const hashedPassword = await hashPassword(req.body.password);
+      
       const userData = {
-        ...req.body,
-        username: req.body.loginID, // Explicitly set username to loginID value
-        password: await hashPassword(req.body.password),
-        role: req.body.role || "customer" // Default role is customer
+        name: req.body.name,
+        email: req.body.email,
+        phone: req.body.phone,
+        country: req.body.country,
+        loginID: req.body.loginID,
+        password: hashedPassword,
+        role: req.body.role || "customer",
+        username: req.body.loginID // Explicitly set username to match loginID
       };
       
-      console.log("User data being sent to database includes username:", !!userData.username);
+      console.log("Final user data being sent to database:", {
+        ...userData,
+        password: "REDACTED",
+        hasLoginID: !!userData.loginID,
+        hasUsername: !!userData.username,
+      });
       
       // Create new user with hashed password
       const user = await storage.createUser(userData);
@@ -209,7 +227,38 @@ export function setupAuth(app: Express): void {
       });
     } catch (error) {
       console.error("Registration error:", error);
-      res.status(500).json({ message: "Error during registration" });
+      
+      // Log more detailed error information
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack
+        });
+        
+        // Check for specific error types
+        if (error.message.includes("violates not-null constraint")) {
+          const match = error.message.match(/column "(.*?)" of relation/);
+          if (match && match[1]) {
+            const missingField = match[1];
+            console.error(`Missing required field in registration: ${missingField}`);
+            return res.status(400).json({ 
+              message: `Registration failed: Required field "${missingField}" is missing.` 
+            });
+          }
+        }
+        
+        // Check for duplicate key errors (unique constraint violations)
+        if (error.message.includes("duplicate key value violates unique constraint")) {
+          return res.status(400).json({ 
+            message: "Registration failed: Username or email already exists." 
+          });
+        }
+      }
+      
+      // If we couldn't determine a specific error, return a generic one
+      res.status(500).json({ 
+        message: "Error during registration. Please try again with different information."
+      });
     }
   });
 
