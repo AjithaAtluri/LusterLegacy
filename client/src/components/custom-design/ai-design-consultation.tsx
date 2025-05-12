@@ -154,12 +154,18 @@ export default function AIDesignConsultation({ integratedWithForm = false }: AID
     setIsLoading(true);
     
     try {
+      // Log form context to debug
+      console.log("AI Design Consultation - Form Context:", formContext);
+      
       // Prepare form data for context if it exists
       const formData = integratedWithForm && formContext ? {
         metalType: formContext.metalType,
         gemstones: formContext.selectedStones,
         designDescription: formContext.formValues?.notes
       } : null;
+      
+      // Log the prepared form data
+      console.log("AI Design Consultation - Prepared Form Data:", formData);
       
       // Send message to API with form context data if available
       const response = await apiRequest("POST", "/api/design-consultation-ai", {

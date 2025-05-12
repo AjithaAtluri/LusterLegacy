@@ -70,6 +70,9 @@ export default function DesignForm() {
   const { toast } = useToast();
   const { user } = useAuth();
   
+  // Debug log - new variable to track context values
+  const [contextMetalType, setContextMetalType] = useState<string>("");
+  
   const form = useForm<DesignFormValues>({
     resolver: zodResolver(designFormSchema),
     defaultValues: {
@@ -866,6 +869,11 @@ export default function DesignForm() {
     selectedStones: selectedStones,
     metalType: form.watch('metalType') || ""
   };
+  
+  // Debug log for context value updates
+  useEffect(() => {
+    console.log("Design Form - Context Value Updated:", contextValue);
+  }, [contextValue.formValues, contextValue.selectedStones, contextValue.metalType]);
 
   // Watch form changes to update currentFormValues
   useEffect(() => {
