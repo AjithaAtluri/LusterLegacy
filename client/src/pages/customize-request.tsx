@@ -302,7 +302,7 @@ export default function CustomizeRequest() {
           });
           
           // Clear the saved data to prevent reloading it on subsequent visits
-          sessionStorage.removeItem('customizationFormData');
+          sessionStorage.removeItem('personalizationFormData');
           
           // Skip the rest of the function to avoid overwriting with default values
           return;
