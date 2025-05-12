@@ -258,9 +258,15 @@ export default function ProductDetail() {
           setProductMetalType(metalType);
           
           // Do the same for metal weight
+          // First check for root-level metalWeight field which is the authoritative source
+          const rootLevelWeight = parsed.metalWeight;
+          // Fall back to AI inputs or additionalData if root level not available
           const rawAiWeight = aiInputs.metalWeight;
           const rawDirectWeight = parsed.additionalData.metalWeight;
+          
           console.log("Raw metal weight values:", {
+            rootLevelWeight,
+            typeOfRootLevel: typeof rootLevelWeight,
             rawAiWeight,
             typeOfAiWeight: typeof rawAiWeight,
             rawDirectWeight,
@@ -268,7 +274,12 @@ export default function ProductDetail() {
           });
           
           let metalWeight = 0;
-          if (typeof rawAiWeight === 'number' && !isNaN(rawAiWeight)) {
+          // First try to use root-level metalWeight (top priority)
+          if (rootLevelWeight && !isNaN(parseFloat(rootLevelWeight))) {
+            const parsedWeight = parseFloat(rootLevelWeight);
+            console.log("Using root-level metal weight:", parsedWeight);
+            metalWeight = parsedWeight;
+          } else if (typeof rawAiWeight === 'number' && !isNaN(rawAiWeight)) {
             console.log("Using AI metal weight:", rawAiWeight);
             metalWeight = rawAiWeight;
           } else if (typeof rawDirectWeight === 'number' && !isNaN(rawDirectWeight)) {

@@ -444,13 +444,18 @@ export default function CustomizeRequest() {
         const additionalData = details.additionalData || {};
         const aiInputs = additionalData.aiInputs || {};
         
+        // First check for root-level values (authoritative source)
+        // Then fall back to additionalData values for compatibility
+        
         // Get stone weights from the product (these don't change in personalization)
-        const mainStoneWeight = aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
-        const secondaryStoneWeight = aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
-        const otherStoneWeight = aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
+        const mainStoneWeight = details.primaryStoneWeight || aiInputs.mainStoneWeight || additionalData.mainStoneWeight || 0;
+        const secondaryStoneWeight = details.secondaryStoneWeight || aiInputs.secondaryStoneWeight || additionalData.secondaryStoneWeight || 0;
+        const otherStoneWeight = details.otherStoneWeight || aiInputs.otherStoneWeight || additionalData.otherStoneWeight || 0;
         
         // Get metal weight (this doesn't change in personalization)
-        const metalWeight = aiInputs.metalWeight || additionalData.metalWeight || 0;
+        // First try to get the root-level metalWeight (highest priority)
+        const rootLevelWeight = details.metalWeight ? parseFloat(details.metalWeight) : 0;
+        const metalWeight = rootLevelWeight || aiInputs.metalWeight || additionalData.metalWeight || 0;
         
         // Get original metal and stone types from the product
         const originalMetalType = aiInputs.metalType || additionalData.metalType || "";
