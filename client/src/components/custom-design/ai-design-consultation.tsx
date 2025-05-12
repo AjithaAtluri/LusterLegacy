@@ -43,7 +43,11 @@ function StartConsultationButton({ onStart }: { onStart: () => void }) {
   );
 }
 
-export default function AIDesignConsultation({ integratedWithForm = false, formState = { metalType: "", selectedStones: [], notes: "" } }: AIDesignConsultationProps) {
+// This is an improved version of the component that is less dependent on form state interactions
+export default function AIDesignConsultation({ 
+  integratedWithForm = false, 
+  formState = { metalType: "", selectedStones: [], notes: "" } 
+}: AIDesignConsultationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const formContext = useContext(DesignFormContext);
@@ -150,12 +154,18 @@ export default function AIDesignConsultation({ integratedWithForm = false, formS
     
     // Use the formState prop directly if available (new approach)
     // Otherwise fall back to the context (for backward compatibility)
+    // Capture the form state directly from the prop
+    // And log both the incoming prop and what we're actually using
+    console.log("AI Consultation - Form state prop received:", formState);
+    
     // Make sure we have valid data by filtering out undefined values
     const currentFormData = {
       metalType: formState?.metalType || formContext?.metalType || "",
       selectedStones: (formState?.selectedStones || formContext?.selectedStones || []).filter(stone => stone),
       notes: formState?.notes || formContext?.formValues?.notes || ""
     };
+    
+    console.log("AI Consultation - Form data extracted:", currentFormData);
     
     // Log the current form data
     console.log("AI Design Consultation - Starting with form data:", currentFormData);

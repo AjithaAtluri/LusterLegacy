@@ -1,9 +1,10 @@
 import { Helmet } from "react-helmet";
 import DesignForm, { DesignFormContext } from "@/components/custom-design/design-form";
 import AIDesignConsultation from "@/components/custom-design/ai-design-consultation";
-import { CheckCircle, Clock, HelpCircle, FileImage, ArrowRight, PenLine } from "lucide-react";
+import { CheckCircle, Clock, HelpCircle, FileImage, ArrowRight, PenLine, Sparkles } from "lucide-react";
 import { PAYMENT_TERMS } from "@/lib/constants";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function CustomDesign() {
   // Create shared state that will be passed to both components
@@ -19,10 +20,16 @@ export default function CustomDesign() {
     selectedStones?: string[];
     notes?: string;
   }) => {
-    setFormState(prev => ({
-      ...prev,
-      ...data
-    }));
+    setFormState(prev => {
+      const updatedState = {
+        ...prev,
+        ...data
+      };
+      
+      // Debug log the latest form state
+      console.log("Custom Design Page - Updated form state:", updatedState);
+      return updatedState;
+    });
   };
   
   return (
