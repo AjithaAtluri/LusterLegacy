@@ -230,6 +230,103 @@ export function setupAuth(app: Express): void {
     const { password, ...userWithoutPassword } = req.user;
     res.json(userWithoutPassword);
   });
+  
+  // Update user profile endpoint 
+  app.put("/api/user/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      const { email, phone, country } = req.body;
+      const updates = { email, phone, country };
+      
+      // Only update fields that were provided
+      Object.keys(updates).forEach(key => 
+        updates[key] === undefined && delete updates[key]
+      );
+      
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ message: "No valid update fields provided" });
+      }
+      
+      const updatedUser = await storage.updateUser(req.user.id, updates);
+      
+      if (updatedUser) {
+        // Update the session with the latest user data
+        req.login(updatedUser, (err) => {
+          if (err) return res.status(500).json({ message: "Session update failed" });
+          
+          const { password, ...userWithoutPassword } = updatedUser;
+          res.json(userWithoutPassword);
+        });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+  
+  // Send verification email
+  app.post("/api/user/send-verification", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      // Generate a verification token (simple UUID)
+      const token = crypto.randomUUID();
+      
+      // Store the token in the user record
+      await storage.updateUser(req.user.id, { verificationToken: token });
+      
+      // In a real application, you would send an email here with a verification link
+      // For demo purposes, just return the verification link
+      const verificationLink = `${req.protocol}://${req.get('host')}/verify-email?token=${token}`;
+      
+      res.json({ 
+        message: "Verification email would be sent in production",
+        // Note: In production, don't include token in response for security
+        // This is just for demonstration purposes
+        verificationLink
+      });
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "Failed to send verification email" });
+    }
+  });
+  
+  // Verify email with token
+  app.get("/api/verify-email", async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+      
+      // Find user with this token
+      const user = await storage.getUserByVerificationToken(token);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Invalid or expired verification token" });
+      }
+      
+      // Mark email as verified and clear token
+      await storage.updateUser(user.id, { 
+        emailVerified: true,
+        verificationToken: null
+      });
+      
+      // Redirect to success page or return success message
+      res.json({ message: "Email verification successful" });
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "Failed to verify email" });
+    }
+  });
 
   // Add middleware to protect admin routes
   // Create a new admin or limited-admin user (only accessible to full admins)
