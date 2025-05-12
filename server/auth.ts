@@ -671,7 +671,8 @@ export function setupAuth(app: Express): void {
         name,
         password: await hashPassword(password),
         email,
-        role
+        role,
+        username: loginID // Explicitly set username to match loginID
       });
       
       // Return user without the password

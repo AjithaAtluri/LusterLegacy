@@ -41,15 +41,11 @@ export const insertUserSchema = createInsertSchema(users)
     // The values must match loginID for consistency
     username: z.string().optional()
       .transform((val, ctx) => {
-        // If no username is provided, use the loginID value
-        // This is required for database consistency
-        if (!val && ctx && ctx.path && ctx.path.length > 0) {
-          const obj = ctx.parent as any;
-          if (obj && obj.loginID) {
-            return obj.loginID;
-          }
+        // If username isn't set, we'll use loginID to maintain consistency
+        if (!val) {
+          return "";  // Default empty string that will be set in the controller
         }
-        return val || "";
+        return val;
       })
   });
 

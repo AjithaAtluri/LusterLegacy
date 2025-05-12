@@ -311,7 +311,9 @@ export class DatabaseStorage implements IStorage {
         phone: insertUser.phone || '',
         country: insertUser.country || 'us',
         loginID: insertUser.loginID,
-        username: insertUser.loginID, // Explicitly set username to match loginID
+        // If username is provided, use it, otherwise set it to loginID
+        // This maintains compatibility with the database requirement
+        username: insertUser.username || insertUser.loginID, 
         password: insertUser.password,
         role: insertUser.role || 'customer',
         emailVerified: false,
