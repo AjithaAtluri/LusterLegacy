@@ -1764,19 +1764,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           }
           
-          // If AI inputs are not available, use the base price
+          // If AI inputs are not available, use a default price
           return {
             ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
+            calculatedPriceUSD: Math.round(75000 / USD_TO_INR_RATE), // Using default price
+            calculatedPriceINR: 75000 // Default price if calculations fail
           };
         } catch (error) {
           console.error(`Error calculating price for product ${product.id}:`, error);
           // Return the product with default conversion from base price
           return {
             ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
+            calculatedPriceUSD: Math.round(75000 / USD_TO_INR_RATE), // Using default price
+            calculatedPriceINR: 75000 // Default price if calculations fail
           };
         }
       }));
@@ -1935,7 +1935,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (calcError) {
         console.error(`Error calculating price for product ${product.id}:`, calcError);
         // Fallback to base price conversion
-        product.calculatedPriceUSD = Math.round(product.basePrice / USD_TO_INR_RATE);
+        const defaultPriceINR = 75000; // Default price if calculations fail
+        product.calculatedPriceUSD = Math.round(defaultPriceINR / USD_TO_INR_RATE);
         product.calculatedPriceINR = product.basePrice;
       }
 
