@@ -1934,10 +1934,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         product.calculatedPriceINR = result.priceINR;
       } catch (calcError) {
         console.error(`Error calculating price for product ${product.id}:`, calcError);
-        // Fallback to base price conversion
+        // Fallback to default price
         const defaultPriceINR = 75000; // Default price if calculations fail
         product.calculatedPriceUSD = Math.round(defaultPriceINR / USD_TO_INR_RATE);
-        product.calculatedPriceINR = product.basePrice;
+        product.calculatedPriceINR = defaultPriceINR;
       }
 
       res.json(product);
@@ -2609,7 +2609,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               name: product.name,
               description: product.description,
               imageUrl: product.imageUrl,
-              basePrice: product.basePrice,
+              calculatedPriceUSD: product.calculatedPriceUSD,
+              calculatedPriceINR: product.calculatedPriceINR,
             } : null
           };
         })
@@ -3180,9 +3181,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Determine which price to use based on currency
+      const defaultPriceINR = 75000; // Default price if calculations fail
       const price = currency === "INR" 
-        ? (product.calculatedPriceINR || product.basePrice) 
-        : (product.calculatedPriceUSD || product.basePrice);
+        ? (product.calculatedPriceINR || defaultPriceINR) 
+        : (product.calculatedPriceUSD || Math.round(defaultPriceINR / USD_TO_INR_RATE));
       
       // Create address as a JSON object to match schema expectation
       const shippingAddress = {
