@@ -60,7 +60,7 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  basePrice: integer("base_price").notNull(), // in INR
+  // basePrice field removed - now using calculated price exclusively
   imageUrl: text("image_url").notNull(),
   additionalImages: json("additional_images").$type<string[]>(),
   details: text("details"),
@@ -80,7 +80,6 @@ export const products = pgTable("products", {
 export const insertProductSchema = createInsertSchema(products).pick({
   name: true,
   description: true,
-  basePrice: true,
   imageUrl: true,
   additionalImages: true,
   details: true,

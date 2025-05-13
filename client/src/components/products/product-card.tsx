@@ -92,7 +92,6 @@ interface ProductDetails {
   detailedDescription: string;
   additionalData: {
     tagline: string;
-    basePriceINR: number;
     metalType: string;
     metalWeight: number;
     stoneTypes: string[];
