@@ -40,7 +40,7 @@ interface PersonalizationDetailProps {
     productImageUrl?: string | null;
     createdAt: string;
     product?: {
-      basePrice?: number;
+      // basePrice field removed - now using calculated prices exclusively
       calculatedPriceUSD?: number;
       calculatedPriceINR?: number;
     };
