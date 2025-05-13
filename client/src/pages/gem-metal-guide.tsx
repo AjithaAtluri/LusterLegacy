@@ -530,6 +530,74 @@ export default function GemMetalGuide() {
               </CardContent>
             </Card>
 
+            <Card className="border-primary/20">
+              <CardHeader className="bg-primary/5">
+                <CardTitle className="font-cormorant text-2xl flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-slate-600" />
+                  Precious Metals Guide
+                </CardTitle>
+                <CardDescription>Properties, uses, and value of fine jewelry metals</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6 mt-2">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 text-amber-600">Gold</h3>
+                    <p className="mb-3 dark:text-slate-300 text-sm">
+                      The most iconic precious metal, valued for its lustrous yellow color and resistance to tarnish. Gold is exceptionally malleable - a single gram can be beaten into a sheet covering nearly 1 square meter.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><span className="font-medium">Composition:</span> Pure gold (Au) is 24K, but typically alloyed for jewelry</li>
+                      <li><span className="font-medium">Durability:</span> 2.5-3 on Mohs hardness scale (relatively soft)</li>
+                      <li><span className="font-medium">Hypoallergenic:</span> Pure gold rarely causes allergic reactions</li>
+                      <li><span className="font-medium">Investment value:</span> Historically maintains value through economic uncertainty</li>
+                      <li><span className="font-medium">Cultural significance:</span> Symbolizes prosperity and prestige across civilizations</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 text-slate-500">Platinum</h3>
+                    <p className="mb-3 dark:text-slate-300 text-sm">
+                      The premium choice for high-end jewelry, platinum is denser and rarer than gold. Its naturally white color never fades or tarnishes, and it holds gemstones more securely than any other metal.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><span className="font-medium">Composition:</span> Typically 95-98% pure platinum (Pt) with rhodium or iridium</li>
+                      <li><span className="font-medium">Durability:</span> 4-4.5 on Mohs scale, but develops a unique patina over time</li>
+                      <li><span className="font-medium">Weight:</span> 60% heavier than 14K gold - substantial feel on the finger</li>
+                      <li><span className="font-medium">Hypoallergenic:</span> Excellent for sensitive skin with minimal alloy content</li>
+                      <li><span className="font-medium">Price comparison:</span> Generally 40-50% more expensive than 14K gold</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 text-blue-400">Silver</h3>
+                    <p className="mb-3 dark:text-slate-300 text-sm">
+                      The most conductive of all metals, silver offers exceptional brilliance at an accessible price point. Sterling silver (92.5% pure) is the jewelry standard, balancing beauty with practicality.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><span className="font-medium">Composition:</span> Sterling is 92.5% silver (Ag) with 7.5% copper for strength</li>
+                      <li><span className="font-medium">Durability:</span> 2.5-3 on Mohs scale, softer than platinum but harder than gold</li>
+                      <li><span className="font-medium">Maintenance:</span> Requires periodic polishing to remove tarnish (oxidation)</li>
+                      <li><span className="font-medium">Value:</span> Exceptional craftsmanship possible at a fraction of gold jewelry cost</li>
+                      <li><span className="font-medium">Versatility:</span> Takes engraving and detailed work exceptionally well</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2 text-indigo-300">Palladium & Rhodium</h3>
+                    <p className="mb-3 dark:text-slate-300 text-sm">
+                      Part of the platinum family, these metals offer platinum-like appearance with distinctive properties. Palladium is increasingly used in fine jewelry, while rhodium is primarily used as a plating material.
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li><span className="font-medium">Palladium:</span> Naturally white, lightweight alternative to platinum (40% lighter)</li>
+                      <li><span className="font-medium">Rhodium:</span> The most reflective metal, used for plating white gold and silver</li>
+                      <li><span className="font-medium">Durability:</span> Palladium is 4.8 on Mohs scale; rhodium plating lasts 1-3 years</li>
+                      <li><span className="font-medium">Usage:</span> Both excellent for white metal lovers with nickel allergies</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="font-cormorant text-2xl">Gold Colors Explained</CardTitle>
