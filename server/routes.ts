@@ -6431,19 +6431,21 @@ Respond in JSON format:
             };
           }
           
-          // If AI inputs are not available, use the base price
+          // If AI inputs are not available, use default price
+          const defaultPriceINR = 75000; // Default price if calculations fail
           return {
             ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
+            calculatedPriceUSD: Math.round(defaultPriceINR / USD_TO_INR_RATE),
+            calculatedPriceINR: defaultPriceINR
           };
         } catch (error) {
           console.error(`Error calculating price for product ${product.id}:`, error);
-          // Return the product with default conversion from base price
+          // Return the product with default price
+          const defaultPriceINR = 75000; // Default price if calculations fail
           return {
             ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
+            calculatedPriceUSD: Math.round(defaultPriceINR / USD_TO_INR_RATE),
+            calculatedPriceINR: defaultPriceINR
           };
         }
       }));
