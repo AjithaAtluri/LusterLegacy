@@ -83,9 +83,9 @@ export default function CustomDesign() {
             </div>
             <a 
               href="/faq" 
-              className="inline-flex items-center px-8 py-4 rounded-md bg-primary text-background hover:bg-primary/90 font-medium transition-colors"
+              className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-background hover:bg-primary/90 font-medium transition-colors text-sm"
             >
-              View FAQ <ArrowRight className="ml-2 h-5 w-5" />
+              View FAQ <ArrowRight className="ml-1.5 h-4 w-4" />
             </a>
           </div>
         </div>
