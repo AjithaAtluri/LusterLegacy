@@ -355,17 +355,22 @@ export default function PersonalizationDetail({ personalization }: Personalizati
                 </span>
               </div>
               
-              {/* Original Product Price Information */}
-              {personalization.product?.basePrice && (
+              {/* Product Listed Price - Showing calculated price instead of basePrice */}
+              {personalization.product?.calculatedPriceUSD && personalization.product?.calculatedPriceINR ? (
                 <>
                   <div className="font-medium">Product Listed Price:</div>
                   <div className="col-span-2">
-                    {formatCurrency(personalization.product.basePrice, "INR")} 
-                    {personalization.product.calculatedPriceUSD && (
-                      <span className="text-muted-foreground ml-2">
-                        ({formatCurrency(personalization.product.calculatedPriceUSD, "USD")})
-                      </span>
-                    )}
+                    {formatCurrency(personalization.product.calculatedPriceINR, "INR")} 
+                    <span className="text-muted-foreground ml-2">
+                      ({formatCurrency(personalization.product.calculatedPriceUSD, "USD")})
+                    </span>
+                  </div>
+                </>
+              ) : personalization.product?.basePrice && (
+                <>
+                  <div className="font-medium">Product Listed Price:</div>
+                  <div className="col-span-2">
+                    {formatCurrency(personalization.product.basePrice, "INR")}
                   </div>
                 </>
               )}
