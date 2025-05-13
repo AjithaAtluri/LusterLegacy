@@ -355,8 +355,8 @@ export default function PersonalizationDetail({ personalization }: Personalizati
                 </span>
               </div>
               
-              {/* Product Listed Price - Showing calculated price instead of basePrice */}
-              {personalization.product?.calculatedPriceUSD && personalization.product?.calculatedPriceINR ? (
+              {/* Product Listed Price - Only showing calculated prices */}
+              {personalization.product?.calculatedPriceUSD && personalization.product?.calculatedPriceINR && (
                 <>
                   <div className="font-medium">Product Listed Price:</div>
                   <div className="col-span-2">
@@ -366,30 +366,12 @@ export default function PersonalizationDetail({ personalization }: Personalizati
                     </span>
                   </div>
                 </>
-              ) : personalization.product?.basePrice && (
-                <>
-                  <div className="font-medium">Product Listed Price:</div>
-                  <div className="col-span-2">
-                    {formatCurrency(personalization.product.basePrice, "INR")}
-                  </div>
-                </>
               )}
               
-              {personalization.product?.calculatedPriceUSD && personalization.product?.calculatedPriceINR && (
-                <>
-                  <div className="font-medium">Original Calculated Price:</div>
-                  <div className="col-span-2">
-                    {formatCurrency(personalization.product.calculatedPriceINR, "INR")}
-                    <span className="text-muted-foreground ml-2">
-                      ({formatCurrency(personalization.product.calculatedPriceUSD, "USD")})
-                    </span>
-                  </div>
-                </>
-              )}
+              {/* Original Calculated Price removed - now using only the Product Listed Price */}
               
-              {/* Divider before quoted price */}
-              {(personalization.product?.basePrice || personalization.product?.calculatedPriceUSD) && 
-               personalization.quotedPrice && (
+              {/* Divider before quoted price - only checking calculatedPriceUSD */}
+              {personalization.product?.calculatedPriceUSD && personalization.quotedPrice && (
                 <div className="col-span-3 py-1">
                   <Separator className="my-2" />
                 </div>
