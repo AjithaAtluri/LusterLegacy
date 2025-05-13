@@ -157,7 +157,8 @@ export async function calculateJewelryPrice(
     if (params.metalTypeId) {
       let metalTypeData;
       if (typeof params.metalTypeId === 'number') {
-        metalTypeData = await storage.getMetalTypeById(params.metalTypeId);
+        // Convert number to string for storage function
+        metalTypeData = await storage.getMetalTypeById(String(params.metalTypeId));
       } else {
         // If metalTypeId is a string, it might be a name or ID
         const metalTypes = await storage.getAllMetalTypes();
@@ -233,8 +234,8 @@ export async function calculateJewelryPrice(
       if (gem.stoneTypeId) {
         let stoneTypeData;
         if (typeof gem.stoneTypeId === 'number') {
-          // Direct lookup by ID
-          stoneTypeData = await storage.getStoneTypeById(gem.stoneTypeId);
+          // Direct lookup by ID (convert number to string)
+          stoneTypeData = await storage.getStoneTypeById(String(gem.stoneTypeId));
           console.log(`Looking up stone by ID ${gem.stoneTypeId}`);
         } else {
           // If stoneTypeId is a string, it might be a name or ID
@@ -342,7 +343,8 @@ export async function calculateJewelryPrice(
         // Try to get directly by ID first
         if (typeof stoneTypeId === 'number' && !isNaN(stoneTypeId)) {
           try {
-            const stoneTypeData = await storage.getStoneTypeById(stoneTypeId);
+            // Convert number to string for storage lookup
+            const stoneTypeData = await storage.getStoneTypeById(String(stoneTypeId));
             if (stoneTypeData) {
               otherStoneName = stoneTypeData.name;
               otherStonePrice = stoneTypeData.priceModifier;
