@@ -2076,11 +2076,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         } catch (error) {
           console.error(`Error processing product ${product.id} for pricing:`, error);
-          // Fallback to base price
+          // Fallback to default fixed price
+          const defaultPriceINR = 75000; // Default price if calculations fail
           return {
             ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
+            calculatedPriceUSD: Math.round(defaultPriceINR / USD_TO_INR_RATE),
+            calculatedPriceINR: defaultPriceINR
           };
         }
       }));
