@@ -176,7 +176,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: number;
         name: string;
         description: string;
-        basePrice: number;
+        // basePrice field removed - now using calculated price exclusively
+        calculatedPriceUSD?: number; // Added calculated price fields
+        calculatedPriceINR?: number; // Added calculated price fields
         imageUrl: string;
         additionalImages: string[] | null;
         details: any;
@@ -1509,20 +1511,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           }
           
-          // If AI inputs are not available, use the base price
-          console.log(`Product ${product.id} - No AI inputs, using base price: ${product.basePrice}`);
+          // If AI inputs are not available, use default pricing method
+          console.log(`Product ${product.id} - No AI inputs, using default pricing method`);
+          // Set default calculated price based on fixed values
+          const defaultPriceINR = 75000; // Default price if calculations fail
           return {
             ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
+            calculatedPriceUSD: Math.round(defaultPriceINR / USD_TO_INR_RATE),
+            calculatedPriceINR: defaultPriceINR
           };
         } catch (error) {
           console.error(`Error calculating price for product ${product.id}:`, error);
-          // Return the product with default conversion from base price
+          // Return the product with default fixed price
+          const defaultPriceINR = 75000; // Default price if calculations fail
           return {
             ...product,
-            calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-            calculatedPriceINR: product.basePrice
+            calculatedPriceUSD: Math.round(defaultPriceINR / USD_TO_INR_RATE),
+            calculatedPriceINR: defaultPriceINR
           };
         }
       }));
@@ -6524,9 +6529,6 @@ Respond in JSON format:
         }
       }
       
-      // Extract numeric values
-      const basePrice = parseInt(req.body.basePrice) || 0;
-      
       // Convert boolean values from form submission
       const isNew = req.body.isNew === 'true';
       const isBestseller = req.body.isBestseller === 'true';
@@ -6536,7 +6538,7 @@ Respond in JSON format:
       const productData = {
         name: req.body.name, 
         description: req.body.description || '',
-        basePrice: basePrice,
+        // basePrice field removed - now using calculated price exclusively
         imageUrl: mainImageUrl || '',
         additionalImages: additionalImages,
         details: req.body.details || '',
