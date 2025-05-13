@@ -459,63 +459,63 @@ export default function GemMetalGuide() {
                   </p>
                 </div>
                 
-                <div className="bg-gradient-to-r from-amber-50 to-transparent p-5 rounded-lg border border-amber-200/30">
-                  <h3 className="font-semibold text-lg mb-3">Why 14K Gold Is Excellent for Fine Jewelry: Debunking the Myths</h3>
+                <div className="bg-card p-5 rounded-lg border border-border shadow-sm">
+                  <h3 className="font-semibold text-lg mb-3 text-foreground">Why 14K Gold Is Excellent for Fine Jewelry: Debunking the Myths</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5">
-                        <Check className="h-4 w-4 text-primary" />
+                    <div className="bg-amber-50/30 dark:bg-amber-900/10 p-4 rounded-md border border-amber-200/30 dark:border-amber-700/20">
+                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                        <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                         Superior Durability
                       </h4>
-                      <p className="mb-3 text-sm">
+                      <p className="mb-3 text-sm text-foreground">
                         14K gold contains 58.3% pure gold, with the remainder being stronger metals like silver, copper, and zinc. This optimal balance creates jewelry that resists daily wear far better than higher karat options.
                       </p>
-                      <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-foreground">
                         <li><span className="font-medium">Scratch resistance:</span> 2-3× more resistant to scratching than 24K</li>
                         <li><span className="font-medium">Deformation resistance:</span> Maintains shape under pressure</li>
                         <li><span className="font-medium">Practical advantage:</span> Ideal for rings and bracelets that face constant impact</li>
                       </ul>
                     </div>
                     
-                    <div>
-                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5">
+                    <div className="bg-slate-50/30 dark:bg-slate-900/10 p-4 rounded-md border border-slate-200/30 dark:border-slate-700/20">
+                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                         <X className="h-4 w-4 text-rose-500" />
                         Myth: "14K is Low Quality"
                       </h4>
-                      <p className="mb-3 text-sm">
+                      <p className="mb-3 text-sm text-foreground">
                         The misconception that higher karat equals higher quality is simply incorrect. Quality in gold jewelry depends on craftsmanship, design, and appropriate karat selection for the piece's purpose.
                       </p>
-                      <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-foreground">
                         <li><span className="font-medium">Industry standard:</span> Most luxury jewelry houses use 14K-18K for fine pieces</li>
                         <li><span className="font-medium">Historical precedent:</span> Many museum-quality antique pieces are 14K</li>
                         <li><span className="font-medium">Expert preference:</span> Jewelers often recommend 14K for everyday luxury</li>
                       </ul>
                     </div>
                     
-                    <div>
-                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5">
-                        <DollarSign className="h-4 w-4 text-emerald-500" />
+                    <div className="bg-emerald-50/30 dark:bg-emerald-900/10 p-4 rounded-md border border-emerald-200/30 dark:border-emerald-800/20">
+                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                        <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         Smart Value Proposition
                       </h4>
-                      <p className="mb-3 text-sm">
+                      <p className="mb-3 text-sm text-foreground">
                         14K gold offers superior value, allowing more investment in design complexity, gemstone quality, or overall size compared to the same budget in higher karat gold.
                       </p>
-                      <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-foreground">
                         <li><span className="font-medium">Cost efficiency:</span> 30-40% less expensive than 18K with minimal visible difference</li>
                         <li><span className="font-medium">Metal value retention:</span> Still contains substantial gold for investment purposes</li>
                         <li><span className="font-medium">Design potential:</span> Budget allows for more elaborate craftsmanship</li>
                       </ul>
                     </div>
                     
-                    <div>
-                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5">
+                    <div className="bg-rose-50/30 dark:bg-rose-900/10 p-4 rounded-md border border-rose-200/30 dark:border-rose-800/20">
+                      <h4 className="font-medium text-base mb-2 flex items-center gap-1.5 text-rose-700 dark:text-rose-300">
                         <X className="h-4 w-4 text-rose-500" />
                         Myth: "14K Will Look Dull"
                       </h4>
-                      <p className="mb-3 text-sm">
+                      <p className="mb-3 text-sm text-foreground">
                         While 14K has a slightly different tone than higher karat gold, well-formulated 14K alloys maintain beautiful color and luster. Yellow, rose, and white gold all shine brilliantly in 14K.
                       </p>
-                      <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <ul className="list-disc pl-5 space-y-1 text-sm text-foreground">
                         <li><span className="font-medium">Color control:</span> Premium 14K alloys are formulated for optimal color</li>
                         <li><span className="font-medium">Luster retention:</span> 14K holds polish longer due to hardness</li>
                         <li><span className="font-medium">Versatility:</span> White and rose gold often look best in 14K due to alloy compositions</li>
@@ -523,7 +523,7 @@ export default function GemMetalGuide() {
                     </div>
                   </div>
                   
-                  <p className="mt-4 text-sm text-muted-foreground">
+                  <p className="mt-6 text-sm text-foreground bg-muted/30 p-3 rounded-md border border-border/50 italic">
                     The ideal karat choice should balance budget, intended use, and design needs. For jewelry that will be worn frequently, 14K offers the perfect combination of quality, durability, and value.
                   </p>
                 </div>
