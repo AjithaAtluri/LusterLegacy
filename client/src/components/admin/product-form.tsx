@@ -54,7 +54,7 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
   const defaultValues: Partial<ProductFormValues> = {
     name: "",
     description: "",
-    basePrice: 0,
+    // basePrice removed - now using calculated price exclusively
     imageUrl: "",
     additionalImages: [],
     details: "",
@@ -193,29 +193,8 @@ export default function ProductForm({ initialData, productId, onSuccess }: Produ
                   )}
                 />
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="basePrice"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Base Price (₹) *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            type="number" 
-                            min={1000}
-                            step={1000}
-                            placeholder="175000" 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Starting price in INR
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <div className="w-full">
+                  {/* Base price field removed - now using calculated price exclusively */}
                   
                   <FormField
                     control={form.control}

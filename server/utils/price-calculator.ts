@@ -33,9 +33,10 @@ const DEFAULT_GOLD_24K_PRICE_PER_GRAM_INR = 9800; // Consistent with gold-price-
 
 /**
  * Calculate jewelry price based on individual parameters (legacy/compatibility method)
+ * Note: basePrice parameter is ignored - now using calculated price exclusively
  */
 export async function calculateJewelryPrice(
-  basePrice: number,
+  _unusedParam: number, // previously basePrice, now ignored
   metalType: string,
   metalWeight: string | number,
   mainStoneType?: string,
