@@ -358,7 +358,7 @@ export default function PersonalizationDetail({ personalization }: Personalizati
               {/* Original Product Price Information */}
               {personalization.product?.basePrice && (
                 <>
-                  <div className="font-medium">Original Base Price:</div>
+                  <div className="font-medium">Product Listed Price:</div>
                   <div className="col-span-2">
                     {formatCurrency(personalization.product.basePrice, "INR")} 
                     {personalization.product.calculatedPriceUSD && (
