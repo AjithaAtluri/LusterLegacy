@@ -103,7 +103,7 @@ interface ProductCardProps {
     id: number;
     name: string;
     description: string;
-    basePrice: number;
+    // basePrice removed - now using calculated prices exclusively
     imageUrl?: string;
     image_url?: string;
     isNew?: boolean;
@@ -113,7 +113,7 @@ interface ProductCardProps {
     productType?: string;
     category?: string; // Legacy field
     details?: string;
-    // New calculated price fields returned from API
+    // Calculated price fields returned from API
     calculatedPriceUSD?: number;
     calculatedPriceINR?: number;
   };
@@ -150,16 +150,13 @@ export default function ProductCard({ product }: ProductCardProps) {
   
   // CRITICAL FIX: Always use server-calculated prices WITHOUT fallback
   // This ensures prices are always consistent with the product detail page
-  const USD_TO_INR_RATE = 83; // Same rate used server-side
   
-  // Logging to debug price discrepancies
+  // Logging to debug price data
   useEffect(() => {
     if (product.id) {
       console.log(`ProductCard ID ${product.id} - Price Data:`, {
         calculatedPriceUSD: product.calculatedPriceUSD,
-        calculatedPriceINR: product.calculatedPriceINR,
-        basePrice: product.basePrice,
-        calculatedLocalUSD: Math.round(product.basePrice / USD_TO_INR_RATE)
+        calculatedPriceINR: product.calculatedPriceINR
       });
     }
   }, [product]);
@@ -189,8 +186,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             setCalculatedPriceUSD(data.calculatedPriceUSD);
             console.log(`Direct product ${product.id} fresh data:`, {
               id: product.id,
-              calculatedPriceUSD: data.calculatedPriceUSD,
-              basePrice: data.basePrice
+              calculatedPriceUSD: data.calculatedPriceUSD
             });
           }
           if (data.calculatedPriceINR) setCalculatedPriceINR(data.calculatedPriceINR);

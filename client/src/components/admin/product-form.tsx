@@ -19,7 +19,7 @@ import type { ProductType } from "@shared/schema";
 const productFormSchema = z.object({
   name: z.string().min(3, "Product name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  basePrice: z.coerce.number().min(1000, "Base price must be at least ₹1,000"),
+  // basePrice field removed - now using calculated price exclusively
   imageUrl: z.string().url("Please enter a valid image URL"),
   additionalImages: z.array(z.string().url("Please enter a valid image URL")).optional(),
   details: z.string().optional(),
