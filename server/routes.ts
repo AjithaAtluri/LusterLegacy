@@ -1175,7 +1175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         productImageUrl: product ? product.imageUrl : null,
         product: {
           // Include specific pricing information
-          basePrice: product?.basePrice || null,
+          // basePrice field removed - now using calculated price exclusively
           calculatedPriceUSD: product?.calculatedPriceUSD || null,
           calculatedPriceINR: product?.calculatedPriceINR || null,
           // Include full product data as well
@@ -1670,18 +1670,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
               };
             } else {
               // Fall back to base price if no material info
+              // Set default calculated price based on fixed value
+              const defaultPriceINR = 75000; // Default price if calculations fail
               return {
                 ...product,
-                calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-                calculatedPriceINR: product.basePrice
+                calculatedPriceUSD: Math.round(defaultPriceINR / USD_TO_INR_RATE),
+                calculatedPriceINR: defaultPriceINR
               };
             }
           } catch (error) {
             console.error(`Error calculating price for product ${product.id}:`, error);
+            // Set default calculated price based on fixed value
+            const defaultPriceINR = 75000; // Default price if calculations fail
             return {
               ...product,
-              calculatedPriceUSD: Math.round(product.basePrice / USD_TO_INR_RATE),
-              calculatedPriceINR: product.basePrice
+              calculatedPriceUSD: Math.round(defaultPriceINR / USD_TO_INR_RATE),
+              calculatedPriceINR: defaultPriceINR
             };
           }
         })
