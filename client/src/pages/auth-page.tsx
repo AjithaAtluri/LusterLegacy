@@ -63,6 +63,8 @@ export default function AuthPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("login");
   const [location] = useLocation();
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isRequestingPasswordReset, setIsRequestingPasswordReset] = useState(false);
   const [returnPath, setReturnPath] = useState<string>("/");
   
   // Parse returnTo parameter from URL and check for prefilled data
@@ -183,6 +185,14 @@ export default function AuthPage() {
     }
   });
   
+  // Forgot password form
+  const forgotPasswordForm = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: ""
+    }
+  });
+  
   // Get prefilled values from stored form data
   const getPrefilledFormValues = () => {
     let prefilledValues = {
@@ -288,6 +298,46 @@ export default function AuthPage() {
   });
   
   // Submit handlers
+  // Handle forgot password form submission
+  const onForgotPasswordSubmit = async (data: ForgotPasswordFormValues) => {
+    try {
+      setIsRequestingPasswordReset(true);
+      
+      // Make API call to request password reset
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: data.email }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to request password reset');
+      }
+      
+      // Success - show message to user
+      toast({
+        title: "Password Reset Link Sent",
+        description: "If an account exists with that email, you'll receive a password reset link shortly.",
+        duration: 5000,
+      });
+      
+      // Reset form and return to login view
+      forgotPasswordForm.reset();
+      setShowForgotPassword(false);
+    } catch (error) {
+      toast({
+        title: "Request Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRequestingPasswordReset(false);
+    }
+  };
+  
   const onLoginSubmit = (data: LoginFormValues) => {
     // Check if there's a saved form state in the session that we need to return to
     const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
