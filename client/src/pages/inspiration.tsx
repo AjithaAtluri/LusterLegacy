@@ -4,6 +4,8 @@ import { ArrowRight, Heart, ZoomIn } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import rubyLeafPendant from "@/assets/ruby-leaf-pendant.png";
+import pearlNecklaceSet from "@/assets/pearl-necklace-set.png";
 
 // Gallery image interface
 interface GalleryImage {
@@ -23,7 +25,7 @@ export default function Inspiration() {
   const galleryImages: GalleryImage[] = [
     {
       id: 1,
-      src: "/inspiration-ruby-leaf.png",
+      src: rubyLeafPendant,
       alt: "Carved ruby leaf pendant in gold setting",
       category: "pendants",
       title: "Autumn Ruby Leaf",
@@ -31,7 +33,7 @@ export default function Inspiration() {
     },
     {
       id: 2,
-      src: "/inspiration-pearl-necklace.png",
+      src: pearlNecklaceSet,
       alt: "Multi-strand pearl necklace with diamond accents",
       category: "necklaces",
       title: "Royal Pearl Cascade",
