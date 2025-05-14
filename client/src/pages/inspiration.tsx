@@ -91,107 +91,107 @@ export default function Inspiration() {
     {
       id: 8,
       src: jewelry1,
-      alt: "Luxury jewelry piece",
+      alt: "Diamond solitaire ring with platinum band",
       title: "Exquisite Craftsmanship",
-      description: "A finely crafted jewelry piece showcasing the perfect blend of traditional techniques and contemporary design."
+      description: "A stunning diamond solitaire ring with a platinum band, showcasing the perfect blend of traditional craftsmanship and contemporary minimalist design."
     },
     {
       id: 9,
       src: jewelry2,
-      alt: "Luxury jewelry piece",
+      alt: "Ruby and diamond pendant necklace",
       title: "Timeless Elegance",
-      description: "A timeless piece that exemplifies luxury and sophistication through meticulous attention to detail and premium materials."
+      description: "A timeless ruby and diamond pendant necklace in 18K gold that exemplifies luxury through meticulous attention to detail and premium gemstone selection."
     },
     {
       id: 10,
       src: jewelry3,
-      alt: "Luxury jewelry piece",
+      alt: "Sapphire and diamond drop earrings",
       title: "Artisan Excellence",
-      description: "Handcrafted by master artisans, this piece demonstrates the pinnacle of jewelry craftsmanship and design innovation."
+      description: "Handcrafted sapphire and diamond drop earrings, demonstrating the pinnacle of jewelry craftsmanship with their intricate settings and brilliant gemstones."
     },
     {
       id: 11,
       src: jewelry4,
-      alt: "Luxury jewelry piece",
+      alt: "Gold and pearl chandelier earrings",
       title: "Royal Heritage",
-      description: "Inspired by royal heritage designs, this luxury piece combines traditional motifs with contemporary elegance."
+      description: "Inspired by royal heritage designs, these gold and pearl chandelier earrings combine traditional Indian motifs with contemporary elegance and movement."
     },
     {
       id: 12,
       src: jewelry5,
-      alt: "Luxury jewelry piece",
+      alt: "Modern diamond bracelet with geometric design",
       title: "Modern Luxury",
-      description: "A modern interpretation of luxury jewelry that balances bold design with wearable elegance for the discerning collector."
+      description: "A modern diamond bracelet featuring bold geometric patterns in white gold, balancing contemporary design with wearable elegance for the discerning collector."
     },
     {
       id: 13,
       src: jewelry6,
-      alt: "Luxury jewelry piece",
+      alt: "Emerald and diamond cocktail ring",
       title: "Precious Creation",
-      description: "A precious creation featuring rare gemstones and metals, meticulously selected and crafted to create a one-of-a-kind masterpiece."
+      description: "A precious emerald and diamond cocktail ring featuring rare gemstones and platinum, meticulously selected and crafted to create a one-of-a-kind statement piece."
     },
     {
       id: 14,
       src: jewelry7,
-      alt: "Luxury jewelry piece",
+      alt: "Diamond tennis bracelet with white gold links",
       title: "Diamond Excellence",
-      description: "Featuring exceptionally cut diamonds that catch and reflect light beautifully, this piece exemplifies luxury in its purest form."
+      description: "A classic diamond tennis bracelet with white gold links, featuring exceptionally cut diamonds that catch and reflect light beautifully, exemplifying luxury in its purest form."
     },
     {
       id: 15,
       src: jewelry8,
-      alt: "Luxury jewelry piece",
+      alt: "Traditional gold temple necklace with rubies",
       title: "Heritage Collection",
-      description: "From our heritage collection, this piece tells a story of tradition and craftsmanship passed down through generations of master jewelers."
+      description: "From our heritage collection, this traditional gold temple necklace with rubies tells a story of tradition and craftsmanship passed down through generations of master jewelers."
     },
     {
       id: 16,
       src: jewelry9,
-      alt: "Luxury jewelry piece",
+      alt: "Pearl and diamond collar necklace",
       title: "Opulent Treasures",
-      description: "An opulent treasure showcasing the finest materials and design expertise, perfect for those who appreciate luxury and distinctive style."
+      description: "An opulent pearl and diamond collar necklace showcasing the finest South Sea pearls and brilliant-cut diamonds, perfect for those who appreciate luxury and distinctive style."
     },
     {
       id: 17,
       src: jewelry10,
-      alt: "Luxury jewelry piece",
+      alt: "Kundan polki necklace with emeralds",
       title: "Royal Splendor",
-      description: "A piece of royal splendor combining traditional artisanship with modern luxury, exemplifying the pinnacle of jewelry craftsmanship."
+      description: "A magnificent kundan polki necklace with emeralds, combining traditional Indian artisanship with modern luxury, exemplifying the pinnacle of jewelry craftsmanship."
     },
     {
       id: 18,
       src: jewelry11,
-      alt: "Luxury jewelry piece",
+      alt: "Diamond floral brooch with sapphire accents",
       title: "Artistic Expression",
-      description: "An artistic expression in precious metals and stones that captures the essence of beauty and transforms it into wearable art."
+      description: "An artistic diamond floral brooch with sapphire accents that captures the essence of natural beauty and transforms it into a sophisticated wearable art piece."
     },
     {
       id: 19,
       src: jewelry12,
-      alt: "Luxury jewelry piece",
+      alt: "Multi-gem statement cuff bracelet",
       title: "Eternal Radiance",
-      description: "Eternal radiance captured in an exquisite jewelry piece that transcends time and fashion trends with its classic beauty."
+      description: "A multi-gem statement cuff bracelet featuring a rainbow of precious stones that radiates eternal beauty and transcends time and fashion trends with its bold design."
     },
     {
       id: 20,
       src: jewelry13,
-      alt: "Luxury jewelry piece",
+      alt: "Emerald and diamond tiara-inspired necklace",
       title: "Regal Elegance",
-      description: "Regal elegance embodied in this extraordinary piece, designed for those who appreciate the finest things in life."
+      description: "Regal elegance embodied in this extraordinary emerald and diamond tiara-inspired necklace, designed for those who appreciate the finest craftsmanship and materials."
     },
     {
       id: 21,
       src: jewelry14,
-      alt: "Luxury jewelry piece",
+      alt: "Vintage-inspired diamond and ruby earrings",
       title: "Heritage Masterpiece",
-      description: "A heritage masterpiece that honors traditional techniques while embracing contemporary aesthetics for a timeless appeal."
+      description: "Vintage-inspired diamond and ruby earrings that honor traditional techniques while embracing contemporary aesthetics, creating a timeless appeal with modern wearability."
     },
     {
       id: 22,
       src: jewelry15,
-      alt: "Luxury jewelry piece",
+      alt: "Star motif diamond and sapphire pendant",
       title: "Celestial Wonder",
-      description: "A celestial wonder that captures the mystery and beauty of the cosmos in an expertly crafted jewelry piece."
+      description: "A celestial star motif pendant with diamonds and sapphires that captures the mystery and beauty of the night sky in an expertly crafted piece of fine jewelry."
     }
   ];
   
