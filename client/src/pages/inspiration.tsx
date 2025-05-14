@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import rubyLeafPendant from "@/assets/ruby-leaf-pendant.png";
 import pearlNecklaceSet from "@/assets/pearl-necklace-set.png";
+import polkiPendantNecklace from "@/assets/polki-pendant-necklace.png";
 
 // Gallery image interface
 interface GalleryImage {
@@ -38,6 +39,14 @@ export default function Inspiration() {
       category: "necklaces",
       title: "Royal Pearl Cascade",
       description: "A stunning multi-strand pearl necklace featuring elegant gold and diamond spacers, creating a luxurious collar effect perfect for special occasions."
+    },
+    {
+      id: 3,
+      src: polkiPendantNecklace,
+      alt: "Polki diamond necklace with emerald and ruby pendant",
+      category: "necklaces",
+      title: "Dual Gemstone Elegance",
+      description: "A sophisticated polki diamond necklace featuring a stunning dual pendant with ruby and emerald gemstones, surrounded by intricate diamond detailing."
     }
   ];
   
