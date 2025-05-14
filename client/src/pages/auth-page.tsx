@@ -541,7 +541,15 @@ export default function AuthPage() {
                     </Form>
                   </div>
                 ) : (
-                  <Form {...loginForm}>
+                  <>
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-primary">Welcome Back</h3>
+                      <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                        Sign in to your account to access your personalized luxury jewelry experience
+                      </p>
+                      <div className="h-1 w-24 mx-auto mt-3 bg-gradient-to-r from-primary/40 to-secondary/40 rounded-full"></div>
+                    </div>
+                    <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
                       <FormField
                         control={loginForm.control}
@@ -576,14 +584,16 @@ export default function AuthPage() {
                               />
                             </FormControl>
                             <FormMessage />
-                            <div className="mt-1">
+                            <div className="mt-2 flex justify-end">
                               <Button 
                                 variant="link" 
-                                className="p-0 h-auto text-xs text-primary"
+                                className="p-0 h-auto text-sm text-primary/80 hover:text-primary font-medium transition-colors"
                                 type="button"
                                 onClick={() => setShowForgotPassword(true)}
                               >
-                                Forgot Password?
+                                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text hover:text-transparent transition-all duration-300">
+                                  Forgot Password?
+                                </span>
                               </Button>
                             </div>
                           </FormItem>
@@ -623,6 +633,13 @@ export default function AuthPage() {
               
               {/* Registration Form */}
               <TabsContent value="register" className="space-y-4 pt-4">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-semibold text-primary">Create Your Account</h3>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                    Join Luster Legacy for a personalized luxury jewelry experience
+                  </p>
+                  <div className="h-1 w-24 mx-auto mt-3 bg-gradient-to-r from-primary/40 to-secondary/40 rounded-full"></div>
+                </div>
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
                     <FormField
