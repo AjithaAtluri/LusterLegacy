@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet";
-import { useState } from "react";
+
 import { ArrowRight, Heart, ZoomIn } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -16,22 +16,17 @@ interface GalleryImage {
   id: number;
   src: string;
   alt: string;
-  category: string;
   title: string;
   description: string;
 }
 
 export default function Inspiration() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const categories = ["all", "pendants", "necklaces", "earrings", "rings", "bracelets", "sets"];
-  
   // Image gallery data with design inspiration images
   const galleryImages: GalleryImage[] = [
     {
       id: 1,
       src: rubyLeafPendant,
       alt: "Carved ruby leaf pendant in gold setting",
-      category: "pendants",
       title: "Autumn Ruby Leaf",
       description: "An exquisite carved ruby leaf pendant set in a luxurious 18K gold bezel, showcasing the natural beauty of the gemstone with its translucent quality."
     },
@@ -39,7 +34,6 @@ export default function Inspiration() {
       id: 2,
       src: pearlNecklaceSet,
       alt: "Multi-strand pearl necklace with diamond accents",
-      category: "necklaces",
       title: "Royal Pearl Cascade",
       description: "A stunning multi-strand pearl necklace featuring elegant gold and diamond spacers, creating a luxurious collar effect perfect for special occasions."
     },
@@ -47,7 +41,6 @@ export default function Inspiration() {
       id: 3,
       src: polkiPendantNecklace,
       alt: "Polki diamond necklace with emerald and ruby pendant",
-      category: "necklaces",
       title: "Dual Gemstone Elegance",
       description: "A sophisticated polki diamond necklace featuring a stunning dual pendant with ruby and emerald gemstones, surrounded by intricate diamond detailing."
     },
@@ -55,7 +48,6 @@ export default function Inspiration() {
       id: 4,
       src: diamondBracelet,
       alt: "Diamond and pearl bracelet with gold accents",
-      category: "bracelets",
       title: "Celestial Diamond Band",
       description: "A luxurious bracelet featuring a perfect balance of brilliant-cut diamonds and delicate pearls set in high-polish gold, creating a timeless statement piece."
     },
@@ -63,7 +55,6 @@ export default function Inspiration() {
       id: 5,
       src: emeraldRing,
       alt: "Emerald and diamond cocktail ring",
-      category: "rings",
       title: "Emerald Majesty",
       description: "A statement cocktail ring featuring a magnificent emerald center stone surrounded by a halo of brilliant-cut diamonds, set in polished gold for maximum brilliance."
     },
@@ -71,17 +62,11 @@ export default function Inspiration() {
       id: 6,
       src: goldEarrings,
       alt: "Gold chandelier earrings with intricate filigree",
-      category: "earrings",
       title: "Golden Chandelier",
       description: "Exquisite gold chandelier earrings featuring delicate filigree work and intricate detailing, creating a dramatic statement piece that captures movement and light."
     }
   ];
   
-  // Filter images based on selected category
-  const filteredImages = selectedCategory === "all" 
-    ? galleryImages 
-    : galleryImages.filter(img => img.category === selectedCategory);
-
   return (
     <>
       <Helmet>
@@ -102,26 +87,10 @@ export default function Inspiration() {
       
       {/* Gallery section */}
       <div className="container mx-auto px-4 md:px-8 py-12">
-        {/* Category filter */}
-        <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-10">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition-colors ${
-                selectedCategory === category
-                  ? "bg-accent text-white"
-                  : "bg-muted/50 text-foreground/80 hover:bg-muted"
-              }`}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
         
         {/* Gallery grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {filteredImages.map((image) => (
+          {galleryImages.map((image: GalleryImage) => (
             <Dialog key={image.id}>
               <div className="group relative overflow-hidden rounded-lg bg-card shadow-md transition-all hover:-translate-y-1 hover:shadow-lg">
                 <div className="aspect-square overflow-hidden">
@@ -164,11 +133,6 @@ export default function Inspiration() {
                   <div className="flex flex-col justify-center">
                     <h3 className="font-playfair text-2xl font-bold text-white mb-3">{image.title}</h3>
                     <p className="text-white/80 mb-6">{image.description}</p>
-                    <div className="mb-6">
-                      <span className="inline-block bg-accent/20 text-accent-foreground text-xs px-3 py-1 rounded-full uppercase tracking-wider">
-                        {image.category}
-                      </span>
-                    </div>
                     <div className="flex flex-col gap-3">
                       <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                         <Link href="/custom-design" className="flex items-center justify-center">
