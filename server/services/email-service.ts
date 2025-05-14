@@ -1,20 +1,29 @@
 import { MailService } from '@sendgrid/mail';
 
+// Check for required environment variables for email functionality
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("SENDGRID_API_KEY environment variable is not set. Email functionality will be disabled.");
 }
 
+if (!process.env.VERIFIED_SENDER_EMAIL) {
+  console.warn("VERIFIED_SENDER_EMAIL environment variable is not set. Using default sender email.");
+}
+
+// Initialize SendGrid mail service
 const mailService = new MailService();
 if (process.env.SENDGRID_API_KEY) {
   mailService.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log("SendGrid API configured successfully with provided API key");
 }
 
 // Default configuration values
 const DEFAULT_SENDER_NAME = 'Luster Legacy';
-const DEFAULT_SENDER_EMAIL = 'noreply@lusterlegacy.com';
+const DEFAULT_SENDER_EMAIL = 'admin@lusterlegacy.com'; // Changed default email
 
 // Use verified sender email from environment variable if available
 const VERIFIED_SENDER_EMAIL = process.env.VERIFIED_SENDER_EMAIL || DEFAULT_SENDER_EMAIL;
+
+console.log(`Email service initialized with sender: ${DEFAULT_SENDER_NAME} <${VERIFIED_SENDER_EMAIL}>`);
 
 interface EmailData {
   to: string;
