@@ -541,7 +541,7 @@ export default function AuthPage() {
                     </Form>
                   </div>
                 ) : (
-                  <>
+                  <div>
                     <div className="text-center mb-6">
                       <h3 className="text-xl font-semibold text-primary">Welcome Back</h3>
                       <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
@@ -550,85 +550,86 @@ export default function AuthPage() {
                       <div className="h-1 w-24 mx-auto mt-3 bg-gradient-to-r from-primary/40 to-secondary/40 rounded-full"></div>
                     </div>
                     <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
-                      <FormField
-                        control={loginForm.control}
-                        name="loginID"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Login ID</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Enter your login ID" 
-                                {...field} 
-                                disabled={loginMutation.isPending}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="password" 
-                                placeholder="Enter your password" 
-                                {...field} 
-                                disabled={loginMutation.isPending}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                            <div className="mt-2 flex justify-end">
-                              <Button 
-                                variant="link" 
-                                className="p-0 h-auto text-sm text-primary/80 hover:text-primary font-medium transition-colors"
-                                type="button"
-                                onClick={() => setShowForgotPassword(true)}
-                              >
-                                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text hover:text-transparent transition-all duration-300">
-                                  Forgot Password?
-                                </span>
-                              </Button>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <Button
-                        type="submit"
-                        className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
-                        disabled={loginMutation.isPending}
-                      >
-                        {loginMutation.isPending ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Logging in...
-                          </>
-                        ) : (
-                          "Sign In"
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
+                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+                        <FormField
+                          control={loginForm.control}
+                          name="loginID"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Login ID</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Enter your login ID" 
+                                  {...field} 
+                                  disabled={loginMutation.isPending}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={loginForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Password</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="password" 
+                                  placeholder="Enter your password" 
+                                  {...field} 
+                                  disabled={loginMutation.isPending}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                              <div className="mt-2 flex justify-end">
+                                <Button 
+                                  variant="link" 
+                                  className="p-0 h-auto text-sm text-primary/80 hover:text-primary font-medium transition-colors"
+                                  type="button"
+                                  onClick={() => setShowForgotPassword(true)}
+                                >
+                                  <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text hover:text-transparent transition-all duration-300">
+                                    Forgot Password?
+                                  </span>
+                                </Button>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button
+                          type="submit"
+                          className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
+                          disabled={loginMutation.isPending}
+                        >
+                          {loginMutation.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Logging in...
+                            </>
+                          ) : (
+                            "Sign In"
+                          )}
+                        </Button>
+                      </form>
+                    </Form>
+                    
+                    <div className="text-center mt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Don't have an account?{" "}
+                        <button
+                          onClick={() => setActiveTab("register")}
+                          className="text-primary hover:underline font-medium"
+                        >
+                          Sign Up
+                        </button>
+                      </p>
+                    </div>
+                  </div>
                 )}
-                
-                <div className="text-center mt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Don't have an account?{" "}
-                    <button
-                      onClick={() => setActiveTab("register")}
-                      className="text-primary hover:underline font-medium"
-                    >
-                      Sign Up
-                    </button>
-                  </p>
-                </div>
               </TabsContent>
               
               {/* Registration Form */}
