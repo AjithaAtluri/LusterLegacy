@@ -38,18 +38,37 @@ interface EmailData {
  */
 export async function sendEmail(data: EmailData): Promise<{ success: boolean; message?: string }> {
   try {
+    // Check if this is a critical email (password reset or verification)
+    const isCriticalEmail = data.subject?.includes("Password Reset") || 
+                           data.subject?.includes("Verify Your Email") ||
+                           data.subject?.includes("Email Verification");
+    
+    // Always log that we're attempting to send an email
+    const sender = data.from || `${DEFAULT_SENDER_NAME} <${VERIFIED_SENDER_EMAIL}>`;
+    console.log(`Attempting to send email from: ${sender} to: ${data.to}`);
+    console.log(`Email subject: "${data.subject}"`);
+    console.log(`Is critical account email: ${isCriticalEmail ? 'YES' : 'no'}`);
+    
+    // If SendGrid API key is missing, we can't send actual emails
     if (!process.env.SENDGRID_API_KEY) {
-      console.log("Email would be sent in production. Email data:", data);
+      console.error("SENDGRID_API_KEY is missing - cannot send emails!");
+      
+      if (isCriticalEmail) {
+        console.error("CRITICAL EMAIL FAILED: Cannot send important account email without SendGrid API key");
+      }
+      
+      console.log("Email data that would be sent:", { 
+        to: data.to, 
+        from: sender, 
+        subject: data.subject,
+        textPreview: data.text?.substring(0, 50) + "..."
+      });
+      
       return { 
-        success: true, 
-        message: "Email sending simulated (no API key)" 
+        success: false, 
+        message: "Failed to send email: SendGrid API key is missing" 
       };
     }
-    
-    // Format sender with name and email
-    const sender = data.from || `${DEFAULT_SENDER_NAME} <${VERIFIED_SENDER_EMAIL}>`;
-    
-    console.log(`Attempting to send email from: ${sender} to: ${data.to}`);
     
     // Validate and fix email URLs in links
     if (process.env.NODE_ENV === 'production' && data.html) {
@@ -94,46 +113,47 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       }
     }
     
-    // In development/test mode, log email content but don't actually send
-    // Only skip sending if explicitly in development mode AND SEND_REAL_EMAILS is not set
-    if (process.env.NODE_ENV === 'development' && !process.env.SEND_REAL_EMAILS) {
-      console.log('Development mode - not sending real email. Would send:');
-      console.log(`From: ${sender}`);
-      console.log(`To: ${data.to}`);
-      console.log(`Subject: ${data.subject}`);
-      console.log('Text:', data.text);
-      console.log('HTML:', data.html?.substring(0, 100) + '...');
-      
-      // Log URLs in the email for debugging
-      if (data.html) {
-        const matches = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
-        if (matches.length > 0) {
-          console.log('URLs found in email:');
-          matches.forEach(url => console.log(`- ${url}`));
-        }
-      }
-      
-      return { 
-        success: true, 
-        message: "Email sending simulated (development mode)" 
-      };
-    }
+    // Determine if we should actually send the email
+    let shouldSendEmail = true;
     
-    // In production, log limited information for debugging
-    if (process.env.NODE_ENV === 'production') {
-      console.log(`Sending production email from: ${sender} to: ${data.to}`);
-      console.log(`Subject: ${data.subject}`);
+    // In development, only send if either:
+    // 1. SEND_REAL_EMAILS is set, or
+    // 2. It's a critical email and ALWAYS_SEND_CRITICAL_EMAILS is set
+    if (process.env.NODE_ENV === 'development') {
+      const sendRealEmails = !!process.env.SEND_REAL_EMAILS;
+      const alwaysSendCritical = !!process.env.ALWAYS_SEND_CRITICAL_EMAILS;
       
-      // Extract and log URLs from the email in production for tracking
-      if (data.html) {
-        const matches = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
-        if (matches.length > 0) {
-          console.log('URLs in production email:');
-          matches.forEach(url => console.log(`- ${url}`));
+      shouldSendEmail = sendRealEmails || (isCriticalEmail && alwaysSendCritical);
+      
+      // If we're not sending, log the content
+      if (!shouldSendEmail) {
+        console.log('Development mode - not sending real email. Would send:');
+        console.log(`From: ${sender}`);
+        console.log(`To: ${data.to}`);
+        console.log(`Subject: ${data.subject}`);
+        console.log('Text:', data.text);
+        console.log('HTML preview:', data.html?.substring(0, 100) + '...');
+        
+        // Log URLs in the email for debugging
+        if (data.html) {
+          const matches = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
+          if (matches.length > 0) {
+            console.log('URLs found in email:');
+            matches.forEach(url => console.log(`- ${url}`));
+          }
         }
+        
+        return { 
+          success: true, 
+          message: "Email sending simulated (development mode)" 
+        };
       }
     }
     
+    // If we got here, we are sending a real email
+    console.log(`Sending real email to ${data.to} via SendGrid API`);
+    
+    // Prepare and send the email
     await mailService.send({
       to: data.to,
       from: sender,

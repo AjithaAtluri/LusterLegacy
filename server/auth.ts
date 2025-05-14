@@ -993,10 +993,18 @@ export function setupAuth(app: Express): void {
     }
 
     try {
-      const { email } = req.query;
+      const { email, forceSend } = req.query;
       const testEmail = email || 'test@example.com';
+      const shouldForceSend = forceSend === 'true';
       
-      console.log(`[DEBUG] Testing password reset email to ${testEmail}`);
+      console.log(`[DEBUG] Testing password reset email to ${testEmail} ${shouldForceSend ? '(FORCE SEND)' : ''}`);
+      
+      // Temporarily force email sending if requested
+      const originalEnvValue = process.env.ALWAYS_SEND_CRITICAL_EMAILS;
+      if (shouldForceSend) {
+        process.env.ALWAYS_SEND_CRITICAL_EMAILS = 'true';
+        console.log('[DEBUG] Temporarily forcing critical email sending for this test');
+      }
       
       // Import email service
       const emailService = await import("./services/email-service");
@@ -1013,12 +1021,23 @@ export function setupAuth(app: Express): void {
         testLink
       );
       
+      // Reset the environment variable if we changed it
+      if (shouldForceSend) {
+        if (originalEnvValue) {
+          process.env.ALWAYS_SEND_CRITICAL_EMAILS = originalEnvValue;
+        } else {
+          delete process.env.ALWAYS_SEND_CRITICAL_EMAILS;
+        }
+        console.log('[DEBUG] Reset critical email forcing');
+      }
+      
       // Log the full details
       console.log('[DEBUG] Email service result:', JSON.stringify(result, null, 2));
       
       res.json({
         success: result.success,
         message: result.message || 'Email test completed',
+        emailActuallySent: shouldForceSend || !!process.env.SEND_REAL_EMAILS,
         testLink,
         emailDetails: {
           to: testEmail,
