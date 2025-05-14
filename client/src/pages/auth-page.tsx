@@ -506,23 +506,8 @@ export default function AuthPage() {
   }, [user, returnPath]);
   
   // Debug utility functions
-  const [debugUsername, setDebugUsername] = useState<string>("");
-  const [userList, setUserList] = useState<any[]>([]);
-  const [isLoadingUserList, setIsLoadingUserList] = useState<boolean>(false);
-  const [isDirectLoginLoading, setIsDirectLoginLoading] = useState<boolean>(false);
-
-  // Debug actions
-  const handleDirectLogin = async () => {
-    if (!debugUsername) {
-      toast({
-        title: "Username required",
-        description: "Please enter a username for direct login",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsDirectLoginLoading(true);
+  // No debug functionality needed
+  // Removed debug functionality
     try {
       const result = await devHelpers.directLogin(debugUsername);
       toast({
@@ -611,8 +596,66 @@ export default function AuthPage() {
             
             {/* Login Form */}
             <TabsContent value="login" className="space-y-4 pt-4">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
+              {showForgotPassword ? (
+                <div>
+                  <Button 
+                    variant="outline" 
+                    type="button"
+                    size="sm"
+                    onClick={() => setShowForgotPassword(false)}
+                    className="mb-4"
+                  >
+                    ← Back to Login
+                  </Button>
+                  
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium">Reset Your Password</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                  </div>
+                  
+                  <Form {...forgotPasswordForm}>
+                    <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-6">
+                      <FormField
+                        control={forgotPasswordForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="email" 
+                                placeholder="Enter your email" 
+                                {...field} 
+                                disabled={isRequestingPasswordReset}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isRequestingPasswordReset}
+                      >
+                        {isRequestingPasswordReset ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending Reset Link...
+                          </>
+                        ) : (
+                          "Send Reset Link"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </div>
+              ) : (
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
                   <FormField
                     control={loginForm.control}
                     name="loginID"
@@ -646,6 +689,16 @@ export default function AuthPage() {
                           />
                         </FormControl>
                         <FormMessage />
+                        <div className="mt-1">
+                          <Button 
+                            variant="link" 
+                            className="p-0 h-auto text-xs text-primary"
+                            type="button"
+                            onClick={() => setShowForgotPassword(true)}
+                          >
+                            Forgot Password?
+                          </Button>
+                        </div>
                       </FormItem>
                     )}
                   />
