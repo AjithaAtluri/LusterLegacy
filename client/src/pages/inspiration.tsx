@@ -8,6 +8,8 @@ import rubyLeafPendant from "@/assets/ruby-leaf-pendant.png";
 import pearlNecklaceSet from "@/assets/pearl-necklace-set.png";
 import polkiPendantNecklace from "@/assets/polki-pendant-necklace.png";
 import diamondBracelet from "@/assets/diamond-bracelet.jpeg";
+import emeraldRing from "@/assets/emerald-ring.jpeg";
+import goldEarrings from "@/assets/gold-earrings.jpeg";
 
 // Gallery image interface
 interface GalleryImage {
@@ -56,6 +58,22 @@ export default function Inspiration() {
       category: "bracelets",
       title: "Celestial Diamond Band",
       description: "A luxurious bracelet featuring a perfect balance of brilliant-cut diamonds and delicate pearls set in high-polish gold, creating a timeless statement piece."
+    },
+    {
+      id: 5,
+      src: emeraldRing,
+      alt: "Emerald and diamond cocktail ring",
+      category: "rings",
+      title: "Emerald Majesty",
+      description: "A statement cocktail ring featuring a magnificent emerald center stone surrounded by a halo of brilliant-cut diamonds, set in polished gold for maximum brilliance."
+    },
+    {
+      id: 6,
+      src: goldEarrings,
+      alt: "Gold chandelier earrings with intricate filigree",
+      category: "earrings",
+      title: "Golden Chandelier",
+      description: "Exquisite gold chandelier earrings featuring delicate filigree work and intricate detailing, creating a dramatic statement piece that captures movement and light."
     }
   ];
   
