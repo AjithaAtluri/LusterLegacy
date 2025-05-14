@@ -30,6 +30,11 @@ const loginSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters")
 });
 
+// Forgot password validation schema
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+});
+
 // Registration form validation schema
 const registerSchema = z.object({
   name: z.string().min(2, "Full name must be at least 2 characters").nonempty("Full name is required"),
@@ -49,6 +54,7 @@ const registerSchema = z.object({
 
 // Form values types
 type LoginFormValues = z.infer<typeof loginSchema>;
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
