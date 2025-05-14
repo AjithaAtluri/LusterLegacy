@@ -484,11 +484,12 @@ export default function AuthPage() {
               <TabsContent value="login" className="space-y-4 pt-4">
                 {showForgotPassword ? (
                   <div className="space-y-4">
-                    <div className="text-center mb-4">
-                      <h3 className="text-lg font-semibold">Forgot Password</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
+                    <div className="text-center mb-6">
+                      <h3 className="text-xl font-semibold text-primary">Forgot Password</h3>
+                      <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
                         Enter your email address and we'll send you a link to reset your password.
                       </p>
+                      <div className="h-1 w-24 mx-auto mt-3 bg-gradient-to-r from-primary/40 to-secondary/40 rounded-full"></div>
                     </div>
                     <Form {...forgotPasswordForm}>
                       <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-6">
@@ -511,11 +512,11 @@ export default function AuthPage() {
                           )}
                         />
                         
-                        <div className="flex space-x-4">
+                        <div className="flex space-x-4 pt-2">
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-1/2"
+                            className="w-1/2 border-primary/30 hover:bg-primary/5 transition-all"
                             onClick={() => setShowForgotPassword(false)}
                             disabled={isRequestingPasswordReset}
                           >
@@ -523,7 +524,7 @@ export default function AuthPage() {
                           </Button>
                           <Button
                             type="submit"
-                            className="w-1/2"
+                            className="w-1/2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
                             disabled={isRequestingPasswordReset}
                           >
                             {isRequestingPasswordReset ? (
@@ -591,7 +592,7 @@ export default function AuthPage() {
                       
                       <Button
                         type="submit"
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -799,7 +800,7 @@ export default function AuthPage() {
                     
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? (
