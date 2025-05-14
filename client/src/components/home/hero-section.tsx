@@ -126,9 +126,9 @@ export default function HeroSection() {
       {/* Scroll indicator with gold accents - only shows after image loads */}
       <div className={`absolute bottom-6 left-0 right-0 flex justify-center z-20 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <a href="#collections" className="flex flex-col items-center group">
-          <span className="text-xs bg-white/90 px-3 py-1 rounded-full text-primary uppercase tracking-widest mb-2 font-montserrat font-semibold shadow-lg group-hover:bg-white transition-colors duration-300">Discover</span>
-          <div className="relative w-6 h-10 border-2 border-white/50 rounded-full flex justify-center p-1 bg-black/20 backdrop-blur-sm">
-            <div className="w-1 h-2 bg-primary rounded-full animate-scroll"></div>
+          <span className="text-xs bg-accent px-3 py-1 rounded-full text-accent-foreground uppercase tracking-widest mb-2 font-montserrat font-semibold shadow-lg group-hover:bg-accent/90 transition-colors duration-300">Discover</span>
+          <div className="relative w-6 h-10 border-2 border-accent/50 rounded-full flex justify-center p-1 bg-black/20 backdrop-blur-sm">
+            <div className="w-1 h-2 bg-accent rounded-full animate-scroll"></div>
           </div>
         </a>
       </div>
