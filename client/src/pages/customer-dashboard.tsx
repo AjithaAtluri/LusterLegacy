@@ -44,7 +44,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 export default function CustomerDashboard() {
-  const { user, isLoading: isLoadingAuth } = useAuth();
+  const { user, isLoading: isLoadingAuth, updateNotificationPreferences } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
@@ -59,6 +59,12 @@ export default function CustomerDashboard() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
   
+  // Notification preferences state
+  const [notifyDesignUpdates, setNotifyDesignUpdates] = useState(true);
+  const [notifyOrderStatus, setNotifyOrderStatus] = useState(true);
+  const [notifyQuoteResponses, setNotifyQuoteResponses] = useState(true);
+  const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
+  
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -71,6 +77,12 @@ export default function CustomerDashboard() {
       setNameValue(user.name || "");
       setPhoneValue(user.phone || "");
       setCountryValue(user.country || "");
+      
+      // Initialize notification preferences from user data
+      // Using nullish coalescing to default to true if not set
+      setNotifyDesignUpdates(user.notifyDesignUpdates ?? true);
+      setNotifyOrderStatus(user.notifyOrderStatus ?? true);
+      setNotifyQuoteResponses(user.notifyQuoteResponses ?? true);
     }
   }, [user]);
   
@@ -241,7 +253,43 @@ export default function CustomerDashboard() {
     }
   };
   
-  // This useEffect is already defined above
+  // Function to update notification preferences
+  const updateNotificationPreference = async (preferenceType: 'notifyDesignUpdates' | 'notifyOrderStatus' | 'notifyQuoteResponses', value: boolean) => {
+    if (!user) return;
+    
+    try {
+      setIsUpdatingNotifications(true);
+      
+      // Create preferences object with just the preference being updated
+      const preferences: {
+        notifyDesignUpdates?: boolean;
+        notifyOrderStatus?: boolean;
+        notifyQuoteResponses?: boolean;
+      } = {};
+      
+      preferences[preferenceType] = value;
+      
+      // Call the API through the auth context
+      const success = await updateNotificationPreferences(preferences);
+      
+      if (success) {
+        toast({
+          title: "Preferences Updated",
+          description: "Your notification preferences have been saved.",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating your notification preferences.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingNotifications(false);
+    }
+  };
   
   // Redirect to auth page if not logged in
   if (!isLoadingAuth && !user) {
@@ -1244,7 +1292,15 @@ export default function CustomerDashboard() {
                               <p className="text-sm font-medium">Custom Design Updates</p>
                               <p className="text-xs text-muted-foreground">Get notified when your design is reviewed or updated</p>
                             </div>
-                            <Switch id="email-design-updates" defaultChecked />
+                            <Switch 
+                              id="email-design-updates" 
+                              checked={notifyDesignUpdates}
+                              disabled={isUpdatingNotifications}
+                              onCheckedChange={(checked) => {
+                                setNotifyDesignUpdates(checked);
+                                updateNotificationPreference('notifyDesignUpdates', checked);
+                              }}
+                            />
                           </div>
                           
                           <div className="flex items-center justify-between py-2 px-3 bg-muted/10 rounded-md">
@@ -1252,7 +1308,15 @@ export default function CustomerDashboard() {
                               <p className="text-sm font-medium">Order Status Changes</p>
                               <p className="text-xs text-muted-foreground">Receive notifications about your order status</p>
                             </div>
-                            <Switch id="email-order-updates" defaultChecked />
+                            <Switch 
+                              id="email-order-updates" 
+                              checked={notifyOrderStatus}
+                              disabled={isUpdatingNotifications}
+                              onCheckedChange={(checked) => {
+                                setNotifyOrderStatus(checked);
+                                updateNotificationPreference('notifyOrderStatus', checked);
+                              }}
+                            />
                           </div>
                           
                           <div className="flex items-center justify-between py-2 px-3 bg-muted/10 rounded-md">
@@ -1260,7 +1324,15 @@ export default function CustomerDashboard() {
                               <p className="text-sm font-medium">Quote Responses</p>
                               <p className="text-xs text-muted-foreground">Get notified when you receive a quote</p>
                             </div>
-                            <Switch id="email-quote-updates" defaultChecked />
+                            <Switch 
+                              id="email-quote-updates" 
+                              checked={notifyQuoteResponses}
+                              disabled={isUpdatingNotifications}
+                              onCheckedChange={(checked) => {
+                                setNotifyQuoteResponses(checked);
+                                updateNotificationPreference('notifyQuoteResponses', checked);
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
