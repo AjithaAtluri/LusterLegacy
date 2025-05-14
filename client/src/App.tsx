@@ -11,6 +11,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { useToast } from "@/hooks/use-toast";
 import { ChatbotProvider } from "@/contexts/ChatbotContext";
 import Chatbot from "@/components/chatbot/Chatbot";
+import { SessionMonitor } from "@/components/utils/SessionMonitor";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("@/pages/home"));
