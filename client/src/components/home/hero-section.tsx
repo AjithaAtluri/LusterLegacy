@@ -42,7 +42,7 @@ export default function HeroSection() {
           className="w-full h-full object-cover brightness-110 contrast-110 saturate-120"
           style={{ transform: `translateY(${scrollY * 0.05}px) scale(${1 + scrollY * 0.0002})` }}
           onLoad={() => setImageLoaded(true)}
-          fetchPriority="high"
+          fetchpriority="high"
           loading="eager"
           decoding="sync"
         />
