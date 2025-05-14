@@ -604,10 +604,9 @@ export default function AuthPage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="register">Sign Up</TabsTrigger>
-              <TabsTrigger value="debug">Debug</TabsTrigger>
             </TabsList>
             
             {/* Login Form */}
