@@ -241,9 +241,6 @@ export default function Inspiration() {
                       <ZoomIn className="h-4 w-4" />
                     </button>
                   </DialogTrigger>
-                  <button className="rounded-full bg-white/90 p-2 text-primary hover:bg-white">
-                    <Heart className="h-4 w-4" />
-                  </button>
                 </div>
               </div>
               
@@ -261,12 +258,12 @@ export default function Inspiration() {
                     <h3 className="font-playfair text-2xl font-bold text-white mb-6">{image.title}</h3>
                     <div className="flex flex-col gap-3">
                       <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        <Link href="/custom-design" className="flex items-center justify-center">
+                        <Link 
+                          href={`/custom-design?inspirationImage=${encodeURIComponent(image.src)}&inspirationTitle=${encodeURIComponent(image.title)}`}
+                          className="flex items-center justify-center"
+                        >
                           Request Similar Design <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
-                      </Button>
-                      <Button variant="outline" className="border-primary/30 text-white hover:bg-primary/10">
-                        Add to Wishlist
                       </Button>
                     </div>
                   </div>

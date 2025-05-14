@@ -5,14 +5,22 @@ import { CheckCircle, Clock, HelpCircle, FileImage, ArrowRight, PenLine, Sparkle
 import { PAYMENT_TERMS } from "@/lib/constants";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 
 export default function CustomDesign() {
+  const [location] = useLocation();
+  
+  // Parse URL parameters to check for inspiration image
+  const params = new URLSearchParams(location.split('?')[1] || '');
+  const inspirationImage = params.get('inspirationImage');
+  const inspirationTitle = params.get('inspirationTitle');
+  
   // Create shared state that will be passed to both components
   const [formState, setFormState] = useState({
     metalType: "",
     selectedStones: [] as string[],
-    notes: "",
-    imageDataUrl: undefined as string | undefined
+    notes: inspirationTitle ? `Inspired by: ${inspirationTitle}` : "",
+    imageDataUrl: inspirationImage || undefined as string | undefined
   });
   
   // Function to update the shared state
@@ -33,6 +41,13 @@ export default function CustomDesign() {
       return updatedState;
     });
   };
+  
+  // Effect to log when inspiration image is passed
+  useEffect(() => {
+    if (inspirationImage) {
+      console.log("Received inspiration image from gallery:", inspirationTitle);
+    }
+  }, [inspirationImage, inspirationTitle]);
   
   return (
     <>
