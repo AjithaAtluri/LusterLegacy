@@ -404,7 +404,14 @@ export default function AuthPage() {
     }
     
     // Remove properties not needed for registration
-    const { confirmPassword, acceptTerms, ...registerData } = data;
+    const { confirmPassword, acceptTerms, ...formData } = data;
+    
+    // Add required username and role fields
+    const registerData = {
+      ...formData,
+      username: formData.name.split(' ')[0] || formData.loginID, // Use first name as username
+      role: "customer" // Default role for all registrations
+    };
     
     // Update the URL to include the return path for use after registration completes
     if (existingReturnTo) {
@@ -516,7 +523,7 @@ export default function AuthPage() {
                           <Button
                             type="button"
                             variant="outline"
-                            className="w-1/2 border-primary/30 hover:bg-primary/5 transition-all"
+                            className="w-1/2 border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:border-primary/50"
                             onClick={() => setShowForgotPassword(false)}
                             disabled={isRequestingPasswordReset}
                           >
@@ -524,7 +531,7 @@ export default function AuthPage() {
                           </Button>
                           <Button
                             type="submit"
-                            className="w-1/2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
+                            className="w-1/2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-1px]"
                             disabled={isRequestingPasswordReset}
                           >
                             {isRequestingPasswordReset ? (
@@ -602,7 +609,7 @@ export default function AuthPage() {
                         
                         <Button
                           type="submit"
-                          className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
+                          className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-1px]"
                           disabled={loginMutation.isPending}
                         >
                           {loginMutation.isPending ? (
@@ -818,7 +825,7 @@ export default function AuthPage() {
                     
                     <Button
                       type="submit"
-                      className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
+                      className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-1px]"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? (
