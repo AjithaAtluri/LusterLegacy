@@ -82,6 +82,14 @@ export interface IStorage {
   getUserByVerificationToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  updateNotificationPreferences(
+    userId: number, 
+    preferences: { 
+      notifyDesignUpdates?: boolean; 
+      notifyOrderStatus?: boolean; 
+      notifyQuoteResponses?: boolean; 
+    }
+  ): Promise<User>;
   deleteUser(loginIDOrId: string | number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
 
@@ -282,6 +290,39 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(users.id, id))
       .returning();
+    
+    return updatedUser;
+  }
+  
+  async updateNotificationPreferences(
+    userId: number, 
+    preferences: { 
+      notifyDesignUpdates?: boolean; 
+      notifyOrderStatus?: boolean; 
+      notifyQuoteResponses?: boolean; 
+    }
+  ): Promise<User> {
+    // Get only the defined preferences (ignore undefined values)
+    const updates: Partial<User> = {};
+    
+    if (preferences.notifyDesignUpdates !== undefined) {
+      updates.notifyDesignUpdates = preferences.notifyDesignUpdates;
+    }
+    
+    if (preferences.notifyOrderStatus !== undefined) {
+      updates.notifyOrderStatus = preferences.notifyOrderStatus;
+    }
+    
+    if (preferences.notifyQuoteResponses !== undefined) {
+      updates.notifyQuoteResponses = preferences.notifyQuoteResponses;
+    }
+    
+    // Update the user with the new preferences
+    const updatedUser = await this.updateUser(userId, updates);
+    
+    if (!updatedUser) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
     
     return updatedUser;
   }

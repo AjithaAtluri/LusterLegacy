@@ -351,6 +351,33 @@ export function setupAuth(app: Express): void {
     }
   });
   
+  // Endpoint to update notification preferences
+  app.post("/api/user/notifications", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    try {
+      // User must be authenticated at this point
+      const user = req.user as User;
+      const { notifyDesignUpdates, notifyOrderStatus, notifyQuoteResponses } = req.body;
+      
+      // Update user preferences in the database
+      const updatedUser = await storage.updateNotificationPreferences(user.id, {
+        notifyDesignUpdates, 
+        notifyOrderStatus, 
+        notifyQuoteResponses
+      });
+      
+      // Return the updated user object without the password
+      const { password, ...userWithoutPassword } = updatedUser;
+      return res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      return res.status(500).json({ message: "Failed to update notification preferences" });
+    }
+  });
+
   // Additional endpoint for field-by-field profile updates from the customer dashboard
   app.post("/api/user/update", async (req, res) => {
     if (!req.isAuthenticated()) {
