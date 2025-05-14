@@ -1002,7 +1002,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const commentData: any = {
         customizationRequestId: parseInt(customizationRequestId),
         content: content,
-        createdBy: isAdminUser ? req.user?.username || 'Admin' : createdBy || req.user?.username || 'Customer',
+        createdBy: isAdminUser ? 'Design Team' : createdBy || req.user?.username || 'Customer',
         isAdmin: isAdminUser
       };
       
