@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 
-// DEVELOPMENT ONLY: Simple bypass for admin authentication
+// Admin authentication check
 // This function can be called in two ways:
 // 1. As middleware with (req, res, next)
 // 2. As a function to check admin status with (req)
@@ -46,37 +46,30 @@ export const validateAdmin = async (
       return true;
     }
     
-    // Regular bypass for direct API calls without headers
-    console.log(`ADMIN ACCESS - AUTHENTICATION BYPASSED for ${endpoint}`);
-    
-    // Try to set a default admin user
-    try {
-      // First try by loginID (new system)
-      let adminUser = await storage.getUserByLoginID('admin');
-      
-      // Fallback to username (old system)
-      if (!adminUser) {
-        adminUser = await storage.getUserByUsername('admin');
-      }
-      
-      if (adminUser) {
-        req.user = adminUser;
-        console.log("Admin auth bypassed - set default admin user:", adminUser.loginID || adminUser.username);
-      } else {
-        console.log("Admin auth bypassed - could not find admin user, but still allowing access");
-      }
-    } catch (error) {
-      console.log("Admin auth bypassed - error finding admin user, but still allowing access:", error);
+    // Check if the user is already authenticated and is an admin
+    if (req.isAuthenticated() && req.user && (req.user.role === 'admin' || req.user.role === 'limited-admin')) {
+      console.log(`ADMIN ACCESS - USER AUTHENTICATED for ${endpoint} - ${req.user.loginID || req.user.username}`);
+      if (next) next();
+      return true;
     }
     
-    // Always proceed without authentication checks
-    if (next) next();
-    return true;
+    // If no valid admin authentication, deny access
+    console.log(`ADMIN ACCESS - DENIED for ${endpoint}`);
+    if (res) {
+      return res.status(401).json({
+        message: "Not authenticated as admin or limited-admin"
+      });
+    }
+    
+    return false;
   } catch (error) {
-    console.error('Error in admin auth bypass:', error);
-    // Even if error occurs, still proceed
-    if (next) next();
-    return true;
+    console.error('Error in admin auth:', error);
+    if (res) {
+      return res.status(500).json({
+        message: "Server error during admin authentication"
+      });
+    }
+    return false;
   }
 };
 
