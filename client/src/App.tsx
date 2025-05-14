@@ -236,6 +236,9 @@ function App() {
             
             {/* Chatbot component - accessible on all pages */}
             <Chatbot />
+            
+            {/* Session Monitor - handles automatic logout after inactivity */}
+            <SessionMonitor />
           </div>
         </ChatbotProvider>
       </AuthProvider>

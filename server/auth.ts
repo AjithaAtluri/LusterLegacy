@@ -72,7 +72,7 @@ export function setupAuth(app: Express): void {
     store: storage.sessionStore,
     name: 'luster-legacy.sid', // Custom name for the session cookie
     cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 10 * 60 * 1000, // 10 minutes idle timeout for security
       httpOnly: true,
       sameSite: 'lax', // Important for cross-site requests
       secure: false, // Set to false during development
