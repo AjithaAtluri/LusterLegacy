@@ -362,11 +362,23 @@ export function setupAuth(app: Express): void {
       const user = req.user as User;
       const { notifyDesignUpdates, notifyOrderStatus, notifyQuoteResponses } = req.body;
       
+      console.log(`Updating notification preferences for user ${user.id} (${user.name || user.loginID}):`, {
+        notifyDesignUpdates, 
+        notifyOrderStatus, 
+        notifyQuoteResponses
+      });
+      
       // Update user preferences in the database
       const updatedUser = await storage.updateNotificationPreferences(user.id, {
         notifyDesignUpdates, 
         notifyOrderStatus, 
         notifyQuoteResponses
+      });
+      
+      console.log(`Notification preferences successfully updated for user ${user.id}:`, {
+        notifyDesignUpdates: updatedUser.notifyDesignUpdates,
+        notifyOrderStatus: updatedUser.notifyOrderStatus,
+        notifyQuoteResponses: updatedUser.notifyQuoteResponses
       });
       
       // Return the updated user object without the password

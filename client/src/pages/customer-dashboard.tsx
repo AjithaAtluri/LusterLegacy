@@ -273,6 +273,15 @@ export default function CustomerDashboard() {
       const success = await updateNotificationPreferences(preferences);
       
       if (success) {
+        // Update the local state to match the server state
+        if (preferenceType === 'notifyDesignUpdates') {
+          setNotifyDesignUpdates(value);
+        } else if (preferenceType === 'notifyOrderStatus') {
+          setNotifyOrderStatus(value);
+        } else if (preferenceType === 'notifyQuoteResponses') {
+          setNotifyQuoteResponses(value);
+        }
+        
         toast({
           title: "Preferences Updated",
           description: "Your notification preferences have been saved.",
@@ -281,6 +290,16 @@ export default function CustomerDashboard() {
       }
     } catch (error) {
       console.error("Error updating notification preferences:", error);
+      
+      // Revert the toggle to its previous state since the update failed
+      if (preferenceType === 'notifyDesignUpdates') {
+        setNotifyDesignUpdates(user.notifyDesignUpdates ?? true);
+      } else if (preferenceType === 'notifyOrderStatus') {
+        setNotifyOrderStatus(user.notifyOrderStatus ?? true);
+      } else if (preferenceType === 'notifyQuoteResponses') {
+        setNotifyQuoteResponses(user.notifyQuoteResponses ?? true);
+      }
+      
       toast({
         title: "Update Failed",
         description: "There was an error updating your notification preferences.",

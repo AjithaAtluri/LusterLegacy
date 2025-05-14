@@ -629,14 +629,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = JSON.stringify(updatedUser);
         sessionStorage.setItem('cached_user_data', userData);
         localStorage.setItem('cached_user_data', userData);
+        
+        // Also trigger a refresh of the user data from the server
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       } catch (error) {
         console.warn("Failed to cache updated user data:", error);
       }
-      
-      toast({
-        title: "Preferences Updated",
-        description: "Your notification preferences have been saved",
-      });
       
       return true;
     } catch (error) {
