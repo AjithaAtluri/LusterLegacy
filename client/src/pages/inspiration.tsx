@@ -165,11 +165,11 @@ export default function Inspiration() {
           {galleryImages.map((image: GalleryImage) => (
             <Dialog key={image.id}>
               <div className="group relative overflow-hidden rounded-lg bg-card shadow-md transition-all hover:-translate-y-1 hover:shadow-lg">
-                <div className="aspect-square overflow-hidden">
+                <div className="aspect-auto overflow-hidden h-[400px]">
                   <img
                     src={image.src}
                     alt={image.alt}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                   />
                 </div>
                 
@@ -195,11 +195,11 @@ export default function Inspiration() {
               {/* Modal for larger image view */}
               <DialogContent className="sm:max-w-3xl bg-charcoal border-accent/20">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center h-[600px]">
                     <img
                       src={image.src}
                       alt={image.alt}
-                      className="max-h-[70vh] object-contain rounded-md"
+                      className="max-h-full max-w-full object-contain rounded-md"
                     />
                   </div>
                   <div className="flex flex-col justify-center">
