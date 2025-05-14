@@ -42,6 +42,49 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     
     console.log(`Attempting to send email from: ${sender} to: ${data.to}`);
     
+    // Validate and fix email URLs in links
+    if (process.env.NODE_ENV === 'production' && data.html) {
+      // Check for development URLs in production emails
+      const devUrlPattern = /(https?:\/\/localhost:[0-9]+|https?:\/\/[^\/\s"'<>]+:[0-9]+)/g;
+      const hasDevUrls = devUrlPattern.test(data.html);
+      
+      if (hasDevUrls) {
+        console.warn('WARNING: Production email contains localhost or port references - attempting to fix:');
+        
+        // Get the production domain from environment or use lusterlegacy.co as default
+        const productionDomain = process.env.PRODUCTION_DOMAIN || 'lusterlegacy.co';
+        
+        // Replace development URLs with production domain
+        let fixedHtml = data.html;
+        
+        // First, fix localhost URLs
+        fixedHtml = fixedHtml.replace(
+          /(https?:\/\/)localhost(:[0-9]+)?(\S*)/g, 
+          `https://${productionDomain}$3`
+        );
+        
+        // Then, fix any URLs with ports (like :5000 or :3000)
+        fixedHtml = fixedHtml.replace(
+          /(https?:\/\/[^\/\s"'<>]+)(:[0-9]+)(\S*)/g,
+          `https://${productionDomain}$3`
+        );
+        
+        // Log the changes
+        const originalUrls = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
+        const fixedUrls = fixedHtml.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
+        
+        console.log('URL fixes in production email:');
+        for (let i = 0; i < Math.min(originalUrls.length, fixedUrls.length); i++) {
+          if (originalUrls[i] !== fixedUrls[i]) {
+            console.log(`- ${originalUrls[i]} → ${fixedUrls[i]}`);
+          }
+        }
+        
+        // Use the fixed HTML
+        data.html = fixedHtml;
+      }
+    }
+    
     // In development/test mode, log email content but don't actually send
     // Only skip sending if explicitly in development mode AND SEND_REAL_EMAILS is not set
     if (process.env.NODE_ENV === 'development' && !process.env.SEND_REAL_EMAILS) {
@@ -51,6 +94,15 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       console.log(`Subject: ${data.subject}`);
       console.log('Text:', data.text);
       console.log('HTML:', data.html?.substring(0, 100) + '...');
+      
+      // Log URLs in the email for debugging
+      if (data.html) {
+        const matches = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
+        if (matches.length > 0) {
+          console.log('URLs found in email:');
+          matches.forEach(url => console.log(`- ${url}`));
+        }
+      }
       
       return { 
         success: true, 
@@ -62,6 +114,15 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     if (process.env.NODE_ENV === 'production') {
       console.log(`Sending production email from: ${sender} to: ${data.to}`);
       console.log(`Subject: ${data.subject}`);
+      
+      // Extract and log URLs from the email in production for tracking
+      if (data.html) {
+        const matches = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
+        if (matches.length > 0) {
+          console.log('URLs in production email:');
+          matches.forEach(url => console.log(`- ${url}`));
+        }
+      }
     }
     
     await mailService.send({

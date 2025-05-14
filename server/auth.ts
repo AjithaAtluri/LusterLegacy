@@ -986,6 +986,56 @@ export function setupAuth(app: Express): void {
     }
   });
   
+  // Debug route to test email sending (only available in development)
+  app.get("/api/debug/test-reset-email", async (req, res) => {
+    if (process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ message: "Debug routes are only available in development mode" });
+    }
+
+    try {
+      const { email } = req.query;
+      const testEmail = email || 'test@example.com';
+      
+      console.log(`[DEBUG] Testing password reset email to ${testEmail}`);
+      
+      // Import email service
+      const emailService = await import("./services/email-service");
+      
+      // Generate a test link
+      const protocol = 'http';
+      const host = req.get('host') || 'localhost:5000';
+      const testLink = `${protocol}://${host}/reset-password?token=TEST_TOKEN_12345`;
+      
+      // Send test email
+      const result = await emailService.sendPasswordResetEmail(
+        testEmail as string,
+        'Test User',
+        testLink
+      );
+      
+      // Log the full details
+      console.log('[DEBUG] Email service result:', JSON.stringify(result, null, 2));
+      
+      res.json({
+        success: result.success,
+        message: result.message || 'Email test completed',
+        testLink,
+        emailDetails: {
+          to: testEmail,
+          subject: 'Test Password Reset',
+          sentVia: result.success ? 'SendGrid API' : 'Debug log only'
+        }
+      });
+    } catch (error) {
+      console.error('[DEBUG] Email test error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Email test failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Verify token validity for password reset
   app.get("/api/reset-password/verify-token", async (req, res) => {
     try {
