@@ -749,4 +749,185 @@ export function setupAuth(app: Express): void {
     
     next();
   });
+
+  // Forgot password endpoint - request a password reset
+  app.post("/api/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ success: false, message: "Email is required" });
+      }
+      
+      // Check if user exists with this email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal whether a user with this email exists for security
+        return res.status(200).json({ 
+          success: true, 
+          message: "If an account with that email exists, a password reset link has been sent" 
+        });
+      }
+      
+      // Create password reset token
+      const resetResult = await storage.createPasswordResetToken(email);
+      
+      if (!resetResult) {
+        return res.status(500).json({ 
+          success: false, 
+          message: "Failed to create password reset token" 
+        });
+      }
+      
+      const { token, user: updatedUser } = resetResult;
+      
+      // Generate the reset link
+      const resetUrl = `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.get('host')}/reset-password?token=${token}`;
+      
+      // Import email service dynamically to avoid circular dependencies
+      const emailService = await import("./services/email-service");
+      
+      // Send password reset email
+      const emailResult = await emailService.sendPasswordResetEmail(
+        updatedUser.email,
+        updatedUser.name || updatedUser.username,
+        resetUrl
+      );
+      
+      const isDevelopmentMode = process.env.NODE_ENV !== 'production';
+      
+      if (emailResult.success) {
+        console.log(`[AUTH] Password reset email sent to ${updatedUser.email}`);
+        
+        // In development mode, provide the reset link in the response
+        const responseData: any = { 
+          success: true, 
+          message: "If an account with that email exists, a password reset link has been sent" 
+        };
+        
+        if (isDevelopmentMode) {
+          responseData.resetLink = resetUrl;
+          responseData.note = "Development mode: use this link to reset your password";
+        }
+        
+        res.status(200).json(responseData);
+      } else {
+        console.error(`[AUTH] Failed to send password reset email: ${emailResult.message}`);
+        
+        // In development, still provide the reset link even if email fails
+        const responseData: any = { 
+          success: true, 
+          message: "If an account with that email exists, a password reset link has been sent" 
+        };
+        
+        if (isDevelopmentMode) {
+          responseData.resetLink = resetUrl;
+          responseData.note = "Development mode: use this link to reset your password despite send failure";
+          responseData.errorDetail = emailResult.message;
+        }
+        
+        res.status(200).json(responseData);
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "An error occurred while processing your request" 
+      });
+    }
+  });
+  
+  // Reset password with token
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Token and new password are required" 
+        });
+      }
+      
+      // Check minimum password length
+      if (newPassword.length < 8) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Password must be at least 8 characters long" 
+        });
+      }
+      
+      // Try to reset the password
+      const updatedUser = await storage.resetPassword(token, newPassword);
+      
+      if (!updatedUser) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid or expired token" 
+        });
+      }
+      
+      // Import email service dynamically to avoid circular dependencies
+      const emailService = await import("./services/email-service");
+      
+      // Send confirmation email
+      emailService.sendPasswordChangeEmail(
+        updatedUser.email,
+        updatedUser.name || updatedUser.username
+      ).catch(err => {
+        console.error("Failed to send password change confirmation email:", err);
+      });
+      
+      // Return success
+      res.status(200).json({ 
+        success: true, 
+        message: "Password has been successfully reset" 
+      });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "An error occurred while processing your request" 
+      });
+    }
+  });
+  
+  // Verify token validity for password reset
+  app.get("/api/reset-password/verify-token", async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Token is required" 
+        });
+      }
+      
+      // Check if token is valid
+      const user = await storage.getUserByPasswordResetToken(token);
+      
+      if (user) {
+        // Token is valid
+        res.status(200).json({ 
+          success: true, 
+          message: "Token is valid",
+          email: user.email,
+          name: user.name || user.username
+        });
+      } else {
+        // Token is invalid or expired
+        res.status(400).json({ 
+          success: false, 
+          message: "Invalid or expired token" 
+        });
+      }
+    } catch (error) {
+      console.error("Token verification error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "An error occurred while verifying the token" 
+      });
+    }
+  });
 }
