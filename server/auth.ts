@@ -849,9 +849,17 @@ export function setupAuth(app: Express): void {
           host = process.env.PRODUCTION_DOMAIN;
           console.log(`[AUTH] Using PRODUCTION_DOMAIN for reset link: ${host}`);
         } else {
-          // Check if we're on a replit domain
-          if (host.includes('replit.dev') || host.includes('replit.app')) {
-            console.log(`[AUTH] Detected Replit domain: ${host}`);
+          // Check if we're on a replit domain or other known production domains
+          if (host.includes('replit.dev') || host.includes('replit.app') || 
+              host.includes('lusterlegacy.co') || host.includes('luster-legacy.replit.app')) {
+            console.log(`[AUTH] Detected production domain: ${host}`);
+            
+            // Fix potential issues with port in production domains
+            if (host.includes(':')) {
+              // Remove port number if present in production
+              host = host.split(':')[0];
+              console.log(`[AUTH] Removed port from host for production: ${host}`);
+            }
           }
         }
       }
