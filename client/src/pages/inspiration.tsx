@@ -19,6 +19,13 @@ import jewelry5 from "@/assets/jewelry5.jpeg";
 import jewelry6 from "@/assets/jewelry6.jpeg";
 import jewelry7 from "@/assets/jewelry7.jpeg";
 import jewelry8 from "@/assets/jewelry8.jpeg";
+import jewelry9 from "@/assets/jewelry9.jpeg";
+import jewelry10 from "@/assets/jewelry10.jpeg";
+import jewelry11 from "@/assets/jewelry11.jpeg";
+import jewelry12 from "@/assets/jewelry12.jpeg";
+import jewelry13 from "@/assets/jewelry13.jpeg";
+import jewelry14 from "@/assets/jewelry14.jpeg";
+import jewelry15 from "@/assets/jewelry15.jpeg";
 
 // Gallery image interface
 interface GalleryImage {
@@ -136,6 +143,55 @@ export default function Inspiration() {
       alt: "Luxury jewelry piece",
       title: "Heritage Collection",
       description: "From our heritage collection, this piece tells a story of tradition and craftsmanship passed down through generations of master jewelers."
+    },
+    {
+      id: 16,
+      src: jewelry9,
+      alt: "Luxury jewelry piece",
+      title: "Opulent Treasures",
+      description: "An opulent treasure showcasing the finest materials and design expertise, perfect for those who appreciate luxury and distinctive style."
+    },
+    {
+      id: 17,
+      src: jewelry10,
+      alt: "Luxury jewelry piece",
+      title: "Royal Splendor",
+      description: "A piece of royal splendor combining traditional artisanship with modern luxury, exemplifying the pinnacle of jewelry craftsmanship."
+    },
+    {
+      id: 18,
+      src: jewelry11,
+      alt: "Luxury jewelry piece",
+      title: "Artistic Expression",
+      description: "An artistic expression in precious metals and stones that captures the essence of beauty and transforms it into wearable art."
+    },
+    {
+      id: 19,
+      src: jewelry12,
+      alt: "Luxury jewelry piece",
+      title: "Eternal Radiance",
+      description: "Eternal radiance captured in an exquisite jewelry piece that transcends time and fashion trends with its classic beauty."
+    },
+    {
+      id: 20,
+      src: jewelry13,
+      alt: "Luxury jewelry piece",
+      title: "Regal Elegance",
+      description: "Regal elegance embodied in this extraordinary piece, designed for those who appreciate the finest things in life."
+    },
+    {
+      id: 21,
+      src: jewelry14,
+      alt: "Luxury jewelry piece",
+      title: "Heritage Masterpiece",
+      description: "A heritage masterpiece that honors traditional techniques while embracing contemporary aesthetics for a timeless appeal."
+    },
+    {
+      id: 22,
+      src: jewelry15,
+      alt: "Luxury jewelry piece",
+      title: "Celestial Wonder",
+      description: "A celestial wonder that captures the mystery and beauty of the cosmos in an expertly crafted jewelry piece."
     }
   ];
   
