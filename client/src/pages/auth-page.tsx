@@ -747,8 +747,8 @@ export default function AuthPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {Object.entries(COUNTRIES).map(([code, name]) => (
-                                  <SelectItem key={code} value={code}>{name}</SelectItem>
+                                {COUNTRIES.map((country) => (
+                                  <SelectItem key={country.id} value={country.id}>{country.name}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
