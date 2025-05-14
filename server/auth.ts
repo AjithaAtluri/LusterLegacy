@@ -794,12 +794,20 @@ export function setupAuth(app: Express): void {
       const { token, user: updatedUser } = resetResult;
       
       // Generate the reset link
-      const resetUrl = `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${req.get('host')}/reset-password?token=${token}`;
+      // In production, we need to use the fully qualified domain name
+      const host = process.env.NODE_ENV === 'production' 
+        ? process.env.PRODUCTION_DOMAIN || req.get('host')
+        : req.get('host');
+        
+      const resetUrl = `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${host}/reset-password?token=${token}`;
       
       // Import email service dynamically to avoid circular dependencies
       const emailService = await import("./services/email-service");
       
       // Send password reset email
+      console.log(`[AUTH] Attempting to send password reset email to ${updatedUser.email}`);
+      console.log(`[AUTH] Reset URL: ${resetUrl}`);
+      
       const emailResult = await emailService.sendPasswordResetEmail(
         updatedUser.email,
         updatedUser.name || updatedUser.username,
@@ -909,12 +917,18 @@ export function setupAuth(app: Express): void {
     try {
       const { token } = req.query;
       
-      if (!token || typeof token !== 'string') {
+      console.log(`[AUTH] Password reset token verification request. Token: ${token}`);
+      
+      if (!token) {
+        console.log(`[AUTH] No token provided in request`);
         return res.status(400).json({ 
           success: false, 
           message: "Token is required" 
         });
       }
+      
+      // Convert token to string if it's an array (from query parameters)
+      const tokenStr = Array.isArray(token) ? token[0] : token;
       
       // Check if token is valid
       const user = await storage.getUserByPasswordResetToken(token);
