@@ -13,13 +13,12 @@ export default function CustomDesign() {
   // Parse URL parameters to check for inspiration image
   const params = new URLSearchParams(location.split('?')[1] || '');
   const inspirationImage = params.get('inspirationImage');
-  const inspirationTitle = params.get('inspirationTitle');
   
   // Create shared state that will be passed to both components
   const [formState, setFormState] = useState({
     metalType: "",
     selectedStones: [] as string[],
-    notes: inspirationTitle ? `Inspired by: ${inspirationTitle}` : "",
+    notes: "",
     imageDataUrl: inspirationImage || undefined as string | undefined
   });
   
@@ -45,9 +44,9 @@ export default function CustomDesign() {
   // Effect to log when inspiration image is passed
   useEffect(() => {
     if (inspirationImage) {
-      console.log("Received inspiration image from gallery:", inspirationTitle);
+      console.log("Received inspiration image from gallery");
     }
-  }, [inspirationImage, inspirationTitle]);
+  }, [inspirationImage]);
   
   return (
     <>

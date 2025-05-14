@@ -231,7 +231,7 @@ export default function Inspiration() {
                 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
                   <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                    <h3 className="font-playfair text-lg font-semibold">{image.title}</h3>
+                    {/* Title removed as requested */}
                   </div>
                 </div>
                 
@@ -255,11 +255,11 @@ export default function Inspiration() {
                     />
                   </div>
                   <div className="flex flex-col justify-center">
-                    <h3 className="font-playfair text-2xl font-bold text-white mb-6">{image.title}</h3>
-                    <div className="flex flex-col gap-3">
+                    {/* Title removed as requested */}
+                    <div className="flex flex-col gap-3 mt-6">
                       <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                         <Link 
-                          href={`/custom-design?inspirationImage=${encodeURIComponent(image.src)}&inspirationTitle=${encodeURIComponent(image.title)}`}
+                          href={`/custom-design?inspirationImage=${encodeURIComponent(image.src)}`}
                           className="flex items-center justify-center"
                         >
                           Request Similar Design <ArrowRight className="ml-2 h-4 w-4" />
