@@ -33,7 +33,7 @@ interface GalleryImage {
   src: string;
   alt: string;
   title: string;
-  description: string;
+  description?: string; // Made optional
 }
 
 export default function Inspiration() {
@@ -232,7 +232,6 @@ export default function Inspiration() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
                   <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                     <h3 className="font-playfair text-lg font-semibold">{image.title}</h3>
-                    <p className="text-sm text-white/80 mt-1 line-clamp-2">{image.description}</p>
                   </div>
                 </div>
                 
@@ -259,8 +258,7 @@ export default function Inspiration() {
                     />
                   </div>
                   <div className="flex flex-col justify-center">
-                    <h3 className="font-playfair text-2xl font-bold text-white mb-3">{image.title}</h3>
-                    <p className="text-white/80 mb-6">{image.description}</p>
+                    <h3 className="font-playfair text-2xl font-bold text-white mb-6">{image.title}</h3>
                     <div className="flex flex-col gap-3">
                       <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
                         <Link href="/custom-design" className="flex items-center justify-center">
