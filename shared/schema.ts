@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   emailVerified: boolean("email_verified").default(false), // Track email verification status
   verificationToken: text("verification_token"), // Store email verification token
+  passwordResetToken: text("password_reset_token"), // Store password reset token
+  passwordResetExpires: timestamp("password_reset_expires"), // When the reset token expires
   phone: text("phone"),
   country: text("country"),
   role: text("role").notNull().default("customer"), // "admin", "limited-admin", or "customer"
