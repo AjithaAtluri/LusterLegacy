@@ -1006,7 +1006,12 @@ export default function CustomerDashboard() {
                                 </Button>
                               )}
                               
-                              <Button variant="ghost" size="sm" className="mt-2 w-full">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="mt-2 w-full"
+                                onClick={() => setLocation(getRequestUrl(request))}
+                              >
                                 <MessageCircle className="h-4 w-4 mr-1.5" />
                                 Contact
                               </Button>

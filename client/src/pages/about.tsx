@@ -84,7 +84,7 @@ export default function About() {
                 Our artisans have spent decades perfecting their craft, specializing in techniques like Kundan, Polki, and Meenakari work. Each piece passes through multiple stages of refinement – from initial sketches to wax carving, metal casting, stone setting, and final polishing.
               </p>
               <p>
-                We source only the finest materials – ethically acquired stones, premium metals, and quality embellishments. Our dedication to excellence means that we never cut corners, ensuring that each creation meets our exacting standards before it reaches you.
+                We carefully select quality materials that offer the perfect balance of beauty and value. Our dedication to excellence means that we never compromise on craftsmanship, ensuring that each creation meets our exacting standards before it reaches you.
               </p>
             </div>
           </div>

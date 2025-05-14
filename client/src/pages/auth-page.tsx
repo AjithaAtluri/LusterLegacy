@@ -468,7 +468,7 @@ export default function AuthPage() {
                   
                   <div className="flex flex-col items-center p-6 bg-gradient-to-b from-background/80 to-background/50 rounded-lg border border-primary/20 shadow-md hover:shadow-lg hover:border-primary/30 transition-all">
                     <span className="font-bold text-lg mb-2 text-primary">Premium Materials</span>
-                    <span className="text-center text-sm">Finest materials that are cost effective</span>
+                    <span className="text-center text-sm">Finest, latest and cost effective gems and diamonds</span>
                   </div>
                 </div>
               </div>

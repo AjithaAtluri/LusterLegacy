@@ -319,7 +319,7 @@ export default function FinalizeOrder() {
               <li>Request a final quotation or proceed with 50% advance payment</li>
               <li>Your order will be crafted to perfection over 3-4 weeks</li>
               <li>The item will be shipped after the remaining 50% payment is made</li>
-              <li>All custom pieces are handcrafted to order with the finest materials</li>
+              <li>All custom pieces are handcrafted to order with quality, cost-effective materials</li>
             </ul>
           </div>
         </div>
