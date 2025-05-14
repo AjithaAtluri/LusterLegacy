@@ -43,6 +43,7 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     console.log(`Attempting to send email from: ${sender} to: ${data.to}`);
     
     // In development/test mode, log email content but don't actually send
+    // Only skip sending if explicitly in development mode AND SEND_REAL_EMAILS is not set
     if (process.env.NODE_ENV === 'development' && !process.env.SEND_REAL_EMAILS) {
       console.log('Development mode - not sending real email. Would send:');
       console.log(`From: ${sender}`);
@@ -57,6 +58,12 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       };
     }
     
+    // In production, log limited information for debugging
+    if (process.env.NODE_ENV === 'production') {
+      console.log(`Sending production email from: ${sender} to: ${data.to}`);
+      console.log(`Subject: ${data.subject}`);
+    }
+    
     await mailService.send({
       to: data.to,
       from: sender,
@@ -69,6 +76,21 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     return { success: true };
   } catch (error) {
     console.error('SendGrid email error:', error);
+    
+    // Enhanced error logging for SendGrid errors
+    if (error && typeof error === 'object') {
+      console.error('SendGrid detailed error:', JSON.stringify(error, null, 2));
+      
+      // Check for response object which might contain more detailed SendGrid error info
+      if ('response' in error && error.response) {
+        console.error('SendGrid response error:', error.response);
+        
+        if ('body' in error.response) {
+          console.error('SendGrid response body:', error.response.body);
+        }
+      }
+    }
+    
     return { 
       success: false, 
       message: error instanceof Error ? error.message : 'Unknown email error'

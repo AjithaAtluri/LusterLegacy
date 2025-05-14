@@ -862,12 +862,17 @@ export function setupAuth(app: Express): void {
     try {
       const { token, newPassword } = req.body;
       
+      console.log(`[AUTH] Password reset request received with token: ${token ? (token.substring(0, 10) + '...') : 'undefined'}`);
+      
       if (!token || !newPassword) {
         return res.status(400).json({ 
           success: false, 
           message: "Token and new password are required" 
         });
       }
+      
+      // Ensure token is string type
+      const tokenStr = typeof token === 'string' ? token : String(token);
       
       // Check minimum password length
       if (newPassword.length < 8) {
@@ -878,7 +883,7 @@ export function setupAuth(app: Express): void {
       }
       
       // Try to reset the password
-      const updatedUser = await storage.resetPassword(token, newPassword);
+      const updatedUser = await storage.resetPassword(tokenStr, newPassword);
       
       if (!updatedUser) {
         return res.status(400).json({ 
@@ -928,10 +933,22 @@ export function setupAuth(app: Express): void {
       }
       
       // Convert token to string if it's an array (from query parameters)
-      const tokenStr = Array.isArray(token) ? token[0] : token;
+      // Convert token to string (it could be a string, array, or ParsedQs object)
+      let tokenStr: string;
+      if (Array.isArray(token)) {
+        tokenStr = token[0];
+      } else if (typeof token === 'string') {
+        tokenStr = token;
+      } else if (token && typeof token === 'object') {
+        tokenStr = String(token);
+      } else {
+        tokenStr = '';
+      }
+      
+      console.log(`[AUTH] Processing token (converted): ${tokenStr ? tokenStr.substring(0, 10) + '...' : 'empty token'}`);
       
       // Check if token is valid
-      const user = await storage.getUserByPasswordResetToken(token);
+      const user = await storage.getUserByPasswordResetToken(tokenStr);
       
       if (user) {
         // Token is valid
