@@ -7,6 +7,7 @@ import { Link } from "wouter";
 import rubyLeafPendant from "@/assets/ruby-leaf-pendant.png";
 import pearlNecklaceSet from "@/assets/pearl-necklace-set.png";
 import polkiPendantNecklace from "@/assets/polki-pendant-necklace.png";
+import diamondBracelet from "@/assets/diamond-bracelet.jpeg";
 
 // Gallery image interface
 interface GalleryImage {
@@ -47,6 +48,14 @@ export default function Inspiration() {
       category: "necklaces",
       title: "Dual Gemstone Elegance",
       description: "A sophisticated polki diamond necklace featuring a stunning dual pendant with ruby and emerald gemstones, surrounded by intricate diamond detailing."
+    },
+    {
+      id: 4,
+      src: diamondBracelet,
+      alt: "Diamond and pearl bracelet with gold accents",
+      category: "bracelets",
+      title: "Celestial Diamond Band",
+      description: "A luxurious bracelet featuring a perfect balance of brilliant-cut diamonds and delicate pearls set in high-polish gold, creating a timeless statement piece."
     }
   ];
   
