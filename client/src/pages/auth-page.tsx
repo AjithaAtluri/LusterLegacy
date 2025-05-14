@@ -427,9 +427,13 @@ export default function AuthPage() {
   
   // Render auth page with login/registration forms
   return (
-    <div className="min-h-screen py-12 bg-gradient-to-br from-background to-background/95">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col lg:flex-row bg-card rounded-xl shadow-xl overflow-hidden">
+    <div className="min-h-screen py-12 bg-gradient-to-br from-background to-background/95 relative">
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-b from-primary/10 to-transparent rounded-bl-full opacity-50"></div>
+      <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-gradient-to-t from-secondary/15 to-transparent rounded-tr-full opacity-70"></div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="flex flex-col lg:flex-row bg-card rounded-xl shadow-xl overflow-hidden border border-primary/10">
           {/* Hero side */}
           <div className="lg:w-1/2 p-8 md:p-12 bg-gradient-to-br from-primary/10 to-primary/5 flex flex-col justify-center">
             <div className="space-y-4">
@@ -441,22 +445,22 @@ export default function AuthPage() {
               </p>
               
               <div className="pt-6">
-                <Separator className="my-6" />
-                <h2 className="text-xl font-semibold mb-4">The Luster Legacy Difference</h2>
+                <Separator className="my-6 bg-gradient-to-r from-primary/40 to-secondary/40" />
+                <h2 className="text-xl font-semibold mb-4 text-primary">The Luster Legacy Difference</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
-                    <span className="font-bold text-lg mb-2">Bespoke Designs</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col items-center p-6 bg-gradient-to-b from-background/80 to-background/50 rounded-lg border border-primary/20 shadow-md hover:shadow-lg hover:border-primary/30 transition-all">
+                    <span className="font-bold text-lg mb-2 text-primary">Bespoke Designs</span>
                     <span className="text-center text-sm">Personalized creations that tell your story</span>
                   </div>
                   
-                  <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
-                    <span className="font-bold text-lg mb-2">Master Craftsmanship</span>
+                  <div className="flex flex-col items-center p-6 bg-gradient-to-b from-background/80 to-background/50 rounded-lg border border-primary/20 shadow-md hover:shadow-lg hover:border-primary/30 transition-all">
+                    <span className="font-bold text-lg mb-2 text-primary">Master Craftsmanship</span>
                     <span className="text-center text-sm">Handcrafted with generations of expertise</span>
                   </div>
                   
-                  <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
-                    <span className="font-bold text-lg mb-2">Premium Materials</span>
+                  <div className="flex flex-col items-center p-6 bg-gradient-to-b from-background/80 to-background/50 rounded-lg border border-primary/20 shadow-md hover:shadow-lg hover:border-primary/30 transition-all">
+                    <span className="font-bold text-lg mb-2 text-primary">Premium Materials</span>
                     <span className="text-center text-sm">Finest gold, diamonds, and precious gemstones</span>
                   </div>
                 </div>
@@ -465,11 +469,15 @@ export default function AuthPage() {
           </div>
           
           {/* Auth forms side */}
-          <div className="lg:w-1/2 p-8 md:p-12">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+          <div className="lg:w-1/2 p-8 md:p-12 bg-gradient-to-br from-background to-background/90 relative">
+            {/* Subtle decorative elements */}
+            <div className="absolute top-8 right-8 w-16 h-16 bg-primary/5 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-12 left-12 w-24 h-24 bg-secondary/5 rounded-full blur-3xl"></div>
+            
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
+              <TabsList className="grid w-full grid-cols-2 mb-8 bg-gradient-to-r from-primary/20 to-secondary/20 p-1">
+                <TabsTrigger value="login" className="data-[state=active]:bg-white/80 data-[state=active]:text-primary font-medium">Sign In</TabsTrigger>
+                <TabsTrigger value="register" className="data-[state=active]:bg-white/80 data-[state=active]:text-primary font-medium">Register</TabsTrigger>
               </TabsList>
               
               {/* Login Form */}
