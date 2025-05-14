@@ -382,6 +382,7 @@ export default function AuthPage() {
       if (redirectPath) {
         params.set("returnTo", redirectPath);
         window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+        setReturnPath(redirectPath);
       }
     }
     
@@ -389,253 +390,161 @@ export default function AuthPage() {
   };
   
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    // Extract fields we don't want to send directly to the API but keep all required user fields
-    const { confirmPassword, acceptTerms, ...userData } = data;
-    
-    // Check if there's a saved form state in the session that we need to return to
-    const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
-    const hasSavedCustomizationForm = sessionStorage.getItem('customizationFormData') !== null;
-    const hasSavedQuoteForm = sessionStorage.getItem('quoteFormData') !== null;
-    
-    // Preserve returnTo parameter if it exists, otherwise check for form data and set appropriate return path
+    // Check if there's a returnTo path in the URL that we need to redirect to after registration
     const params = new URLSearchParams(window.location.search);
     const existingReturnTo = params.get("returnTo");
+    const shareStory = params.get("shareStory") === "true";
     
-    if (!existingReturnTo) {
-      let redirectPath = null;
-      
-      // Set the appropriate return path based on which form data we have saved
-      if (hasSavedDesignForm) {
-        redirectPath = "/custom-design";
-        console.log("Setting custom-design as returnTo for registration due to saved form data");
-      } else if (hasSavedCustomizationForm) {
-        // The actual customization request ID will be part of the saved data
-        const savedData = JSON.parse(sessionStorage.getItem('customizationFormData') || '{}');
-        if (savedData.productId) {
-          redirectPath = `/customize-request/${savedData.productId}`;
-          console.log(`Setting ${redirectPath} as returnTo for registration due to saved customization form data`);
-        }
-      } else if (hasSavedQuoteForm) {
-        // The actual product ID will be part of the saved data
-        const savedData = JSON.parse(sessionStorage.getItem('quoteFormData') || '{}');
-        if (savedData.productId) {
-          redirectPath = `/place-order/${savedData.productId}`;
-          console.log(`Setting ${redirectPath} as returnTo for registration due to saved quote form data`);
-        }
-      }
-      
-      // Update the URL if we found a redirect path
-      if (redirectPath) {
-        params.set("returnTo", redirectPath);
-        window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-      }
+    // If returnTo is set and it's to the client-stories page with a share parameter,
+    // update the return path to add the tab parameter
+    if (existingReturnTo === "/client-stories" && shareStory) {
+      setReturnPath("/client-stories?tab=share");
+    } else if (existingReturnTo) {
+      setReturnPath(existingReturnTo);
     }
     
-    // Log the data we're sending to the registration API
-    console.log("Registering with data:", {
-      ...userData,
-      loginID: userData.loginID,
-      hasLoginID: !!userData.loginID,
-      password: userData.password ? "REDACTED" : undefined,
-      hasPassword: !!userData.password
-    });
+    // Remove properties not needed for registration
+    const { confirmPassword, acceptTerms, ...registerData } = data;
     
-    // Create the complete registration data with all required fields
-    const registrationData = {
-      ...userData,
-      role: "customer",
-      username: userData.loginID, // Set username explicitly to match loginID
-    };
+    // Update the URL to include the return path for use after registration completes
+    if (existingReturnTo) {
+      // URL already has returnTo parameter, no need to update
+    } else if (returnPath !== "/") {
+      params.set("returnTo", returnPath);
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
     
-    // Add additional debug log
-    console.log("Attempting to register with data:", {
-      ...registrationData,
-      password: "REDACTED",
-      passwordLength: registrationData.password?.length,
-      hasPassword: !!registrationData.password, 
-      username: registrationData.username,
-      hasUsername: !!registrationData.username
-    });
-    
-    // Submit the registration data
-    registerMutation.mutate(registrationData);
+    registerMutation.mutate(registerData);
   };
   
-  // We'll handle redirects in a separate useEffect to avoid the "rendered fewer hooks" error
-  useEffect(() => {
-    if (user) {
-      // Check again for any saved form data in case it was added after initial page load
-      const currentParams = new URLSearchParams(window.location.search);
-      let redirectTarget = currentParams.get("returnTo") || returnPath;
-      
-      // If we don't have a returnTo and there's saved form data, let's set it now
-      if (!currentParams.get("returnTo")) {
-        const hasSavedDesignForm = sessionStorage.getItem('designFormData') !== null;
-        const hasSavedCustomizationForm = sessionStorage.getItem('customizationFormData') !== null;
-        const hasSavedQuoteForm = sessionStorage.getItem('quoteFormData') !== null;
-        
-        if (hasSavedDesignForm) {
-          redirectTarget = "/custom-design";
-          console.log("Auth redirect - found saved design data, redirecting to:", redirectTarget);
-        } else if (hasSavedCustomizationForm) {
-          const savedData = JSON.parse(sessionStorage.getItem('customizationFormData') || '{}');
-          if (savedData.productId) {
-            redirectTarget = `/customize-request/${savedData.productId}`;
-            console.log("Auth redirect - found saved customization data, redirecting to:", redirectTarget);
-          }
-        } else if (hasSavedQuoteForm) {
-          const savedData = JSON.parse(sessionStorage.getItem('quoteFormData') || '{}');
-          if (savedData.productId) {
-            redirectTarget = `/place-order/${savedData.productId}`;
-            console.log("Auth redirect - found saved quote data, redirecting to:", redirectTarget);
-          }
-        }
-      }
-      
-      // If admin, redirect to admin dashboard
-      if (user.role === "admin") {
-        console.log("Admin user detected, redirecting to admin direct dashboard");
-        
-        // For admin users, use direct navigation since wouter Redirect sometimes fails
-        setTimeout(() => {
-          window.location.href = window.location.origin + "/admin/dashboard";
-        }, 100);
-      } else {
-        // Otherwise go to return path or home
-        console.log("Customer user detected, redirecting to:", redirectTarget);
-        
-        // For customer users, also use direct navigation to be consistent
-        setTimeout(() => {
-          window.location.href = window.location.origin + redirectTarget;
-        }, 100);
-      }
-    }
-  }, [user, returnPath]);
+  // If user is already logged in, redirect
+  if (user) {
+    // Get any stored returnTo path from URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("returnTo") || "/";
+    return <Redirect to={returnTo} />;
+  }
   
-  // Debug utility functions
-  // No debug functionality needed
-  // Removed debug functionality
-    try {
-      const result = await devHelpers.directLogin(debugUsername);
-      toast({
-        title: "Direct login successful",
-        description: `Logged in as ${debugUsername} (${result.redirectTo})`,
-      });
-    } catch (error) {
-      toast({
-        title: "Direct login failed",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      });
-    } finally {
-      setIsDirectLoginLoading(false);
-    }
-  };
-  
-  const handleLoadUsers = async () => {
-    setIsLoadingUserList(true);
-    try {
-      const users = await devHelpers.listAllUsers();
-      setUserList(users);
-      toast({
-        title: "Users loaded",
-        description: `Found ${users.length} users in the database`
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to load users",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingUserList(false);
-    }
-  };
-  
-  const handleCheckAuthStatus = async () => {
-    try {
-      const user = await devHelpers.checkAuthStatus();
-      if (user) {
-        toast({
-          title: "Authentication status",
-          description: `Logged in as ${user.username} (${user.role})`,
-        });
-      } else {
-        toast({
-          title: "Authentication status",
-          description: "Not currently authenticated",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error checking auth status",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive"
-      });
-    }
-  };
-
+  // Render auth page with login/registration forms
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Left side - Form */}
-      <div className="flex flex-col items-center justify-center w-full md:w-1/2 px-6 py-12">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold tracking-tight font-serif">
-              Welcome to Luster Legacy
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Sign in to your account or create a new one
-            </p>
-          </div>
-          
-          <Tabs 
-            defaultValue="login" 
-            value={activeTab} 
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Sign In</TabsTrigger>
-              <TabsTrigger value="register">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            {/* Login Form */}
-            <TabsContent value="login" className="space-y-4 pt-4">
-              {showForgotPassword ? (
-                <div>
-                  <Button 
-                    variant="outline" 
-                    type="button"
-                    size="sm"
-                    onClick={() => setShowForgotPassword(false)}
-                    className="mb-4"
-                  >
-                    ← Back to Login
-                  </Button>
-                  
-                  <div className="mb-4">
-                    <h3 className="text-lg font-medium">Reset Your Password</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Enter your email address and we'll send you a link to reset your password.
-                    </p>
+    <div className="min-h-screen py-12 bg-gradient-to-br from-background to-background/95">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col lg:flex-row bg-card rounded-xl shadow-xl overflow-hidden">
+          {/* Hero side */}
+          <div className="lg:w-1/2 p-8 md:p-12 bg-gradient-to-br from-primary/10 to-primary/5 flex flex-col justify-center">
+            <div className="space-y-4">
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+                Welcome to Luster Legacy
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Sign in to access your personalized luxury jewelry experience.
+              </p>
+              
+              <div className="pt-6">
+                <Separator className="my-6" />
+                <h2 className="text-xl font-semibold mb-4">The Luster Legacy Difference</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
+                    <span className="font-bold text-lg mb-2">Bespoke Designs</span>
+                    <span className="text-center text-sm">Personalized creations that tell your story</span>
                   </div>
                   
-                  <Form {...forgotPasswordForm}>
-                    <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-6">
+                  <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
+                    <span className="font-bold text-lg mb-2">Master Craftsmanship</span>
+                    <span className="text-center text-sm">Handcrafted with generations of expertise</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
+                    <span className="font-bold text-lg mb-2">Premium Materials</span>
+                    <span className="text-center text-sm">Finest gold, diamonds, and precious gemstones</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Auth forms side */}
+          <div className="lg:w-1/2 p-8 md:p-12">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-8">
+                <TabsTrigger value="login">Sign In</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
+              
+              {/* Login Form */}
+              <TabsContent value="login" className="space-y-4 pt-4">
+                {showForgotPassword ? (
+                  <div className="space-y-4">
+                    <div className="text-center mb-4">
+                      <h3 className="text-lg font-semibold">Forgot Password</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Enter your email address and we'll send you a link to reset your password.
+                      </p>
+                    </div>
+                    <Form {...forgotPasswordForm}>
+                      <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-6">
+                        <FormField
+                          control={forgotPasswordForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="email" 
+                                  placeholder="Enter your email address" 
+                                  {...field} 
+                                  disabled={isRequestingPasswordReset}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="flex space-x-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-1/2"
+                            onClick={() => setShowForgotPassword(false)}
+                            disabled={isRequestingPasswordReset}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            className="w-1/2"
+                            disabled={isRequestingPasswordReset}
+                          >
+                            {isRequestingPasswordReset ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              "Send Reset Link"
+                            )}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </div>
+                ) : (
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
                       <FormField
-                        control={forgotPasswordForm.control}
-                        name="email"
+                        control={loginForm.control}
+                        name="loginID"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel>Login ID</FormLabel>
                             <FormControl>
                               <Input 
-                                type="email" 
-                                placeholder="Enter your email" 
+                                placeholder="Enter your login ID" 
                                 {...field} 
-                                disabled={isRequestingPasswordReset}
+                                disabled={loginMutation.isPending}
                               />
                             </FormControl>
                             <FormMessage />
@@ -643,459 +552,276 @@ export default function AuthPage() {
                         )}
                       />
                       
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Enter your password" 
+                                {...field} 
+                                disabled={loginMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                            <div className="mt-1">
+                              <Button 
+                                variant="link" 
+                                className="p-0 h-auto text-xs text-primary"
+                                type="button"
+                                onClick={() => setShowForgotPassword(true)}
+                              >
+                                Forgot Password?
+                              </Button>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      
                       <Button
                         type="submit"
                         className="w-full"
-                        disabled={isRequestingPasswordReset}
+                        disabled={loginMutation.isPending}
                       >
-                        {isRequestingPasswordReset ? (
+                        {loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Sending Reset Link...
+                            Logging in...
                           </>
                         ) : (
-                          "Send Reset Link"
+                          "Sign In"
                         )}
                       </Button>
                     </form>
                   </Form>
+                )}
+                
+                <div className="text-center mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Don't have an account?{" "}
+                    <button
+                      onClick={() => setActiveTab("register")}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Sign Up
+                    </button>
+                  </p>
                 </div>
-              ) : (
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
-                  <FormField
-                    control={loginForm.control}
-                    name="loginID"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Login ID</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter your login ID" 
-                            {...field} 
-                            disabled={loginMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="Enter your password" 
-                            {...field} 
-                            disabled={loginMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                        <div className="mt-1">
-                          <Button 
-                            variant="link" 
-                            className="p-0 h-auto text-xs text-primary"
-                            type="button"
-                            onClick={() => setShowForgotPassword(true)}
-                          >
-                            Forgot Password?
-                          </Button>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loginMutation.isPending}
-                  >
-                    {loginMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
-                </form>
-              </Form>
+              </TabsContent>
               
-              <div className="text-center mt-4">
-                <p className="text-sm text-muted-foreground">
-                  Don't have an account?{" "}
-                  <button
-                    onClick={() => setActiveTab("register")}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Sign Up
-                  </button>
-                </p>
-              </div>
-            </TabsContent>
-            
-            {/* Registration Form */}
-            <TabsContent value="register" className="space-y-4 pt-4">
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
-                  <FormField
-                    control={registerForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Enter your full name" 
-                            {...field} 
-                            disabled={registerMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="loginID"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Login ID</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Choose a login ID" 
-                            {...field} 
-                            disabled={registerMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="Enter your email" 
-                            {...field} 
-                            disabled={registerMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="Create a password" 
-                            {...field} 
-                            disabled={registerMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="Confirm your password" 
-                            {...field} 
-                            disabled={registerMutation.isPending}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="space-y-2">
+              {/* Registration Form */}
+              <TabsContent value="register" className="space-y-4 pt-4">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
                     <FormField
                       control={registerForm.control}
-                      name="country"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Country and Phone</FormLabel>
-                          <div className="flex flex-row space-x-2 items-start">
-                            <div className="w-1/2">
-                              <Select
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  // Find the selected country to display the code
-                                  const selectedCountry = COUNTRIES.find(c => c.id === value);
-                                  if (selectedCountry) {
-                                    // Update the phone field with the country code prefix
-                                    const phoneField = registerForm.getValues('phone') || '';
-                                    if (!phoneField.startsWith(selectedCountry.code)) {
-                                      registerForm.setValue('phone', selectedCountry.code + ' ');
-                                    }
-                                  }
-                                }}
-                                value={field.value}
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter your full name" 
+                              {...field} 
+                              disabled={registerMutation.isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="loginID"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Login ID</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Create a login ID" 
+                              {...field} 
+                              disabled={registerMutation.isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Create a password" 
+                                {...field} 
                                 disabled={registerMutation.isPending}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a country" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {COUNTRIES.map((country) => (
-                                    <SelectItem key={country.id} value={country.id}>
-                                      {country.code} {country.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="w-1/2">
-                              <FormField
-                                control={registerForm.control}
-                                name="phone"
-                                render={({ field }) => (
-                                  <FormControl>
-                                    <Input 
-                                      type="tel" 
-                                      placeholder="Your phone number" 
-                                      {...field} 
-                                      disabled={registerMutation.isPending}
-                                    />
-                                  </FormControl>
-                                )}
                               />
-                            </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={registerForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Confirm your password" 
+                                {...field} 
+                                disabled={registerMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="email" 
+                              placeholder="Enter your email" 
+                              {...field} 
+                              disabled={registerMutation.isPending}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter your phone number" 
+                                {...field} 
+                                disabled={registerMutation.isPending}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={registerForm.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <Select 
+                              value={field.value} 
+                              onValueChange={field.onChange}
+                              disabled={registerMutation.isPending}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select your country" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {Object.entries(COUNTRIES).map(([code, name]) => (
+                                  <SelectItem key={code} value={code}>{name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={registerForm.control}
+                      name="acceptTerms"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={registerMutation.isPending}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Accept Terms and Conditions</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              I agree to the{" "}
+                              <a href="/terms" target="_blank" className="text-primary hover:underline">
+                                Terms of Service
+                              </a>{" "}
+                              and{" "}
+                              <a href="/privacy" target="_blank" className="text-primary hover:underline">
+                                Privacy Policy
+                              </a>
+                              .
+                            </p>
                           </div>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                  
-                  <FormField
-                    control={registerForm.control}
-                    name="acceptTerms"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={registerMutation.isPending}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            I accept the terms and conditions
-                          </FormLabel>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={registerMutation.isPending}
-                  >
-                    {registerMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-                </form>
-              </Form>
-              
-              <div className="text-center mt-4">
-                <p className="text-sm text-muted-foreground">
-                  Already have an account?{" "}
-                  <button
-                    onClick={() => setActiveTab("login")}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Sign in
-                  </button>
-                </p>
-              </div>
-            </TabsContent>
-            
-            {/* Debug Tools */}
-            <TabsContent value="debug" className="space-y-6 pt-4">
-              <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md mb-4">
-                <h3 className="text-amber-800 font-medium mb-2">Debug Tools</h3>
-                <p className="text-amber-700 text-sm">
-                  These tools are for development and debugging purposes only.
-                </p>
-              </div>
-              
-              {/* Direct Login */}
-              <div className="space-y-4 border border-border p-4 rounded-md">
-                <h3 className="font-medium">Direct Login</h3>
-                <p className="text-sm text-muted-foreground">
-                  Bypass password verification and log in directly as any user
-                </p>
+                    
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={registerMutation.isPending}
+                    >
+                      {registerMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
                 
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Enter username"
-                    value={debugUsername}
-                    onChange={(e) => setDebugUsername(e.target.value)}
-                    disabled={isDirectLoginLoading}
-                  />
-                  <Button 
-                    onClick={handleDirectLogin}
-                    disabled={isDirectLoginLoading}
-                  >
-                    {isDirectLoginLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
-                    ) : (
-                      "Direct Login"
-                    )}
-                  </Button>
+                <div className="text-center mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Already have an account?{" "}
+                    <button
+                      onClick={() => setActiveTab("login")}
+                      className="text-primary hover:underline font-medium"
+                    >
+                      Sign In
+                    </button>
+                  </p>
                 </div>
-                
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setDebugUsername("admin")}
-                  >
-                    Admin
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setDebugUsername("Ajitha72")}
-                  >
-                    Customer
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Authentication Status */}
-              <div className="space-y-4 border border-border p-4 rounded-md">
-                <h3 className="font-medium">Authentication Status</h3>
-                <p className="text-sm text-muted-foreground">
-                  Check current authentication status
-                </p>
-                
-                <Button onClick={handleCheckAuthStatus}>
-                  Check Auth Status
-                </Button>
-              </div>
-              
-              {/* User List */}
-              <div className="space-y-4 border border-border p-4 rounded-md">
-                <h3 className="font-medium">User List</h3>
-                <p className="text-sm text-muted-foreground">
-                  List all users in the database
-                </p>
-                
-                <Button 
-                  onClick={handleLoadUsers}
-                  disabled={isLoadingUserList}
-                >
-                  {isLoadingUserList ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Loading users...
-                    </>
-                  ) : (
-                    "Load Users"
-                  )}
-                </Button>
-                
-                {userList.length > 0 && (
-                  <div className="mt-4 max-h-60 overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted">
-                        <tr>
-                          <th className="px-2 py-1 text-left">ID</th>
-                          <th className="px-2 py-1 text-left">Username</th>
-                          <th className="px-2 py-1 text-left">Email</th>
-                          <th className="px-2 py-1 text-left">Role</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {userList.map((user) => (
-                          <tr key={user.id} className="border-b border-border hover:bg-muted/50">
-                            <td className="px-2 py-1">{user.id}</td>
-                            <td className="px-2 py-1">{user.username}</td>
-                            <td className="px-2 py-1">{user.email}</td>
-                            <td className="px-2 py-1">{user.role}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-      
-      {/* Right side - Hero */}
-      <div className="hidden md:block md:w-1/2 bg-gradient-to-r from-primary/80 to-primary">
-        <div className="relative h-full flex items-center justify-center p-8">
-          <div className="max-w-lg">
-            <h1 className="text-4xl font-serif font-bold text-white mb-6">
-              Timeless Elegance, Personalized Luxury
-            </h1>
-            <Separator className="bg-white/30 my-6" />
-            <p className="text-white/90 text-lg mb-8">
-              Join Luster Legacy to discover exclusive custom jewelry designs that reflect your unique style. 
-              Create an account to track your orders, save favorite pieces, and request custom designs tailored just for you.
-            </p>
-            <div className="grid grid-cols-2 gap-4 text-white/90">
-              <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
-                <span className="font-bold text-lg mb-2">Custom Designs</span>
-                <span className="text-center text-sm">Personalized jewelry tailored to your preferences</span>
-              </div>
-              <div className="flex flex-col items-center p-4 bg-white/10 rounded-lg">
-                <span className="font-bold text-lg mb-2">Premium Materials</span>
-                <span className="text-center text-sm">Finest gold, diamonds, and precious gemstones</span>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
     </div>
   );
-}
 }
