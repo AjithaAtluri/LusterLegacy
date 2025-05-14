@@ -595,6 +595,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   console.log("Auth Context - Raw Loading:", isLoading);
   console.log("Auth Context - Stable Loading:", stableLoading);
   
+  // Function to update notification preferences
+  const updateNotificationPreferences = async (preferences: NotificationPreferences): Promise<boolean> => {
+    try {
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to update notification preferences",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      const response = await apiRequest("POST", "/api/user/notifications", preferences);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        toast({
+          title: "Update Failed",
+          description: error.message || "Failed to update notification preferences",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      const updatedUser = await response.json();
+      
+      // Update the user data in the cache
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      
+      // Update the local cache
+      try {
+        const userData = JSON.stringify(updatedUser);
+        sessionStorage.setItem('cached_user_data', userData);
+        localStorage.setItem('cached_user_data', userData);
+      } catch (error) {
+        console.warn("Failed to cache updated user data:", error);
+      }
+      
+      toast({
+        title: "Preferences Updated",
+        description: "Your notification preferences have been saved",
+      });
+      
+      return true;
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "An error occurred while updating your preferences",
+        variant: "destructive",
+      });
+      console.error("Error updating notification preferences:", error);
+      return false;
+    }
+  };
+  
   return (
     <AuthContext.Provider
       value={{
@@ -605,6 +660,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        updateNotificationPreferences,
       }}
     >
       {children}
