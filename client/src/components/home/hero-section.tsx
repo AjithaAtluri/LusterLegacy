@@ -96,10 +96,10 @@ export default function HeroSection() {
           </div>
           
           {/* Call to action buttons */}
-          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6 mb-16 sm:mb-0">
             <Button 
               asChild
-              className="font-montserrat font-medium bg-primary/90 text-white px-6 py-3 md:px-8 md:py-4 rounded-none border border-primary/80 hover:bg-primary transition duration-300 hover-shine h-auto group shadow-lg"
+              className="font-montserrat font-medium bg-primary/90 text-white px-4 py-2 md:px-8 md:py-4 rounded-none border border-primary/80 hover:bg-primary transition duration-300 hover-shine h-auto group shadow-lg"
             >
               <Link href="/collections" className="flex items-center">
                 <span>Explore Collection</span>
@@ -108,7 +108,7 @@ export default function HeroSection() {
             </Button>
             <Button 
               asChild
-              className="font-montserrat font-medium bg-white text-primary px-6 py-3 md:px-8 md:py-4 rounded-none border-2 border-primary/70 hover:bg-white/90 transition duration-300 h-auto group shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+              className="font-montserrat font-medium bg-white text-primary px-4 py-2 md:px-8 md:py-4 rounded-none border-2 border-primary/70 hover:bg-white/90 transition duration-300 h-auto group shadow-[0_0_15px_rgba(212,175,55,0.2)]"
             >
               <Link href="/custom-design" className="flex items-center">
                 <span>Create Custom Design</span>
@@ -124,8 +124,8 @@ export default function HeroSection() {
       <div className={`absolute bottom-6 right-6 h-16 w-16 border-b-2 border-r-2 border-primary/40 pointer-events-none transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}></div>
       
       {/* Scroll indicator with gold accents - only shows after image loads */}
-      <div className={`absolute bottom-6 left-0 right-0 flex justify-center z-20 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
-        <a href="#collections" className="flex flex-col items-center group">
+      <div className={`absolute bottom-6 sm:bottom-6 left-0 right-0 flex justify-center z-20 transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}>
+        <a href="#collections" className="flex flex-col items-center group mt-16 sm:mt-0">
           <span className="text-xs bg-accent px-3 py-1 rounded-full text-accent-foreground uppercase tracking-widest mb-2 font-montserrat font-semibold shadow-lg group-hover:bg-accent/90 transition-colors duration-300">Discover</span>
           <div className="relative w-6 h-10 border-2 border-accent/50 rounded-full flex justify-center p-1 bg-black/20 backdrop-blur-sm">
             <div className="w-1 h-2 bg-accent rounded-full animate-scroll"></div>
