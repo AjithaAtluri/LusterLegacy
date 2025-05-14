@@ -146,7 +146,7 @@ export default function FAQ() {
                   Do you provide certificates for gemstones?
                 </AccordionTrigger>
                 <AccordionContent className="font-montserrat text-foreground/70">
-                  Yes, we provide certification for all precious gemstones from internationally recognized laboratories such as GIA, IGI, and AGS. For custom pieces with client-provided stones, we can arrange certification services at an additional cost. These certificates verify authenticity, quality, and characteristics of your gemstones.
+                  Yes, we provide certification for diamonds and precious gemstones from recognized laboratories like GIA, IGI, and AGS. We also offer detailed quality information for lab-created diamonds and semi-precious gems. Certification for client-provided stones is available at an additional cost.
                 </AccordionContent>
               </AccordionItem>
               
