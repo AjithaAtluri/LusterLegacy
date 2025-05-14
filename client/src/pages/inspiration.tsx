@@ -10,6 +10,15 @@ import polkiPendantNecklace from "@/assets/polki-pendant-necklace.png";
 import diamondBracelet from "@/assets/diamond-bracelet.jpeg";
 import emeraldRing from "@/assets/emerald-ring.jpeg";
 import goldEarrings from "@/assets/gold-earrings.jpeg";
+import emeraldNecklace from "@/assets/emerald-necklace.png";
+import jewelry1 from "@/assets/jewelry1.jpeg";
+import jewelry2 from "@/assets/jewelry2.jpeg";
+import jewelry3 from "@/assets/jewelry3.jpeg";
+import jewelry4 from "@/assets/jewelry4.jpeg";
+import jewelry5 from "@/assets/jewelry5.jpeg";
+import jewelry6 from "@/assets/jewelry6.jpeg";
+import jewelry7 from "@/assets/jewelry7.jpeg";
+import jewelry8 from "@/assets/jewelry8.jpeg";
 
 // Gallery image interface
 interface GalleryImage {
@@ -64,6 +73,69 @@ export default function Inspiration() {
       alt: "Gold chandelier earrings with intricate filigree",
       title: "Golden Chandelier",
       description: "Exquisite gold chandelier earrings featuring delicate filigree work and intricate detailing, creating a dramatic statement piece that captures movement and light."
+    },
+    {
+      id: 7,
+      src: emeraldNecklace,
+      alt: "Emerald and diamond statement necklace",
+      title: "Emerald Cascade",
+      description: "A spectacular statement necklace featuring multiple emerald gemstones surrounded by brilliant diamonds in a cascading pattern, perfect for grand occasions."
+    },
+    {
+      id: 8,
+      src: jewelry1,
+      alt: "Luxury jewelry piece",
+      title: "Exquisite Craftsmanship",
+      description: "A finely crafted jewelry piece showcasing the perfect blend of traditional techniques and contemporary design."
+    },
+    {
+      id: 9,
+      src: jewelry2,
+      alt: "Luxury jewelry piece",
+      title: "Timeless Elegance",
+      description: "A timeless piece that exemplifies luxury and sophistication through meticulous attention to detail and premium materials."
+    },
+    {
+      id: 10,
+      src: jewelry3,
+      alt: "Luxury jewelry piece",
+      title: "Artisan Excellence",
+      description: "Handcrafted by master artisans, this piece demonstrates the pinnacle of jewelry craftsmanship and design innovation."
+    },
+    {
+      id: 11,
+      src: jewelry4,
+      alt: "Luxury jewelry piece",
+      title: "Royal Heritage",
+      description: "Inspired by royal heritage designs, this luxury piece combines traditional motifs with contemporary elegance."
+    },
+    {
+      id: 12,
+      src: jewelry5,
+      alt: "Luxury jewelry piece",
+      title: "Modern Luxury",
+      description: "A modern interpretation of luxury jewelry that balances bold design with wearable elegance for the discerning collector."
+    },
+    {
+      id: 13,
+      src: jewelry6,
+      alt: "Luxury jewelry piece",
+      title: "Precious Creation",
+      description: "A precious creation featuring rare gemstones and metals, meticulously selected and crafted to create a one-of-a-kind masterpiece."
+    },
+    {
+      id: 14,
+      src: jewelry7,
+      alt: "Luxury jewelry piece",
+      title: "Diamond Excellence",
+      description: "Featuring exceptionally cut diamonds that catch and reflect light beautifully, this piece exemplifies luxury in its purest form."
+    },
+    {
+      id: 15,
+      src: jewelry8,
+      alt: "Luxury jewelry piece",
+      title: "Heritage Collection",
+      description: "From our heritage collection, this piece tells a story of tradition and craftsmanship passed down through generations of master jewelers."
     }
   ];
   
