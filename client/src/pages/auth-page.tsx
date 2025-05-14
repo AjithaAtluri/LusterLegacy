@@ -498,58 +498,79 @@ export default function AuthPage() {
                       </p>
                       <div className="h-1 w-24 mx-auto mt-3 bg-gradient-to-r from-primary/40 to-secondary/40 rounded-full"></div>
                     </div>
-                    <Form {...forgotPasswordForm}>
-                      <form onSubmit={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)} className="space-y-6">
-                        <FormField
-                          control={forgotPasswordForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="email" 
-                                  placeholder="Enter your email address"
-                                  onChange={field.onChange}
-                                  onBlur={field.onBlur}
-                                  value={field.value}
-                                  name={field.name}
-                                  ref={field.ref}
-                                  disabled={isRequestingPasswordReset}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+                    
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label htmlFor="reset-email" className="text-sm font-medium">
+                          Email
+                        </label>
+                        <input
+                          id="reset-email"
+                          type="email"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          placeholder="Enter your email address"
+                          disabled={isRequestingPasswordReset}
+                          onChange={(e) => {
+                            // Manually update the form value
+                            forgotPasswordForm.setValue('email', e.target.value);
+                          }}
                         />
-                        
-                        <div className="flex space-x-4 pt-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-1/2 border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:border-primary/50"
-                            onClick={() => setShowForgotPassword(false)}
-                            disabled={isRequestingPasswordReset}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="submit"
-                            className="w-1/2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-1px]"
-                            disabled={isRequestingPasswordReset}
-                          >
-                            {isRequestingPasswordReset ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Sending...
-                              </>
-                            ) : (
-                              "Send Reset Link"
-                            )}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
+                        {forgotPasswordForm.formState.errors.email && (
+                          <p className="text-sm font-medium text-destructive">
+                            {forgotPasswordForm.formState.errors.email.message}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="flex space-x-4 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-1/2 border-primary/30 hover:bg-primary/5 transition-all duration-300 hover:border-primary/50"
+                          onClick={() => setShowForgotPassword(false)}
+                          disabled={isRequestingPasswordReset}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          className="w-1/2 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md transition-all duration-300 hover:shadow-lg hover:translate-y-[-1px]"
+                          disabled={isRequestingPasswordReset}
+                          onClick={() => {
+                            const emailValue = forgotPasswordForm.getValues('email');
+                            if (!emailValue) {
+                              forgotPasswordForm.setError('email', {
+                                type: 'manual',
+                                message: 'Please enter your email address'
+                              });
+                              return;
+                            }
+                            
+                            // Check email format using regex
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailRegex.test(emailValue)) {
+                              forgotPasswordForm.setError('email', {
+                                type: 'manual',
+                                message: 'Please enter a valid email address'
+                              });
+                              return;
+                            }
+                            
+                            // Call the submit handler with the email value
+                            onForgotPasswordSubmit({ email: emailValue });
+                          }}
+                        >
+                          {isRequestingPasswordReset ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            "Send Reset Link"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div>
