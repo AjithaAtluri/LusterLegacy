@@ -10,9 +10,10 @@ import { useLocation } from "wouter";
 export default function CustomDesign() {
   const [location] = useLocation();
   
-  // Parse URL parameters to check for inspiration image
+  // Parse URL parameters
   const params = new URLSearchParams(location.split('?')[1] || '');
   const inspirationImage = params.get('inspirationImage');
+  const fromInspiration = params.get('fromInspiration') === 'true';
   
   // Create shared state that will be passed to both components
   const [formState, setFormState] = useState({
@@ -22,53 +23,84 @@ export default function CustomDesign() {
     imageDataUrl: undefined as string | undefined
   });
   
-  // Handle inspiration image - convert module import path to data URL
+  // Handle inspiration image - using both session storage and URL parameter approaches
   useEffect(() => {
-    if (inspirationImage) {
-      console.log("Received inspiration image from gallery:", inspirationImage);
-      
-      // Create an Image object to load the image
-      const img = new Image();
-      
-      // Set up onload handler to convert to data URL once loaded
-      img.onload = () => {
-        console.log("Inspiration image loaded successfully, converting to data URL");
-        // Create a canvas to draw the image
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
+    // First, check if we're coming from the inspiration page (via sessionStorage)
+    if (fromInspiration) {
+      try {
+        const sessionImageSrc = sessionStorage.getItem('inspirationImageSrc');
         
-        // Draw the image to the canvas
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
+        if (sessionImageSrc) {
+          console.log("Found inspiration image in session storage:", sessionImageSrc);
+          processInspirationImage(sessionImageSrc);
           
-          // Convert to data URL
-          try {
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            
-            // Update state with the data URL
-            setFormState(prev => ({
-              ...prev,
-              imageDataUrl: dataUrl
-            }));
-            
-            console.log("Inspiration image converted to data URL successfully");
-          } catch (err) {
-            console.error("Error converting inspiration image to data URL:", err);
-          }
+          // Clear from session storage to prevent reuse
+          sessionStorage.removeItem('inspirationImageSrc');
+          return;
+        } else {
+          console.warn("fromInspiration flag is true but no image found in sessionStorage");
         }
-      };
-      
-      // Set up error handler
-      img.onerror = (err) => {
-        console.error("Error loading inspiration image:", err);
-      };
-      
-      // Start loading the image - use the URL directly
-      img.src = inspirationImage;
+      } catch (err) {
+        console.error("Error accessing sessionStorage for inspiration image:", err);
+      }
     }
-  }, [inspirationImage]);
+    
+    // Fallback to URL parameter approach if sessionStorage didn't work
+    if (inspirationImage) {
+      console.log("Using URL parameter for inspiration image:", inspirationImage);
+      processInspirationImage(inspirationImage);
+    }
+  }, [inspirationImage, fromInspiration]);
+  
+  // Helper function to process an inspiration image source into a data URL
+  const processInspirationImage = (imageSrc: string) => {
+    console.log("Processing inspiration image:", imageSrc);
+    
+    // Create an Image object to load the image
+    const img = new Image();
+    
+    // Set up onload handler to convert to data URL once loaded
+    img.onload = () => {
+      console.log("Inspiration image loaded successfully, dimensions:", img.width, "x", img.height);
+      
+      // Create a canvas to draw the image
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // Draw the image to the canvas
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        
+        // Convert to data URL
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+          
+          // Update state with the data URL
+          setFormState(prev => ({
+            ...prev,
+            imageDataUrl: dataUrl
+          }));
+          
+          console.log("Inspiration image converted to data URL successfully");
+        } catch (err) {
+          console.error("Error converting inspiration image to data URL:", err);
+        }
+      }
+    };
+    
+    // Set up error handler
+    img.onerror = (err) => {
+      console.error("Error loading inspiration image:", err);
+    };
+    
+    // Start loading the image - use the URL directly
+    img.src = imageSrc;
+    
+    // Set crossOrigin to anonymous to avoid CORS issues with some image sources
+    img.crossOrigin = "anonymous";
+  };
   
   // Function to update the shared state
   const updateFormState = (data: {

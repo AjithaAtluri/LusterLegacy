@@ -257,13 +257,28 @@ export default function Inspiration() {
                   <div className="flex flex-col justify-center">
                     {/* Title removed as requested */}
                     <div className="flex flex-col gap-3 mt-6">
-                      <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                        <Link 
-                          href={`/custom-design?inspirationImage=${encodeURIComponent(image.src)}`}
-                          className="flex items-center justify-center"
-                        >
-                          Request Similar Design <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
+                      <Button 
+                        variant="default" 
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                        onClick={() => {
+                          console.log("Inspiration - Preparing image for transfer to design page:", image.src);
+                          
+                          // Save the image src to sessionStorage for the design page to retrieve
+                          try {
+                            sessionStorage.setItem('inspirationImageSrc', image.src);
+                            console.log("Inspiration - Saved image src to sessionStorage");
+                            
+                            // Navigate to the custom design page
+                            window.location.href = '/custom-design?fromInspiration=true';
+                          } catch (err) {
+                            console.error("Error storing inspiration image in sessionStorage:", err);
+                            
+                            // Fallback to the previous approach if sessionStorage fails
+                            window.location.href = `/custom-design?inspirationImage=${encodeURIComponent(image.src)}`;
+                          }
+                        }}
+                      >
+                        Request Similar Design <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </div>
                   </div>
