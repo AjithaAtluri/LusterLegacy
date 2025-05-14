@@ -17,6 +17,14 @@ type AuthContextType = {
   loginMutation: UseMutationResult<Omit<User, "password">, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<Omit<User, "password">, Error, RegisterData>;
+  updateNotificationPreferences: (preferences: NotificationPreferences) => Promise<boolean>;
+};
+
+// Type for notification preferences
+type NotificationPreferences = {
+  notifyDesignUpdates?: boolean;
+  notifyOrderStatus?: boolean;
+  notifyQuoteResponses?: boolean;
 };
 
 // Data type for login

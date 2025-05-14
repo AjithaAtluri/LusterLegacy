@@ -16,6 +16,10 @@ export const users = pgTable("users", {
   phone: text("phone"),
   country: text("country"),
   role: text("role").notNull().default("customer"), // "admin", "limited-admin", or "customer"
+  // Email notification preferences
+  notifyDesignUpdates: boolean("notify_design_updates").default(true),
+  notifyOrderStatus: boolean("notify_order_status").default(true),
+  notifyQuoteResponses: boolean("notify_quote_responses").default(true),
   createdAt: timestamp("created_at").defaultNow()
 });
 
