@@ -133,6 +133,67 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
     return params;
   };
   
+  // Handle inspiration image from parent component
+  useEffect(() => {
+    if (formState?.imageDataUrl && !previewUrl && uploadedImages.length === 0) {
+      console.log("DesignForm - Received inspiration image from parent");
+      
+      try {
+        // Create an Image object to load the image
+        const img = new Image();
+        
+        // Set up onload handler to convert to a File once loaded
+        img.onload = () => {
+          console.log("DesignForm - Inspiration image loaded successfully, converting to File");
+          
+          // Create a canvas to draw the image
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          // Draw the image to the canvas
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            
+            // Convert to a blob
+            canvas.toBlob((blob) => {
+              if (blob) {
+                // Create a File object from the blob
+                const fileName = "inspiration-image.jpg";
+                const file = new File([blob], fileName, { 
+                  type: "image/jpeg",
+                  lastModified: Date.now()
+                });
+                
+                // Create the preview URL
+                const newPreviewUrl = URL.createObjectURL(blob);
+                
+                // Update component state with the new file and preview
+                setUploadedImage(file);
+                setUploadedImages([file]);
+                setPreviewUrl(newPreviewUrl);
+                setPreviewUrls([newPreviewUrl]);
+                
+                console.log("DesignForm - Successfully processed inspiration image");
+              }
+            }, "image/jpeg");
+          }
+        };
+        
+        // Set up error handler
+        img.onerror = (err) => {
+          console.error("DesignForm - Error loading inspiration image:", err);
+        };
+        
+        // Start loading the image
+        img.src = formState.imageDataUrl;
+      } catch (error) {
+        console.error("DesignForm - Error processing inspiration image:", error);
+      }
+    }
+  }, [formState, previewUrl, uploadedImages.length]);
+  
   // Update the form with user data when user loads
   useEffect(() => {
     if (user) {

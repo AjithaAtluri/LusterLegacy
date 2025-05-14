@@ -19,8 +19,56 @@ export default function CustomDesign() {
     metalType: "",
     selectedStones: [] as string[],
     notes: "",
-    imageDataUrl: inspirationImage || undefined as string | undefined
+    imageDataUrl: undefined as string | undefined
   });
+  
+  // Handle inspiration image - convert module import path to data URL
+  useEffect(() => {
+    if (inspirationImage) {
+      console.log("Received inspiration image from gallery:", inspirationImage);
+      
+      // Create an Image object to load the image
+      const img = new Image();
+      
+      // Set up onload handler to convert to data URL once loaded
+      img.onload = () => {
+        console.log("Inspiration image loaded successfully, converting to data URL");
+        // Create a canvas to draw the image
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Draw the image to the canvas
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          
+          // Convert to data URL
+          try {
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            
+            // Update state with the data URL
+            setFormState(prev => ({
+              ...prev,
+              imageDataUrl: dataUrl
+            }));
+            
+            console.log("Inspiration image converted to data URL successfully");
+          } catch (err) {
+            console.error("Error converting inspiration image to data URL:", err);
+          }
+        }
+      };
+      
+      // Set up error handler
+      img.onerror = (err) => {
+        console.error("Error loading inspiration image:", err);
+      };
+      
+      // Start loading the image - use the URL directly
+      img.src = inspirationImage;
+    }
+  }, [inspirationImage]);
   
   // Function to update the shared state
   const updateFormState = (data: {
