@@ -23,6 +23,22 @@ export default function Inspiration() {
   const galleryImages: GalleryImage[] = [
     {
       id: 1,
+      src: "/inspiration-ruby-leaf.png",
+      alt: "Carved ruby leaf pendant in gold setting",
+      category: "pendants",
+      title: "Autumn Ruby Leaf",
+      description: "An exquisite carved ruby leaf pendant set in a luxurious 18K gold bezel, showcasing the natural beauty of the gemstone with its translucent quality."
+    },
+    {
+      id: 2,
+      src: "/inspiration-pearl-necklace.png",
+      alt: "Multi-strand pearl necklace with diamond accents",
+      category: "necklaces",
+      title: "Royal Pearl Cascade",
+      description: "A stunning multi-strand pearl necklace featuring elegant gold and diamond spacers, creating a luxurious collar effect perfect for special occasions."
+    },
+    {
+      id: 3,
       src: "/attached_assets/Where passion meets craftsmanship — every masterpiece begins with a spark..png",
       alt: "Ruby pendant sketch with diamond surround",
       category: "pendants",
@@ -30,7 +46,7 @@ export default function Inspiration() {
       description: "A conceptual sketch of a teardrop ruby pendant with an intricate diamond surround design, showcasing the initial creative process."
     },
     {
-      id: 2,
+      id: 4,
       src: "/uploads/e97f1746-c8fd-4ebb-9efb-8b603ae50c8e.jpeg",
       alt: "Sapphire necklace initial design sketch",
       category: "necklaces",
@@ -38,7 +54,7 @@ export default function Inspiration() {
       description: "A design inspiration for a statement sapphire necklace featuring multiple gems arranged in a cascade pattern."
     },
     {
-      id: 3,
+      id: 5,
       src: "/uploads/ade2c1ec-880e-424a-b4cb-86973e188c92.jpeg",
       alt: "Vintage-inspired diamond ring sketch",
       category: "rings",
@@ -46,7 +62,7 @@ export default function Inspiration() {
       description: "A hand-sketched design for a vintage-inspired diamond ring with filigree details and side stone accents."
     },
     {
-      id: 4,
+      id: 6,
       src: "/uploads/ce266b9c-6666-4300-828e-f0442d6d4292.jpeg",
       alt: "Gold and sapphire bracelet design",
       category: "bracelets",
@@ -54,7 +70,7 @@ export default function Inspiration() {
       description: "An innovative design concept for a gold link bracelet with sapphire focal points, blending modern and classical elements."
     },
     {
-      id: 5,
+      id: 7,
       src: "/uploads/cb2369a1-95c3-47b9-a817-52d1fcc6afbc.jpeg",
       alt: "Complete bridal jewelry set sketch",
       category: "sets",
@@ -62,7 +78,7 @@ export default function Inspiration() {
       description: "A comprehensive design for a bridal jewelry set including tiara, necklace, bracelet and earrings with matching motifs."
     },
     {
-      id: 6,
+      id: 8,
       src: "/uploads/c9e7f866-e41a-45e0-a2e9-8da85040d572.jpeg",
       alt: "Modern pearl necklace concept",
       category: "necklaces",
@@ -70,7 +86,7 @@ export default function Inspiration() {
       description: "A fresh take on pearl necklace design featuring asymmetrical placement and mixed metal elements."
     },
     {
-      id: 7,
+      id: 9,
       src: "/uploads/c5b70277-7af7-43d8-97ee-7b51f16b29a4.jpeg",
       alt: "Art deco inspired earring design",
       category: "earrings",
@@ -78,7 +94,7 @@ export default function Inspiration() {
       description: "An artistically rendered concept for earrings inspired by Art Deco geometric patterns and symmetry."
     },
     {
-      id: 8,
+      id: 10,
       src: "/uploads/9cffd119-20ca-461d-be69-fd53a03b177d.jpeg",
       alt: "Minimalist diamond ring sketch",
       category: "rings",
@@ -86,7 +102,7 @@ export default function Inspiration() {
       description: "A clean, minimalist design sketch for a contemporary ring featuring a solitaire diamond in an innovative setting."
     },
     {
-      id: 9,
+      id: 11,
       src: "/uploads/97c32e6e-50e4-40cc-8f6f-22ca94a98d85.jpeg",
       alt: "Woven gold bracelet concept",
       category: "bracelets",
@@ -94,28 +110,12 @@ export default function Inspiration() {
       description: "A detailed design for a bracelet with interwoven gold strands creating a textured, natural appearance."
     },
     {
-      id: 10,
+      id: 12,
       src: "/uploads/9e0ee12c-3349-41a6-b615-f574b4e71549.jpeg",
       alt: "Colorful gemstone collection concept",
       category: "sets",
       title: "Rainbow Treasure",
       description: "A vibrant design concept for a coordinated set using various colored gemstones arranged in a rainbow pattern."
-    },
-    {
-      id: 11,
-      src: "/uploads/8f436011-760e-4636-920b-6089018ebc37.jpeg",
-      alt: "Nature-inspired pendant design",
-      category: "necklaces",
-      title: "Floral Essence",
-      description: "A nature-inspired pendant design featuring organic forms and floral motifs with diamond accents."
-    },
-    {
-      id: 12,
-      src: "/uploads/834a063e-5e70-454e-9c6b-ca63875bcf60.jpeg",
-      alt: "Chandelier earrings technical drawing",
-      category: "earrings",
-      title: "Cascading Light",
-      description: "A technical drawing showing the intricate construction of chandelier earrings with multiple movement points."
     }
   ];
   
