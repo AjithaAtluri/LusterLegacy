@@ -27,6 +27,7 @@ const InspirationGallery = lazy(() => import("@/pages/inspiration"));
 const CustomerDashboard = lazy(() => import("@/pages/customer-dashboard"));
 const AuthPage = lazy(() => import("@/pages/auth-page"));
 const VerifyEmail = lazy(() => import("@/pages/verify-email"));
+const ResetPassword = lazy(() => import("@/pages/reset-password"));
 const FinalizeOrder = lazy(() => import("@/pages/finalize-order"));
 const CustomizeRequest = lazy(() => import("@/pages/customize-request"));
 
@@ -166,6 +167,7 @@ function App() {
                   <ProtectedRoute path="/payment/design-consultation/:id" component={lazy(() => import("@/pages/payment/design-consultation/[id]"))} />
                   <Route path="/auth" component={AuthPage} />
                   <Route path="/verify-email" component={VerifyEmail} />
+                  <Route path="/reset-password" component={ResetPassword} />
                   
                   {/* Tools */}
                   <Route path="/tools/image-test" component={ImageTest} />

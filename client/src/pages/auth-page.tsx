@@ -304,7 +304,7 @@ export default function AuthPage() {
       setIsRequestingPasswordReset(true);
       
       // Make API call to request password reset
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch('/api/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -312,9 +312,10 @@ export default function AuthPage() {
         body: JSON.stringify({ email: data.email }),
       });
       
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to request password reset');
+        throw new Error(responseData.message || 'Failed to request password reset');
       }
       
       // Success - show message to user
@@ -323,6 +324,12 @@ export default function AuthPage() {
         description: "If an account exists with that email, you'll receive a password reset link shortly.",
         duration: 5000,
       });
+      
+      // If in development mode and a reset link is provided in the response, show it in the console
+      if (responseData.resetLink) {
+        console.log("[DEV] Password reset link:", responseData.resetLink);
+        console.log("[DEV] You can use this link to reset your password in development mode");
+      }
       
       // Reset form and return to login view
       forgotPasswordForm.reset();
