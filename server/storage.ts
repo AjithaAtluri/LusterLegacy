@@ -61,6 +61,8 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { sql, and, eq, ne, isNotNull, desc, asc, SQL } from "drizzle-orm";
+import { randomBytes } from "crypto";
+import { hashPassword } from "./auth";
 
 // Storage interface definition
 import session from "express-session";
@@ -80,6 +82,9 @@ export interface IStorage {
   getUserByLoginID(loginID: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByVerificationToken(token: string): Promise<User | undefined>;
+  getUserByPasswordResetToken(token: string): Promise<User | undefined>;
+  createPasswordResetToken(email: string): Promise<{ token: string; user: User } | undefined>;
+  resetPassword(token: string, newPassword: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
   updateNotificationPreferences(
@@ -92,6 +97,10 @@ export interface IStorage {
   ): Promise<User>;
   deleteUser(loginIDOrId: string | number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
+  
+  // Password reset methods
+  createPasswordResetToken(email: string): Promise<{token: string; user: User} | undefined>;
+  resetPassword(token: string, newPassword: string): Promise<User | undefined>;
 
   // Customization request methods
   createCustomizationRequest(request: any): Promise<any>;
@@ -422,6 +431,86 @@ export class DatabaseStorage implements IStorage {
       await db.delete(users).where(eq(users.id, loginIDOrId));
     }
     return true;
+  }
+  
+  // Password reset methods
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select()
+      .from(users)
+      .where(eq(users.verificationToken, token));
+    return user;
+  }
+  
+  async getUserByPasswordResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select()
+      .from(users)
+      .where(eq(users.passwordResetToken, token));
+    
+    if (!user || !user.passwordResetExpires) {
+      return undefined;
+    }
+    
+    // Check if the token has expired
+    const now = new Date();
+    if (now > user.passwordResetExpires) {
+      // Token expired, clear it
+      await db.update(users)
+        .set({ 
+          passwordResetToken: null,
+          passwordResetExpires: null 
+        })
+        .where(eq(users.id, user.id));
+      return undefined;
+    }
+    
+    return user;
+  }
+  
+  async createPasswordResetToken(email: string): Promise<{ token: string; user: User } | undefined> {
+    const user = await this.getUserByEmail(email);
+    if (!user) {
+      return undefined;
+    }
+
+    // Generate a random token
+    const token = randomBytes(32).toString('hex');
+    
+    // Set token expiration to 1 hour from now
+    const expiration = new Date();
+    expiration.setHours(expiration.getHours() + 1);
+    
+    // Update user with reset token and expiration
+    const [updatedUser] = await db.update(users)
+      .set({
+        passwordResetToken: token,
+        passwordResetExpires: expiration
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+    
+    return { token, user: updatedUser };
+  }
+  
+  async resetPassword(token: string, newPassword: string): Promise<User | undefined> {
+    const user = await this.getUserByPasswordResetToken(token);
+    if (!user) {
+      return undefined;
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashPassword(newPassword);
+    
+    // Update the user with new password and clear reset token
+    const [updatedUser] = await db.update(users)
+      .set({
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+    
+    return updatedUser;
   }
   
   // Implementation for remaining methods...
