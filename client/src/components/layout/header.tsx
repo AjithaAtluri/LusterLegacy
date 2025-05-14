@@ -70,7 +70,7 @@ export default function Header() {
   };
   
   const navItems = [
-    { label: "Collections", path: "/collections" },
+    { label: "Our Collections", path: "/collections" },
     { label: "Inspiration", path: "/inspiration" },
     { label: "Custom Design", path: "/custom-design" },
     { label: "Client Stories", path: "/client-stories" },
