@@ -1215,8 +1215,38 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
-  async getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]> { return []; }
-  async addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment> { return {} as DesignRequestComment; }
+  async getDesignRequestComments(designRequestId: number): Promise<DesignRequestComment[]> {
+    try {
+      // Get all comments for the specified design request, ordered by creation date
+      const comments = await db
+        .select()
+        .from(designRequestComments)
+        .where(eq(designRequestComments.designRequestId, designRequestId))
+        .orderBy(asc(designRequestComments.createdAt));
+      
+      console.log(`Retrieved ${comments.length} comments for design request ID ${designRequestId}`);
+      return comments;
+    } catch (error) {
+      console.error(`Error fetching comments for design request ID ${designRequestId}:`, error);
+      return [];
+    }
+  }
+  
+  async addDesignRequestComment(comment: InsertDesignRequestComment): Promise<DesignRequestComment> {
+    try {
+      // Insert the new comment
+      const [newComment] = await db
+        .insert(designRequestComments)
+        .values(comment)
+        .returning();
+      
+      console.log(`Added new comment ID ${newComment.id} to design request ID ${comment.designRequestId}`);
+      return newComment;
+    } catch (error) {
+      console.error(`Error adding comment to design request ID ${comment.designRequestId}:`, error);
+      throw new Error(`Failed to add comment: ${error.message}`);
+    }
+  }
   async getDesignFeedback(designRequestId: number): Promise<DesignFeedback[]> { return []; }
   async addDesignFeedback(feedback: InsertDesignFeedback): Promise<DesignFeedback> { return {} as DesignFeedback; }
   async getDesignPayments(designRequestId: number): Promise<DesignPayment[]> { return []; }
