@@ -509,8 +509,12 @@ export default function AuthPage() {
                               <FormControl>
                                 <Input 
                                   type="email" 
-                                  placeholder="Enter your email address" 
-                                  {...field} 
+                                  placeholder="Enter your email address"
+                                  onChange={field.onChange}
+                                  onBlur={field.onBlur}
+                                  value={field.value}
+                                  name={field.name}
+                                  ref={field.ref}
                                   disabled={isRequestingPasswordReset}
                                 />
                               </FormControl>
