@@ -102,7 +102,8 @@ export function IdleTimer({
       if (timer) window.clearTimeout(timer);
       if (warningTimer) window.clearTimeout(warningTimer);
     };
-  }, [user, isIdle, timer, warningTimer]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isIdle]);
 
   return null; // This component doesn't render anything
 }

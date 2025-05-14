@@ -82,11 +82,14 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       console.error('SendGrid detailed error:', JSON.stringify(error, null, 2));
       
       // Check for response object which might contain more detailed SendGrid error info
-      if ('response' in error && error.response) {
-        console.error('SendGrid response error:', error.response);
+      // Check if the error object has a response property
+      const errorObj = error as any;
+      if (errorObj && errorObj.response) {
+        console.error('SendGrid response error:', errorObj.response);
         
-        if ('body' in error.response) {
-          console.error('SendGrid response body:', error.response.body);
+        // Check if the response has a body property
+        if (errorObj.response.body) {
+          console.error('SendGrid response body:', errorObj.response.body);
         }
       }
     }

@@ -576,7 +576,29 @@ export function setupAuth(app: Express): void {
       await storage.updateUser(req.user.id, { verificationToken: token });
       
       // Generate verification link
-      const verificationLink = `${req.protocol}://${req.get('host')}/verify-email?token=${token}`;
+      // Determine the proper host and protocol
+      let protocol = 'http';
+      let host = req.get('host') || 'localhost:5000';
+      
+      // When in production, use HTTPS and the proper domain
+      if (process.env.NODE_ENV === 'production') {
+        protocol = 'https';
+        
+        // Use PRODUCTION_DOMAIN env var if available, otherwise use host from request
+        if (process.env.PRODUCTION_DOMAIN) {
+          host = process.env.PRODUCTION_DOMAIN;
+          console.log(`[AUTH] Using PRODUCTION_DOMAIN for verification link: ${host}`);
+        } else {
+          // Check if we're on a replit domain
+          if (host.includes('replit.dev') || host.includes('replit.app')) {
+            console.log(`[AUTH] Detected Replit domain: ${host}`);
+          }
+        }
+      }
+      
+      // URL-encode the token to prevent issues with special characters
+      const encodedToken = encodeURIComponent(token);
+      const verificationLink = `${protocol}://${host}/verify-email?token=${encodedToken}`;
       
       console.log(`[AUTH] Generating verification link: ${verificationLink}`);
       
@@ -655,8 +677,28 @@ export function setupAuth(app: Express): void {
         return res.status(400).json({ message: "Verification token is required" });
       }
       
+      // Convert token to string (it could be a string, array, or ParsedQs object)
+      let tokenStr: string;
+      if (Array.isArray(token)) {
+        tokenStr = token[0];
+      } else if (typeof token === 'string') {
+        tokenStr = token;
+      } else if (token && typeof token === 'object') {
+        tokenStr = String(token);
+      } else {
+        tokenStr = '';
+      }
+      
+      console.log(`[AUTH] Verifying email with token: ${tokenStr ? tokenStr.substring(0, 10) + '...' : 'empty token'}`);
+      
+      // Check if token is valid (don't proceed if token is empty)
+      if (!tokenStr) {
+        console.error('[AUTH] Empty token provided for email verification');
+        return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
+      }
+      
       // Find user with this token
-      const user = await storage.getUserByVerificationToken(token);
+      const user = await storage.getUserByVerificationToken(tokenStr);
       
       if (!user) {
         return res.status(404).json({ message: "Invalid or expired verification token" });
@@ -794,12 +836,31 @@ export function setupAuth(app: Express): void {
       const { token, user: updatedUser } = resetResult;
       
       // Generate the reset link
-      // In production, we need to use the fully qualified domain name
-      const host = process.env.NODE_ENV === 'production' 
-        ? process.env.PRODUCTION_DOMAIN || req.get('host')
-        : req.get('host');
+      // Determine the proper host and protocol
+      let protocol = 'http';
+      let host = req.get('host') || 'localhost:5000';
+      
+      // When in production, use HTTPS and the proper domain
+      if (process.env.NODE_ENV === 'production') {
+        protocol = 'https';
         
-      const resetUrl = `${process.env.NODE_ENV === 'production' ? 'https' : 'http'}://${host}/reset-password?token=${token}`;
+        // Use PRODUCTION_DOMAIN env var if available, otherwise use host from request
+        if (process.env.PRODUCTION_DOMAIN) {
+          host = process.env.PRODUCTION_DOMAIN;
+          console.log(`[AUTH] Using PRODUCTION_DOMAIN for reset link: ${host}`);
+        } else {
+          // Check if we're on a replit domain
+          if (host.includes('replit.dev') || host.includes('replit.app')) {
+            console.log(`[AUTH] Detected Replit domain: ${host}`);
+          }
+        }
+      }
+      
+      // URL-encode the token to prevent issues with special characters
+      const encodedToken = encodeURIComponent(token);
+      const resetUrl = `${protocol}://${host}/reset-password?token=${encodedToken}`;
+      
+      console.log(`[AUTH] Generated password reset URL: ${resetUrl}`);
       
       // Import email service dynamically to avoid circular dependencies
       const emailService = await import("./services/email-service");
@@ -947,7 +1008,13 @@ export function setupAuth(app: Express): void {
       
       console.log(`[AUTH] Processing token (converted): ${tokenStr ? tokenStr.substring(0, 10) + '...' : 'empty token'}`);
       
-      // Check if token is valid
+      // Check if token is valid (don't proceed if token is empty)
+      if (!tokenStr) {
+        console.error('[AUTH] Empty token provided for password reset');
+        return res.status(400).json({ success: false, message: 'Invalid or expired password reset token' });
+      }
+      
+      console.log(`[AUTH] Looking up user by password reset token: ${tokenStr.substring(0, 10)}...`);
       const user = await storage.getUserByPasswordResetToken(tokenStr);
       
       if (user) {
