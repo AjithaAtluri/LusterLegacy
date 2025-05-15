@@ -46,8 +46,8 @@ const FAQ = lazy(() => import("@/pages/faq"));
 // Admin pages
 const AdminLogin = lazy(() => import("@/pages/admin/login"));
 const AdminDashboard = lazy(() => import("@/pages/admin/dashboard"));
-// DirectAdminDashboard is being replaced by the regular dashboard
-// const DirectAdminDashboard = lazy(() => import("@/pages/admin/direct-dashboard"));
+// New reliable dashboard that doesn't rely on complex authentication flow
+const ReliableDashboard = lazy(() => import("@/pages/admin/reliable-dashboard"));
 const AdminProducts = lazy(() => import("@/pages/admin/products"));
 // Unified product page with AI generator
 const AdminAddProductUnified = lazy(() => import("@/pages/admin/add-product-with-unified-generator"));
@@ -220,6 +220,9 @@ function App() {
                       return null;
                     }}
                   </Route>
+                  
+                  {/* Direct access to reliable dashboard - no protected route */}
+                  <Route path="/admin/reliable" component={ReliableDashboard} />
                   
                   {/* Protected Routes for regular admin access */}
                   <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
