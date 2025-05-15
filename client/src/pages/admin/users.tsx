@@ -19,7 +19,7 @@ import {
   CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, UserCircle, UserPlus, ShieldCheck } from "lucide-react";
+import { Loader2, Trash2, UserCircle, UserPlus, ShieldCheck, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { UserDetailDialog } from "@/components/admin/user-detail-dialog";
 
 // User type definition
 interface User {
@@ -72,6 +73,7 @@ interface NewAdminFormState {
 export default function AdminUsersPage() {
   const { toast } = useToast();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newAdminForm, setNewAdminForm] = useState<NewAdminFormState>({
     username: "",
@@ -341,15 +343,25 @@ export default function AdminUsersPage() {
                         </TableCell>
                         <TableCell>{formatDate(user.createdAt)}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setUserToDelete(user)}
-                            disabled={user.role === "admin" || deleteUserMutation.isPending}
-                            title={user.role === "admin" ? "Admin users cannot be deleted" : "Delete user"}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSelectedUserId(user.id)}
+                              title="View user details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setUserToDelete(user)}
+                              disabled={user.role === "admin" || deleteUserMutation.isPending}
+                              title={user.role === "admin" ? "Admin users cannot be deleted" : "Delete user"}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -391,6 +403,12 @@ export default function AdminUsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* User detail dialog */}
+      <UserDetailDialog 
+        userId={selectedUserId} 
+        onClose={() => setSelectedUserId(null)} 
+      />
     </AdminLayout>
   );
 }
