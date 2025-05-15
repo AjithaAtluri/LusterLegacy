@@ -1,7 +1,7 @@
 import { Helmet } from "react-helmet";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { ArrowRight, Heart, ZoomIn, PlusCircle, Upload, X, Image, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,29 @@ export default function Inspiration() {
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Fetch inspiration images from API
+  const { data: apiGalleryImages, isLoading: isLoadingGallery } = useQuery({
+    queryKey: ['/api/inspiration'],
+    queryFn: async () => {
+      const response = await fetch('/api/inspiration');
+      if (!response.ok) {
+        throw new Error('Failed to fetch inspiration images');
+      }
+      return response.json();
+    },
+  });
+  
+  // Transform API images to match GalleryImage format or use fallback data
+  const displayImages: GalleryImage[] = apiGalleryImages?.length > 0 
+    ? apiGalleryImages.map((img: any) => ({
+        id: img.id,
+        src: img.imageUrl,
+        alt: img.title || 'Inspiration image',
+        title: img.title || 'Jewelry piece',
+        description: img.description
+      }))
+    : galleryImages;
   
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,6 +354,27 @@ export default function Inspiration() {
     }
   };
   
+  // Fetch inspiration images from API
+  const { data: apiGalleryImages, isLoading: isLoadingGallery } = useQuery({
+    queryKey: ['/api/inspiration'],
+    queryFn: async () => {
+      const response = await fetch('/api/inspiration');
+      if (!response.ok) {
+        throw new Error('Failed to fetch inspiration images');
+      }
+      return response.json();
+    },
+  });
+  
+  // Transform API images to match GalleryImage format
+  const transformedApiImages: GalleryImage[] = apiGalleryImages?.map((img: any) => ({
+    id: img.id,
+    src: img.imageUrl,
+    alt: img.title,
+    title: img.title,
+    description: img.description
+  })) || [];
+  
   const { user } = useAuth();
 
   return (
@@ -477,8 +521,13 @@ export default function Inspiration() {
         )}
         
         {/* Gallery grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {galleryImages.map((image: GalleryImage) => (
+        {isLoadingGallery ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {(transformedApiImages.length > 0 ? transformedApiImages : galleryImages).map((image: GalleryImage) => (
             <Dialog key={image.id}>
               <div className="group relative overflow-hidden rounded-lg bg-card shadow-md transition-all hover:-translate-y-1 hover:shadow-lg">
                 <div className="aspect-auto overflow-hidden h-[400px]">
