@@ -17,6 +17,10 @@ export default function PersonalizationsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("active");
   
+  // Get URL search params
+  const params = new URLSearchParams(window.location.search);
+  const userIdParam = params.get('userId');
+  
   // Fetch all personalization requests using original API endpoint for compatibility
   const { data: personalizationRequests, isLoading, isError, refetch } = useQuery({
     queryKey: ["/api/customization-requests"],
@@ -27,7 +31,7 @@ export default function PersonalizationsPage() {
     }
   });
   
-  // Filter requests based on search term and active tab
+  // Filter requests based on search term, active tab, and userId
   const filteredRequests = personalizationRequests ? personalizationRequests
     .filter((request: CustomizationRequest) => {
       const searchLower = searchTerm.toLowerCase();
@@ -46,6 +50,10 @@ export default function PersonalizationsPage() {
       } else {
         return true; // Show all in "all" tab
       }
+    })
+    .filter((request: CustomizationRequest) => {
+      // Filter by userId if present in URL
+      return !userIdParam || request.userId === parseInt(userIdParam);
     }) : [];
   
   // Handle refresh button

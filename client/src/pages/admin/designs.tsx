@@ -45,12 +45,16 @@ export default function AdminDesigns() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
   
+  // Get URL search params
+  const params = new URLSearchParams(window.location.search);
+  const userIdParam = params.get('userId');
+  
   // Fetch design requests
   const { data: designs, isLoading } = useQuery({
     queryKey: ['/api/custom-designs'],
   });
   
-  // Filter designs by search query and status
+  // Filter designs by search query, status, and userId
   const filteredDesigns = designs?.filter(design => {
     // Filter by search query
     const matchesSearch = !searchQuery || 
@@ -61,7 +65,10 @@ export default function AdminDesigns() {
     // Filter by status
     const matchesStatus = statusFilter === "all" || design.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    // Filter by userId if present in URL
+    const matchesUserId = !userIdParam || design.userId === parseInt(userIdParam);
+    
+    return matchesSearch && matchesStatus && matchesUserId;
   });
   
   // Sort designs
