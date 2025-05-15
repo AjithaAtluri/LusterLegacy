@@ -26,29 +26,68 @@ export default function AdminLogin() {
   const isLoading = loginMutation.isPending;
   const [showAuthLoading, setShowAuthLoading] = useState(false);
   
-  // If stable loading is active, show a delayed auth check message
+  // Maximum loading state duration with forced continuation
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let loadingTimer: NodeJS.Timeout;
+    let maxDurationTimer: NodeJS.Timeout;
     
     if (authLoading || stableLoading) {
-      // Set a delay before showing the auth checking message to avoid flicker
-      timer = setTimeout(() => {
+      // Regular loading indicator after a short delay to prevent flickering
+      loadingTimer = setTimeout(() => {
         setShowAuthLoading(true);
-      }, 800);
+      }, 400); // Show loading faster
+      
+      // Force continue after max duration (2 seconds) regardless of loading state
+      maxDurationTimer = setTimeout(() => {
+        console.log("Admin login - Loading timeout reached, forcing continuation");
+        setShowAuthLoading(false);
+      }, 2000);
     } else {
       setShowAuthLoading(false);
     }
     
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(loadingTimer);
+      clearTimeout(maxDurationTimer);
+    };
   }, [authLoading, stableLoading]);
   
   // Redirect if already logged in as admin
   useEffect(() => {
+    // Add a direct check to help break out of endless loading cycles
+    if (showAuthLoading) {
+      const directCheck = async () => {
+        try {
+          const response = await fetch('/api/auth/me', {
+            credentials: 'include',
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            if (userData && userData.role === 'admin') {
+              console.log("Admin detected via direct check, forcing redirect");
+              window.location.href = window.location.origin + "/admin/dashboard";
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Direct admin check failed:", error);
+        }
+      };
+      
+      // Run the direct check
+      directCheck();
+    }
+    
+    // Regular check through user context
     if (user && user.role === "admin") {
       console.log("Admin already authenticated, redirecting to dashboard");
       window.location.href = window.location.origin + "/admin/dashboard";
     }
-  }, [user]);
+  }, [user, showAuthLoading]);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -85,9 +124,36 @@ export default function AdminLogin() {
           description: "Welcome to Luster Legacy admin dashboard",
         });
         
+        // Sync admin cookie before redirecting
+        console.log("Admin login successful, syncing admin cookie");
+        
+        try {
+          // Call the sync endpoint to ensure cookies and session are properly set
+          const syncResponse = await fetch('/api/auth/sync-admin-cookie', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              adminId: userData.id,
+              loginID: userData.loginID || userData.username,
+              password: data.password  // Include password for verification
+            })
+          });
+          
+          if (syncResponse.ok) {
+            console.log("Admin cookie sync successful");
+          } else {
+            console.warn("Admin cookie sync failed, but continuing with login");
+          }
+        } catch (error) {
+          console.error("Admin cookie sync error:", error);
+          // Continue despite sync error
+        }
+        
         // Navigate to the admin dashboard
-        console.log("Admin login successful, redirecting to dashboard");
-        // Use the dashboard route for better compatibility
+        console.log("Redirecting to dashboard");
         window.location.href = window.location.origin + "/admin/dashboard";
       },
       onError: (error) => {

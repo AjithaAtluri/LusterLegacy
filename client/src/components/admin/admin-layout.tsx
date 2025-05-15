@@ -120,6 +120,37 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       // Only continue if we're not loading OR timeout has occurred
       if ((isLoading || stableLoading) && !loadingTimeout) {
         console.log("Admin layout - waiting for auth state to load...");
+        
+        // Emergency direct check after 1 second to exit infinite loading
+        setTimeout(async () => {
+          if (isLoading || stableLoading) {
+            try {
+              console.log("Admin layout - emergency direct admin check");
+              const response = await fetch('/api/auth/me', {
+                credentials: 'include',
+                headers: { 'Accept': 'application/json' }
+              });
+              
+              if (response.ok) {
+                const userData = await response.json();
+                if (userData && userData.role === 'admin') {
+                  console.log("Admin verified via direct check - bypassing React Query");
+                  // Don't redirect, let the auth check continue naturally
+                  return;
+                } else {
+                  console.log("Direct admin check failed - not an admin");
+                  window.location.href = window.location.origin + "/admin/login";
+                }
+              } else {
+                console.log("Direct admin check failed with status:", response.status);
+                window.location.href = window.location.origin + "/admin/login";
+              }
+            } catch (error) {
+              console.error("Emergency admin check failed:", error);
+            }
+          }
+        }, 1000);
+        
         return; // Wait for loading to complete or timeout
       }
 
@@ -193,6 +224,24 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             try {
               sessionStorage.setItem('adminUserData', JSON.stringify(adminData));
               console.log("Updated cached user data in storage");
+              
+              // Call the sync endpoint to ensure cookies and session are in sync
+              fetch('/api/auth/sync-admin-cookie', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ adminId: adminData.id })
+              }).then(response => {
+                if (response.ok) {
+                  console.log("Admin cookie sync successful");
+                } else {
+                  console.warn("Admin cookie sync failed, admin access may expire prematurely");
+                }
+              }).catch(error => {
+                console.error("Admin cookie sync request failed:", error);
+              });
             } catch (storageError) {
               console.warn("Failed to cache admin data:", storageError);
             }
