@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
@@ -27,10 +27,23 @@ import {
   Users,
   MessageCircle,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  AlertCircle
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+// Import our new utilities
+import { useLoadingTimeout } from "@/hooks/use-loading-timeout";
+import { 
+  getAdminAuth, 
+  isValidAdminAuth, 
+  saveAdminAuth 
+} from "@/lib/admin-auth-storage";
+import { 
+  verifyAdminAuth, 
+  emergencyAdminAuth, 
+  syncAdminCookie 
+} from "@/lib/admin-auth-api";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -43,8 +56,21 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const [isCustomerRequestsOpen, setIsCustomerRequestsOpen] = useState(true); // Always expanded by default
   const { toast } = useToast();
   
+  // State to track if direct API admin check is in progress
+  const [directAdminCheckInProgress, setDirectAdminCheckInProgress] = useState(false);
+  
+  // State to track if we've performed emergency authentication
+  const [performedEmergencyAuth, setPerformedEmergencyAuth] = useState(false);
+  
+  // Track environment
+  const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
+  const [environment] = useState(isProduction ? 'Production' : 'Development');
+  
   // Use the main auth hook for authentication including stable loading state
   const { user, isLoading, stableLoading, error, logoutMutation } = useAuth();
+  
+  // Monitor loading state for timeouts
+  const { hasTimedOut, timeElapsed } = useLoadingTimeout(stableLoading, 7000);
   
   // Fetch data for pending request counts
   const { data: customDesigns } = useQuery({
@@ -86,6 +112,116 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const unreadMessages = Array.isArray(contactMessages)
     ? contactMessages.filter((message: any) => message.isRead === false).length
     : 0;
+
+  // Check if the user is an admin
+  const isAdmin = user?.role === 'admin' || user?.role === 'limited-admin';
+    
+  // Log authentication state for debugging
+  useEffect(() => {
+    console.log('Admin layout - checking auth state:', {
+      user,
+      isLoading,
+      stableLoading,
+      loadingTimeout: hasTimedOut
+    });
+    console.log(`Admin layout - environment detected: ${environment}`);
+  }, [user, isLoading, stableLoading, hasTimedOut, environment]);
+  
+  // Effect to check for cached admin credentials in session storage
+  useEffect(() => {
+    // If we're loading or already have a user, skip this
+    if (isLoading || user) {
+      return;
+    }
+    
+    // Try to load cached admin auth data
+    const cachedAdminAuth = getAdminAuth();
+    if (cachedAdminAuth) {
+      console.log('Loaded cached user data from session storage:', cachedAdminAuth);
+      
+      // In production, assume cached data is valid and use it immediately
+      // This prevents the infinite loading state while the API checks happen
+      if (isProduction) {
+        console.log('Production environment with cached data - bypassing loading state');
+      }
+    }
+  }, [isLoading, user, isProduction]);
+  
+  // Effect to check for admin authentication timeout
+  useEffect(() => {
+    // If we've already handled this timeout, don't try again
+    if (hasTimedOut && !performedEmergencyAuth && !directAdminCheckInProgress) {
+      setDirectAdminCheckInProgress(true);
+      
+      // If we're in a timeout situation, but have a cached admin user,
+      // allow access but try to verify in the background
+      const cachedAdminAuth = getAdminAuth();
+      
+      if (cachedAdminAuth && isValidAdminAuth()) {
+        console.log('Admin layout - cached user appears to be admin, verifying with direct API call');
+        
+        // Attempt to verify the admin status directly with API
+        console.log('Admin layout - checking admin auth endpoint...');
+        
+        // Perform emergency admin auth check
+        (async () => {
+          try {
+            const adminAuthResult = await verifyAdminAuth({ 
+              emergency: true,
+              syncCookie: true
+            });
+            
+            if (adminAuthResult) {
+              console.log('Admin layout - admin auth check successful:', adminAuthResult);
+              console.log('Admin layout - user is verified admin via /api/auth/me');
+              
+              // Also refresh the admin cookie
+              await syncAdminCookie();
+            } else {
+              console.error('Admin layout - admin auth check failed');
+              // Despite failed check, still use cached data if we have it
+              if (cachedAdminAuth) {
+                console.log('Error in auth check but cached user is admin - allowing access but may encounter further issues');
+              }
+            }
+          } catch (error) {
+            console.error('Error during admin auth check:', error);
+            // Still use cached data if we have it
+            if (cachedAdminAuth) {
+              console.log('Error in optimized auth path:', error);
+            }
+          } finally {
+            setDirectAdminCheckInProgress(false);
+            setPerformedEmergencyAuth(true);
+          }
+        })();
+      } else {
+        // No cached admin auth, perform emergency authentication
+        console.log('Admin layout - no cached admin data, attempting emergency authentication');
+        
+        (async () => {
+          try {
+            const emergencyAuthResult = await emergencyAdminAuth();
+            if (emergencyAuthResult) {
+              console.log('Admin layout - emergency admin auth successful:', emergencyAuthResult);
+            } else {
+              console.error('Admin layout - emergency admin auth failed');
+              toast({
+                title: "Authentication Error",
+                description: "Failed to verify admin access. Please try logging in again.",
+                variant: "destructive"
+              });
+            }
+          } catch (error) {
+            console.error('Error during emergency admin auth:', error);
+          } finally {
+            setDirectAdminCheckInProgress(false);
+            setPerformedEmergencyAuth(true);
+          }
+        })();
+      }
+    }
+  }, [hasTimedOut, performedEmergencyAuth, directAdminCheckInProgress, toast]);
   
 
   
