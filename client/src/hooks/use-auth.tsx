@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
   
-  // Query to get the current user (if logged in)
+  // Query to get the current user (if logged in) with enhanced admin support
   const {
     data: user,
     error,
@@ -95,7 +95,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetch: refetchUser
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryFn: async (context) => {
+      // Special optimized path for admins to prevent loading state issues in admin dashboard
+      try {
+        // First check for admin authentication via the special admin endpoint
+        if (typeof window !== 'undefined' && document.location.pathname.startsWith('/admin')) {
+          console.log("Admin page detected - trying direct admin authentication check");
+          // Try the direct admin auth endpoint first for performance
+          const adminAuthResponse = await fetch('/api/auth/me', {
+            credentials: 'include',
+            headers: {
+              'Accept': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            },
+          });
+          
+          if (adminAuthResponse.ok) {
+            const adminData = await adminAuthResponse.json();
+            console.log("Direct admin auth check successful:", adminData);
+            if (adminData && (adminData.role === 'admin' || adminData.role === 'limited-admin')) {
+              // Also call the sync endpoint to ensure cookies are maintained
+              try {
+                fetch('/api/auth/sync-admin-cookie', {
+                  method: 'POST',
+                  credentials: 'include',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ adminId: adminData.id })
+                }).catch(e => console.warn("Admin cookie sync error (non-critical):", e));
+              } catch (syncError) {
+                // Ignore sync errors - not critical
+              }
+              
+              // Return the admin user directly from the admin endpoint
+              return adminData;
+            }
+          } else {
+            console.log("Direct admin auth check failed with status:", adminAuthResponse.status);
+          }
+        }
+        
+        // If not admin or admin check failed, try the cached data in production
+        if (isProductionEnv && cachedUser) {
+          console.log("Using cached user data in production environment");
+          return cachedUser;
+        }
+      } catch (err) {
+        console.warn("Error in optimized auth path:", err);
+      }
+      
+      // Fall back to regular API query if optimizations fail
+      return getQueryFn({ on401: "returnNull" })(context);
+    },
     retry: isProductionEnv ? 3 : 1, // More retries in production
     refetchOnWindowFocus: !isProductionEnv, // Don't refetch on window focus in production
     refetchOnMount: !isProductionEnv, // More aggressive caching in production

@@ -121,32 +121,109 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       if ((isLoading || stableLoading) && !loadingTimeout) {
         console.log("Admin layout - waiting for auth state to load...");
         
-        // Emergency direct check after 1 second to exit infinite loading
+        // Enhanced emergency direct check after 1 second to exit infinite loading situations
         setTimeout(async () => {
           if (isLoading || stableLoading) {
             try {
               console.log("Admin layout - emergency direct admin check");
-              const response = await fetch('/api/auth/me', {
-                credentials: 'include',
-                headers: { 'Accept': 'application/json' }
-              });
               
-              if (response.ok) {
-                const userData = await response.json();
-                if (userData && userData.role === 'admin') {
-                  console.log("Admin verified via direct check - bypassing React Query");
+              // First try to load from session storage cache if available
+              try {
+                const cachedUserData = sessionStorage.getItem('adminUserData');
+                if (cachedUserData) {
+                  const userData = JSON.parse(cachedUserData);
+                  console.log("Emergency check - using cached admin data:", userData);
+                  
+                  if (userData && (userData.role === 'admin' || userData.role === 'limited-admin')) {
+                    console.log("Admin verified via session cache - bypassing React Query");
+                    
+                    // Update React Query cache to help break the loading state
+                    import("@/lib/queryClient").then(({queryClient}) => {
+                      queryClient.setQueryData(["/api/user"], userData);
+                    });
+                    
+                    // Don't redirect, let the auth check continue naturally with the cached data
+                    return;
+                  }
+                }
+              } catch (cacheError) {
+                console.warn("Failed to load from admin cache:", cacheError);
+              }
+              
+              // Try both admin endpoints in parallel for faster response
+              const [adminResponse, userResponse] = await Promise.allSettled([
+                fetch('/api/auth/me', {
+                  credentials: 'include',
+                  headers: { 
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'X-Admin-Emergency': 'true'
+                  }
+                }),
+                fetch('/api/user', {
+                  credentials: 'include',
+                  headers: { 
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache' 
+                  }
+                })
+              ]);
+              
+              // First check admin-specific endpoint
+              if (adminResponse.status === 'fulfilled' && adminResponse.value.ok) {
+                const userData = await adminResponse.value.json();
+                if (userData && (userData.role === 'admin' || userData.role === 'limited-admin')) {
+                  console.log("Admin verified via direct admin check - bypassing React Query");
+                  
+                  // Store in session storage for future emergency checks
+                  try {
+                    sessionStorage.setItem('adminUserData', JSON.stringify(userData));
+                  } catch (e) {
+                    // Ignore storage errors
+                  }
+                  
+                  // Update React Query cache to help break the loading state
+                  import("@/lib/queryClient").then(({queryClient}) => {
+                    queryClient.setQueryData(["/api/user"], userData);
+                  });
+                  
                   // Don't redirect, let the auth check continue naturally
                   return;
-                } else {
-                  console.log("Direct admin check failed - not an admin");
-                  window.location.href = window.location.origin + "/admin/login";
                 }
-              } else {
-                console.log("Direct admin check failed with status:", response.status);
-                window.location.href = window.location.origin + "/admin/login";
               }
+              
+              // Then check regular user endpoint as fallback
+              if (userResponse.status === 'fulfilled' && userResponse.value.ok) {
+                const userData = await userResponse.value.json();
+                if (userData && (userData.role === 'admin' || userData.role === 'limited-admin')) {
+                  console.log("Admin verified via regular user endpoint - bypassing React Query");
+                  
+                  // Store in session storage for future emergency checks
+                  try {
+                    sessionStorage.setItem('adminUserData', JSON.stringify(userData));
+                  } catch (e) {
+                    // Ignore storage errors
+                  }
+                  
+                  // Update React Query cache to help break the loading state
+                  import("@/lib/queryClient").then(({queryClient}) => {
+                    queryClient.setQueryData(["/api/user"], userData);
+                  });
+                  
+                  // Don't redirect, let the auth check continue naturally
+                  return;
+                }
+              }
+              
+              // If both checks failed, redirect to login
+              console.log("All emergency admin checks failed - redirecting to login");
+              window.location.href = window.location.origin + "/admin/login";
+              
             } catch (error) {
               console.error("Emergency admin check failed:", error);
+              
+              // On error, fallback to login page to be safe
+              window.location.href = window.location.origin + "/admin/login";
             }
           }
         }, 1000);

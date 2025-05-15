@@ -108,7 +108,7 @@ export default function AdminLogin() {
     
     // Use the mutation from useAuth hook
     loginMutation.mutate(loginData, {
-      onSuccess: (userData) => {
+      onSuccess: async (userData) => {
         // Check if user has admin role
         if (userData.role !== 'admin') {
           toast({
