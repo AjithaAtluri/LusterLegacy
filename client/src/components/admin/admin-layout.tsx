@@ -154,62 +154,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           }
         }
         
-        // Check 3: Try special recovery mechanism
-        console.log("Admin layout - admin auth check failed, attempting special recovery...");
-        
-        // Get the failed response data to check if special recovery is supported
-        const responseData = await adminAuthResponse.json();
-        const specialRecoveryAllowed = responseData.allowHeaderAuth === true;
-        
-        if (specialRecoveryAllowed && user) {
-          console.log("Admin layout - special recovery mechanism supported, attempting with user ID:", user.id);
-          
-          // Attempt recovery with an admin-specific header-based auth request
-          try {
-            const recoveryResponse = await fetch("/api/auth/me", {
-              credentials: "include",
-              headers: {
-                "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache",
-                "Expires": "0",
-                "X-Admin-ReAuth-Request": "true",
-                "X-Admin-ID": user.id.toString()
-              }
-            });
-            
-            if (recoveryResponse.ok) {
-              const recoveredData = await recoveryResponse.json();
-              console.log("Admin layout - special recovery successful:", recoveredData);
-              
-              if (recoveredData.role === "admin" || recoveredData.role === "limited-admin") {
-                console.log(`Admin layout - user is verified ${recoveredData.role} via special recovery`);
-                
-                // Update the cache with this recovered data
-                import("@/lib/queryClient").then(({queryClient}) => {
-                  queryClient.setQueryData(["/api/user"], recoveredData);
-                });
-                
-                // Show toast about recovery success
-                toast({
-                  title: "Admin access restored",
-                  description: "Your admin session has been recovered successfully",
-                  variant: "default"
-                });
-                
-                return; // Allow access after successful special recovery
-              }
-            } else {
-              console.warn("Admin layout - special recovery failed");
-            }
-          } catch (recoveryError) {
-            console.error("Admin layout - error during special recovery:", recoveryError);
-          }
-        } else {
-          console.log("Admin layout - special recovery not supported or no user ID available");
-        }
-        
-        // Check 4: As a last resort, try regular auth endpoint
-        console.log("Admin layout - trying regular user endpoint as last resort...");
+        // Check 3: Try regular auth endpoint as fallback
+        console.log("Admin layout - admin auth check failed, trying regular user endpoint...");
         const userResponse = await fetch("/api/user", { 
           credentials: "include",
           headers: {
@@ -287,53 +233,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     // Run the check immediately
     checkAdminAuth();
   }, [user, isLoading, stableLoading, toast]);
-  
-  // Additional authentication synchronization effect to prevent flickering in production
-  useEffect(() => {
-    // Force an admin auth check on initial load to ensure auth stability
-    const verifyAdminAuth = async () => {
-      try {
-        console.log("Admin layout - performing proactive auth verification");
-        const adminResponse = await fetch('/api/auth/me', {
-          credentials: 'include',
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-          }
-        });
-        
-        if (adminResponse.ok) {
-          const adminUser = await adminResponse.json();
-          console.log("Admin layout - proactive auth verification successful:", adminUser);
-          
-          // Update the React Query cache with this fresh data
-          import("@/lib/queryClient").then(({queryClient}) => {
-            queryClient.setQueryData(["/api/user"], adminUser);
-          });
-          
-          // Ensure stable auth by checking passport auth too
-          fetch('/api/user', {
-            credentials: 'include',
-            headers: {
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-              "Pragma": "no-cache",
-              "Expires": "0"
-            }
-          }).catch(err => console.warn("Secondary auth check failed (non-critical):", err));
-        } else {
-          console.warn("Admin layout - proactive auth verification failed");
-        }
-      } catch (error) {
-        console.error("Admin layout - proactive auth verification error:", error);
-      }
-    };
-    
-    // Only run verification if we appear to be logged in but are in an unstable state
-    if (!isLoading && user?.role === 'admin') {
-      verifyAdminAuth();
-    }
-  }, [isLoading, user]);
   
   // Handle logout from both auth systems
   const handleLogout = async () => {

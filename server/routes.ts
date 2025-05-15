@@ -7635,11 +7635,6 @@ Respond in JSON format:
   app.get('/api/auth/me', async (req, res) => {
     console.log("ADMIN AUTH CHECK - /api/auth/me endpoint called");
     
-    // Set no-cache headers to prevent caching issues in production
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    
     try {
       // First check dedicated admin cookie (preferred method)
       const adminId = req.cookies?.admin_id;
@@ -7839,77 +7834,12 @@ Respond in JSON format:
         console.log("Admin auth check - no passport authentication found");
       }
       
-      // One last attempt - check for special admin-reauth-request header used by the frontend
-      const reAuthRequest = req.headers['x-admin-reauth-request'];
-      if (reAuthRequest) {
-        console.log("Admin auth check - received special reauth request, attempting to detect browser-specific issues");
-        
-        // Get the admin ID from the request headers - this is a special case to handle browser cookie inconsistencies
-        const requestedAdminId = req.headers['x-admin-id'];
-        if (requestedAdminId && typeof requestedAdminId === 'string') {
-          try {
-            const parsedId = parseInt(requestedAdminId);
-            if (!isNaN(parsedId)) {
-              // Look up the user with this ID
-              const adminUser = await storage.getUser(parsedId);
-              
-              if (adminUser && (adminUser.role === 'admin' || adminUser.role === 'limited-admin')) {
-                console.log(`Admin auth check - special recovery: verified ${adminUser.role} from header ID:`, adminUser.loginID || adminUser.username);
-                
-                // Re-establish admin cookies for future requests
-                res.cookie('admin_id', adminUser.id, { 
-                  httpOnly: true, 
-                  secure: process.env.NODE_ENV === 'production',
-                  sameSite: 'lax', 
-                  path: '/',
-                  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-                });
-                res.cookie('admin_auth_time', Date.now(), { 
-                  httpOnly: true, 
-                  secure: process.env.NODE_ENV === 'production',
-                  sameSite: 'lax',
-                  path: '/',
-                  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-                });
-                
-                // Also try to sync with passport
-                try {
-                  req.login(adminUser, (loginErr) => {
-                    if (loginErr) {
-                      console.warn("Admin special recovery - could not sync passport (non-critical):", loginErr);
-                    } else {
-                      console.log("Admin special recovery - synced passport session");
-                    }
-                  });
-                } catch (sessionError) {
-                  console.warn("Admin special recovery - error syncing passport (non-critical):", sessionError);
-                }
-                
-                // Return the admin user with special recovery flag
-                const { password: _recoverPassword, ...recoveredUserData } = adminUser;
-                console.log("Admin auth check - returning admin user via special recovery");
-                return res.json({
-                  ...recoveredUserData,
-                  adminAuth: true,
-                  authTime: Date.now(),
-                  authSource: 'special_recovery',
-                  recovered: true
-                });
-              }
-            }
-          } catch (recoveryError) {
-            console.error("Error in admin special recovery:", recoveryError);
-          }
-        }
-      }
-      
       // No authenticated admin user found with any method
       console.log("Admin auth check - no admin authentication found via any method");
       return res.status(401).json({ 
         message: 'Not authenticated as admin or limited-admin',
         authenticated: false,
-        timestamp: Date.now(),
-        allowHeaderAuth: true // Signal to client that header-based auth is allowed for recovery
+        timestamp: Date.now()
       });
     } catch (error) {
       console.error("Unexpected error in admin auth check:", error);
