@@ -28,6 +28,10 @@ export default function QuotesPage() {
   const [_, navigate] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   
+  // Get URL search params for user filtering
+  const params = new URLSearchParams(window.location.search);
+  const userIdParam = params.get('userId');
+  
   // Redirect if not admin
   useEffect(() => {
     if (!authLoading && !user?.role?.includes("admin")) {
@@ -46,7 +50,7 @@ export default function QuotesPage() {
     enabled: !!user?.role?.includes("admin")
   });
   
-  // Filter requests based on search term and active tab
+  // Filter requests based on search term, active tab, and userId
   const filteredRequests = quoteRequests ? (quoteRequests as QuoteRequestDisplay[])
     .filter((request) => {
       const searchLower = searchTerm.toLowerCase();
@@ -65,6 +69,10 @@ export default function QuotesPage() {
       } else {
         return true; // Show all in "all" tab
       }
+    })
+    .filter((request) => {
+      // Filter by userId if present in URL
+      return !userIdParam || request.userId === parseInt(userIdParam);
     }) : [];
   
   // Handle refresh button

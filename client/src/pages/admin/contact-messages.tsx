@@ -25,6 +25,7 @@ import {
 
 interface ContactMessage {
   id: number;
+  userId?: number;  // Added userId field for user filtering
   name: string;
   email: string;
   phone: string | null;
@@ -37,6 +38,10 @@ export default function AdminContactMessages() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentTab, setCurrentTab] = useState("all");
+  
+  // Get URL search params for user filtering
+  const params = new URLSearchParams(window.location.search);
+  const userIdParam = params.get('userId');
   
   // Fetch contact messages
   const { data: messages, isLoading, refetch } = useQuery<ContactMessage[]>({
@@ -88,7 +93,7 @@ export default function AdminContactMessages() {
     }
   });
 
-  // Filter messages based on current tab and search term
+  // Filter messages based on current tab, search term, and userId
   const filteredMessages = messages
     ? messages
         .filter((message) => {
@@ -105,6 +110,10 @@ export default function AdminContactMessages() {
             message.message.toLowerCase().includes(term) ||
             (message.phone && message.phone.toLowerCase().includes(term))
           );
+        })
+        .filter((message) => {
+          // Filter by userId if present in URL
+          return !userIdParam || message.userId === parseInt(userIdParam);
         })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     : [];
