@@ -275,7 +275,24 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!email) return undefined;
+    
+    // Convert to lowercase for case-insensitive comparison
+    const emailLower = email.toLowerCase();
+    console.log(`[STORAGE] Looking up user by email (case insensitive): ${emailLower}`);
+    
+    // Use SQL LOWER function for case-insensitive matching
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(sql`LOWER(${users.email}) = ${emailLower}`);
+      
+    if (user) {
+      console.log(`[STORAGE] Found user for email ${emailLower}: ID ${user.id}, username ${user.username}`);
+    } else {
+      console.log(`[STORAGE] No user found for email: ${emailLower}`);
+    }
+    
     return user;
   }
   
