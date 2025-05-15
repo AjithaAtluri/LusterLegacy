@@ -275,8 +275,32 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
             agreeToTerms: parsedData.agreeToTerms || false
           });
           
+          // Restore direct image URL if available (for inspiration images)
+          if (parsedData.directImageUrl) {
+            console.log("DesignForm - Found direct image URL in saved form data");
+            setPreviewUrl(parsedData.directImageUrl);
+            
+            // Create a placeholder file for the UI
+            try {
+              const fileName = "restored-image.jpg";
+              const placeholderFile = new File(
+                [new ArrayBuffer(1)], // Minimal content
+                fileName,
+                { type: "image/jpeg" }
+              );
+              
+              setUploadedImage(placeholderFile);
+              setUploadedImages([placeholderFile]);
+              setPreviewUrls([parsedData.directImageUrl]);
+              
+              console.log("DesignForm - Restored direct image from session storage");
+            } catch (err) {
+              console.error("DesignForm - Error creating placeholder file:", err);
+            }
+          }
+          
           // Restore multiple images if available
-          if (parsedData.imageDataUrls && Object.keys(parsedData.imageDataUrls).length > 0) {
+          else if (parsedData.imageDataUrls && Object.keys(parsedData.imageDataUrls).length > 0) {
             try {
               // Function to convert a data URL to a File object
               const convertDataUrlToFile = (dataUrl: string, imageInfo: any): Promise<File | null> => {
@@ -456,8 +480,13 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
       // Update selectedStones state to match form data
       setSelectedStones(formData.primaryStones);
       
-      // Save the initial form data first (without image)
-      sessionStorage.setItem('designFormData', JSON.stringify(formData));
+      // Save the initial form data with any direct image reference
+      const formDataWithImage = {
+        ...formData,
+        // Include the preview URL (which could be our inspiration image)
+        directImageUrl: previewUrl
+      };
+      sessionStorage.setItem('designFormData', JSON.stringify(formDataWithImage));
       
       // Then handle multiple images separately if available
       if (uploadedImages.length > 0) {
