@@ -531,6 +531,20 @@ export async function sendDesignCommentNotification(
   isFromAdmin: boolean,
   dashboardLink: string
 ): Promise<{ success: boolean; message?: string }> {
+  console.log('=== DESIGN COMMENT NOTIFICATION TRIGGERED ===');
+  console.log(`[DESIGN COMMENT] Email:        ${email}`);
+  console.log(`[DESIGN COMMENT] Name:         ${name || 'null'}`);
+  console.log(`[DESIGN COMMENT] Design ID:    ${designRequestId}`);
+  console.log(`[DESIGN COMMENT] Design Name:  ${designName}`);
+  console.log(`[DESIGN COMMENT] Comment By:   ${commentBy}`);
+  console.log(`[DESIGN COMMENT] Is Admin:     ${isFromAdmin}`);
+  console.log(`[DESIGN COMMENT] Dashboard:    ${dashboardLink}`);
+  console.log(`[DESIGN COMMENT] Content:      ${commentContent.substring(0, 100)}${commentContent.length > 100 ? '...' : ''}`);
+  
+  // Check email configuration
+  console.log(`[DESIGN COMMENT] SendGrid API Key:     ${process.env.SENDGRID_API_KEY ? 'Present' : 'MISSING'}`);
+  console.log(`[DESIGN COMMENT] Verified Sender:      ${process.env.VERIFIED_SENDER_EMAIL || 'Using default sender'}`);
+  
   const displayName = name || 'Valued Customer';
   const commentSource = isFromAdmin ? 'a Luster Legacy artisan' : commentBy;
   

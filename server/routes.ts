@@ -2741,6 +2741,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add a comment to a design request
   app.post('/api/custom-designs/:id/comments', upload.single('image'), async (req, res) => {
     try {
+      console.log('=== DESIGN COMMENT ENDPOINT CALLED ===');
+      console.log('Request cookies:', JSON.stringify(req.cookies || {}, null, 2));
+      console.log('Request user session:', req.user ? `User ID: ${req.user.id}` : 'No user in session');
+      
       // Check for authentication through both regular user sessions and admin cookies
       let isAuthenticated = false;
       let user = req.user;
@@ -2748,10 +2752,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // First check if passport has authenticated the user
       if (req.user) {
         isAuthenticated = true;
-        console.log('User authenticated via passport:', req.user.username);
+        console.log('User authenticated via passport session. ID:', req.user.id, 'Username:', req.user.username);
       } 
       // If not, check for admin cookie authentication
-      else if (req.cookies.admin_id) {
+      else if (req.cookies && req.cookies.admin_id) {
         const adminId = parseInt(req.cookies.admin_id);
         if (!isNaN(adminId)) {
           console.log('Attempting admin cookie authentication for ID:', adminId);
@@ -2760,16 +2764,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (adminUser && adminUser.role === 'admin') {
               isAuthenticated = true;
               user = adminUser;
-              console.log('User authenticated via admin cookie:', adminUser.username);
+              console.log('User authenticated via admin cookie. ID:', adminUser.id, 'Username:', adminUser.username);
+            } else {
+              console.log('Admin user not found or not admin role. Found:', adminUser ? adminUser.role : 'no user');
             }
           } catch (error) {
             console.error('Error authenticating via admin cookie:', error);
           }
+        } else {
+          console.log('Invalid admin_id cookie format:', req.cookies.admin_id);
         }
+      } else {
+        console.log('No authentication credentials found. Cookies present:', !!req.cookies, 'User session:', !!req.user);
       }
       
       if (!isAuthenticated || !user) {
-        console.log('Authentication failed. User session:', !!req.user, 'Admin cookie:', !!req.cookies.admin_id);
+        console.log('Authentication failed. User session:', !!req.user, 'Admin cookie:', req.cookies ? !!req.cookies.admin_id : false);
         return res.status(401).json({ message: 'Authentication required' });
       }
       
