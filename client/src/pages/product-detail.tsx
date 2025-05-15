@@ -485,13 +485,27 @@ export default function ProductDetail() {
             {/* Left Column: Product Images */}
             <div className="w-full lg:w-1/2">
               {/* Main Image */}
-              <div className="mb-6 rounded-xl overflow-hidden shadow-lg bg-card">
+              <div className="mb-6 rounded-xl overflow-hidden shadow-lg bg-card relative group">
                 <ReliableProductImage
                   productId={product.id}
                   imageUrl={product.imageUrl}
                   alt={product.name}
                   className="w-full h-auto object-contain aspect-square"
                 />
+                {/* Zoom Button */}
+                <div className="absolute right-3 top-3 transition-opacity group-hover:opacity-100">
+                  <button 
+                    className="rounded-full bg-black/70 p-2.5 text-white hover:bg-black hover:shadow-lg border-2 border-white/80"
+                    onClick={() => window.open(product.imageUrl || `/api/products/${product.id}/image`, '_blank')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      <line x1="11" y1="8" x2="11" y2="14"></line>
+                      <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
               
               {/* Product Details Quick Specs Below Image */}

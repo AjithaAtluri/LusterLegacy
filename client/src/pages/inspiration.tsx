@@ -235,10 +235,10 @@ export default function Inspiration() {
                   </div>
                 </div>
                 
-                <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-80 transition-opacity group-hover:opacity-100">
                   <DialogTrigger asChild>
-                    <button className="rounded-full bg-white/90 p-2 text-primary hover:bg-white">
-                      <ZoomIn className="h-4 w-4" />
+                    <button className="rounded-full bg-black/70 p-2.5 text-white hover:bg-black hover:shadow-lg border-2 border-white/80 shadow-xl">
+                      <ZoomIn className="h-5 w-5" />
                     </button>
                   </DialogTrigger>
                 </div>
