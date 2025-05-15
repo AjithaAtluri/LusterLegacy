@@ -90,14 +90,37 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   
   // Redirect to login page if not authenticated or not an admin
+  // Use a separate state and timeout to handle loading situations
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  
+  useEffect(() => {
+    // Set a maximum loading time of 2 seconds
+    if (isLoading || stableLoading) {
+      // Set a timeout to force continuation after 2 seconds
+      const timer = setTimeout(() => {
+        console.log("Admin layout - loading timeout reached");
+        setLoadingTimeout(true);
+      }, 2000);
+      
+      return () => clearTimeout(timer); // Clean up the timer
+    } else {
+      setLoadingTimeout(false); // Reset when loading completes
+    }
+  }, [isLoading, stableLoading]);
+
   useEffect(() => {
     const checkAdminAuth = async () => {
-      console.log("Admin layout - checking auth state:", { user, isLoading, stableLoading });
+      console.log("Admin layout - checking auth state:", { 
+        user, 
+        isLoading, 
+        stableLoading,
+        loadingTimeout 
+      });
       
-      // First check if currently loading
-      if (isLoading || stableLoading) {
-        console.log("Admin layout - still loading auth state...");
-        return; // Wait for loading to complete
+      // Only continue if we're not loading OR timeout has occurred
+      if ((isLoading || stableLoading) && !loadingTimeout) {
+        console.log("Admin layout - waiting for auth state to load...");
+        return; // Wait for loading to complete or timeout
       }
 
       // Perform a multi-level authentication check to ensure we're truly authenticated

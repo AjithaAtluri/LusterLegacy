@@ -39,8 +39,13 @@ const registerSchema = insertUserSchema.extend({
 });
 type RegisterData = z.infer<typeof registerSchema>;
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+// Create context with proper defaults - Note: don't use 'export const' to improve HMR compatibility
+const AuthContext = createContext<AuthContextType | null>(null);
 
+// Export the context separately for better HMR compatibility
+export { AuthContext };
+
+// Provider component - separate from context creation
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [stableLoading, setStableLoading] = useState(true);
@@ -118,28 +123,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Stabilize loading state to prevent flickering
   useEffect(() => {
-    // In production with cached data, skip loading state entirely
+    // IMPORTANT: If we're in production with cached data, skip loading state entirely
     if (isProductionEnv && cachedUser) {
       console.log("Production environment with cached data - bypassing loading state");
       setStableLoading(false);
       return;
     }
     
+    // When we start loading, immediately set stableLoading to true
     if (isLoading) {
       setStableLoading(true);
       return;
     }
     
-    // Adjust delay based on environment
-    const delay = isProductionEnv ? 400 : 800;
-    console.log(`Using ${delay}ms delay for loading state stabilization`);
+    // CRITICAL FIX: When loading is complete, immediately set stableLoading to false
+    // Don't use a timeout as it can cause infinite loading loops
+    setStableLoading(false);
     
-    // Delayed state update to prevent UI flickering
-    const timer = setTimeout(() => {
-      setStableLoading(false);
-    }, delay);
-    
-    return () => clearTimeout(timer);
+    // No delayed state update for production to avoid UI issues
+    return () => {}; // No cleanup needed
   }, [isLoading, cachedUser, isProductionEnv]);
   
   console.log("Auth Context - User data:", user);

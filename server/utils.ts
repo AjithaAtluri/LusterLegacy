@@ -89,11 +89,12 @@ export const validateAdmin = async (
   } catch (error) {
     console.error('Error in admin auth:', error);
     if (res) {
+      // Send response but don't return the response object
       res.status(500).json({
         message: "Server error during admin authentication"
       });
-      return false;
     }
+    // Always return boolean for type safety
     return false;
   }
 };
