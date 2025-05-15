@@ -2800,6 +2800,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: 'Error creating comment' });
       }
       
+      // Send email notification if this is a comment on another user's design request
+      // Only send notifications when someone else comments (admin comments to user, or user comments to their own request)
+      try {
+        // The comment is not by the owner, so notify the design request owner
+        if ((isAdmin && !isOwner) || (isOwner && designRequest.email)) {
+          // Import email service dynamically to avoid circular dependencies
+          const emailService = await import('./services/email-service');
+          
+          // Determine who should receive the notification
+          let recipientEmail;
+          let recipientName;
+          
+          if (isAdmin) {
+            // Admin commented on user's design - notify the user (design owner)
+            recipientEmail = designRequest.email;
+            recipientName = designRequest.fullName;
+            console.log(`[DESIGN COMMENT] Admin comment - will notify design owner: ${recipientEmail}`);
+          } else if (isOwner && designRequest.adminEmail) {
+            // User commented on their own design - this shouldn't happen given the condition above
+            console.log(`[DESIGN COMMENT] Owner commenting on own design - no notification needed`);
+            // No notification in this case
+            recipientEmail = null;
+          }
+          
+          // Send notification if we have a recipient
+          if (recipientEmail) {
+            console.log(`[DESIGN COMMENT] Sending notification to ${recipientEmail}`);
+            
+            // Generate dashboard link
+            const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+            const host = process.env.PRODUCTION_DOMAIN || req.get('host') || 'localhost:5000';
+            const dashboardLink = `${protocol}://${host}/customer-dashboard`;
+            
+            // Design name or fallback
+            const designName = designRequest.name || `Custom Design #${designId}`;
+            
+            await emailService.sendDesignCommentNotification(
+              recipientEmail,
+              recipientName,
+              designId,
+              designName,
+              content || 'Image comment (No text)',
+              req.user.username || 'Luster Legacy',
+              isAdmin,
+              dashboardLink
+            );
+            
+            console.log(`[DESIGN COMMENT] Email notification sent successfully to ${recipientEmail}`);
+          }
+        }
+      } catch (emailError) {
+        // Don't fail the whole request if email sending fails
+        console.error('[DESIGN COMMENT] Error sending email notification:', emailError);
+      }
+      
       res.status(201).json(comment);
     } catch (error) {
       console.error('Error adding comment to design request:', error);
