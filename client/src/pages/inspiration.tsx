@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Heart, ZoomIn, PlusCircle, Upload, X, Image } from "lucide-react";
+import { ArrowRight, Heart, ZoomIn, PlusCircle, Upload, X, Image, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -291,6 +291,46 @@ export default function Inspiration() {
     }
   ];
   
+  // Delete image mutation
+  const deleteImageMutation = useMutation({
+    mutationFn: async (imageId: number) => {
+      const response = await apiRequest(
+        "DELETE", 
+        `/api/admin/inspiration/${imageId}`
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete image");
+      }
+      
+      return imageId;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Image deleted",
+        description: "The image has been successfully removed from the gallery",
+      });
+      
+      // Refresh the gallery data
+      queryClient.invalidateQueries({ queryKey: ["/api/inspiration"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete the image",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Function to handle image deletion
+  const handleDeleteImage = (imageId: number) => {
+    if (window.confirm("Are you sure you want to delete this image? This action cannot be undone.")) {
+      deleteImageMutation.mutate(imageId);
+    }
+  };
+  
   const { user } = useAuth();
 
   return (
@@ -461,6 +501,20 @@ export default function Inspiration() {
                       <ZoomIn className="h-5 w-5" />
                     </button>
                   </DialogTrigger>
+                  
+                  {/* Delete button - only visible for admin users */}
+                  {user && user.role === 'admin' && (
+                    <button 
+                      className="rounded-full bg-red-600/90 p-2.5 text-white hover:bg-red-700 hover:shadow-lg border-2 border-white/80 shadow-xl mt-2"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDeleteImage(image.id);
+                      }}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  )}
                 </div>
               </div>
               
