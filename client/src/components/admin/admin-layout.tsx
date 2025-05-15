@@ -477,12 +477,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         {
           title: "Metal Types",
           icon: <Diamond className="w-4 h-4 mr-2" />,
-          href: "/admin/materials/metals"
+          href: "/admin/metal-types"
         },
         {
           title: "Stone Types",
           icon: <Sparkles className="w-4 h-4 mr-2" />,
-          href: "/admin/materials/stones"
+          href: "/admin/stone-types"
         }
       ]
     },
