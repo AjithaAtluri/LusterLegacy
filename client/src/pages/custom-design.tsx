@@ -1,20 +1,10 @@
 import { Helmet } from "react-helmet";
-import DesignForm, { DesignFormContext } from "@/components/custom-design/design-form";
+import DesignForm from "@/components/custom-design/design-form";
 import AIDesignConsultation from "@/components/custom-design/ai-design-consultation";
-import { CheckCircle, Clock, HelpCircle, FileImage, ArrowRight, PenLine, Sparkles } from "lucide-react";
-import { PAYMENT_TERMS } from "@/lib/constants";
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
+import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function CustomDesign() {
-  const [location] = useLocation();
-  
-  // Parse URL parameters
-  const params = new URLSearchParams(location.split('?')[1] || '');
-  const inspirationImage = params.get('inspirationImage');
-  const fromInspiration = params.get('fromInspiration') === 'true';
-  
   // Create shared state that will be passed to both components
   const [formState, setFormState] = useState({
     metalType: "",
@@ -25,9 +15,7 @@ export default function CustomDesign() {
   
   // Check for inspiration image in localStorage
   useEffect(() => {
-    // This runs only once when the component mounts
     try {
-      // Check for image in localStorage
       const storedImage = localStorage.getItem('INSPIRATION_IMAGE');
       
       if (storedImage) {
@@ -43,117 +31,10 @@ export default function CustomDesign() {
         localStorage.removeItem('INSPIRATION_IMAGE');
         console.log("Custom Design Page - Applied image from localStorage");
       }
-      // Also check URL parameters as fallback
-      else if (inspirationImage) {
-        console.log("Custom Design Page - Using URL parameter for inspiration image");
-        
-        // Set image from URL directly
-        setFormState(prev => ({
-          ...prev,
-          imageDataUrl: inspirationImage
-        }));
-      }
     } catch (err) {
       console.error("Custom Design Page - Error retrieving from localStorage:", err);
-      
-      // Fallback to URL parameter
-      if (inspirationImage) {
-        setFormState(prev => ({
-          ...prev,
-          imageDataUrl: inspirationImage
-        }));
-      }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array means this runs once on mount
-  
-  // Helper function to process an inspiration image source into a data URL
-  const processInspirationImage = (imageSrc: string) => {
-    console.log("Custom Design Page - Processing inspiration image source:", imageSrc.substring(0, 50) + "...");
-    
-    // Create an Image object to load the image
-    const img = new Image();
-    
-    // Set crossOrigin to anonymous to avoid CORS issues with some image sources
-    img.crossOrigin = "anonymous";
-    
-    // Set up onload handler to convert to data URL once loaded
-    img.onload = () => {
-      console.log("Custom Design Page - Inspiration image loaded successfully, dimensions:", img.width, "x", img.height);
-      
-      try {
-        // Create a canvas to draw the image
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        
-        // Draw the image to the canvas
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          
-          // Convert to data URL
-          try {
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            console.log("Custom Design Page - Converted to data URL:", dataUrl.substring(0, 50) + "...");
-            
-            // Update state with the data URL
-            setFormState(prev => {
-              console.log("Custom Design Page - Updating form state with image data URL");
-              return {
-                ...prev,
-                imageDataUrl: dataUrl
-              };
-            });
-          } catch (err) {
-            console.error("Custom Design Page - Error converting to data URL:", err);
-          }
-        }
-      } catch (err) {
-        console.error("Custom Design Page - Error processing image in canvas:", err);
-      }
-    };
-    
-    // Set up error handler
-    img.onerror = (err) => {
-      console.error("Custom Design Page - Error loading inspiration image:", err);
-      
-      // Try without crossOrigin as a fallback
-      console.log("Custom Design Page - Retrying without crossOrigin");
-      const retryImg = new Image();
-      retryImg.onload = () => {
-        console.log("Custom Design Page - Retry successful, dimensions:", retryImg.width, "x", retryImg.height);
-        
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = retryImg.width;
-          canvas.height = retryImg.height;
-          
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(retryImg, 0, 0);
-            
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            setFormState(prev => ({
-              ...prev,
-              imageDataUrl: dataUrl
-            }));
-            console.log("Custom Design Page - Retry conversion successful");
-          }
-        } catch (retryErr) {
-          console.error("Custom Design Page - Retry processing failed:", retryErr);
-        }
-      };
-      retryImg.onerror = (retryErr) => {
-        console.error("Custom Design Page - Final retry failed:", retryErr);
-      };
-      retryImg.src = imageSrc;
-    };
-    
-    // Start loading the image
-    console.log("Custom Design Page - Starting to load image");
-    img.src = imageSrc;
-  };
   
   // Function to update the shared state
   const updateFormState = (data: {
@@ -173,13 +54,6 @@ export default function CustomDesign() {
       return updatedState;
     });
   };
-  
-  // Effect to log when inspiration image is passed
-  useEffect(() => {
-    if (inspirationImage) {
-      console.log("Received inspiration image from gallery");
-    }
-  }, [inspirationImage]);
   
   return (
     <>
