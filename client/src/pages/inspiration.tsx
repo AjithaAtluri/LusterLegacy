@@ -312,8 +312,8 @@ export default function Inspiration() {
         description: "The image has been successfully removed from the gallery",
       });
       
-      // Refresh the gallery data
-      queryClient.invalidateQueries({ queryKey: ["/api/inspiration"] });
+      // Force reload the page to refresh the gallery
+      window.location.reload();
     },
     onError: (error: Error) => {
       toast({
