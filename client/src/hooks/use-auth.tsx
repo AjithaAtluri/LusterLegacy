@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [stableLoading, setStableLoading] = useState(true);
   const [cachedUser, setCachedUser] = useState<User | null>(null);
   const [isProductionEnv, setIsProductionEnv] = useState(false);
+  const [forcedReauth, setForcedReauth] = useState(0); // Counter to force reauthentication
   
   // Detect production environment for special optimizations
   useEffect(() => {
@@ -67,6 +68,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Also populate React Query cache for consistency
         queryClient.setQueryData(["/api/user"], userData);
         console.log("Loaded cached user data from session storage:", userData);
+        
+        // Immediately verify admin authentication if this is an admin user
+        if (userData?.role === 'admin' || userData?.role === 'limited-admin') {
+          console.log("Auth Provider - Found admin in cache, verifying admin auth immediately");
+          fetch('/api/auth/me', { 
+            credentials: 'include',
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            }
+          })
+          .then(res => {
+            if (res.ok) {
+              console.log("Auth Provider - Admin auth verified on load");
+              return res.json();
+            } else {
+              console.warn("Auth Provider - Admin auth verification failed, will try emergency reauth");
+              throw new Error("Admin auth verification failed");
+            }
+          })
+          .then(adminData => {
+            // Update cache with verified data
+            queryClient.setQueryData(["/api/user"], adminData);
+          })
+          .catch(error => {
+            console.error("Auth Provider - Error verifying admin:", error);
+            // Force reauthentication if verification fails
+            setForcedReauth(prev => prev + 1);
+          });
+        }
       } else {
         // Fall back to localStorage as a secondary option
         const localUserData = localStorage.getItem('cached_user_data');
@@ -75,6 +107,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setCachedUser(userData);
           queryClient.setQueryData(["/api/user"], userData);
           console.log("Loaded cached user data from local storage:", userData);
+          
+          // Also verify admin auth for localStorage data
+          if (userData?.role === 'admin' || userData?.role === 'limited-admin') {
+            fetch('/api/auth/me', { credentials: 'include' })
+            .catch(error => console.warn("Auth Provider - Admin verification error:", error));
+          }
         }
       }
     } catch (error) {
@@ -89,13 +127,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     refetch: refetchUser
   } = useQuery<User | null, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
+    queryKey: ["/api/user", forcedReauth], // Include forcedReauth to trigger refetch
+    queryFn: async ({ signal }) => {
+      // For admin users in production, we need to ensure both authentication systems are in sync
+      const userData = cachedUser;
+      
+      if (isProductionEnv && userData?.role === 'admin') {
+        console.log("Auth Provider - Using enhanced admin auth fetch in production");
+        
+        try {
+          // First try the admin-specific endpoint
+          const adminResponse = await fetch('/api/auth/me', {
+            credentials: 'include',
+            signal,
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            }
+          });
+          
+          if (adminResponse.ok) {
+            const adminData = await adminResponse.json();
+            console.log("Auth Provider - Successfully retrieved admin data:", adminData);
+            return adminData;
+          }
+          
+          console.warn("Auth Provider - Admin auth endpoint failed, falling back to standard auth");
+        } catch (error) {
+          console.error("Auth Provider - Error with admin auth endpoint:", error);
+        }
+      }
+      
+      // Fall back to standard getQueryFn
+      return getQueryFn({ on401: "returnNull" })({ queryKey: ["/api/user"], signal });
+    },
     retry: isProductionEnv ? 3 : 1, // More retries in production
-    refetchOnWindowFocus: !isProductionEnv, // Don't refetch on window focus in production
+    refetchOnWindowFocus: !isProductionEnv, // Don't refetch on window focus in production  
     refetchOnMount: !isProductionEnv, // More aggressive caching in production
     refetchInterval: isProductionEnv ? false : 10000, // Disable interval in production
-    staleTime: isProductionEnv ? 1000 * 60 * 30 : 0, // 30 minute cache in production
+    staleTime: isProductionEnv ? 1000 * 60 * 5 : 0, // Reduced from 30 minutes to 5 minutes for safety
     gcTime: isProductionEnv ? 1000 * 60 * 60 : 1000 * 60 * 5, // Longer cache in production
     // Critical optimization: use cached data while revalidating in background
     // This prevents the UI from showing loading state during revalidation
@@ -227,12 +298,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // First invalidate any stale queries
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
-      // Then update the query cache with user data
-      queryClient.setQueryData(["/api/user"], userData);
+      // Then update the query cache with user data - including the forcedReauth key
+      queryClient.setQueryData(["/api/user", forcedReauth], userData);
+      
+      // Cache the user data in storage for stability
+      try {
+        sessionStorage.setItem('cached_user_data', JSON.stringify(userData));
+        localStorage.setItem('cached_user_data', JSON.stringify(userData));
+        console.log("Updated cached user data in storage");
+      } catch (storageError) {
+        console.warn("Failed to cache user data:", storageError);
+      }
       
       // Immediately verify the auth state by fetching fresh user data
       setTimeout(async () => {
         try {
+          // For admin users, verify with both auth systems
+          if (userData.role === "admin" || userData.role === "limited-admin") {
+            console.log("Admin login - ensuring both auth systems are in sync");
+            
+            // First check admin-specific endpoint to ensure admin cookie is set
+            try {
+              const adminResponse = await fetch('/api/auth/me', {
+                credentials: 'include',
+                headers: {
+                  "Cache-Control": "no-cache, no-store, must-revalidate",
+                  "Pragma": "no-cache", 
+                  "Expires": "0"
+                }
+              });
+              
+              if (adminResponse.ok) {
+                console.log("Admin auth endpoint verified successfully");
+                // Set the admin data in cache as it's the most reliable source in production
+                const adminData = await adminResponse.json();
+                queryClient.setQueryData(["/api/user", forcedReauth], adminData);
+              } else {
+                console.warn("Admin auth endpoint verification failed:", adminResponse.status);
+              }
+            } catch (adminError) {
+              console.error("Error verifying admin auth:", adminError);
+            }
+          }
+          
+          // Standard user auth verification
           const userResponse = await fetch('/api/user', {
             credentials: "include",
             headers: {
@@ -245,7 +354,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (userResponse.ok) {
             const freshUserData = await userResponse.json();
             console.log("Auth verified with fresh data:", freshUserData);
-            queryClient.setQueryData(["/api/user"], freshUserData);
+            queryClient.setQueryData(["/api/user", forcedReauth], freshUserData);
           } else {
             console.error("Auth verification failed - still not authenticated after login");
           }
