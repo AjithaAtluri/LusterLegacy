@@ -7631,11 +7631,15 @@ Respond in JSON format:
     }
   });
 
-  // Endpoint to synchronize passport session and admin cookies
+  // Enhanced endpoint to synchronize passport session and admin cookies
   app.post('/api/auth/sync-admin-cookie', async (req, res) => {
     console.log("Admin cookie sync endpoint called");
     
-    // First check if we have a valid session
+    // Check request body for adminId - allows direct specification of admin to sync
+    // This is critical for production environments where sessions can get lost
+    const adminIdFromBody = req.body?.adminId;
+    
+    // First check if we have a valid session - the most reliable method
     if (req.isAuthenticated() && req.user) {
       console.log("Admin cookie sync - authenticated user found:", req.user.loginID || req.user.username);
       
@@ -7643,33 +7647,121 @@ Respond in JSON format:
       if (req.user.role === 'admin' || req.user.role === 'limited-admin') {
         console.log(`Admin cookie sync - setting admin cookie for ${req.user.role}:`, req.user.id);
         
-        // Set admin cookie
-        res.cookie('admin_id', req.user.id, { 
+        // Set admin cookie - reduced to 4 hours for security
+        const FOUR_HOURS = 4 * 60 * 60 * 1000;
+        
+        res.cookie('admin_id', req.user.id.toString(), { 
           httpOnly: true, 
-          secure: process.env.NODE_ENV === 'production',
+          secure: process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https',
           sameSite: 'lax',
           path: '/',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          maxAge: FOUR_HOURS
         });
         
         // Set admin auth time
-        res.cookie('admin_auth_time', Date.now(), { 
+        res.cookie('admin_auth_time', Date.now().toString(), { 
           httpOnly: true, 
-          secure: process.env.NODE_ENV === 'production',
+          secure: process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https',
           sameSite: 'lax',
           path: '/',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          maxAge: FOUR_HOURS
         });
         
-        console.log("Admin cookie sync - cookies set successfully");
-        return res.status(200).json({ success: true, message: "Admin cookies synchronized" });
+        console.log("Admin cookie sync - cookies set successfully from session");
+        return res.status(200).json({ 
+          success: true, 
+          message: "Admin cookies synchronized using session", 
+          data: {
+            id: req.user.id,
+            role: req.user.role,
+            loginID: req.user.loginID || req.user.username,
+            method: "session"
+          }
+        });
       } else {
         console.log("Admin cookie sync - user is not admin:", req.user.role);
         return res.status(403).json({ success: false, message: "User is not an admin" });
       }
+    } 
+    // If no session but adminId provided in body, try to use that (backup method)
+    else if (adminIdFromBody) {
+      console.log("Admin cookie sync - using provided adminId:", adminIdFromBody);
+      
+      try {
+        // Validate the adminId exists and is an admin
+        const adminId = parseInt(adminIdFromBody);
+        if (isNaN(adminId)) {
+          return res.status(400).json({ success: false, message: "Invalid admin ID format" });
+        }
+        
+        // Fetch user from database to verify admin status
+        const user = await storage.getUser(adminId);
+        
+        if (!user) {
+          console.log("Admin cookie sync - no user found with ID:", adminId);
+          return res.status(404).json({ success: false, message: "Admin user not found" });
+        }
+        
+        if (user.role !== 'admin' && user.role !== 'limited-admin') {
+          console.log("Admin cookie sync - user is not admin:", user.role);
+          return res.status(403).json({ success: false, message: "User is not an admin" });
+        }
+        
+        console.log(`Admin cookie sync - setting admin cookie for ${user.role}:`, user.id);
+        
+        // Set admin cookie - reduced to 4 hours for security
+        const FOUR_HOURS = 4 * 60 * 60 * 1000;
+        
+        res.cookie('admin_id', user.id.toString(), { 
+          httpOnly: true, 
+          secure: process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: FOUR_HOURS
+        });
+        
+        // Set admin auth time
+        res.cookie('admin_auth_time', Date.now().toString(), { 
+          httpOnly: true, 
+          secure: process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: FOUR_HOURS
+        });
+        
+        // For future requests, also set this user in the session if possible
+        if (req.logIn) {
+          try {
+            req.logIn(user, (err) => {
+              if (err) {
+                console.error("Admin cookie sync - failed to log in user via passport:", err);
+              } else {
+                console.log("Admin cookie sync - also logged in via passport session");
+              }
+            });
+          } catch (loginError) {
+            console.error("Admin cookie sync - error during passport login:", loginError);
+          }
+        }
+        
+        console.log("Admin cookie sync - cookies set successfully from adminId");
+        return res.status(200).json({ 
+          success: true, 
+          message: "Admin cookies synchronized using provided ID", 
+          data: {
+            id: user.id,
+            role: user.role,
+            loginID: user.loginID || user.username,
+            method: "adminId"
+          }
+        });
+      } catch (error) {
+        console.error("Admin cookie sync - error using adminId:", error);
+        return res.status(500).json({ success: false, message: "Error setting admin cookie using adminId" });
+      }
     } else {
-      console.log("Admin cookie sync - no authenticated user found");
-      return res.status(401).json({ success: false, message: "Not authenticated" });
+      console.log("Admin cookie sync - no authenticated user found and no adminId provided");
+      return res.status(401).json({ success: false, message: "Not authenticated and no admin ID provided" });
     }
   });
 

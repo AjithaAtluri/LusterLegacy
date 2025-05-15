@@ -12,7 +12,16 @@ export const validateAdmin = async (
 ): Promise<boolean> => {
   try {
     const endpoint = req.originalUrl || req.url;
-    console.log(`ADMIN ACCESS CHECK - Validating admin access for ${endpoint}`);
+    console.log(`ADMIN AUTH CHECK - /api/auth/me endpoint called`);
+    
+    // Check if this is an emergency admin check from the frontend
+    const isEmergencyCheck = req.headers['x-admin-emergency'] === 'true';
+    if (isEmergencyCheck) {
+      console.log(`ADMIN ACCESS - EMERGENCY CHECK MODE for ${endpoint}`);
+    }
+    
+    // Special header that indicates we should sync the session cookie after this check
+    const shouldSyncCookie = req.headers['x-admin-sync-cookie'] === 'true';
     
     // Check for admin headers first (for client-side API requests that include headers)
     const hasAdminDebugHeader = req.headers['x-admin-debug-auth'] === 'true';
@@ -36,6 +45,30 @@ export const validateAdmin = async (
           if (adminUser) {
             req.user = adminUser;
             console.log("Admin auth via headers - set admin user:", adminUser.loginID || adminUser.username);
+            
+            // Also set admin cookie for future requests if this is a production environment
+            if (process.env.NODE_ENV === 'production' || isEmergencyCheck) {
+              if (res) {
+                const ONE_HOUR = 60 * 60 * 1000;
+                const ADMIN_COOKIE_MAX_AGE = 4 * ONE_HOUR; // 4 hours
+                
+                res.cookie('admin_id', adminUser.id.toString(), {
+                  httpOnly: true,
+                  maxAge: ADMIN_COOKIE_MAX_AGE,
+                  sameSite: 'lax',
+                  secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+                });
+                
+                res.cookie('admin_auth_time', Date.now().toString(), {
+                  httpOnly: true,
+                  maxAge: ADMIN_COOKIE_MAX_AGE,
+                  sameSite: 'lax',
+                  secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+                });
+                
+                console.log(`Admin cookie set for user ${adminUser.id} (${adminUser.loginID || adminUser.username})`);
+              }
+            }
           }
         } catch (error) {
           console.log("Admin auth via headers - error finding specified admin user:", error);
@@ -50,6 +83,31 @@ export const validateAdmin = async (
     // Check if the user is already authenticated and is an admin via session
     if (req.isAuthenticated() && req.user && (req.user.role === 'admin' || req.user.role === 'limited-admin')) {
       console.log(`ADMIN ACCESS - USER AUTHENTICATED for ${endpoint} - ${req.user.loginID || req.user.username}`);
+      
+      // Also set the admin cookie to ensure both auth systems stay in sync
+      if (shouldSyncCookie || isEmergencyCheck || process.env.NODE_ENV === 'production') {
+        if (res) {
+          const ONE_HOUR = 60 * 60 * 1000;
+          const ADMIN_COOKIE_MAX_AGE = 4 * ONE_HOUR; // 4 hours
+          
+          res.cookie('admin_id', req.user.id.toString(), {
+            httpOnly: true,
+            maxAge: ADMIN_COOKIE_MAX_AGE,
+            sameSite: 'lax',
+            secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+          });
+          
+          res.cookie('admin_auth_time', Date.now().toString(), {
+            httpOnly: true,
+            maxAge: ADMIN_COOKIE_MAX_AGE,
+            sameSite: 'lax',
+            secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+          });
+          
+          console.log(`Admin cookie synced for user ${req.user.id} (${req.user.loginID || req.user.username})`);
+        }
+      }
+      
       if (next) next();
       return true;
     }
@@ -59,21 +117,82 @@ export const validateAdmin = async (
       const adminId = parseInt(req.cookies.admin_id);
       if (!isNaN(adminId)) {
         console.log(`ADMIN ACCESS - CHECKING ADMIN COOKIE for ${endpoint} - ID: ${adminId}`);
-        try {
-          const adminUser = await storage.getUser(adminId);
-          if (adminUser && (adminUser.role === 'admin' || adminUser.role === 'limited-admin')) {
-            // Set the user on the request for downstream use
-            req.user = adminUser;
-            console.log(`ADMIN ACCESS - COOKIE AUTHENTICATED for ${endpoint} - ${adminUser.loginID || adminUser.username}`);
-            if (next) next();
-            return true;
-          } else {
-            console.log(`ADMIN ACCESS - INVALID ADMIN COOKIE for ${endpoint} - User not admin or not found`);
+        
+        // Check if cookie is expired by checking the auth_time cookie
+        let cookieIsExpired = false;
+        if (req.cookies.admin_auth_time) {
+          const authTime = parseInt(req.cookies.admin_auth_time);
+          const now = Date.now();
+          const FOUR_HOURS = 4 * 60 * 60 * 1000;
+          
+          // Cookie is considered expired if it's older than 4 hours
+          if (!isNaN(authTime) && now - authTime > FOUR_HOURS) {
+            cookieIsExpired = true;
+            console.log(`ADMIN ACCESS - ADMIN COOKIE EXPIRED for ${endpoint} - Auth time: ${new Date(authTime).toISOString()}`);
           }
-        } catch (error) {
-          console.error(`ADMIN ACCESS - ERROR CHECKING ADMIN COOKIE for ${endpoint}:`, error);
+        }
+        
+        // Only proceed if cookie is not expired
+        if (!cookieIsExpired) {
+          try {
+            const adminUser = await storage.getUser(adminId);
+            if (adminUser && (adminUser.role === 'admin' || adminUser.role === 'limited-admin')) {
+              // Set the user on the request for downstream use
+              req.user = adminUser;
+              console.log(`ADMIN ACCESS - COOKIE AUTHENTICATED for ${endpoint} - ${adminUser.loginID || adminUser.username}`);
+              
+              // In emergency check mode or production, refresh the cookie
+              if (isEmergencyCheck || process.env.NODE_ENV === 'production') {
+                if (res) {
+                  const ONE_HOUR = 60 * 60 * 1000;
+                  const ADMIN_COOKIE_MAX_AGE = 4 * ONE_HOUR; // 4 hours
+                  
+                  res.cookie('admin_id', adminUser.id.toString(), {
+                    httpOnly: true,
+                    maxAge: ADMIN_COOKIE_MAX_AGE,
+                    sameSite: 'lax',
+                    secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+                  });
+                  
+                  res.cookie('admin_auth_time', Date.now().toString(), {
+                    httpOnly: true,
+                    maxAge: ADMIN_COOKIE_MAX_AGE,
+                    sameSite: 'lax',
+                    secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+                  });
+                  
+                  console.log(`Admin cookie refreshed for user ${adminUser.id} (${adminUser.loginID || adminUser.username})`);
+                }
+              }
+              
+              if (next) next();
+              return true;
+            } else {
+              console.log(`ADMIN ACCESS - INVALID ADMIN COOKIE for ${endpoint} - User not admin or not found`);
+            }
+          } catch (error) {
+            console.error(`ADMIN ACCESS - ERROR CHECKING ADMIN COOKIE for ${endpoint}:`, error);
+          }
         }
       }
+    }
+    
+    // If this is an emergency check, provide more detailed information
+    if (isEmergencyCheck) {
+      console.log(`ADMIN ACCESS - EMERGENCY CHECK DETAILS:`, {
+        isAuthenticated: req.isAuthenticated?.() || false,
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        hasCookies: !!req.cookies,
+        adminIdCookie: req.cookies?.admin_id || 'none',
+        adminAuthTimeCookie: req.cookies?.admin_auth_time || 'none',
+        headers: {
+          adminDebug: req.headers['x-admin-debug-auth'] || 'none',
+          adminApiKey: req.headers['x-admin-api-key'] ? 'present' : 'none',
+          adminUsername: req.headers['x-admin-username'] || 'none',
+          adminEmergency: req.headers['x-admin-emergency'] || 'none'
+        }
+      });
     }
     
     // If no valid admin authentication, deny access
