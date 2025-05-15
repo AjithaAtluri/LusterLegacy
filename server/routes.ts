@@ -1415,7 +1415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   /**
-   * Debug routes (temporary)
+   * Debug and diagnostic routes
    */
   app.get('/api/debug/products/:id', async (req, res) => {
     try {

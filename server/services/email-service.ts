@@ -45,6 +45,9 @@ console.log(`Email service initialized with sender: ${DEFAULT_SENDER_NAME} <${VE
 // Flag to indicate if we should use a backup email method when SendGrid fails
 const USE_BACKUP_EMAIL_METHOD = true;
 
+// Flag to allow diagnostic email tests in development
+const ALLOW_TEST_EMAILS = process.env.NODE_ENV !== 'production';
+
 interface EmailData {
   to: string;
   subject: string;
@@ -387,6 +390,8 @@ export async function sendPasswordChangeEmail(
 ): Promise<{ success: boolean; message?: string }> {
   const displayName = name || 'Valued Customer';
   
+  console.log(`[PASSWORD CHANGE] Preparing confirmation email for ${email} (${displayName})`);
+  
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #F5F5F5; padding: 20px; text-align: center; border-bottom: 3px solid #D4AF37;">
@@ -404,10 +409,26 @@ export async function sendPasswordChangeEmail(
     </div>
   `;
   
-  return sendEmail({
-    to: email,
-    subject: 'Password Changed - Luster Legacy',
-    html: emailHtml,
-    text: `Hello ${displayName}, your password has been successfully changed. If you did not initiate this change, please contact us immediately.`
-  });
+  try {
+    const result = await sendEmail({
+      to: email,
+      subject: 'Password Changed - Luster Legacy',
+      html: emailHtml,
+      text: `Hello ${displayName}, your password has been successfully changed. If you did not initiate this change, please contact us immediately.`
+    });
+    
+    if (result.success) {
+      console.log(`[PASSWORD CHANGE] Confirmation email sent successfully to ${email}`);
+    } else {
+      console.error(`[PASSWORD CHANGE] Failed to send confirmation email to ${email}: ${result.message}`);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`[PASSWORD CHANGE] Exception sending confirmation email:`, error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : "Unknown error sending password change confirmation" 
+    };
+  }
 }
