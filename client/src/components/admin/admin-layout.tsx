@@ -453,7 +453,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         {
           title: "Product Inquiries",
           icon: <MessageCircle className="w-4 h-4 mr-2" />,
-          href: "/admin/inquiries",
+          href: "/admin/quotes",
           badge: pendingQuotes
         }
       ]
