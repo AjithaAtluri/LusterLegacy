@@ -25,42 +25,67 @@ export default function CustomDesign() {
   
   // Handle inspiration image - using both session storage and URL parameter approaches
   useEffect(() => {
-    const loadFromSession = () => {
+    const loadFromSessionDataUrl = () => {
       try {
+        // Try to get the ready-made data URL first (new approach)
+        const dataUrl = sessionStorage.getItem('inspirationImageDataUrl');
+        if (dataUrl) {
+          console.log("Custom Design Page - Found pre-processed data URL in sessionStorage");
+          
+          // Directly set the data URL to the form state
+          setFormState(prev => ({
+            ...prev,
+            imageDataUrl: dataUrl
+          }));
+          
+          // Clear from session storage to prevent reuse
+          sessionStorage.removeItem('inspirationImageDataUrl');
+          console.log("Custom Design Page - Applied data URL from sessionStorage");
+          return true;
+        }
+      } catch (err) {
+        console.error("Custom Design Page - Error accessing data URL from sessionStorage:", err);
+      }
+      return false;
+    };
+    
+    const loadFromSessionSrc = () => {
+      try {
+        // Try the old approach as fallback
         const sessionImageSrc = sessionStorage.getItem('inspirationImageSrc');
-        console.log("Checking sessionStorage for image:", sessionImageSrc ? "Found" : "Not found");
-        
         if (sessionImageSrc) {
+          console.log("Custom Design Page - Found image source in sessionStorage:", sessionImageSrc.substring(0, 50) + "...");
           processInspirationImage(sessionImageSrc);
           // Clear from session storage to prevent reuse
           sessionStorage.removeItem('inspirationImageSrc');
           return true;
         }
       } catch (err) {
-        console.error("Error accessing sessionStorage for inspiration image:", err);
+        console.error("Custom Design Page - Error accessing image source from sessionStorage:", err);
       }
       return false;
     };
     
-    // First check URL parameters
+    // First, try to load the pre-processed data URL (most reliable method)
     if (fromInspiration) {
       console.log("Custom Design Page - Detected fromInspiration=true in URL");
-      const loaded = loadFromSession();
-      if (!loaded) {
-        console.warn("fromInspiration flag is true but no image found in sessionStorage");
+      const loadedDataUrl = loadFromSessionDataUrl();
+      
+      // If data URL wasn't found, try the image source
+      if (!loadedDataUrl) {
+        console.log("Custom Design Page - No data URL found, trying image source");
+        const loadedSrc = loadFromSessionSrc();
+        
+        if (!loadedSrc) {
+          console.warn("Custom Design Page - No inspiration image found in any sessionStorage key");
+        }
       }
     }
     
-    // Also check for direct image URL in parameters
+    // Also check for direct image URL in parameters as ultimate fallback
     if (inspirationImage) {
-      console.log("Custom Design Page - Using URL parameter for inspiration image:", inspirationImage);
+      console.log("Custom Design Page - Using URL parameter for inspiration image");
       processInspirationImage(inspirationImage);
-    }
-    
-    // Delay check in case sessionStorage is taking time to be populated
-    if (!inspirationImage && !fromInspiration) {
-      console.log("Custom Design Page - No inspiration parameters found, checking sessionStorage anyway");
-      loadFromSession();
     }
   }, [inspirationImage, fromInspiration]);
   

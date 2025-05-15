@@ -136,58 +136,157 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
   // Handle inspiration image from parent component
   useEffect(() => {
     if (formState?.imageDataUrl && !previewUrl && uploadedImages.length === 0) {
-      console.log("DesignForm - Received inspiration image from parent");
+      console.log("DesignForm - Received inspiration image from parent component");
       
       try {
-        // Create an Image object to load the image
-        const img = new Image();
-        
-        // Set up onload handler to convert to a File once loaded
-        img.onload = () => {
-          console.log("DesignForm - Inspiration image loaded successfully, converting to File");
+        // If it's already a data URL, we can create a file from it directly
+        if (formState.imageDataUrl.startsWith('data:')) {
+          console.log("DesignForm - Processing received data URL");
           
-          // Create a canvas to draw the image
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
+          // Create an Image object to get the image dimensions
+          const img = new Image();
           
-          // Draw the image to the canvas
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            
-            // Convert to a blob
-            canvas.toBlob((blob) => {
-              if (blob) {
-                // Create a File object from the blob
-                const fileName = "inspiration-image.jpg";
-                const file = new File([blob], fileName, { 
-                  type: "image/jpeg",
-                  lastModified: Date.now()
-                });
-                
-                // Create the preview URL
-                const newPreviewUrl = URL.createObjectURL(blob);
-                
-                // Update component state with the new file and preview
-                setUploadedImage(file);
-                setUploadedImages([file]);
-                setPreviewUrl(newPreviewUrl);
-                setPreviewUrls([newPreviewUrl]);
-                
-                console.log("DesignForm - Successfully processed inspiration image");
+          img.onload = () => {
+            try {
+              console.log("DesignForm - Data URL image loaded, dimensions:", img.width, "x", img.height);
+              
+              // Convert the data URL to a Blob
+              const byteString = atob(formState.imageDataUrl.split(',')[1]);
+              const mimeType = formState.imageDataUrl.split(',')[0].split(':')[1].split(';')[0];
+              
+              const arrayBuffer = new ArrayBuffer(byteString.length);
+              const uint8Array = new Uint8Array(arrayBuffer);
+              
+              for (let i = 0; i < byteString.length; i++) {
+                uint8Array[i] = byteString.charCodeAt(i);
               }
-            }, "image/jpeg");
-          }
-        };
-        
-        // Set up error handler
-        img.onerror = (err) => {
-          console.error("DesignForm - Error loading inspiration image:", err);
-        };
-        
-        // Start loading the image
-        img.src = formState.imageDataUrl;
+              
+              const blob = new Blob([arrayBuffer], { type: mimeType });
+              
+              // Create a File object from the blob
+              const fileName = "inspiration-image.jpg";
+              const file = new File([blob], fileName, { 
+                type: mimeType || "image/jpeg",
+                lastModified: Date.now()
+              });
+              
+              // Create the preview URL
+              const newPreviewUrl = URL.createObjectURL(blob);
+              
+              // Update component state with the new file and preview
+              setUploadedImage(file);
+              setUploadedImages([file]);
+              setPreviewUrl(newPreviewUrl);
+              setPreviewUrls([newPreviewUrl]);
+              
+              console.log("DesignForm - Successfully processed inspiration image from data URL");
+            } catch (err) {
+              console.error("DesignForm - Error processing data URL image after load:", err);
+            }
+          };
+          
+          img.onerror = (err) => {
+            console.error("DesignForm - Error loading data URL image:", err);
+          };
+          
+          img.src = formState.imageDataUrl;
+        } 
+        // Otherwise use the canvas approach for regular URLs
+        else {
+          console.log("DesignForm - Processing received image URL");
+          
+          // Create an Image object to load the image
+          const img = new Image();
+          img.crossOrigin = "anonymous"; // To avoid CORS issues
+          
+          // Set up onload handler to convert to a File once loaded
+          img.onload = () => {
+            console.log("DesignForm - Image URL loaded successfully, dimensions:", img.width, "x", img.height);
+            
+            try {
+              // Create a canvas to draw the image
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              
+              // Draw the image to the canvas
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0);
+                
+                // Convert to a blob
+                canvas.toBlob((blob) => {
+                  if (blob) {
+                    // Create a File object from the blob
+                    const fileName = "inspiration-image.jpg";
+                    const file = new File([blob], fileName, { 
+                      type: "image/jpeg",
+                      lastModified: Date.now()
+                    });
+                    
+                    // Create the preview URL
+                    const newPreviewUrl = URL.createObjectURL(blob);
+                    
+                    // Update component state with the new file and preview
+                    setUploadedImage(file);
+                    setUploadedImages([file]);
+                    setPreviewUrl(newPreviewUrl);
+                    setPreviewUrls([newPreviewUrl]);
+                    
+                    console.log("DesignForm - Successfully processed inspiration image from URL");
+                  }
+                }, "image/jpeg");
+              }
+            } catch (err) {
+              console.error("DesignForm - Error processing image URL in canvas:", err);
+            }
+          };
+          
+          // Set up error handler with retry
+          img.onerror = (err) => {
+            console.error("DesignForm - Error loading image URL:", err);
+            
+            // Try without crossOrigin as a fallback
+            console.log("DesignForm - Retrying without crossOrigin");
+            const retryImg = new Image();
+            retryImg.onload = function() {
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = retryImg.width;
+                canvas.height = retryImg.height;
+                
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.drawImage(retryImg, 0, 0);
+                  
+                  canvas.toBlob((blob) => {
+                    if (blob) {
+                      const fileName = "inspiration-image.jpg";
+                      const file = new File([blob], fileName, { 
+                        type: "image/jpeg",
+                        lastModified: Date.now()
+                      });
+                      
+                      const newPreviewUrl = URL.createObjectURL(blob);
+                      setUploadedImage(file);
+                      setUploadedImages([file]);
+                      setPreviewUrl(newPreviewUrl);
+                      setPreviewUrls([newPreviewUrl]);
+                      
+                      console.log("DesignForm - Retry successful");
+                    }
+                  }, "image/jpeg");
+                }
+              } catch (retryErr) {
+                console.error("DesignForm - Retry processing failed:", retryErr);
+              }
+            };
+            retryImg.src = formState.imageDataUrl;
+          };
+          
+          // Start loading the image
+          img.src = formState.imageDataUrl;
+        }
       } catch (error) {
         console.error("DesignForm - Error processing inspiration image:", error);
       }
