@@ -761,10 +761,122 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   // Current location for determining active route
   const [location] = useLocation();
   
+  // Show loading UI or timeout recovery UI
   if (stableLoading) {
+    // If we have a cache, let's check if it's valid
+    const cachedAdminAuth = getAdminAuth();
+    const isValidCache = cachedAdminAuth && isValidAdminAuth();
+    
+    // If we have a valid cache and this is taking too long, use emergency mode
+    if (hasTimedOut && isValidCache) {
+      return (
+        <div className="min-h-screen flex flex-col bg-background">
+          {/* Limited emergency admin header */}
+          <header className="border-b sticky top-0 z-30 bg-background">
+            <div className="flex h-16 items-center px-4 sm:px-6">
+              <a href="/admin/dashboard" className="font-playfair text-xl font-bold">
+                Luster<span className="text-primary">Legacy</span> Admin
+              </a>
+              <Badge variant="outline" className="ml-2">Emergency Mode</Badge>
+              
+              <div className="ml-auto flex items-center gap-4">
+                <Button 
+                  onClick={() => setLocation('/admin/login')}
+                  variant="destructive" 
+                  size="sm"
+                >
+                  Re-Login
+                </Button>
+              </div>
+            </div>
+          </header>
+          
+          {/* Emergency mode notice */}
+          <div className="flex-1 p-4 sm:p-6 md:p-8">
+            <div className="mb-6 p-4 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+                <h2 className="text-lg font-semibold text-yellow-700 dark:text-yellow-400">
+                  Emergency Mode Active
+                </h2>
+              </div>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-2">
+                The authentication system is currently experiencing issues. Using cached credentials to maintain your session.
+              </p>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                <span className="font-medium">Logged in as:</span> {cachedAdminAuth?.username || cachedAdminAuth?.loginID} (Last verified: {new Date(cachedAdminAuth?.authTime || 0).toLocaleTimeString()})
+              </p>
+              <div className="mt-3">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    // Attempt emergency auth
+                    emergencyAdminAuth(cachedAdminAuth?.id).then(result => {
+                      if (result) {
+                        toast({
+                          title: "Authentication Refreshed",
+                          description: "Your session has been successfully refreshed.",
+                        });
+                        // Reload the page to restart normal auth flow
+                        window.location.reload();
+                      } else {
+                        toast({
+                          title: "Authentication Failed",
+                          description: "Unable to refresh your session. Please re-login.",
+                          variant: "destructive"
+                        });
+                      }
+                    });
+                  }}
+                >
+                  Try to Refresh Session
+                </Button>
+              </div>
+            </div>
+            
+            {/* Main content in emergency mode */}
+            <main className="mt-6">
+              {children}
+            </main>
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular loading UI with timeout indicator
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        
+        {/* Show timeout message if loading is taking too long */}
+        {hasTimedOut && (
+          <div className="text-center mt-4 max-w-md px-4">
+            <h3 className="text-lg font-medium mb-2">
+              Loading is taking longer than expected
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Time elapsed: {(timeElapsed / 1000).toFixed(1)}s
+            </p>
+            <div className="flex justify-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </Button>
+              
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setLocation('/admin/login')}
+              >
+                Go to Login
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
