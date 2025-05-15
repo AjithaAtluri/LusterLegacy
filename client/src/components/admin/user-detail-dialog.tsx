@@ -290,7 +290,7 @@ export function UserDetailDialog({ userId, onClose }: UserDetailDialogProps) {
                         <Button 
                           variant="ghost" 
                           className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
-                          onClick={() => window.location.href = `/admin/custom-designs?userId=${userId}`}
+                          onClick={() => window.location.href = `/admin/designs?userId=${userId}`}
                         >
                           <div className="text-xl font-bold">{activity.designRequests}</div>
                           <div className="text-xs text-muted-foreground">Design Requests</div>
@@ -306,7 +306,7 @@ export function UserDetailDialog({ userId, onClose }: UserDetailDialogProps) {
                         <Button 
                           variant="ghost" 
                           className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
-                          onClick={() => window.location.href = `/admin/customizations?userId=${userId}`}
+                          onClick={() => window.location.href = `/admin/personalizations?userId=${userId}`}
                         >
                           <div className="text-xl font-bold">{activity.personalizationRequests}</div>
                           <div className="text-xs text-muted-foreground">Personalizations</div>
@@ -322,7 +322,7 @@ export function UserDetailDialog({ userId, onClose }: UserDetailDialogProps) {
                         <Button 
                           variant="ghost" 
                           className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
-                          onClick={() => window.location.href = `/admin/contact?userId=${userId}`}
+                          onClick={() => window.location.href = `/admin/contact-messages?userId=${userId}`}
                         >
                           <div className="text-xl font-bold">{activity.contactMessages}</div>
                           <div className="text-xs text-muted-foreground">Messages</div>
