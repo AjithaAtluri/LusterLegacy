@@ -466,7 +466,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     {
       title: "Contact Messages",
       icon: <MessageSquare className="w-5 h-5 mr-2" />,
-      href: "/admin/contact",
+      href: "/admin/contact-messages",
       badge: unreadMessages
     },
     {
