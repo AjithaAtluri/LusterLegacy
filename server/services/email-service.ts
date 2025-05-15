@@ -116,10 +116,17 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     // Determine if we should actually send the email
     let shouldSendEmail = true;
     
+    // OVERRIDE: Always send critical emails (like password reset) regardless of environment
+    // This change ensures password reset emails work even in development mode
+    if (isCriticalEmail) {
+      console.log('CRITICAL EMAIL: Always sending this important account-related email');
+      shouldSendEmail = true;
+    }
     // In development, only send if either:
     // 1. SEND_REAL_EMAILS is set, or
-    // 2. It's a critical email and ALWAYS_SEND_CRITICAL_EMAILS is set
-    if (process.env.NODE_ENV === 'development') {
+    // 2. It's a critical email and ALWAYS_SEND_CRITICAL_EMAILS is set,
+    // OR when forced to send via the API
+    else if (process.env.NODE_ENV === 'development') {
       const sendRealEmails = !!process.env.SEND_REAL_EMAILS;
       const alwaysSendCritical = !!process.env.ALWAYS_SEND_CRITICAL_EMAILS;
       
