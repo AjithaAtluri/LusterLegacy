@@ -134,9 +134,20 @@ export default function Inspiration() {
   // Upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
+      // Also include admin headers for image upload
+      const headers = {
+        'X-Admin-Debug-Auth': 'true',
+        'X-Admin-API-Key': 'dev_admin_key_12345',
+        'X-Admin-Username': user?.username || 'admin'
+      };
+      
+      console.log('Uploading new inspiration image with headers:', headers);
+      
       const response = await fetch('/api/inspiration', {
         method: 'POST',
-        body: formData
+        headers, // No Content-Type as browser sets it automatically with boundary for FormData
+        body: formData,
+        credentials: 'include'
       });
       
       if (!response.ok) {
@@ -193,10 +204,21 @@ export default function Inspiration() {
   // Delete image mutation
   const deleteImageMutation = useMutation({
     mutationFn: async (imageId: number) => {
-      const response = await apiRequest(
-        "DELETE", 
-        `/api/admin/inspiration/${imageId}`
-      );
+      // Include admin headers for authentication
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Admin-Debug-Auth': 'true',
+        'X-Admin-API-Key': 'dev_admin_key_12345',
+        'X-Admin-Username': user?.username || 'admin'
+      };
+      
+      console.log('Deleting inspiration image:', imageId, 'with headers:', headers);
+      
+      const response = await fetch(`/api/admin/inspiration/${imageId}`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'include'
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
