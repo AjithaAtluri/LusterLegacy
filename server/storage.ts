@@ -1744,8 +1744,32 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
-  async getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]> { return []; }
-  async getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]> { return []; }
+  async getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]> {
+    try {
+      const items = await db.select()
+        .from(inspirationGallery)
+        .where(eq(inspirationGallery.featured, true))
+        .orderBy(desc(inspirationGallery.id));
+      
+      return items;
+    } catch (error) {
+      console.error('Error fetching featured inspiration items:', error);
+      return [];
+    }
+  }
+  async getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]> {
+    try {
+      const items = await db.select()
+        .from(inspirationGallery)
+        .where(eq(inspirationGallery.category, category))
+        .orderBy(desc(inspirationGallery.id));
+      
+      return items;
+    } catch (error) {
+      console.error('Error fetching inspiration items by category:', error);
+      return [];
+    }
+  }
   async createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem> {
     try {
       const [result] = await db.insert(inspirationGallery)
