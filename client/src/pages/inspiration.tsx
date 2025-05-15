@@ -1,10 +1,16 @@
 import { Helmet } from "react-helmet";
-
-import { ArrowRight, Heart, ZoomIn, PlusCircle } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, Heart, ZoomIn, PlusCircle, Upload, X, Image } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 import rubyLeafPendant from "@/assets/ruby-leaf-pendant.png";
 import pearlNecklaceSet from "@/assets/pearl-necklace-set.png";
 import polkiPendantNecklace from "@/assets/polki-pendant-necklace.png";
@@ -38,6 +44,95 @@ interface GalleryImage {
 }
 
 export default function Inspiration() {
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [alt, setAlt] = useState("");
+  const [description, setDescription] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Clear form
+  const resetForm = () => {
+    setImage(null);
+    setImagePreview(null);
+    setTitle("");
+    setAlt("");
+    setDescription("");
+    setUploading(false);
+  };
+  
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await apiRequest('POST', '/api/inspiration-images', undefined, formData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload image');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Image uploaded",
+        description: "The inspiration image was added successfully",
+        variant: "default",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/inspiration-images'] });
+      resetForm();
+      setUploadOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setUploading(false);
+    }
+  });
+  
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!image) {
+      toast({
+        title: "No image selected",
+        description: "Please select an image to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setUploading(true);
+    
+    const formData = new FormData();
+    formData.append('image', image);
+    formData.append('title', title);
+    formData.append('alt', alt);
+    formData.append('description', description);
+    
+    uploadMutation.mutate(formData);
+  };
+  
   // Image gallery data with design inspiration images
   const galleryImages: GalleryImage[] = [
     {
@@ -221,12 +316,123 @@ export default function Inspiration() {
         {/* Admin Add Inspiration Image Button */}
         {user && user.role === 'admin' && (
           <div className="flex justify-end mb-4">
-            <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-white">
-              <Link href="/admin/inspiration/add">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add New Inspiration Image
-              </Link>
+            <Button 
+              variant="default"
+              className="bg-primary hover:bg-primary/90 text-white"
+              onClick={() => setUploadOpen(true)}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add New Inspiration Image
             </Button>
+            
+            {/* Image Upload Dialog */}
+            <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add New Inspiration Image</DialogTitle>
+                  <DialogDescription>
+                    Upload a new image to the inspiration gallery. High-quality images work best.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="image">Image</Label>
+                    <div className="flex items-center gap-4">
+                      <div 
+                        className={`border-2 border-dashed rounded-md p-4 w-full flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors ${
+                          imagePreview ? 'h-40' : 'h-32'
+                        }`}
+                        onClick={() => document.getElementById('image-upload')?.click()}
+                      >
+                        {imagePreview ? (
+                          <div className="relative w-full h-full">
+                            <img 
+                              src={imagePreview} 
+                              alt="Preview" 
+                              className="w-full h-full object-contain" 
+                            />
+                            <button 
+                              type="button"
+                              className="absolute top-1 right-1 bg-black/70 text-white p-1 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setImage(null);
+                                setImagePreview(null);
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <Image className="h-10 w-10 text-muted-foreground mb-2" />
+                            <p className="text-sm text-muted-foreground">Click to select an image</p>
+                          </>
+                        )}
+                      </div>
+                      <input 
+                        type="file"
+                        id="image-upload"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input 
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Enter image title"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="alt">Alt Text</Label>
+                    <Input 
+                      id="alt"
+                      value={alt}
+                      onChange={(e) => setAlt(e.target.value)}
+                      placeholder="Descriptive alternate text for accessibility"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea 
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Enter detailed description"
+                      required
+                    />
+                  </div>
+                  
+                  <DialogFooter className="mt-4">
+                    <Button type="button" variant="outline" onClick={() => setUploadOpen(false)} disabled={uploading}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={!image || uploading}>
+                      {uploading ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Uploading...
+                        </>
+                      ) : 'Upload Image'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
         
