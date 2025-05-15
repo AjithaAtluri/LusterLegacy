@@ -8206,6 +8206,101 @@ Respond in JSON format:
     }
   });
   
+  // Get user details by ID
+  app.get('/api/admin/users/:id', validateAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      // Remove password before sending
+      const { password, ...userWithoutPassword } = user;
+      
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching user details',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
+  // Get user activity by ID
+  app.get('/api/admin/users/:id/activity', validateAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid user ID'
+        });
+      }
+      
+      // Count user's design requests
+      const designRequests = await storage.countUserDesignRequests(userId);
+      
+      // Count user's quote requests
+      const quoteRequests = await storage.countUserQuoteRequests(userId);
+      
+      // Count user's personalization requests
+      const personalizationRequests = await storage.countUserCustomizationRequests(userId);
+      
+      // Count user's orders (if available)
+      let orders = 0;
+      try {
+        orders = await storage.countUserOrders(userId);
+      } catch (error) {
+        console.log('Order count not available:', error);
+      }
+      
+      // Count user's contact messages
+      let contactMessages = 0;
+      try {
+        contactMessages = await storage.countUserContactMessages(userId);
+      } catch (error) {
+        console.log('Contact messages count not available:', error);
+      }
+      
+      // Try to get last activity time (if available)
+      let lastActivity = null;
+      try {
+        lastActivity = await storage.getUserLastActivity(userId);
+      } catch (error) {
+        console.log('Last activity time not available:', error);
+      }
+      
+      res.json({
+        designRequests,
+        quoteRequests,
+        personalizationRequests,
+        orders,
+        contactMessages,
+        lastActivity
+      });
+    } catch (error) {
+      console.error('Error fetching user activity:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching user activity',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+  
   // Delete a user
   app.delete('/api/admin/users/:id', validateAdmin, async (req, res) => {
     try {

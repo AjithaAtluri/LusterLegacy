@@ -97,6 +97,12 @@ export interface IStorage {
   ): Promise<User>;
   deleteUser(loginIDOrId: string | number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
+  countUserDesignRequests(userId: number): Promise<number>;
+  countUserQuoteRequests(userId: number): Promise<number>;
+  countUserCustomizationRequests(userId: number): Promise<number>;
+  countUserOrders(userId: number): Promise<number>;
+  countUserContactMessages(userId: number): Promise<number>;
+  getUserLastActivity(userId: number): Promise<string | null>;
   
   // Password reset methods
   createPasswordResetToken(email: string): Promise<{token: string; user: User} | undefined>;
@@ -255,12 +261,30 @@ export class DatabaseStorage implements IStorage {
   public sessionStore: any; // Using any to avoid type issues with express-session
 
   constructor() {
-    // Initialize with PostgresSessionStore
-    // Using the already imported pool from db.ts
-    this.sessionStore = new PostgresSessionStore({ 
-      pool, 
-      createTableIfMissing: true 
-    });
+    try {
+      // Initialize with PostgresSessionStore
+      // Using the already imported pool from db.ts
+      this.sessionStore = new PostgresSessionStore({ 
+        pool, 
+        createTableIfMissing: true 
+      });
+      
+      // Add error handler to session store
+      if (this.sessionStore && typeof this.sessionStore.on === 'function') {
+        this.sessionStore.on('error', (error: Error) => {
+          console.error('Session store error:', error);
+          // Log but don't crash the application
+        });
+      }
+    } catch (error) {
+      console.error('Failed to create PostgresSessionStore:', error);
+      // Create a fallback memory store
+      const MemoryStore = require('memorystore')(session);
+      this.sessionStore = new MemoryStore({
+        checkPeriod: 86400000 // prune expired entries every 24h
+      });
+      console.log('Using in-memory session store as fallback');
+    }
   }
 
   // User methods
@@ -437,6 +461,141 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return db.select().from(users);
+  }
+  
+  async countUserDesignRequests(userId: number): Promise<number> {
+    const requests = await db
+      .select()
+      .from(designRequests)
+      .where(eq(designRequests.userId, userId));
+    return requests.length;
+  }
+
+  async countUserQuoteRequests(userId: number): Promise<number> {
+    const requests = await db
+      .select()
+      .from(quoteRequests)
+      .where(eq(quoteRequests.userId, userId));
+    return requests.length;
+  }
+
+  async countUserCustomizationRequests(userId: number): Promise<number> {
+    const requests = await db
+      .select()
+      .from(customizationRequests)
+      .where(eq(customizationRequests.userId, userId));
+    return requests.length;
+  }
+
+  async countUserOrders(userId: number): Promise<number> {
+    const userOrders = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.userId, userId));
+    return userOrders.length;
+  }
+
+  async countUserContactMessages(userId: number): Promise<number> {
+    // Find the user to get their email
+    const user = await this.getUser(userId);
+    if (!user || !user.email) {
+      return 0;
+    }
+    
+    // Find contact messages by email
+    const messages = await db
+      .select()
+      .from(contactMessages)
+      .where(eq(contactMessages.email, user.email));
+    return messages.length;
+  }
+
+  async getUserLastActivity(userId: number): Promise<string | null> {
+    // Look up the most recent activity across all user-related tables
+    // Start with design requests
+    const designRequest = await db
+      .select()
+      .from(designRequests)
+      .where(eq(designRequests.userId, userId))
+      .orderBy(desc(designRequests.createdAt))
+      .limit(1);
+    
+    // Quote requests
+    const quoteRequest = await db
+      .select()
+      .from(quoteRequests)
+      .where(eq(quoteRequests.userId, userId))
+      .orderBy(desc(quoteRequests.createdAt))
+      .limit(1);
+      
+    // Customization requests
+    const customRequest = await db
+      .select()
+      .from(customizationRequests)
+      .where(eq(customizationRequests.userId, userId))
+      .orderBy(desc(customizationRequests.createdAt))
+      .limit(1);
+      
+    // Orders
+    const userOrder = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.userId, userId))
+      .orderBy(desc(orders.createdAt))
+      .limit(1);
+    
+    // Design comments
+    const designComment = await db
+      .select({ 
+        createdAt: designRequestComments.createdAt, 
+        designRequestId: designRequestComments.designRequestId 
+      })
+      .from(designRequestComments)
+      .innerJoin(designRequests, eq(designRequestComments.designRequestId, designRequests.id))
+      .where(eq(designRequests.userId, userId))
+      .orderBy(desc(designRequestComments.createdAt))
+      .limit(1);
+    
+    // Collect all timestamps
+    const timestamps = [];
+    
+    if (designRequest.length > 0) {
+      timestamps.push(designRequest[0].createdAt);
+    }
+    
+    if (quoteRequest.length > 0) {
+      timestamps.push(quoteRequest[0].createdAt);
+    }
+    
+    if (customRequest.length > 0) {
+      timestamps.push(customRequest[0].createdAt);
+    }
+    
+    if (userOrder.length > 0) {
+      timestamps.push(userOrder[0].createdAt);
+    }
+    
+    if (designComment.length > 0) {
+      timestamps.push(designComment[0].createdAt);
+    }
+    
+    // Find the most recent timestamp
+    if (timestamps.length === 0) {
+      return null;
+    }
+    
+    // Sort timestamps in descending order and take the first one
+    if (timestamps.length > 0) {
+      // Make sure we sort as dates
+      timestamps.sort((a, b) => {
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateB.getTime() - dateA.getTime();
+      });
+      // Convert to string before returning
+      return typeof timestamps[0] === 'string' ? timestamps[0] : timestamps[0].toString();
+    }
+    return null;
   }
 
   async deleteUser(loginIDOrId: string | number): Promise<boolean> {

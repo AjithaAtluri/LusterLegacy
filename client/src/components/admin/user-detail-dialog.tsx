@@ -88,7 +88,14 @@ export function UserDetailDialog({ userId, onClose }: UserDetailDialogProps) {
         const response = await apiRequest("GET", `/api/admin/users/${userId}/activity`);
         return await response.json() as UserActivitySummary;
       } catch (error) {
-        // If endpoint doesn't exist yet, provide default empty data
+        console.error("Error fetching user activity:", error);
+        toast({
+          title: "Error",
+          description: "Could not load user activity data. Please try again.",
+          variant: "destructive",
+        });
+        
+        // Return empty data while we fix the API issue
         return {
           designRequests: 0,
           quoteRequests: 0,
