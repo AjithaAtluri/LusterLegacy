@@ -43,6 +43,7 @@ import { generateAITestimonial } from "./openai-service";
 import { generateDesignConsultationResponse } from "./design-consultation-service";
 // We don't import processImageForTestimonial because it fails with local image paths
 import { getGoldPrice, fetchGoldPrice } from "./services/gold-price-service";
+import { analyzeImage } from "./ai-image-analyzer";
 
 // USD to INR conversion rate - must match the rate in price-calculator.ts
 const USD_TO_INR_RATE = 83;
