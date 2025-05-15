@@ -260,59 +260,20 @@ export default function Inspiration() {
                       <Button 
                         variant="default" 
                         className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        onClick={async () => {
-                          console.log("Inspiration - Preparing image for transfer to design page:", image.src);
+                        onClick={() => {
+                          console.log("Inspiration - Preparing image with direct method:", image.src);
                           
-                          // Directly convert the image to a data URL before transferring
+                          // Create a direct reference that will survive navigation
                           try {
-                            // Create an Image object to load the image properly
-                            const img = new Image();
+                            // Add a global variable to window object that will survive page navigation
+                            window.__INSPIRATION_IMAGE_SRC = image.src;
+                            console.log("Inspiration - Set global image reference:", image.src);
                             
-                            // Use a promise to make sure the image is loaded
-                            const imageLoaded = new Promise((resolve, reject) => {
-                              img.onload = () => resolve(true);
-                              img.onerror = (e) => reject(e);
-                            });
-                            
-                            // Set crossOrigin to allow canvas operations on external images
-                            img.crossOrigin = "anonymous";
-                            img.src = image.src;
-                            
-                            try {
-                              // Wait for the image to load
-                              await imageLoaded;
-                              console.log("Inspiration - Image loaded successfully, dimensions:", img.width, "x", img.height);
-                              
-                              // Create a canvas to draw the image
-                              const canvas = document.createElement('canvas');
-                              canvas.width = img.width;
-                              canvas.height = img.height;
-                              
-                              // Draw the image to the canvas
-                              const ctx = canvas.getContext('2d');
-                              if (ctx) {
-                                ctx.drawImage(img, 0, 0);
-                                
-                                // Convert to data URL
-                                const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-                                console.log("Inspiration - Image converted to data URL successfully");
-                                
-                                // Store the full data URL in sessionStorage
-                                sessionStorage.setItem('inspirationImageDataUrl', dataUrl);
-                                console.log("Inspiration - Data URL saved to sessionStorage");
-                                
-                                // Navigate to the custom design page
-                                window.location.href = '/custom-design?fromInspiration=true';
-                              }
-                            } catch (loadError) {
-                              console.error("Inspiration - Error loading or processing image:", loadError);
-                              // Just try to pass the source URL as a fallback
-                              sessionStorage.setItem('inspirationImageSrc', image.src);
-                              window.location.href = `/custom-design?inspirationImage=${encodeURIComponent(image.src)}`;
-                            }
+                            // Navigate to the custom design page
+                            window.location.href = '/custom-design?fromInspiration=true&t=' + Date.now();
                           } catch (err) {
-                            console.error("Inspiration - Error in image transfer process:", err);
-                            // Last resort fallback
+                            console.error("Inspiration - Error in direct reference approach:", err);
+                            // Fallback
                             window.location.href = `/custom-design?inspirationImage=${encodeURIComponent(image.src)}`;
                           }
                         }}

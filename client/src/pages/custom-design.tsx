@@ -23,69 +23,38 @@ export default function CustomDesign() {
     imageDataUrl: undefined as string | undefined
   });
   
-  // Handle inspiration image - using both session storage and URL parameter approaches
+  // Direct approach with window global
   useEffect(() => {
-    const loadFromSessionDataUrl = () => {
-      try {
-        // Try to get the ready-made data URL first (new approach)
-        const dataUrl = sessionStorage.getItem('inspirationImageDataUrl');
-        if (dataUrl) {
-          console.log("Custom Design Page - Found pre-processed data URL in sessionStorage");
-          
-          // Directly set the data URL to the form state
-          setFormState(prev => ({
-            ...prev,
-            imageDataUrl: dataUrl
-          }));
-          
-          // Clear from session storage to prevent reuse
-          sessionStorage.removeItem('inspirationImageDataUrl');
-          console.log("Custom Design Page - Applied data URL from sessionStorage");
-          return true;
-        }
-      } catch (err) {
-        console.error("Custom Design Page - Error accessing data URL from sessionStorage:", err);
-      }
-      return false;
-    };
+    // Check for global variable with image source
+    // @ts-ignore - Using a custom property we added to window
+    const globalImageSrc = window.__INSPIRATION_IMAGE_SRC;
     
-    const loadFromSessionSrc = () => {
-      try {
-        // Try the old approach as fallback
-        const sessionImageSrc = sessionStorage.getItem('inspirationImageSrc');
-        if (sessionImageSrc) {
-          console.log("Custom Design Page - Found image source in sessionStorage:", sessionImageSrc.substring(0, 50) + "...");
-          processInspirationImage(sessionImageSrc);
-          // Clear from session storage to prevent reuse
-          sessionStorage.removeItem('inspirationImageSrc');
-          return true;
-        }
-      } catch (err) {
-        console.error("Custom Design Page - Error accessing image source from sessionStorage:", err);
-      }
-      return false;
-    };
-    
-    // First, try to load the pre-processed data URL (most reliable method)
-    if (fromInspiration) {
-      console.log("Custom Design Page - Detected fromInspiration=true in URL");
-      const loadedDataUrl = loadFromSessionDataUrl();
+    if (fromInspiration && globalImageSrc) {
+      console.log("Custom Design Page - Found global image reference:", globalImageSrc);
       
-      // If data URL wasn't found, try the image source
-      if (!loadedDataUrl) {
-        console.log("Custom Design Page - No data URL found, trying image source");
-        const loadedSrc = loadFromSessionSrc();
-        
-        if (!loadedSrc) {
-          console.warn("Custom Design Page - No inspiration image found in any sessionStorage key");
-        }
-      }
+      // Update form state with the direct image source
+      setFormState(prev => ({
+        ...prev,
+        imageDataUrl: globalImageSrc
+      }));
+      
+      // Clear it to prevent reuse
+      // @ts-ignore
+      window.__INSPIRATION_IMAGE_SRC = null;
+      
+      console.log("Custom Design Page - Applied global image reference to form state");
+      return;
     }
     
-    // Also check for direct image URL in parameters as ultimate fallback
+    // Fallback to URL parameters if global approach didn't work
     if (inspirationImage) {
       console.log("Custom Design Page - Using URL parameter for inspiration image");
-      processInspirationImage(inspirationImage);
+      
+      // Set image from URL directly
+      setFormState(prev => ({
+        ...prev,
+        imageDataUrl: inspirationImage
+      }));
     }
   }, [inspirationImage, fromInspiration]);
   
