@@ -464,16 +464,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       href: "/admin/products"
     },
     {
-      title: "Add Product",
-      icon: <PlusCircle className="w-5 h-5 mr-2" />,
-      href: "/admin/products/add"
-    },
-    {
-      title: "Orders",
-      icon: <ShoppingBag className="w-5 h-5 mr-2" />,
-      href: "/admin/orders"
-    },
-    {
       title: "Contact Messages",
       icon: <MessageSquare className="w-5 h-5 mr-2" />,
       href: "/admin/contact",
@@ -490,19 +480,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       href: "/admin/customers"
     },
     {
-      title: "Invoices",
-      icon: <Receipt className="w-5 h-5 mr-2" />,
-      href: "/admin/invoices"
-    },
-    {
       title: "AI Content Helper",
       icon: <Wand2 className="w-5 h-5 mr-2" />,
       href: "/admin/ai-helper"
-    },
-    {
-      title: "Gallery",
-      icon: <GalleryHorizontal className="w-5 h-5 mr-2" />,
-      href: "/admin/gallery"
     },
   ];
 
