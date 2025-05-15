@@ -7615,18 +7615,41 @@ Respond in JSON format:
   });
 
   // Admin: Update inspiration gallery item
-  app.put('/api/admin/inspiration/:id', validateAdmin, async (req, res) => {
+  app.put('/api/admin/inspiration/:id', async (req, res) => {
+    console.log('PUT /api/admin/inspiration/:id - Starting admin validation');
+    
+    // Manual admin check to better debug authentication issues
+    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'limited-admin')) {
+      console.log('PUT /api/admin/inspiration/:id - Admin validation failed', {
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        isAuthenticated: req.isAuthenticated?.() || false,
+        hasCookies: !!req.cookies,
+        adminIdCookie: req.cookies?.admin_id || 'none',
+      });
+      
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    console.log('PUT /api/admin/inspiration/:id - Admin validation successful', {
+      userId: req.user.id,
+      username: req.user.username || req.user.loginID
+    });
+    
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: 'Invalid ID' });
       }
 
+      console.log(`PUT /api/admin/inspiration/:id - Updating inspiration item with ID: ${id}`, req.body);
       const updatedItem = await storage.updateInspirationItem(id, req.body);
       if (!updatedItem) {
+        console.log(`PUT /api/admin/inspiration/:id - Item with ID ${id} not found`);
         return res.status(404).json({ message: 'Inspiration gallery item not found' });
       }
 
+      console.log(`PUT /api/admin/inspiration/:id - Successfully updated item with ID: ${id}`);
       res.json(updatedItem);
     } catch (error) {
       console.error('Error updating inspiration gallery item:', error);
