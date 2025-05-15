@@ -489,7 +489,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     {
       title: "Customers",
       icon: <Users className="w-5 h-5 mr-2" />,
-      href: "/admin/customers"
+      href: "/admin/users"
     },
     {
       title: "AI Content Helper",

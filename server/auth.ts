@@ -67,12 +67,13 @@ export function setupAuth(app: Express): void {
   // Configure session settings
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "luster-legacy-session-secret",
-    resave: true, // Changed to true to ensure session is saved on each request
+    resave: true, // Set to true to ensure session is saved on each request, renewing the timeout
     saveUninitialized: true, // Changed to true to save session for all requests
+    rolling: true, // IMPORTANT: This ensures the cookie expiration time is reset with each response
     store: storage.sessionStore,
     name: 'luster-legacy.sid', // Custom name for the session cookie
     cookie: {
-      maxAge: 10 * 60 * 1000, // 10 minutes idle timeout for security
+      maxAge: 10 * 60 * 1000, // 10 minutes of inactivity before timeout
       httpOnly: true,
       sameSite: 'lax', // Important for cross-site requests
       secure: false, // Set to false during development
