@@ -932,6 +932,13 @@ export function setupAuth(app: Express): void {
       const { token, newPassword } = req.body;
       
       console.log(`[AUTH] Password reset request received with token: ${token ? (token.substring(0, 10) + '...') : 'undefined'}`);
+      console.log(`[AUTH] Request body: ${JSON.stringify({ 
+        hasToken: !!token, 
+        tokenType: typeof token,
+        tokenLength: token ? token.length : 0,
+        hasPassword: !!newPassword,
+        passwordLength: newPassword ? newPassword.length : 0
+      })}`);
       
       if (!token || !newPassword) {
         return res.status(400).json({ 
@@ -951,26 +958,41 @@ export function setupAuth(app: Express): void {
         });
       }
       
+      console.log(`[AUTH] Attempting to reset password with token: ${tokenStr.substring(0, 10)}...`);
+      
       // Try to reset the password
       const updatedUser = await storage.resetPassword(tokenStr, newPassword);
       
       if (!updatedUser) {
+        console.log(`[AUTH] Password reset failed - invalid or expired token`);
         return res.status(400).json({ 
           success: false, 
           message: "Invalid or expired token" 
         });
       }
       
+      console.log(`[AUTH] Password reset successful for user ID ${updatedUser.id}`);
+      
       // Import email service dynamically to avoid circular dependencies
       const emailService = await import("./services/email-service");
       
-      // Send confirmation email
-      emailService.sendPasswordChangeEmail(
-        updatedUser.email,
-        updatedUser.name || updatedUser.username
-      ).catch(err => {
-        console.error("Failed to send password change confirmation email:", err);
-      });
+      console.log(`[AUTH] Sending password change confirmation email to ${updatedUser.email}`);
+      
+      try {
+        // Send confirmation email
+        const emailResult = await emailService.sendPasswordChangeEmail(
+          updatedUser.email,
+          updatedUser.name || updatedUser.username
+        );
+        
+        console.log(`[AUTH] Password change email sent: ${emailResult.success}`);
+        if (!emailResult.success) {
+          console.warn(`[AUTH] Failed to send password change confirmation email: ${emailResult.message}`);
+        }
+      } catch (emailErr) {
+        console.error("[AUTH] Error sending password change confirmation email:", emailErr);
+        // Continue despite email error - password was still reset
+      }
       
       // Return success
       res.status(200).json({ 

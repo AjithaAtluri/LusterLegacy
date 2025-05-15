@@ -442,17 +442,36 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getUserByPasswordResetToken(token: string): Promise<User | undefined> {
+    console.log(`[STORAGE] Looking for user with reset token: ${token ? token.substring(0, 10) + '...' : 'undefined'}`);
+    
+    if (!token || token.trim() === '') {
+      console.log('[STORAGE] Empty or undefined token provided');
+      return undefined;
+    }
+    
+    // Ensure we use the exact token string in the query
     const [user] = await db.select()
       .from(users)
       .where(eq(users.passwordResetToken, token));
     
-    if (!user || !user.passwordResetExpires) {
+    console.log(`[STORAGE] User search result: ${user ? `Found user ID ${user.id}` : 'No user found'}`);
+    
+    if (!user) {
+      console.log('[STORAGE] No user found with this reset token');
+      return undefined;
+    }
+    
+    if (!user.passwordResetExpires) {
+      console.log('[STORAGE] User found but passwordResetExpires is null');
       return undefined;
     }
     
     // Check if the token has expired
     const now = new Date();
+    console.log(`[STORAGE] Token expires: ${user.passwordResetExpires.toISOString()}, Current time: ${now.toISOString()}`);
+    
     if (now > user.passwordResetExpires) {
+      console.log('[STORAGE] Token has expired, clearing it from user record');
       // Token expired, clear it
       await db.update(users)
         .set({ 
@@ -463,6 +482,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
     
+    console.log('[STORAGE] Valid token found, returning user');
     return user;
   }
   
@@ -492,25 +512,38 @@ export class DatabaseStorage implements IStorage {
   }
   
   async resetPassword(token: string, newPassword: string): Promise<User | undefined> {
+    console.log(`[STORAGE] Reset password request with token: ${token ? token.substring(0, 10) + '...' : 'undefined'}`);
+    
     const user = await this.getUserByPasswordResetToken(token);
     if (!user) {
+      console.log(`[STORAGE] Failed to reset password - invalid or expired token`);
       return undefined;
     }
 
-    // Hash the new password
-    const hashedPassword = await hashPassword(newPassword);
-    
-    // Update the user with new password and clear reset token
-    const [updatedUser] = await db.update(users)
-      .set({
-        password: hashedPassword,
-        passwordResetToken: null,
-        passwordResetExpires: null
-      })
-      .where(eq(users.id, user.id))
-      .returning();
-    
-    return updatedUser;
+    try {
+      console.log(`[STORAGE] Valid token found for user ID ${user.id}, proceeding with password reset`);
+      
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      console.log(`[STORAGE] Password hashed successfully, updating user record`);
+      
+      // Update the user with new password and clear reset token
+      const [updatedUser] = await db.update(users)
+        .set({
+          password: hashedPassword,
+          passwordResetToken: null,
+          passwordResetExpires: null
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+      
+      console.log(`[STORAGE] Password reset successful for user ID ${updatedUser.id}`);
+      return updatedUser;
+    } catch (error) {
+      console.error(`[STORAGE] Error during password reset:`, error);
+      throw error;
+    }
   }
   
   // Implementation for remaining methods...
