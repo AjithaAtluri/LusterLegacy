@@ -517,3 +517,78 @@ export async function sendPasswordChangeEmail(
     };
   }
 }
+
+/**
+ * Send a notification email when a comment is added to a custom design request
+ */
+export async function sendDesignCommentNotification(
+  email: string,
+  name: string | null,
+  designRequestId: number,
+  designName: string,
+  commentContent: string,
+  commentBy: string,
+  isFromAdmin: boolean,
+  dashboardLink: string
+): Promise<{ success: boolean; message?: string }> {
+  const displayName = name || 'Valued Customer';
+  const commentSource = isFromAdmin ? 'a Luster Legacy artisan' : commentBy;
+  
+  console.log(`[DESIGN COMMENT] Sending notification email to ${email} for design #${designRequestId}`);
+  
+  // Truncate long comments for the email
+  const truncatedComment = commentContent.length > 300 
+    ? commentContent.substring(0, 300) + '...' 
+    : commentContent;
+  
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #F5F5F5; padding: 20px; text-align: center; border-bottom: 3px solid #D4AF37;">
+        <h1 style="color: #333; margin: 0;">Luster Legacy</h1>
+      </div>
+      <div style="padding: 20px; background-color: #ffffff; border: 1px solid #e0e0e0;">
+        <h2 style="color: #333;">New Comment on Your Design Request</h2>
+        <p>Hello ${displayName},</p>
+        <p>You have received a new comment on your custom design request "${designName}" from ${commentSource}.</p>
+        
+        <div style="background-color: #f9f9f9; border-left: 4px solid #D4AF37; padding: 15px; margin: 20px 0;">
+          <p style="font-style: italic;">"${truncatedComment}"</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${dashboardLink}" style="background-color: #D4AF37; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">View Details & Respond</a>
+        </div>
+        
+        <p>For your convenience, you can view all comments and respond directly through your customer dashboard.</p>
+      </div>
+      <div style="padding: 15px; background-color: #333333; color: #ffffff; text-align: center; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} Luster Legacy. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+  
+  const plainText = `Hello ${displayName}, you have received a new comment on your custom design request "${designName}" from ${commentSource}:\n\n"${truncatedComment}"\n\nTo view details and respond, please visit: ${dashboardLink}`;
+  
+  try {
+    const result = await sendEmail({
+      to: email,
+      subject: `New Comment on Your Custom Design - Luster Legacy`,
+      html: emailHtml,
+      text: plainText
+    });
+    
+    if (result.success) {
+      console.log(`[DESIGN COMMENT] Notification email sent successfully to ${email}`);
+    } else {
+      console.error(`[DESIGN COMMENT] Failed to send notification email to ${email}: ${result.message}`);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`[DESIGN COMMENT] Exception sending notification email:`, error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
