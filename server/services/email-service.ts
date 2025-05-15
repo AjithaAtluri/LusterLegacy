@@ -3,17 +3,34 @@ import { MailService } from '@sendgrid/mail';
 // Check for required environment variables for email functionality
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("SENDGRID_API_KEY environment variable is not set. Email functionality will be disabled.");
+} else {
+  console.log("SENDGRID_API_KEY is set and available for use");
 }
 
 if (!process.env.VERIFIED_SENDER_EMAIL) {
   console.warn("VERIFIED_SENDER_EMAIL environment variable is not set. Using default sender email.");
+} else {
+  console.log(`VERIFIED_SENDER_EMAIL is set to: ${process.env.VERIFIED_SENDER_EMAIL}`);
 }
 
 // Initialize SendGrid mail service
 const mailService = new MailService();
 if (process.env.SENDGRID_API_KEY) {
-  mailService.setApiKey(process.env.SENDGRID_API_KEY);
-  console.log("SendGrid API configured successfully with provided API key");
+  try {
+    mailService.setApiKey(process.env.SENDGRID_API_KEY);
+    console.log("SendGrid API configured successfully with provided API key");
+    
+    // Verify the API key is correctly formatted (won't verify if it's valid though)
+    const apiKey = process.env.SENDGRID_API_KEY;
+    if (!apiKey.startsWith('SG.')) {
+      console.warn("WARNING: SendGrid API key doesn't follow expected format. Should start with 'SG.'");
+    }
+    if (apiKey.length < 50) {
+      console.warn("WARNING: SendGrid API key appears to be too short. Standard keys are longer.");
+    }
+  } catch (error) {
+    console.error("ERROR initializing SendGrid client:", error);
+  }
 }
 
 // Default configuration values
@@ -161,13 +178,24 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     console.log(`Sending real email to ${data.to} via SendGrid API`);
     
     // Prepare and send the email
-    await mailService.send({
-      to: data.to,
-      from: sender,
-      subject: data.subject,
-      text: data.text,
-      html: data.html,
-    });
+    try {
+      console.log(`[EMAIL] Sending email via SendGrid API to: ${data.to}`);
+      console.log(`[EMAIL] From: ${sender}`);
+      console.log(`[EMAIL] Subject: ${data.subject}`);
+      
+      const result = await mailService.send({
+        to: data.to,
+        from: sender,
+        subject: data.subject,
+        text: data.text,
+        html: data.html,
+      });
+      
+      console.log(`[EMAIL] SendGrid API response:`, JSON.stringify(result));
+    } catch (sendError) {
+      console.error(`[EMAIL] SendGrid API sending error:`, sendError);
+      throw sendError;
+    }
     
     console.log(`Email sent successfully to ${data.to}`);
     return { success: true };
