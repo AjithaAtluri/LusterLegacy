@@ -12,6 +12,7 @@ export const validateAdmin = async (
 ): Promise<boolean> => {
   try {
     const endpoint = req.originalUrl || req.url;
+    console.log(`ADMIN ACCESS CHECK - Validating admin access for ${endpoint}`);
     
     // Check for admin headers first (for client-side API requests that include headers)
     const hasAdminDebugHeader = req.headers['x-admin-debug-auth'] === 'true';
@@ -46,11 +47,33 @@ export const validateAdmin = async (
       return true;
     }
     
-    // Check if the user is already authenticated and is an admin
+    // Check if the user is already authenticated and is an admin via session
     if (req.isAuthenticated() && req.user && (req.user.role === 'admin' || req.user.role === 'limited-admin')) {
       console.log(`ADMIN ACCESS - USER AUTHENTICATED for ${endpoint} - ${req.user.loginID || req.user.username}`);
       if (next) next();
       return true;
+    }
+    
+    // Check for admin authentication via cookies (admin_id)
+    if (req.cookies && req.cookies.admin_id) {
+      const adminId = parseInt(req.cookies.admin_id);
+      if (!isNaN(adminId)) {
+        console.log(`ADMIN ACCESS - CHECKING ADMIN COOKIE for ${endpoint} - ID: ${adminId}`);
+        try {
+          const adminUser = await storage.getUser(adminId);
+          if (adminUser && (adminUser.role === 'admin' || adminUser.role === 'limited-admin')) {
+            // Set the user on the request for downstream use
+            req.user = adminUser;
+            console.log(`ADMIN ACCESS - COOKIE AUTHENTICATED for ${endpoint} - ${adminUser.loginID || adminUser.username}`);
+            if (next) next();
+            return true;
+          } else {
+            console.log(`ADMIN ACCESS - INVALID ADMIN COOKIE for ${endpoint} - User not admin or not found`);
+          }
+        } catch (error) {
+          console.error(`ADMIN ACCESS - ERROR CHECKING ADMIN COOKIE for ${endpoint}:`, error);
+        }
+      }
     }
     
     // If no valid admin authentication, deny access
