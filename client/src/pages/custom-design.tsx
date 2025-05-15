@@ -25,81 +25,131 @@ export default function CustomDesign() {
   
   // Handle inspiration image - using both session storage and URL parameter approaches
   useEffect(() => {
-    // First, check if we're coming from the inspiration page (via sessionStorage)
-    if (fromInspiration) {
+    const loadFromSession = () => {
       try {
         const sessionImageSrc = sessionStorage.getItem('inspirationImageSrc');
+        console.log("Checking sessionStorage for image:", sessionImageSrc ? "Found" : "Not found");
         
         if (sessionImageSrc) {
-          console.log("Found inspiration image in session storage:", sessionImageSrc);
           processInspirationImage(sessionImageSrc);
-          
           // Clear from session storage to prevent reuse
           sessionStorage.removeItem('inspirationImageSrc');
-          return;
-        } else {
-          console.warn("fromInspiration flag is true but no image found in sessionStorage");
+          return true;
         }
       } catch (err) {
         console.error("Error accessing sessionStorage for inspiration image:", err);
       }
+      return false;
+    };
+    
+    // First check URL parameters
+    if (fromInspiration) {
+      console.log("Custom Design Page - Detected fromInspiration=true in URL");
+      const loaded = loadFromSession();
+      if (!loaded) {
+        console.warn("fromInspiration flag is true but no image found in sessionStorage");
+      }
     }
     
-    // Fallback to URL parameter approach if sessionStorage didn't work
+    // Also check for direct image URL in parameters
     if (inspirationImage) {
-      console.log("Using URL parameter for inspiration image:", inspirationImage);
+      console.log("Custom Design Page - Using URL parameter for inspiration image:", inspirationImage);
       processInspirationImage(inspirationImage);
+    }
+    
+    // Delay check in case sessionStorage is taking time to be populated
+    if (!inspirationImage && !fromInspiration) {
+      console.log("Custom Design Page - No inspiration parameters found, checking sessionStorage anyway");
+      loadFromSession();
     }
   }, [inspirationImage, fromInspiration]);
   
   // Helper function to process an inspiration image source into a data URL
   const processInspirationImage = (imageSrc: string) => {
-    console.log("Processing inspiration image:", imageSrc);
+    console.log("Custom Design Page - Processing inspiration image source:", imageSrc.substring(0, 50) + "...");
     
     // Create an Image object to load the image
     const img = new Image();
     
+    // Set crossOrigin to anonymous to avoid CORS issues with some image sources
+    img.crossOrigin = "anonymous";
+    
     // Set up onload handler to convert to data URL once loaded
     img.onload = () => {
-      console.log("Inspiration image loaded successfully, dimensions:", img.width, "x", img.height);
+      console.log("Custom Design Page - Inspiration image loaded successfully, dimensions:", img.width, "x", img.height);
       
-      // Create a canvas to draw the image
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      // Draw the image to the canvas
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0);
+      try {
+        // Create a canvas to draw the image
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
         
-        // Convert to data URL
-        try {
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        // Draw the image to the canvas
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
           
-          // Update state with the data URL
-          setFormState(prev => ({
-            ...prev,
-            imageDataUrl: dataUrl
-          }));
-          
-          console.log("Inspiration image converted to data URL successfully");
-        } catch (err) {
-          console.error("Error converting inspiration image to data URL:", err);
+          // Convert to data URL
+          try {
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            console.log("Custom Design Page - Converted to data URL:", dataUrl.substring(0, 50) + "...");
+            
+            // Update state with the data URL
+            setFormState(prev => {
+              console.log("Custom Design Page - Updating form state with image data URL");
+              return {
+                ...prev,
+                imageDataUrl: dataUrl
+              };
+            });
+          } catch (err) {
+            console.error("Custom Design Page - Error converting to data URL:", err);
+          }
         }
+      } catch (err) {
+        console.error("Custom Design Page - Error processing image in canvas:", err);
       }
     };
     
     // Set up error handler
     img.onerror = (err) => {
-      console.error("Error loading inspiration image:", err);
+      console.error("Custom Design Page - Error loading inspiration image:", err);
+      
+      // Try without crossOrigin as a fallback
+      console.log("Custom Design Page - Retrying without crossOrigin");
+      const retryImg = new Image();
+      retryImg.onload = () => {
+        console.log("Custom Design Page - Retry successful, dimensions:", retryImg.width, "x", retryImg.height);
+        
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = retryImg.width;
+          canvas.height = retryImg.height;
+          
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(retryImg, 0, 0);
+            
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            setFormState(prev => ({
+              ...prev,
+              imageDataUrl: dataUrl
+            }));
+            console.log("Custom Design Page - Retry conversion successful");
+          }
+        } catch (retryErr) {
+          console.error("Custom Design Page - Retry processing failed:", retryErr);
+        }
+      };
+      retryImg.onerror = (retryErr) => {
+        console.error("Custom Design Page - Final retry failed:", retryErr);
+      };
+      retryImg.src = imageSrc;
     };
     
-    // Start loading the image - use the URL directly
+    // Start loading the image
+    console.log("Custom Design Page - Starting to load image");
     img.src = imageSrc;
-    
-    // Set crossOrigin to anonymous to avoid CORS issues with some image sources
-    img.crossOrigin = "anonymous";
   };
   
   // Function to update the shared state
