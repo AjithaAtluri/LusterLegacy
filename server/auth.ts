@@ -879,42 +879,75 @@ export function setupAuth(app: Express): void {
       const encodedToken = encodeURIComponent(token);
       const resetUrl = `${protocol}://${host}/reset-password?token=${encodedToken}`;
       
-      console.log(`[AUTH] Generated password reset URL: ${resetUrl}`);
+      console.log(`[PASSWORD RESET] Generated password reset URL: ${resetUrl}`);
       
       // Import email service dynamically to avoid circular dependencies
       const emailService = await import("./services/email-service");
       
-      // Send password reset email
-      console.log(`[AUTH] Attempting to send password reset email to ${updatedUser.email}`);
-      console.log(`[AUTH] Reset URL: ${resetUrl}`);
-      
-      const emailResult = await emailService.sendPasswordResetEmail(
-        updatedUser.email,
-        updatedUser.name || updatedUser.username,
-        resetUrl
-      );
-      
-      const isDevelopmentMode = process.env.NODE_ENV !== 'production';
-      
-      if (emailResult.success) {
-        console.log(`[AUTH] Password reset email sent to ${updatedUser.email}`);
+      // Send password reset email with comprehensive error handling
+      try {
+        console.log(`[PASSWORD RESET] Attempting to send password reset email to ${updatedUser.email}`);
+        console.log(`[PASSWORD RESET] Reset URL (masked): ${resetUrl.substring(0, 20)}...${resetUrl.substring(resetUrl.length - 20)}`);
         
-        // In development mode, provide the reset link in the response
-        const responseData: any = { 
-          success: true, 
-          message: "If an account with that email exists, a password reset link has been sent" 
-        };
+        // Emergency access info for server logs - will appear even if email fails
+        console.log(`[PASSWORD RESET EMERGENCY ACCESS] User: ${updatedUser.id} (${updatedUser.name || updatedUser.username})`);
+        console.log(`[PASSWORD RESET EMERGENCY ACCESS] Email: ${updatedUser.email}`);
+        console.log(`[PASSWORD RESET EMERGENCY ACCESS] Token: ${token.substring(0, 5)}...${token.substring(token.length - 5)}`);
+        console.log(`[PASSWORD RESET EMERGENCY ACCESS] Reset Link: ${resetUrl}`);
         
-        if (isDevelopmentMode) {
-          responseData.resetLink = resetUrl;
-          responseData.note = "Development mode: use this link to reset your password";
+        const emailResult = await emailService.sendPasswordResetEmail(
+          updatedUser.email,
+          updatedUser.name || updatedUser.username,
+          resetUrl
+        );
+        
+        const isDevelopmentMode = process.env.NODE_ENV !== 'production';
+        
+        if (emailResult.success) {
+          console.log(`[PASSWORD RESET] Email sent successfully to ${updatedUser.email}`);
+          
+          // In development mode, provide the reset link in the response
+          const responseData: any = { 
+            success: true, 
+            message: "If an account with that email exists, a password reset link has been sent" 
+          };
+          
+          if (isDevelopmentMode) {
+            console.log(`[PASSWORD RESET] Including reset link in response (development mode)`);
+            responseData.resetLink = resetUrl;
+            responseData.note = "Development mode: use this link to reset your password";
+          }
+          
+          res.status(200).json(responseData);
+        } else {
+          console.error(`[PASSWORD RESET] Failed to send password reset email: ${emailResult.message}`);
+          console.error(`[PASSWORD RESET] Email service details: ${JSON.stringify(emailResult)}`);
+          
+          // In development, still provide the reset link even if email fails
+          const responseData: any = { 
+            success: true, 
+            message: "If an account with that email exists, a password reset link has been sent" 
+          };
+          
+          if (isDevelopmentMode) {
+            console.log(`[PASSWORD RESET] Including reset link in response despite email failure (development mode)`);
+            responseData.resetLink = resetUrl;
+            responseData.note = "Development mode: use this link to reset your password despite send failure";
+            responseData.errorDetail = emailResult.message;
+          }
+          
+          res.status(200).json(responseData);
         }
+      } catch (emailError) {
+        console.error(`[PASSWORD RESET] Critical error in email sending process:`, emailError);
         
-        res.status(200).json(responseData);
-      } else {
-        console.error(`[AUTH] Failed to send password reset email: ${emailResult.message}`);
+        // Log the reset link for emergency access even if email crashes
+        console.error(`[PASSWORD RESET CRITICAL ERROR] Email service crashed`);
+        console.error(`[PASSWORD RESET EMERGENCY FALLBACK] Token: ${token}`);
+        console.error(`[PASSWORD RESET EMERGENCY FALLBACK] Reset URL: ${resetUrl}`);
         
-        // In development, still provide the reset link even if email fails
+        // In development, still provide the reset link even if email crashes
+        const isDevelopmentMode = process.env.NODE_ENV !== 'production';
         const responseData: any = { 
           success: true, 
           message: "If an account with that email exists, a password reset link has been sent" 
@@ -922,8 +955,8 @@ export function setupAuth(app: Express): void {
         
         if (isDevelopmentMode) {
           responseData.resetLink = resetUrl;
-          responseData.note = "Development mode: use this link to reset your password despite send failure";
-          responseData.errorDetail = emailResult.message;
+          responseData.note = "Development mode: use this link to reset your password (email service crashed)";
+          responseData.emailError = "Email service error occurred";
         }
         
         res.status(200).json(responseData);
@@ -942,8 +975,8 @@ export function setupAuth(app: Express): void {
     try {
       const { token, newPassword } = req.body;
       
-      console.log(`[AUTH] Password reset request received with token: ${token ? (token.substring(0, 10) + '...') : 'undefined'}`);
-      console.log(`[AUTH] Request body: ${JSON.stringify({ 
+      console.log(`[PASSWORD RESET] Reset request received with token: ${token ? (token.substring(0, 10) + '...') : 'undefined'}`);
+      console.log(`[PASSWORD RESET] Request body: ${JSON.stringify({ 
         hasToken: !!token, 
         tokenType: typeof token,
         tokenLength: token ? token.length : 0,
@@ -969,25 +1002,25 @@ export function setupAuth(app: Express): void {
         });
       }
       
-      console.log(`[AUTH] Attempting to reset password with token: ${tokenStr.substring(0, 10)}...`);
+      console.log(`[PASSWORD RESET] Attempting to reset password with token: ${tokenStr.substring(0, 10)}...`);
       
       // Try to reset the password
       const updatedUser = await storage.resetPassword(tokenStr, newPassword);
       
       if (!updatedUser) {
-        console.log(`[AUTH] Password reset failed - invalid or expired token`);
+        console.error(`[PASSWORD RESET] Failed - invalid or expired token`);
         return res.status(400).json({ 
           success: false, 
           message: "Invalid or expired token" 
         });
       }
       
-      console.log(`[AUTH] Password reset successful for user ID ${updatedUser.id}`);
+      console.log(`[PASSWORD RESET] Successful for user ID ${updatedUser.id} (${updatedUser.email})`);
       
       // Import email service dynamically to avoid circular dependencies
       const emailService = await import("./services/email-service");
       
-      console.log(`[AUTH] Sending password change confirmation email to ${updatedUser.email}`);
+      console.log(`[PASSWORD RESET] Sending confirmation email to ${updatedUser.email}`);
       
       try {
         // Send confirmation email
