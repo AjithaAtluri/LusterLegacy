@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { PenLine, Star, Heart, User } from "lucide-react";
+import { PenLine, Star, Heart, User, Edit, Shield } from "lucide-react";
 import { ClientStoryGrid } from "@/components/client-stories/client-story-grid";
 import { ClientStoryForm } from "@/components/client-stories/client-story-form";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "wouter";
 
 export default function ClientStories() {
   const { user } = useAuth();
@@ -47,6 +48,18 @@ export default function ClientStories() {
             Discover the experiences of our valued clients who have found their perfect pieces
             with Luster Legacy, and share your own journey with our jewelry.
           </p>
+          
+          {/* Admin Edit/Approve Button */}
+          {user && user.role === 'admin' && (
+            <div className="flex justify-center mt-4">
+              <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-white">
+                <Link href="/admin/testimonials">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Edit/Approve Client Stories
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
         
         <Tabs

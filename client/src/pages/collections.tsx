@@ -40,6 +40,7 @@ interface Product {
 }
 
 export default function Collections() {
+  const { user } = useAuth();
   const [productType, setProductType] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("default");
@@ -251,6 +252,18 @@ export default function Collections() {
       </div>
       
       <div className="container mx-auto px-4 md:px-8 py-12">
+        {/* Admin Add Product Button */}
+        {user && user.role === 'admin' && (
+          <div className="flex justify-end mb-4">
+            <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-white">
+              <Link href="/admin/ai-generator">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Product
+              </Link>
+            </Button>
+          </div>
+        )}
+        
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <Tabs defaultValue="all" value={productType} onValueChange={setProductType} className="w-full md:w-auto">
             <TabsList className="h-auto flex flex-wrap">

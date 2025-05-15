@@ -1,9 +1,10 @@
 import { Helmet } from "react-helmet";
 
-import { ArrowRight, Heart, ZoomIn } from "lucide-react";
+import { ArrowRight, Heart, ZoomIn, PlusCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import rubyLeafPendant from "@/assets/ruby-leaf-pendant.png";
 import pearlNecklaceSet from "@/assets/pearl-necklace-set.png";
 import polkiPendantNecklace from "@/assets/polki-pendant-necklace.png";
@@ -195,6 +196,8 @@ export default function Inspiration() {
     }
   ];
   
+  const { user } = useAuth();
+
   return (
     <>
       <Helmet>
@@ -215,6 +218,17 @@ export default function Inspiration() {
       
       {/* Gallery section */}
       <div className="container mx-auto px-4 md:px-8 py-12">
+        {/* Admin Add Inspiration Image Button */}
+        {user && user.role === 'admin' && (
+          <div className="flex justify-end mb-4">
+            <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-white">
+              <Link href="/admin/inspiration/add">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Inspiration Image
+              </Link>
+            </Button>
+          </div>
+        )}
         
         {/* Gallery grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
