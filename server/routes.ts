@@ -7630,6 +7630,64 @@ Respond in JSON format:
       res.status(500).json({ message: 'Failed to delete inspiration gallery item' });
     }
   });
+  
+  // Admin: Upload inspiration image with file
+  app.post('/api/inspiration-images', upload.single('image'), async (req, res) => {
+    try {
+      // Admin authentication check
+      if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+        return res.status(401).json({ message: 'Unauthorized - Admin access required' });
+      }
+
+      const { title, alt, description } = req.body;
+      
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image file provided' });
+      }
+      
+      if (!title || !alt) {
+        return res.status(400).json({ message: 'Title and alt text are required' });
+      }
+      
+      // Process and save the image
+      const filename = req.file.filename;
+      const imageUrl = `/uploads/${filename}`;
+      
+      // Save to database using the inspiration_gallery table
+      const newImage = await storage.createInspirationItem({
+        title,
+        description: description || '',
+        imageUrl,
+        category: 'general',  // Default category
+        tags: [],  // Empty tags array as default
+        featured: false  // Not featured by default
+      });
+      
+      return res.status(201).json({
+        success: true,
+        message: 'Inspiration image uploaded successfully',
+        image: newImage
+      });
+      
+    } catch (error) {
+      console.error('Error uploading inspiration image:', error);
+      return res.status(500).json({ 
+        message: 'Failed to upload inspiration image',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get all inspiration images
+  app.get('/api/inspiration-images', async (_req, res) => {
+    try {
+      const inspirationItems = await storage.getAllInspirationItems();
+      res.json(inspirationItems);
+    } catch (error) {
+      console.error('Error fetching inspiration images:', error);
+      res.status(500).json({ message: 'Failed to fetch inspiration images' });
+    }
+  });
 
   // Enhanced endpoint to synchronize passport session and admin cookies
   app.post('/api/auth/sync-admin-cookie', async (req, res) => {
