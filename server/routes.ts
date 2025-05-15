@@ -2741,7 +2741,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add a comment to a design request
   app.post('/api/custom-designs/:id/comments', upload.single('image'), async (req, res) => {
     try {
-      if (!req.user) {
+      // Check for authentication through both regular user sessions and admin cookies
+      let isAuthenticated = false;
+      let user = req.user;
+      
+      // First check if passport has authenticated the user
+      if (req.user) {
+        isAuthenticated = true;
+        console.log('User authenticated via passport:', req.user.username);
+      } 
+      // If not, check for admin cookie authentication
+      else if (req.cookies.admin_id) {
+        const adminId = parseInt(req.cookies.admin_id);
+        if (!isNaN(adminId)) {
+          console.log('Attempting admin cookie authentication for ID:', adminId);
+          try {
+            const adminUser = await storage.getUser(adminId);
+            if (adminUser && adminUser.role === 'admin') {
+              isAuthenticated = true;
+              user = adminUser;
+              console.log('User authenticated via admin cookie:', adminUser.username);
+            }
+          } catch (error) {
+            console.error('Error authenticating via admin cookie:', error);
+          }
+        }
+      }
+      
+      if (!isAuthenticated || !user) {
+        console.log('Authentication failed. User session:', !!req.user, 'Admin cookie:', !!req.cookies.admin_id);
         return res.status(401).json({ message: 'Authentication required' });
       }
       
@@ -2756,8 +2784,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is admin or if the request belongs to the user
-      const isAdmin = req.user.role === 'admin';
-      const isOwner = req.user.id === designRequest.userId;
+      const isAdmin = user.role === 'admin';
+      const isOwner = user.id === designRequest.userId;
+      
+      console.log(`Design comment access check - User ID: ${user.id}, Design User ID: ${designRequest.userId}`);
+      console.log(`Design comment access check - Is admin: ${isAdmin}, Is owner: ${isOwner}`);
       
       if (!isAdmin && !isOwner) {
         return res.status(403).json({ message: 'Unauthorized access to design request' });
@@ -2787,11 +2818,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           comment = await storage.addDesignRequestComment({
             designRequestId: designId,
             content: content ? content.trim() : '',
-            createdBy: req.user.username || req.user.email,
-            userId: req.user.id,
+            createdBy: user.username || user.email,
+            userId: user.id,
             isAdmin: isAdmin,
             imageUrl: imageUrl
           });
+          
+          console.log(`Successfully created comment for design ${designId} by user ${user.username || user.email}`);
         } else {
           return res.status(501).json({ message: 'Comment functionality not implemented' });
         }
@@ -2842,7 +2875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               designId,
               designName,
               content || 'Image comment (No text)',
-              req.user.username || 'Luster Legacy',
+              user.username || 'Luster Legacy',
               isAdmin,
               dashboardLink
             );
