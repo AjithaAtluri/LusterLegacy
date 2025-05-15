@@ -287,26 +287,46 @@ export function UserDetailDialog({ userId, onClose }: UserDetailDialogProps) {
                   ) : (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <div className="text-center p-2 bg-muted rounded-lg">
+                        <Button 
+                          variant="ghost" 
+                          className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
+                          onClick={() => window.location.href = `/admin/custom-designs?userId=${userId}`}
+                        >
                           <div className="text-xl font-bold">{activity.designRequests}</div>
                           <div className="text-xs text-muted-foreground">Design Requests</div>
-                        </div>
-                        <div className="text-center p-2 bg-muted rounded-lg">
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
+                          onClick={() => window.location.href = `/admin/quotes?userId=${userId}`}
+                        >
                           <div className="text-xl font-bold">{activity.quoteRequests}</div>
                           <div className="text-xs text-muted-foreground">Quote Requests</div>
-                        </div>
-                        <div className="text-center p-2 bg-muted rounded-lg">
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
+                          onClick={() => window.location.href = `/admin/customizations?userId=${userId}`}
+                        >
                           <div className="text-xl font-bold">{activity.personalizationRequests}</div>
                           <div className="text-xs text-muted-foreground">Personalizations</div>
-                        </div>
-                        <div className="text-center p-2 bg-muted rounded-lg">
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
+                          onClick={() => window.location.href = `/admin/orders?userId=${userId}`}
+                        >
                           <div className="text-xl font-bold">{activity.orders}</div>
                           <div className="text-xs text-muted-foreground">Orders</div>
-                        </div>
-                        <div className="text-center p-2 bg-muted rounded-lg">
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="text-center p-2 bg-muted rounded-lg hover:bg-muted/80 h-auto" 
+                          onClick={() => window.location.href = `/admin/contact?userId=${userId}`}
+                        >
                           <div className="text-xl font-bold">{activity.contactMessages}</div>
                           <div className="text-xs text-muted-foreground">Messages</div>
-                        </div>
+                        </Button>
                       </div>
                       
                       {activity.lastActivity && (
