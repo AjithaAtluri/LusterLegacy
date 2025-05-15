@@ -7631,7 +7631,49 @@ Respond in JSON format:
     }
   });
 
-  // Get current user - completely rewritten to use the new dedicated admin tokens
+  // Endpoint to synchronize passport session and admin cookies
+  app.post('/api/auth/sync-admin-cookie', async (req, res) => {
+    console.log("Admin cookie sync endpoint called");
+    
+    // First check if we have a valid session
+    if (req.isAuthenticated() && req.user) {
+      console.log("Admin cookie sync - authenticated user found:", req.user.loginID || req.user.username);
+      
+      // Check if user is admin
+      if (req.user.role === 'admin' || req.user.role === 'limited-admin') {
+        console.log(`Admin cookie sync - setting admin cookie for ${req.user.role}:`, req.user.id);
+        
+        // Set admin cookie
+        res.cookie('admin_id', req.user.id, { 
+          httpOnly: true, 
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+        
+        // Set admin auth time
+        res.cookie('admin_auth_time', Date.now(), { 
+          httpOnly: true, 
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+        
+        console.log("Admin cookie sync - cookies set successfully");
+        return res.status(200).json({ success: true, message: "Admin cookies synchronized" });
+      } else {
+        console.log("Admin cookie sync - user is not admin:", req.user.role);
+        return res.status(403).json({ success: false, message: "User is not an admin" });
+      }
+    } else {
+      console.log("Admin cookie sync - no authenticated user found");
+      return res.status(401).json({ success: false, message: "Not authenticated" });
+    }
+  });
+
+// Get current user - completely rewritten to use the new dedicated admin tokens
   app.get('/api/auth/me', async (req, res) => {
     console.log("ADMIN AUTH CHECK - /api/auth/me endpoint called");
     

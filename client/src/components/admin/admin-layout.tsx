@@ -102,9 +102,36 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
       // Perform a multi-level authentication check to ensure we're truly authenticated
       try {
+        // Check if we're in production environment
+        const isProduction = window.location.hostname.includes('.replit.app') || 
+                            window.location.hostname.includes('lusterlegacy.co');
+        console.log(`Admin layout - environment detected: ${isProduction ? 'Production' : 'Development'}`);
+        
+        // Production environments may have cached user data in sessionStorage to reduce flickering
+        let cachedUserData = null;
+        try {
+          const cachedDataStr = sessionStorage.getItem('adminUserData');
+          if (cachedDataStr) {
+            cachedUserData = JSON.parse(cachedDataStr);
+            console.log("Loaded cached user data from session storage:", cachedUserData);
+          }
+        } catch (storageError) {
+          console.warn("Error accessing session storage:", storageError);
+        }
+        
         // Check 1: First check the cached user from React Query
         if (!user) {
           console.log("Admin layout - no user in cache, will verify with API");
+          
+          // In production with cached data, we can try to use it temporarily 
+          if (isProduction && cachedUserData && 
+              (cachedUserData.role === "admin" || cachedUserData.role === "limited-admin")) {
+            console.log("Using cached admin data while verifying with API...");
+            // Update the cache with cached data
+            import("@/lib/queryClient").then(({queryClient}) => {
+              queryClient.setQueryData(["/api/user"], cachedUserData);
+            });
+          }
         } else if (user.role !== "admin" && user.role !== "limited-admin") {
           console.log("Admin layout - user is not admin or limited-admin, redirecting to home page");
           toast({
@@ -125,7 +152,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           headers: {
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
-            "Expires": "0"
+            "Expires": "0",
+            "X-Admin-Verification": "true" // Add special header to indicate this is an admin verification
           }
         });
         
@@ -137,10 +165,27 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           // Make sure it's still an admin or limited-admin account
           if (adminData.role === "admin" || adminData.role === "limited-admin") {
             console.log(`Admin layout - user is verified ${adminData.role} via /api/auth/me`);
+            
+            // Store admin data in sessionStorage for faster loading on page refresh in production
+            try {
+              sessionStorage.setItem('adminUserData', JSON.stringify(adminData));
+              console.log("Updated cached user data in storage");
+            } catch (storageError) {
+              console.warn("Failed to cache admin data:", storageError);
+            }
+            
             // Update the cache with this fresh data
             import("@/lib/queryClient").then(({queryClient}) => {
               queryClient.setQueryData(["/api/user"], adminData);
             });
+            
+            // For production, check if we need to bypass loading state
+            if (window.location.hostname.includes('.replit.app') || 
+                window.location.hostname.includes('lusterlegacy.co')) {
+              console.log("Production environment with cached data - bypassing loading state");
+              // Additional production-only adjustments can be added here
+            }
+            
             return; // Allow access
           } else {
             console.log("User is authenticated but admin/limited-admin role missing in admin auth check");
@@ -171,6 +216,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           
           if (userData.role === "admin" || userData.role === "limited-admin") {
             console.log(`Admin layout - user is verified ${userData.role} via /api/user`);
+            
+            // Store admin data in sessionStorage for faster loading on page refresh in production
+            try {
+              sessionStorage.setItem('adminUserData', JSON.stringify(userData));
+              console.log("Updated cached user data in storage from regular auth endpoint");
+            } catch (storageError) {
+              console.warn("Failed to cache admin data:", storageError);
+            }
+            
             // Update the cache with this fresh data
             import("@/lib/queryClient").then(({queryClient}) => {
               queryClient.setQueryData(["/api/user"], userData);
@@ -179,6 +233,25 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             // Since admin auth failed but regular auth succeeded, let's continue anyway
             // The user is authenticated as admin in the main system
             console.log("User has admin privileges but admin-specific endpoint failed - using regular auth");
+            
+            // For production environments, also try to set the admin cookie via a special endpoint
+            if (window.location.hostname.includes('.replit.app') || 
+                window.location.hostname.includes('lusterlegacy.co')) {
+              try {
+                console.log("Production environment - attempting to establish admin cookie");
+                // Fire and forget request to sync admin cookie with passport session
+                fetch("/api/auth/sync-admin-cookie", { 
+                  method: "POST",
+                  credentials: "include"
+                }).then(res => {
+                  console.log("Admin cookie sync response:", res.status);
+                }).catch(err => {
+                  console.warn("Admin cookie sync failed:", err);
+                });
+              } catch (syncError) {
+                console.warn("Failed to sync admin cookie:", syncError);
+              }
+            }
             
             // Display a warning toast that some admin features might be limited
             toast({

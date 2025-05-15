@@ -79,18 +79,20 @@ export const validateAdmin = async (
     // If no valid admin authentication, deny access
     console.log(`ADMIN ACCESS - DENIED for ${endpoint}`);
     if (res) {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Not authenticated as admin or limited-admin"
       });
+      return false;
     }
     
     return false;
   } catch (error) {
     console.error('Error in admin auth:', error);
     if (res) {
-      return res.status(500).json({
+      res.status(500).json({
         message: "Server error during admin authentication"
       });
+      return false;
     }
     return false;
   }
