@@ -55,6 +55,7 @@ interface EmailData {
   html: string;
   from?: string;
   isPasswordReset?: boolean; // Flag to mark password reset emails for special handling
+  isDiagnostic?: boolean; // Flag to mark diagnostic test emails
 }
 
 /**
@@ -382,8 +383,92 @@ export async function sendPasswordResetEmail(
 }
 
 /**
- * Send password change confirmation email
+ * Send a test email - only available in development mode
  */
+export async function sendTestEmail(
+  to: string
+): Promise<{ success: boolean; message: string; details?: any }> {
+  if (!ALLOW_TEST_EMAILS) {
+    return {
+      success: false,
+      message: "Test emails are only available in development mode"
+    };
+  }
+  
+  console.log(`[EMAIL SERVICE] Sending diagnostic test email to ${to}`);
+  
+  const subject = "Luster Legacy Email System Test";
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #F5F5F5; padding: 20px; text-align: center; border-bottom: 3px solid #D4AF37;">
+        <h1 style="color: #333; margin: 0;">Luster Legacy</h1>
+      </div>
+      <div style="padding: 20px; background-color: #ffffff; border: 1px solid #e0e0e0;">
+        <h2 style="color: #333;">Email System Test</h2>
+        <p>This is a test email from the Luster Legacy email system.</p>
+        <p>If you received this email, it means the email delivery system is working correctly.</p>
+        <p><strong>Time sent:</strong> ${new Date().toISOString()}</p>
+        <p><strong>Environment:</strong> ${process.env.NODE_ENV || 'development'}</p>
+        <div style="margin-top: 30px;">
+          <p>Thank you,</p>
+          <p><strong>Luster Legacy Team</strong></p>
+        </div>
+      </div>
+      <div style="padding: 15px; background-color: #333333; color: #ffffff; text-align: center; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} Luster Legacy. All rights reserved.</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    // Collect diagnostic information
+    const diagnosticInfo = {
+      sendgridApiKeyExists: !!process.env.SENDGRID_API_KEY,
+      sendgridApiKeyLength: process.env.SENDGRID_API_KEY ? process.env.SENDGRID_API_KEY.length : 0,
+      verifiedSenderEmail: VERIFIED_SENDER_EMAIL,
+      defaultSenderEmail: DEFAULT_SENDER_EMAIL,
+      environment: process.env.NODE_ENV || 'development',
+      useBackupMethod: USE_BACKUP_EMAIL_METHOD,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log(`[EMAIL SERVICE] Diagnostic information: ${JSON.stringify(diagnosticInfo)}`);
+    
+    const result = await sendEmail({
+      to,
+      subject,
+      html,
+      isDiagnostic: true
+    });
+    
+    if (result.success) {
+      console.log(`[EMAIL SERVICE] Test email sent successfully to ${to}`);
+    } else {
+      console.error(`[EMAIL SERVICE] Failed to send test email: ${result.message}`);
+    }
+    
+    return {
+      success: result.success,
+      message: result.message || "Email test completed",
+      details: diagnosticInfo
+    };
+  } catch (error) {
+    console.error(`[EMAIL SERVICE] Exception when sending test email:`, error);
+    
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : "Unknown error sending test email",
+      details: {
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : null,
+        sendgridApiKeyExists: !!process.env.SENDGRID_API_KEY,
+        verifiedSenderExists: !!process.env.VERIFIED_SENDER_EMAIL,
+        timestamp: new Date().toISOString()
+      }
+    };
+  }
+}
+
 export async function sendPasswordChangeEmail(
   email: string, 
   name: string | null

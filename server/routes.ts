@@ -1436,7 +1436,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-/**
+  /**
+   * Email diagnostic tools - only available in development mode
+   */
+  app.post("/api/diagnostic/email-test", async (req, res) => {
+    // Only allow in development mode
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ 
+        success: false,
+        message: "Email diagnostics are not available in production mode" 
+      });
+    }
+    
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email address is required"
+      });
+    }
+    
+    console.log(`[EMAIL DIAGNOSTIC] Test email requested for ${email}`);
+    
+    try {
+      // Import email service dynamically to avoid circular dependencies
+      const emailService = await import("./services/email-service");
+      
+      const result = await emailService.sendTestEmail(email);
+      
+      if (result.success) {
+        console.log(`[EMAIL DIAGNOSTIC] Test email sent successfully to ${email}`);
+      } else {
+        console.error(`[EMAIL DIAGNOSTIC] Test email failed: ${result.message}`);
+      }
+      
+      res.status(result.success ? 200 : 500).json(result);
+    } catch (error) {
+      console.error(`[EMAIL DIAGNOSTIC] Exception during test:`, error);
+      
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while testing the email service",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  /**
    * Product routes
    */
   // Get all products
