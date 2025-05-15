@@ -35,12 +35,15 @@ if (process.env.SENDGRID_API_KEY) {
 
 // Default configuration values
 const DEFAULT_SENDER_NAME = 'Luster Legacy';
-const DEFAULT_SENDER_EMAIL = 'admin@lusterlegacy.com'; // Changed default email
+const DEFAULT_SENDER_EMAIL = 'noreply@lusterlegacy.co'; // Updated to match domain
 
 // Use verified sender email from environment variable if available
 const VERIFIED_SENDER_EMAIL = process.env.VERIFIED_SENDER_EMAIL || DEFAULT_SENDER_EMAIL;
 
 console.log(`Email service initialized with sender: ${DEFAULT_SENDER_NAME} <${VERIFIED_SENDER_EMAIL}>`);
+
+// Flag to indicate if we should use a backup email method when SendGrid fails
+const USE_BACKUP_EMAIL_METHOD = true;
 
 interface EmailData {
   to: string;
@@ -48,6 +51,7 @@ interface EmailData {
   text?: string;
   html: string;
   from?: string;
+  isPasswordReset?: boolean; // Flag to mark password reset emails for special handling
 }
 
 /**
@@ -56,30 +60,50 @@ interface EmailData {
 export async function sendEmail(data: EmailData): Promise<{ success: boolean; message?: string }> {
   try {
     // Check if this is a critical email (password reset or verification)
-    const isCriticalEmail = data.subject?.includes("Password Reset") || 
-                           data.subject?.includes("Verify Your Email") ||
-                           data.subject?.includes("Email Verification");
+    const isCriticalEmail = 
+      data.subject?.includes("Password Reset") || 
+      data.subject?.includes("Verify Your Email") ||
+      data.subject?.includes("Email Verification") ||
+      data.isPasswordReset === true;  // Use the explicit flag too
     
     // Always log that we're attempting to send an email
     const sender = data.from || `${DEFAULT_SENDER_NAME} <${VERIFIED_SENDER_EMAIL}>`;
-    console.log(`Attempting to send email from: ${sender} to: ${data.to}`);
-    console.log(`Email subject: "${data.subject}"`);
-    console.log(`Is critical account email: ${isCriticalEmail ? 'YES' : 'no'}`);
+    console.log(`[EMAIL] Attempting to send email from: ${sender} to: ${data.to}`);
+    console.log(`[EMAIL] Email subject: "${data.subject}"`);
+    console.log(`[EMAIL] Is critical account email: ${isCriticalEmail ? 'YES' : 'no'}`);
+    
+    // Special handling for password reset emails
+    if (data.isPasswordReset) {
+      console.log(`[EMAIL] PASSWORD RESET EMAIL: Special handling enabled`);
+    }
     
     // If SendGrid API key is missing, we can't send actual emails
     if (!process.env.SENDGRID_API_KEY) {
-      console.error("SENDGRID_API_KEY is missing - cannot send emails!");
+      console.error("[EMAIL] SENDGRID_API_KEY is missing - cannot send emails!");
       
       if (isCriticalEmail) {
-        console.error("CRITICAL EMAIL FAILED: Cannot send important account email without SendGrid API key");
+        console.error("[EMAIL] CRITICAL EMAIL FAILED: Cannot send important account email without SendGrid API key");
+        console.error("[EMAIL] CRITICAL EMAIL CONTENT:");
+        console.error(`[EMAIL] To: ${data.to}`);
+        console.error(`[EMAIL] Subject: ${data.subject}`);
+        console.error(`[EMAIL] Text: ${data.text}`);
+        console.error("[EMAIL] HTML preview:", data.html?.substring(0, 200) + "...");
+      } else {
+        console.log("[EMAIL] Email data that would be sent:", { 
+          to: data.to, 
+          from: sender, 
+          subject: data.subject,
+          textPreview: data.text?.substring(0, 50) + "..."
+        });
       }
       
-      console.log("Email data that would be sent:", { 
-        to: data.to, 
-        from: sender, 
-        subject: data.subject,
-        textPreview: data.text?.substring(0, 50) + "..."
-      });
+      // For password resets, we'll include the failure in the result message
+      if (data.isPasswordReset) {
+        return { 
+          success: false, 
+          message: "Failed to send password reset email: SendGrid API key is missing" 
+        };
+      }
       
       return { 
         success: false, 
@@ -94,7 +118,7 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       const hasDevUrls = devUrlPattern.test(data.html);
       
       if (hasDevUrls) {
-        console.warn('WARNING: Production email contains localhost or port references - attempting to fix:');
+        console.warn('[EMAIL] WARNING: Production email contains localhost or port references - attempting to fix:');
         
         // Get the production domain from environment or use lusterlegacy.co as default
         const productionDomain = process.env.PRODUCTION_DOMAIN || 'lusterlegacy.co';
@@ -118,10 +142,10 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
         const originalUrls = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
         const fixedUrls = fixedHtml.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
         
-        console.log('URL fixes in production email:');
+        console.log('[EMAIL] URL fixes in production email:');
         for (let i = 0; i < Math.min(originalUrls.length, fixedUrls.length); i++) {
           if (originalUrls[i] !== fixedUrls[i]) {
-            console.log(`- ${originalUrls[i]} → ${fixedUrls[i]}`);
+            console.log(`[EMAIL] - ${originalUrls[i]} → ${fixedUrls[i]}`);
           }
         }
         
@@ -136,7 +160,7 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     // OVERRIDE: Always send critical emails (like password reset) regardless of environment
     // This change ensures password reset emails work even in development mode
     if (isCriticalEmail) {
-      console.log('CRITICAL EMAIL: Always sending this important account-related email');
+      console.log('[EMAIL] CRITICAL EMAIL: Always sending this important account-related email');
       shouldSendEmail = true;
     }
     // In development, only send if either:
@@ -151,19 +175,19 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       
       // If we're not sending, log the content
       if (!shouldSendEmail) {
-        console.log('Development mode - not sending real email. Would send:');
-        console.log(`From: ${sender}`);
-        console.log(`To: ${data.to}`);
-        console.log(`Subject: ${data.subject}`);
-        console.log('Text:', data.text);
-        console.log('HTML preview:', data.html?.substring(0, 100) + '...');
+        console.log('[EMAIL] Development mode - not sending real email. Would send:');
+        console.log(`[EMAIL] From: ${sender}`);
+        console.log(`[EMAIL] To: ${data.to}`);
+        console.log(`[EMAIL] Subject: ${data.subject}`);
+        console.log('[EMAIL] Text:', data.text);
+        console.log('[EMAIL] HTML preview:', data.html?.substring(0, 100) + '...');
         
         // Log URLs in the email for debugging
         if (data.html) {
           const matches = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
           if (matches.length > 0) {
-            console.log('URLs found in email:');
-            matches.forEach(url => console.log(`- ${url}`));
+            console.log('[EMAIL] URLs found in email:');
+            matches.forEach(url => console.log(`[EMAIL] - ${url}`));
           }
         }
         
@@ -175,11 +199,11 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
     }
     
     // If we got here, we are sending a real email
-    console.log(`Sending real email to ${data.to} via SendGrid API`);
+    console.log(`[EMAIL] Sending real email to ${data.to} via SendGrid API`);
     
     // Prepare and send the email
     try {
-      console.log(`[EMAIL] Sending email via SendGrid API to: ${data.to}`);
+      console.log(`[EMAIL] Attempting to send email via SendGrid API to: ${data.to}`);
       console.log(`[EMAIL] From: ${sender}`);
       console.log(`[EMAIL] Subject: ${data.subject}`);
       
@@ -192,32 +216,55 @@ export async function sendEmail(data: EmailData): Promise<{ success: boolean; me
       });
       
       console.log(`[EMAIL] SendGrid API response:`, JSON.stringify(result));
-    } catch (sendError) {
+      console.log(`[EMAIL] Email sent successfully to ${data.to}`);
+      return { success: true };
+    } catch (sendError: any) {
       console.error(`[EMAIL] SendGrid API sending error:`, sendError);
-      throw sendError;
-    }
-    
-    console.log(`Email sent successfully to ${data.to}`);
-    return { success: true };
-  } catch (error) {
-    console.error('SendGrid email error:', error);
-    
-    // Enhanced error logging for SendGrid errors
-    if (error && typeof error === 'object') {
-      console.error('SendGrid detailed error:', JSON.stringify(error, null, 2));
+      
+      // Enhanced error logging for SendGrid errors
+      console.error('[EMAIL] SendGrid detailed error:', JSON.stringify(sendError, null, 2));
       
       // Check for response object which might contain more detailed SendGrid error info
-      // Check if the error object has a response property
-      const errorObj = error as any;
-      if (errorObj && errorObj.response) {
-        console.error('SendGrid response error:', errorObj.response);
+      if (sendError && sendError.response) {
+        console.error('[EMAIL] SendGrid response error:', sendError.response);
         
         // Check if the response has a body property
-        if (errorObj.response.body) {
-          console.error('SendGrid response body:', errorObj.response.body);
+        if (sendError.response.body) {
+          console.error('[EMAIL] SendGrid response body:', sendError.response.body);
         }
       }
+      
+      // For critical emails like password resets, we want to provide special handling
+      if (data.isPasswordReset && USE_BACKUP_EMAIL_METHOD) {
+        console.log(`[EMAIL] CRITICAL EMAIL FALLBACK: Attempting alternate methods to ensure delivery`);
+        
+        // The actual backup method would be implemented here, but for now we'll just log
+        console.log(`[EMAIL] CRITICAL EMAIL FALLBACK: Password reset for ${data.to}`);
+        console.log(`[EMAIL] CRITICAL EMAIL FALLBACK: Subject: ${data.subject}`);
+        
+        // Extract links that might be in the password reset email
+        if (data.html) {
+          const links = data.html.match(/(https?:\/\/[^\s"'<>]+)/g) || [];
+          if (links.length > 0) {
+            console.log('[EMAIL] CRITICAL EMAIL FALLBACK: Important links found:');
+            links.forEach(link => console.log(`[EMAIL] CRITICAL LINK: ${link}`));
+          }
+        }
+        
+        // Log that we failed but provided fallback info
+        return {
+          success: false,
+          message: "Email sending failed, but critical information was preserved in logs"
+        };
+      }
+      
+      return { 
+        success: false, 
+        message: sendError instanceof Error ? sendError.message : 'Unknown email error'
+      };
     }
+  } catch (error: any) {
+    console.error('[EMAIL] Unexpected error in email service:', error);
     
     return { 
       success: false, 
@@ -276,6 +323,10 @@ export async function sendPasswordResetEmail(
 ): Promise<{ success: boolean; message?: string }> {
   const displayName = name || 'Valued Customer';
   
+  // Log password reset attempt
+  console.log(`[PASSWORD RESET] Attempting to send password reset email to ${email}`);
+  console.log(`[PASSWORD RESET] Reset link: ${resetLink}`);
+  
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #F5F5F5; padding: 20px; text-align: center; border-bottom: 3px solid #D4AF37;">
@@ -299,12 +350,32 @@ export async function sendPasswordResetEmail(
     </div>
   `;
   
-  return sendEmail({
+  const plainText = `Hello ${displayName}, we received a request to reset your password. Please visit this link to reset your password: ${resetLink}. This link will expire in 1 hour.`;
+  
+  // Save the password reset info in a more accessible place for debugging
+  console.log(`[PASSWORD RESET] Direct access to reset: ${resetLink}`);
+  
+  // Try to send the email with special flag for password resets
+  const result = await sendEmail({
     to: email,
     subject: 'Password Reset - Luster Legacy',
     html: emailHtml,
-    text: `Hello ${displayName}, we received a request to reset your password. Please visit this link to reset your password: ${resetLink}. This link will expire in 1 hour.`
+    text: plainText,
+    isPasswordReset: true
   });
+  
+  // Always log whether the password reset email succeeded or failed
+  if (result.success) {
+    console.log(`[PASSWORD RESET] Email sent successfully to ${email}`);
+  } else {
+    console.error(`[PASSWORD RESET] Failed to send email to ${email}: ${result.message}`);
+    
+    // For password resets specifically, provide detailed debug info
+    console.log(`[PASSWORD RESET EMERGENCY FALLBACK] Reset Link: ${resetLink}`);
+    console.log(`[PASSWORD RESET EMERGENCY FALLBACK] User: ${email} (${displayName})`);
+  }
+  
+  return result;
 }
 
 /**

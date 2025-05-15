@@ -807,15 +807,21 @@ export function setupAuth(app: Express): void {
   // Forgot password endpoint - request a password reset
   app.post("/api/forgot-password", async (req, res) => {
     try {
+      console.log(`[PASSWORD RESET] Password reset request received for email: ${req.body.email || 'undefined'}`);
+      
       const { email } = req.body;
       
       if (!email) {
+        console.log(`[PASSWORD RESET] Rejected - missing email in request`);
         return res.status(400).json({ success: false, message: "Email is required" });
       }
       
       // Check if user exists with this email
+      console.log(`[PASSWORD RESET] Looking up user with email: ${email}`);
       const user = await storage.getUserByEmail(email);
+      
       if (!user) {
+        console.log(`[PASSWORD RESET] User not found with email: ${email}`);
         // Don't reveal whether a user with this email exists for security
         return res.status(200).json({ 
           success: true, 
@@ -823,16 +829,21 @@ export function setupAuth(app: Express): void {
         });
       }
       
+      console.log(`[PASSWORD RESET] User found: ${user.id} (${user.name || 'unnamed'})`);
+      
       // Create password reset token
+      console.log(`[PASSWORD RESET] Creating password reset token for user: ${user.id} (${email})`);
       const resetResult = await storage.createPasswordResetToken(email);
       
       if (!resetResult) {
+        console.error(`[PASSWORD RESET] Failed to create password reset token for ${email}`);
         return res.status(500).json({ 
           success: false, 
           message: "Failed to create password reset token" 
         });
       }
       
+      console.log(`[PASSWORD RESET] Reset token created successfully for ${email}`);
       const { token, user: updatedUser } = resetResult;
       
       // Generate the reset link
