@@ -760,7 +760,12 @@ export default function CustomerDashboard() {
                             </div>
                             <div>
                               <div className="font-medium">
-                                {formatRequestType(request.requestType)} #{request.id}
+                                {formatRequestType(request.requestType)} #{
+                                  // Create a user-friendly index (1-based) for display
+                                  filteredRequests
+                                    .filter(r => r.requestType === request.requestType)
+                                    .findIndex(r => r.id === request.id) + 1
+                                }
                               </div>
                               <div className="text-sm text-muted-foreground flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -946,7 +951,12 @@ export default function CustomerDashboard() {
                                       <span className={getRequestTypeColor(request.requestType)}>
                                         {formatRequestType(request.requestType)}
                                       </span>
-                                      <span className="ml-2">#{request.id}</span>
+                                      <span className="ml-2">#{
+                                        // Create a user-friendly index (1-based) for display
+                                        filteredRequests
+                                          .filter(r => r.requestType === request.requestType)
+                                          .findIndex(r => r.id === request.id) + 1
+                                      }</span>
                                     </h3>
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                       <CalendarDays className="h-3.5 w-3.5" />
