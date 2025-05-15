@@ -62,10 +62,47 @@ export function ProtectedRoute({
             queryClient.setQueryData(["/api/user"], adminData);
             setAdminVerified(true);
           } else {
-            console.warn("Protected route - direct admin auth verification failed");
+            // If verification failed, check if special recovery is supported
+            const responseData = await adminAuthResponse.json();
+            const specialRecoveryAllowed = responseData.allowHeaderAuth === true;
+            
+            console.warn("Protected route - direct admin auth verification failed, recovery allowed:", specialRecoveryAllowed);
             setAdminVerified(false);
             
-            // Since direct verification failed, invalidate the cache to trigger a fresh fetch
+            // If special recovery is allowed, try with a header-based admin authentication
+            if (specialRecoveryAllowed && user) {
+              console.log("Protected route - attempting special header-based recovery with user ID:", user.id);
+              
+              // Attempt recovery with an admin-specific header-based auth request
+              try {
+                const recoveryResponse = await fetch("/api/auth/me", {
+                  credentials: "include",
+                  headers: {
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0",
+                    "X-Admin-ReAuth-Request": "true",
+                    "X-Admin-ID": user.id.toString()
+                  }
+                });
+                
+                if (recoveryResponse.ok) {
+                  const recoveredData = await recoveryResponse.json();
+                  console.log("Protected route - special recovery successful:", recoveredData);
+                  
+                  // Update the React Query cache with this recovered data
+                  queryClient.setQueryData(["/api/user"], recoveredData);
+                  setAdminVerified(true);
+                  return;
+                } else {
+                  console.warn("Protected route - special recovery failed");
+                }
+              } catch (recoveryError) {
+                console.error("Protected route - error during special recovery:", recoveryError);
+              }
+            }
+            
+            // Since all recovery attempts failed, invalidate the cache to trigger a fresh fetch
             queryClient.invalidateQueries({ queryKey: ['/api/user'] });
           }
         } catch (error) {

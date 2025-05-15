@@ -85,8 +85,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.log("Auth Provider - Admin auth verified on load");
               return res.json();
             } else {
-              console.warn("Auth Provider - Admin auth verification failed, will try emergency reauth");
-              throw new Error("Admin auth verification failed");
+              console.warn("Auth Provider - Admin auth verification failed, checking for special recovery options");
+              
+              // Try to get the response body to check if special recovery is allowed
+              return res.json().then(errorData => {
+                if (errorData.allowHeaderAuth === true) {
+                  console.log("Auth Provider - Special recovery mechanism is available, attempting recovery");
+                  
+                  // Attempt header-based recovery
+                  return fetch('/api/auth/me', { 
+                    credentials: 'include',
+                    headers: {
+                      "Cache-Control": "no-cache, no-store, must-revalidate",
+                      "Pragma": "no-cache",
+                      "Expires": "0",
+                      "X-Admin-ReAuth-Request": "true",
+                      "X-Admin-ID": userData.id.toString()
+                    }
+                  }).then(recoveryRes => {
+                    if (recoveryRes.ok) {
+                      console.log("Auth Provider - Special recovery successful");
+                      return recoveryRes.json();
+                    } else {
+                      console.warn("Auth Provider - Special recovery failed, will try emergency reauth");
+                      throw new Error("Admin auth recovery failed");
+                    }
+                  });
+                } else {
+                  console.warn("Auth Provider - No special recovery mechanism available");
+                  throw new Error("Admin auth verification failed and no recovery mechanism available");
+                }
+              }).catch(parseError => {
+                console.error("Auth Provider - Error parsing response or special recovery:", parseError);
+                throw new Error("Admin auth verification failed with parsing error");
+              });
             }
           })
           .then(adminData => {
