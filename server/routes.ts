@@ -7581,10 +7581,32 @@ Respond in JSON format:
   });
 
   // Admin: Create new inspiration gallery item
-  app.post('/api/admin/inspiration', validateAdmin, async (req, res) => {
+  app.post('/api/admin/inspiration', async (req, res) => {
+    console.log('POST /api/admin/inspiration - Starting admin validation');
+    
+    // Manual admin check to better debug authentication issues
+    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'limited-admin')) {
+      console.log('POST /api/admin/inspiration - Admin validation failed', {
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        isAuthenticated: req.isAuthenticated?.() || false,
+        hasCookies: !!req.cookies,
+        adminIdCookie: req.cookies?.admin_id || 'none',
+      });
+      
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    console.log('POST /api/admin/inspiration - Admin validation successful', {
+      userId: req.user.id,
+      username: req.user.username || req.user.loginID
+    });
+    
     try {
       const validatedData = insertInspirationGallerySchema.parse(req.body);
+      console.log('POST /api/admin/inspiration - Creating new inspiration item', validatedData);
       const newItem = await storage.createInspirationItem(validatedData);
+      console.log('POST /api/admin/inspiration - Successfully created new item with ID:', newItem.id);
       res.status(201).json(newItem);
     } catch (error) {
       console.error('Error creating inspiration gallery item:', error);
@@ -7613,18 +7635,42 @@ Respond in JSON format:
   });
 
   // Admin: Delete inspiration gallery item
-  app.delete('/api/admin/inspiration/:id', validateAdmin, async (req, res) => {
+  app.delete('/api/admin/inspiration/:id', async (req, res) => {
+    console.log('DELETE /api/admin/inspiration/:id - Starting admin validation');
+    
+    // Manual admin check to better debug authentication issues
+    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'limited-admin')) {
+      console.log('DELETE /api/admin/inspiration/:id - Admin validation failed', {
+        hasUser: !!req.user,
+        userRole: req.user?.role || 'none',
+        isAuthenticated: req.isAuthenticated?.() || false,
+        hasCookies: !!req.cookies,
+        adminIdCookie: req.cookies?.admin_id || 'none',
+      });
+      
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    console.log('DELETE /api/admin/inspiration/:id - Admin validation successful', {
+      userId: req.user.id,
+      username: req.user.username || req.user.loginID
+    });
+    
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
         return res.status(400).json({ message: 'Invalid ID' });
       }
-
+      
+      console.log(`DELETE /api/admin/inspiration/:id - Deleting inspiration item with ID: ${id}`);
       const success = await storage.deleteInspirationItem(id);
+      
       if (!success) {
+        console.log(`DELETE /api/admin/inspiration/:id - Item with ID ${id} not found`);
         return res.status(404).json({ message: 'Inspiration gallery item not found' });
       }
-
+      
+      console.log(`DELETE /api/admin/inspiration/:id - Successfully deleted item with ID: ${id}`);
       res.status(204).send();
     } catch (error) {
       console.error('Error deleting inspiration gallery item:', error);

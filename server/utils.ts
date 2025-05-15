@@ -12,7 +12,7 @@ export const validateAdmin = async (
 ): Promise<boolean> => {
   try {
     const endpoint = req.originalUrl || req.url;
-    console.log(`ADMIN AUTH CHECK - /api/auth/me endpoint called`);
+    console.log(`ADMIN AUTH CHECK - ${endpoint} endpoint called`);
     
     // Check if this is an emergency admin check from the frontend
     const isEmergencyCheck = req.headers['x-admin-emergency'] === 'true';
