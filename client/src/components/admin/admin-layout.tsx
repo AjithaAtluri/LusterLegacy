@@ -167,16 +167,21 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         (async () => {
           try {
             const adminAuthResult = await verifyAdminAuth({ 
-              emergency: true,
-              syncCookie: true
+              forceRefresh: true,
+              storeResult: true
             });
             
             if (adminAuthResult) {
-              console.log('Admin layout - admin auth check successful:', adminAuthResult);
+              console.log('Admin layout - admin auth check successful:', adminAuthResult.username || adminAuthResult.loginID);
               console.log('Admin layout - user is verified admin via /api/auth/me');
               
               // Also refresh the admin cookie
-              await syncAdminCookie();
+              await syncAdminCookie(adminAuthResult.id);
+              
+              // Update React Query cache to help break any loading state
+              import("@/lib/queryClient").then(({queryClient}) => {
+                queryClient.setQueryData(["/api/user"], adminAuthResult);
+              });
             } else {
               console.error('Admin layout - admin auth check failed');
               // Despite failed check, still use cached data if we have it
@@ -201,9 +206,29 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         
         (async () => {
           try {
-            const emergencyAuthResult = await emergencyAdminAuth();
+            // Try to get the admin ID from URL if available
+            let adminId: number | undefined;
+            try {
+              const urlParams = new URLSearchParams(window.location.search);
+              const adminIdParam = urlParams.get('admin_id');
+              if (adminIdParam) {
+                adminId = parseInt(adminIdParam);
+                if (isNaN(adminId)) adminId = undefined;
+              }
+            } catch (e) {
+              console.warn('Failed to parse admin_id from URL:', e);
+            }
+            
+            // Use our improved emergency auth function
+            const emergencyAuthResult = await emergencyAdminAuth(adminId);
+            
             if (emergencyAuthResult) {
-              console.log('Admin layout - emergency admin auth successful:', emergencyAuthResult);
+              console.log('Admin layout - emergency admin auth successful:', emergencyAuthResult.username || emergencyAuthResult.loginID);
+              
+              // Update React Query cache to help break any loading state
+              import("@/lib/queryClient").then(({queryClient}) => {
+                queryClient.setQueryData(["/api/user"], emergencyAuthResult);
+              });
             } else {
               console.error('Admin layout - emergency admin auth failed');
               toast({
@@ -263,97 +288,64 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
             try {
               console.log("Admin layout - emergency direct admin check");
               
-              // First try to load from session storage cache if available
-              try {
-                const cachedUserData = sessionStorage.getItem('adminUserData');
-                if (cachedUserData) {
-                  const userData = JSON.parse(cachedUserData);
-                  console.log("Emergency check - using cached admin data:", userData);
-                  
-                  if (userData && (userData.role === 'admin' || userData.role === 'limited-admin')) {
-                    console.log("Admin verified via session cache - bypassing React Query");
-                    
-                    // Update React Query cache to help break the loading state
-                    import("@/lib/queryClient").then(({queryClient}) => {
-                      queryClient.setQueryData(["/api/user"], userData);
-                    });
-                    
-                    // Don't redirect, let the auth check continue naturally with the cached data
-                    return;
-                  }
-                }
-              } catch (cacheError) {
-                console.warn("Failed to load from admin cache:", cacheError);
+              // First check cache from our storage utility
+              const cachedAdminAuth = getAdminAuth();
+              if (cachedAdminAuth && isValidAdminAuth()) {
+                console.log("Admin verified via utility cache - bypassing React Query");
+                
+                // Update React Query cache to help break the loading state
+                import("@/lib/queryClient").then(({queryClient}) => {
+                  queryClient.setQueryData(["/api/user"], cachedAdminAuth);
+                });
+                
+                // Don't redirect, let the auth check continue naturally with the cached data
+                return;
               }
               
-              // Try both admin endpoints in parallel for faster response
-              const [adminResponse, userResponse] = await Promise.allSettled([
-                fetch('/api/auth/me', {
-                  credentials: 'include',
-                  headers: { 
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache',
-                    'X-Admin-Emergency': 'true'
-                  }
-                }),
-                fetch('/api/user', {
-                  credentials: 'include',
-                  headers: { 
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache' 
-                  }
-                })
-              ]);
+              // Cache not available, try direct API verification
+              const adminAuthResult = await verifyAdminAuth({ 
+                forceRefresh: true, 
+                storeResult: true
+              });
               
-              // First check admin-specific endpoint
-              if (adminResponse.status === 'fulfilled' && adminResponse.value.ok) {
-                const userData = await adminResponse.value.json();
-                if (userData && (userData.role === 'admin' || userData.role === 'limited-admin')) {
-                  console.log("Admin verified via direct admin check - bypassing React Query");
-                  
-                  // Store in session storage for future emergency checks
-                  try {
-                    sessionStorage.setItem('adminUserData', JSON.stringify(userData));
-                  } catch (e) {
-                    // Ignore storage errors
-                  }
-                  
-                  // Update React Query cache to help break the loading state
-                  import("@/lib/queryClient").then(({queryClient}) => {
-                    queryClient.setQueryData(["/api/user"], userData);
-                  });
-                  
-                  // Don't redirect, let the auth check continue naturally
-                  return;
-                }
+              if (adminAuthResult) {
+                console.log("Admin verified via direct auth API - bypassing React Query");
+                
+                // Update React Query cache to help break the loading state
+                import("@/lib/queryClient").then(({queryClient}) => {
+                  queryClient.setQueryData(["/api/user"], adminAuthResult);
+                });
+                
+                // Also sync the admin cookie for future requests
+                await syncAdminCookie(adminAuthResult.id);
+                
+                // Don't redirect, let the auth check continue naturally
+                return;
               }
               
-              // Then check regular user endpoint as fallback
-              if (userResponse.status === 'fulfilled' && userResponse.value.ok) {
-                const userData = await userResponse.value.json();
-                if (userData && (userData.role === 'admin' || userData.role === 'limited-admin')) {
-                  console.log("Admin verified via regular user endpoint - bypassing React Query");
-                  
-                  // Store in session storage for future emergency checks
-                  try {
-                    sessionStorage.setItem('adminUserData', JSON.stringify(userData));
-                  } catch (e) {
-                    // Ignore storage errors
-                  }
-                  
-                  // Update React Query cache to help break the loading state
-                  import("@/lib/queryClient").then(({queryClient}) => {
-                    queryClient.setQueryData(["/api/user"], userData);
-                  });
-                  
-                  // Don't redirect, let the auth check continue naturally
-                  return;
-                }
+              // If all else fails, try the emergency admin auth
+              const emergencyAuthResult = await emergencyAdminAuth();
+              if (emergencyAuthResult) {
+                console.log("Admin verified via emergency auth - bypassing React Query");
+                
+                // Update React Query cache to help break the loading state
+                import("@/lib/queryClient").then(({queryClient}) => {
+                  queryClient.setQueryData(["/api/user"], emergencyAuthResult);
+                });
+                
+                // Don't redirect, let the auth check continue naturally
+                return;
               }
               
               // If both checks failed, redirect to login
               console.log("All emergency admin checks failed - redirecting to login");
               window.location.href = window.location.origin + "/admin/login";
+            } catch (error) {
+              console.error("Error during emergency direct admin check:", error);
+            }
+          }
+        }, 1000); // Try after 1 second to give normal auth flow a chance
+      }
               
             } catch (error) {
               console.error("Emergency admin check failed:", error);
