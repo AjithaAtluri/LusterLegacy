@@ -1,4 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+/**
+ * A type defining the return value of the useLoadingTimeout hook
+ */
+export interface LoadingTimeoutHook {
+  /**
+   * Indicates if the loading operation has exceeded the timeout threshold
+   */
+  hasTimedOut: boolean;
+  
+  /**
+   * The time elapsed since loading started (in milliseconds)
+   */
+  timeElapsed: number;
+  
+  /**
+   * Function to manually reset the timeout state
+   */
+  reset: () => void;
+}
 
 /**
  * Custom hook to detect and handle prolonged loading states
@@ -6,51 +26,61 @@ import { useState, useEffect } from 'react';
  * @param timeoutMs Timeout in milliseconds (default: 5000ms)
  * @returns Object containing timeout state and reset function
  */
-export function useLoadingTimeout(isLoading: boolean, timeoutMs = 5000) {
-  const [hasTimedOut, setHasTimedOut] = useState<boolean>(false);
-  const [timeoutStarted, setTimeoutStarted] = useState<number | null>(null);
+export function useLoadingTimeout(isLoading: boolean, timeoutMs = 5000): LoadingTimeoutHook {
+  // State to track if loading has timed out
+  const [hasTimedOut, setHasTimedOut] = useState(false);
   
-  // Reset function to clear timeout state
-  const resetTimeout = () => {
+  // State to track elapsed time
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  
+  // Ref to store the start time of loading
+  const loadingStartTime = useRef<number | null>(null);
+  
+  // Ref to store interval ID for cleanup
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Function to reset the timeout state
+  const reset = () => {
     setHasTimedOut(false);
-    setTimeoutStarted(null);
+    setTimeElapsed(0);
+    loadingStartTime.current = null;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   };
   
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
-    
-    // If loading starts, set a timeout
-    if (isLoading && !timeoutStarted) {
-      const startTime = Date.now();
-      setTimeoutStarted(startTime);
+    // When loading starts
+    if (isLoading && !loadingStartTime.current) {
+      loadingStartTime.current = Date.now();
       
-      timeoutId = setTimeout(() => {
-        console.log(`Loading state timed out after ${timeoutMs}ms`);
-        setHasTimedOut(true);
-      }, timeoutMs);
-    } 
-    // If loading stops, clear timeout
-    else if (!isLoading) {
-      if (timeoutStarted) {
-        const loadTime = Date.now() - timeoutStarted;
-        console.log(`Loading completed in ${loadTime}ms`);
-      }
-      setTimeoutStarted(null);
-      setHasTimedOut(false);
+      // Set up interval to update elapsed time
+      intervalRef.current = setInterval(() => {
+        if (loadingStartTime.current) {
+          const elapsed = Date.now() - loadingStartTime.current;
+          setTimeElapsed(elapsed);
+          
+          // Check if we've exceeded the timeout
+          if (elapsed >= timeoutMs && !hasTimedOut) {
+            setHasTimedOut(true);
+          }
+        }
+      }, 100); // Update every 100ms
     }
     
-    // Clean up timeout on unmount or state change
+    // When loading ends
+    if (!isLoading && loadingStartTime.current) {
+      reset();
+    }
+    
+    // Cleanup
     return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
-  }, [isLoading, timeoutMs, timeoutStarted]);
+  }, [isLoading, timeoutMs, hasTimedOut]);
   
-  return {
-    hasTimedOut,
-    resetTimeout,
-    timeoutStarted,
-    timeElapsed: timeoutStarted ? Date.now() - timeoutStarted : 0
-  };
+  return { hasTimedOut, timeElapsed, reset };
 }

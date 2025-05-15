@@ -1,15 +1,20 @@
 /**
- * Admin Authentication Storage Utility
- * Provides persistent caching for admin authentication to prevent infinite loading issues
+ * Admin Authentication Storage
+ * 
+ * Provides utilities for storing and retrieving admin authentication data
+ * from session storage to maintain login state between page refreshes
+ * and handle authentication timeout situations in production.
  */
 
-// Key for storing admin auth data in session storage
-const ADMIN_AUTH_KEY = 'luster_legacy_admin_auth';
+// Storage key for admin authentication data
+const ADMIN_AUTH_STORAGE_KEY = 'luster_admin_auth';
 
-// Maximum time admin auth data is considered valid (4 hours in milliseconds)
-const MAX_AUTH_AGE = 4 * 60 * 60 * 1000;
+// Set expiration time for admin session cache (4 hours)
+const AUTH_EXPIRATION_MS = 4 * 60 * 60 * 1000; 
 
-// Interface for admin auth data structure
+/**
+ * Admin authentication data structure
+ */
 export interface AdminAuthData {
   id: number;
   username?: string;
@@ -25,18 +30,16 @@ export interface AdminAuthData {
  */
 export function saveAdminAuth(authData: AdminAuthData): void {
   try {
-    // Add current timestamp to track when this data was cached
-    const dataToStore = {
-      ...authData,
-      authTime: Date.now(),
-      authSource: authData.authSource || 'session_storage'
-    };
+    // Ensure authTime is set
+    if (!authData.authTime) {
+      authData.authTime = Date.now();
+    }
     
-    // Store in session storage
-    sessionStorage.setItem(ADMIN_AUTH_KEY, JSON.stringify(dataToStore));
+    // Save to session storage
+    sessionStorage.setItem(ADMIN_AUTH_STORAGE_KEY, JSON.stringify(authData));
     console.log('Updated cached user data in storage');
   } catch (error) {
-    console.error('Error saving admin auth data to session storage:', error);
+    console.error('Failed to save admin auth data to session storage:', error);
   }
 }
 
@@ -47,27 +50,24 @@ export function saveAdminAuth(authData: AdminAuthData): void {
 export function getAdminAuth(): AdminAuthData | null {
   try {
     // Get data from session storage
-    const storedData = sessionStorage.getItem(ADMIN_AUTH_KEY);
+    const storedData = sessionStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
     if (!storedData) {
       return null;
     }
     
-    // Parse the data
-    const authData = JSON.parse(storedData) as AdminAuthData;
+    // Parse the stored data
+    const authData: AdminAuthData = JSON.parse(storedData);
     
-    // Check if the data is expired
-    const now = Date.now();
-    if (now - authData.authTime > MAX_AUTH_AGE) {
-      console.log('Cached admin auth data is expired');
-      // Clear expired data
-      sessionStorage.removeItem(ADMIN_AUTH_KEY);
+    // Check if data is expired (4 hours)
+    if (Date.now() - authData.authTime > AUTH_EXPIRATION_MS) {
+      console.log('Admin auth data is expired, clearing');
+      clearAdminAuth();
       return null;
     }
     
-    console.log('Loaded cached user data from session storage:', authData);
     return authData;
   } catch (error) {
-    console.error('Error retrieving admin auth data from session storage:', error);
+    console.error('Failed to retrieve admin auth data from session storage:', error);
     return null;
   }
 }
@@ -77,10 +77,9 @@ export function getAdminAuth(): AdminAuthData | null {
  */
 export function clearAdminAuth(): void {
   try {
-    sessionStorage.removeItem(ADMIN_AUTH_KEY);
-    console.log('Cleared admin auth data from session storage');
+    sessionStorage.removeItem(ADMIN_AUTH_STORAGE_KEY);
   } catch (error) {
-    console.error('Error clearing admin auth data from session storage:', error);
+    console.error('Failed to clear admin auth data from session storage:', error);
   }
 }
 
@@ -91,11 +90,12 @@ export function clearAdminAuth(): void {
 export function isValidAdminAuth(): boolean {
   const authData = getAdminAuth();
   
+  // Check if we have valid auth data
   if (!authData) {
     return false;
   }
   
-  // Check if user has admin role
+  // Check if the role is admin or limited-admin
   return authData.role === 'admin' || authData.role === 'limited-admin';
 }
 
@@ -106,13 +106,10 @@ export function refreshAdminAuthTime(): void {
   try {
     const authData = getAdminAuth();
     if (authData) {
-      saveAdminAuth({
-        ...authData,
-        authTime: Date.now()
-      });
-      console.log('Refreshed admin auth timestamp');
+      authData.authTime = Date.now();
+      saveAdminAuth(authData);
     }
   } catch (error) {
-    console.error('Error refreshing admin auth timestamp:', error);
+    console.error('Failed to refresh admin auth time:', error);
   }
 }
