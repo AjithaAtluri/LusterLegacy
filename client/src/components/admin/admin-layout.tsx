@@ -234,6 +234,53 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     checkAdminAuth();
   }, [user, isLoading, stableLoading, toast]);
   
+  // Additional authentication synchronization effect to prevent flickering in production
+  useEffect(() => {
+    // Force an admin auth check on initial load to ensure auth stability
+    const verifyAdminAuth = async () => {
+      try {
+        console.log("Admin layout - performing proactive auth verification");
+        const adminResponse = await fetch('/api/auth/me', {
+          credentials: 'include',
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+          }
+        });
+        
+        if (adminResponse.ok) {
+          const adminUser = await adminResponse.json();
+          console.log("Admin layout - proactive auth verification successful:", adminUser);
+          
+          // Update the React Query cache with this fresh data
+          import("@/lib/queryClient").then(({queryClient}) => {
+            queryClient.setQueryData(["/api/user"], adminUser);
+          });
+          
+          // Ensure stable auth by checking passport auth too
+          fetch('/api/user', {
+            credentials: 'include',
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            }
+          }).catch(err => console.warn("Secondary auth check failed (non-critical):", err));
+        } else {
+          console.warn("Admin layout - proactive auth verification failed");
+        }
+      } catch (error) {
+        console.error("Admin layout - proactive auth verification error:", error);
+      }
+    };
+    
+    // Only run verification if we appear to be logged in but are in an unstable state
+    if (!isLoading && user?.role === 'admin') {
+      verifyAdminAuth();
+    }
+  }, [isLoading, user]);
+  
   // Handle logout from both auth systems
   const handleLogout = async () => {
     try {
