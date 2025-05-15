@@ -23,40 +23,49 @@ export default function CustomDesign() {
     imageDataUrl: undefined as string | undefined
   });
   
-  // Direct approach with window global
+  // Check for inspiration image in localStorage
   useEffect(() => {
-    // Check for global variable with image source
-    // @ts-ignore - Using a custom property we added to window
-    const globalImageSrc = window.__INSPIRATION_IMAGE_SRC;
-    
-    if (fromInspiration && globalImageSrc) {
-      console.log("Custom Design Page - Found global image reference:", globalImageSrc);
+    // This runs only once when the component mounts
+    try {
+      // Check for image in localStorage
+      const storedImage = localStorage.getItem('INSPIRATION_IMAGE');
       
-      // Update form state with the direct image source
-      setFormState(prev => ({
-        ...prev,
-        imageDataUrl: globalImageSrc
-      }));
+      if (storedImage) {
+        console.log("Custom Design Page - Found image in localStorage");
+        
+        // Update form state with the image source
+        setFormState(prev => ({
+          ...prev,
+          imageDataUrl: storedImage
+        }));
+        
+        // Clear localStorage after retrieving the image
+        localStorage.removeItem('INSPIRATION_IMAGE');
+        console.log("Custom Design Page - Applied image from localStorage");
+      }
+      // Also check URL parameters as fallback
+      else if (inspirationImage) {
+        console.log("Custom Design Page - Using URL parameter for inspiration image");
+        
+        // Set image from URL directly
+        setFormState(prev => ({
+          ...prev,
+          imageDataUrl: inspirationImage
+        }));
+      }
+    } catch (err) {
+      console.error("Custom Design Page - Error retrieving from localStorage:", err);
       
-      // Clear it to prevent reuse
-      // @ts-ignore
-      window.__INSPIRATION_IMAGE_SRC = null;
-      
-      console.log("Custom Design Page - Applied global image reference to form state");
-      return;
+      // Fallback to URL parameter
+      if (inspirationImage) {
+        setFormState(prev => ({
+          ...prev,
+          imageDataUrl: inspirationImage
+        }));
+      }
     }
-    
-    // Fallback to URL parameters if global approach didn't work
-    if (inspirationImage) {
-      console.log("Custom Design Page - Using URL parameter for inspiration image");
-      
-      // Set image from URL directly
-      setFormState(prev => ({
-        ...prev,
-        imageDataUrl: inspirationImage
-      }));
-    }
-  }, [inspirationImage, fromInspiration]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array means this runs once on mount
   
   // Helper function to process an inspiration image source into a data URL
   const processInspirationImage = (imageSrc: string) => {

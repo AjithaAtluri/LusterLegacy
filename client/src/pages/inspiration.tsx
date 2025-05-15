@@ -257,28 +257,32 @@ export default function Inspiration() {
                   <div className="flex flex-col justify-center">
                     {/* Title removed as requested */}
                     <div className="flex flex-col gap-3 mt-6">
-                      <Button 
-                        variant="default" 
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                        onClick={() => {
-                          console.log("Inspiration - Preparing image with direct method:", image.src);
-                          
-                          // Create a direct reference that will survive navigation
-                          try {
-                            // Add a global variable to window object that will survive page navigation
-                            window.__INSPIRATION_IMAGE_SRC = image.src;
-                            console.log("Inspiration - Set global image reference:", image.src);
+                      <Button asChild variant="default" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <a 
+                          href="/custom-design" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            console.log("Inspiration - Using localStorage method");
                             
-                            // Navigate to the custom design page
-                            window.location.href = '/custom-design?fromInspiration=true&t=' + Date.now();
-                          } catch (err) {
-                            console.error("Inspiration - Error in direct reference approach:", err);
-                            // Fallback
-                            window.location.href = `/custom-design?inspirationImage=${encodeURIComponent(image.src)}`;
-                          }
-                        }}
-                      >
-                        Request Similar Design <ArrowRight className="ml-2 h-4 w-4" />
+                            try {
+                              // Store the image source in localStorage
+                              localStorage.setItem('INSPIRATION_IMAGE', image.src);
+                              console.log("Inspiration - Saved to localStorage:", image.src);
+                              
+                              // Navigate using a small delay to ensure localStorage is set
+                              setTimeout(() => {
+                                window.location.href = '/custom-design';
+                              }, 100);
+                            } catch (err) {
+                              console.error("Inspiration - Error using localStorage:", err);
+                              // If localStorage fails, redirect immediately
+                              window.location.href = '/custom-design';
+                            }
+                          }}
+                          className="flex items-center justify-center"
+                        >
+                          Request Similar Design <ArrowRight className="ml-2 h-4 w-4" />
+                        </a>
                       </Button>
                     </div>
                   </div>
