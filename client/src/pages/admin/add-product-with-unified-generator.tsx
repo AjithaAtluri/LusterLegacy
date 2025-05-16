@@ -615,35 +615,60 @@ export default function AddProduct() {
       form.setValue("detailedDescription", enhancedDescription);
     }
     
-    // Save content to localStorage for potential regeneration
-    localStorage.setItem('aiGeneratedContent', JSON.stringify({
-      ...content,
-      // Add stone details to the content object if they're not already there
-      additionalData: {
+    // Save enhanced content to localStorage with timestamp
+    try {
+      // Create a timestamp to make saving more reliable
+      const timestamp = new Date().toISOString();
+      
+      // Create enhanced additionalData object with merged values
+      const enhancedAdditionalData = {
         ...content.additionalData,
+        productType: productType || content.additionalData?.productType,
+        metalType: metalType || form.getValues("metalType") || content.additionalData?.metalType,
+        metalWeight: metalWeight ? parseFloat(metalWeight) : (form.getValues("metalWeight") ? parseFloat(form.getValues("metalWeight")) : content.additionalData?.metalWeight),
         mainStoneType: mainStoneType || content.additionalData?.mainStoneType,
         mainStoneWeight: mainStoneWeight ? parseFloat(mainStoneWeight) : content.additionalData?.mainStoneWeight,
         secondaryStoneType: secondaryStoneType || content.additionalData?.secondaryStoneType,
         secondaryStoneWeight: secondaryStoneWeight ? parseFloat(secondaryStoneWeight) : content.additionalData?.secondaryStoneWeight,
         otherStoneType: otherStoneType || content.additionalData?.otherStoneType,
         otherStoneWeight: otherStoneWeight ? parseFloat(otherStoneWeight) : content.additionalData?.otherStoneWeight
-      }
-    }));
-    
-    // Save input values to localStorage
-    const aiGeneratorInputs = {
-      productType: productType,
-      metalType: metalType || form.getValues("metalType"),
-      metalWeight: metalWeight || form.getValues("metalWeight"),
-      mainStoneType: mainStoneType || content.additionalData?.mainStoneType,
-      mainStoneWeight: mainStoneWeight || (content.additionalData?.mainStoneWeight?.toString()),
-      secondaryStoneType: secondaryStoneType || content.additionalData?.secondaryStoneType,
-      secondaryStoneWeight: secondaryStoneWeight || (content.additionalData?.secondaryStoneWeight?.toString()),
-      otherStoneType: otherStoneType || content.additionalData?.otherStoneType,
-      otherStoneWeight: otherStoneWeight || (content.additionalData?.otherStoneWeight?.toString()),
-      userDescription: form.getValues("userDescription")
-    };
-    localStorage.setItem('aiGeneratorInputs', JSON.stringify(aiGeneratorInputs));
+      };
+      
+      // Create enhanced content object with timestamp and merged data
+      const enhancedContent = {
+        ...content,
+        additionalData: enhancedAdditionalData,
+        generatedAt: timestamp
+      };
+      
+      // Save enhanced content to localStorage
+      localStorage.setItem('aiGeneratedContent', JSON.stringify(enhancedContent));
+      console.log('Saved enhanced AI content to localStorage with timestamp:', timestamp);
+      
+      // Clear any existing flags to prevent duplicate messages when reloading
+      localStorage.removeItem('aiContentLoadedFlag');
+      
+      // Save input values to localStorage as a separate object for the AI generator
+      const aiGeneratorInputs = {
+        productType: productType || content.additionalData?.productType,
+        metalType: metalType || form.getValues("metalType") || content.additionalData?.metalType,
+        metalWeight: metalWeight || form.getValues("metalWeight") || (content.additionalData?.metalWeight?.toString()),
+        mainStoneType: mainStoneType || content.additionalData?.mainStoneType,
+        mainStoneWeight: mainStoneWeight || (content.additionalData?.mainStoneWeight?.toString()),
+        secondaryStoneType: secondaryStoneType || content.additionalData?.secondaryStoneType,
+        secondaryStoneWeight: secondaryStoneWeight || (content.additionalData?.secondaryStoneWeight?.toString()),
+        otherStoneType: otherStoneType || content.additionalData?.otherStoneType,
+        otherStoneWeight: otherStoneWeight || (content.additionalData?.otherStoneWeight?.toString()),
+        userDescription: form.getValues("userDescription")
+      };
+      
+      // Save the consolidated input state and reset flags
+      localStorage.setItem('aiGeneratorInputs', JSON.stringify(aiGeneratorInputs));
+      localStorage.removeItem('aiInputsLoadedFlag');
+      console.log('Saved AI generator inputs to localStorage');
+    } catch (error) {
+      console.error('Error saving AI content and inputs:', error);
+    }
     
     // Save image preview to localStorage if available
     if (mainImagePreview) {
