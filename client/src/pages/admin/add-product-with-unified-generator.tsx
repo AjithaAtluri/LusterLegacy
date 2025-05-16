@@ -206,19 +206,6 @@ export default function AddProduct() {
           console.log("Setting metal weight from additionalData:", additionalData.metalWeight);
         }
         
-        // Mark that inputs have been loaded to prevent duplicate loading
-        localStorage.setItem('aiInputsLoadedFlag', 'true');
-      } catch (error) {
-        console.error('Error parsing saved inputs from localStorage:', error);
-      }
-    }
-    
-    // Cleanup to ensure we don't leave flags in localStorage if component unmounts
-    return () => {
-      localStorage.removeItem('aiInputsLoadedFlag');
-    };
-  }, [form]);
-        
         if (parsedInputs.mainStoneType) {
           setMainStoneType(parsedInputs.mainStoneType);
           console.log("Setting main stone type from localStorage:", parsedInputs.mainStoneType);
@@ -235,32 +222,92 @@ export default function AddProduct() {
           console.log("Setting main stone weight from additionalData:", additionalData.mainStoneWeight);
         }
         
+        // Mark that inputs have been loaded to prevent duplicate loading
+        localStorage.setItem('aiInputsLoadedFlag', 'true');
+      } catch (error) {
+        console.error('Error parsing saved inputs from localStorage:', error);
+      }
+    }
+    
+    // Cleanup to ensure we don't leave flags in localStorage if component unmounts
+    return () => {
+      localStorage.removeItem('aiInputsLoadedFlag');
+    };
+  }, [form]);
+  
+  // Third effect to handle secondary and other stone types
+  useEffect(() => {
+    const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
+    const inputsLoadedFlag = localStorage.getItem('secondaryStonesLoadedFlag');
+    
+    // Skip if already loaded
+    if (inputsLoadedFlag === 'true') {
+      return;
+    }
+    
+    // Load saved input values
+    if (savedInputsJson) {
+      try {
+        const parsedInputs = JSON.parse(savedInputsJson);
+        const savedContentJson = localStorage.getItem('aiGeneratedContent');
+        let additionalData: any = {};
+        
+        if (savedContentJson) {
+          try {
+            const parsedContent = JSON.parse(savedContentJson) as AIGeneratedContent;
+            additionalData = parsedContent.additionalData || {};
+          } catch (error) {
+            console.error('Error parsing saved content from localStorage:', error);
+          }
+        }
+        
         // We no longer support the array format for secondary stones
         // Everything uses the single stone type approach
         if (parsedInputs.secondaryStoneType) {
           setSecondaryStoneType(parsedInputs.secondaryStoneType);
           console.log("Setting secondary stone type from localStorage:", parsedInputs.secondaryStoneType);
+        } else if (additionalData.secondaryStoneType) {
+          setSecondaryStoneType(additionalData.secondaryStoneType);
+          console.log("Setting secondary stone type from additionalData:", additionalData.secondaryStoneType);
         }
         
         if (parsedInputs.secondaryStoneWeight) {
           setSecondaryStoneWeight(parsedInputs.secondaryStoneWeight.toString());
           console.log("Setting secondary stone weight from localStorage:", parsedInputs.secondaryStoneWeight);
+        } else if (additionalData.secondaryStoneWeight) {
+          setSecondaryStoneWeight(additionalData.secondaryStoneWeight.toString());
+          console.log("Setting secondary stone weight from additionalData:", additionalData.secondaryStoneWeight);
         }
         
         // Other stone type (newer format)
         if (parsedInputs.otherStoneType) {
           setOtherStoneType(parsedInputs.otherStoneType);
           console.log("Setting other stone type from localStorage:", parsedInputs.otherStoneType);
+        } else if (additionalData.otherStoneType) {
+          setOtherStoneType(additionalData.otherStoneType);
+          console.log("Setting other stone type from additionalData:", additionalData.otherStoneType);
         }
         
         if (parsedInputs.otherStoneWeight) {
           setOtherStoneWeight(parsedInputs.otherStoneWeight.toString());
           console.log("Setting other stone weight from localStorage:", parsedInputs.otherStoneWeight);
+        } else if (additionalData.otherStoneWeight) {
+          setOtherStoneWeight(additionalData.otherStoneWeight.toString());
+          console.log("Setting other stone weight from additionalData:", additionalData.otherStoneWeight);
         }
-
-        if (parsedInputs.userDescription) {
-          form.setValue('userDescription', parsedInputs.userDescription);
-        }
+        
+        // Mark that secondary stones have been loaded to prevent duplicate loading
+        localStorage.setItem('secondaryStonesLoadedFlag', 'true');
+      } catch (error) {
+        console.error('Error parsing saved inputs for secondary stones:', error);
+      }
+    }
+    
+    // Cleanup to ensure we don't leave flags in localStorage if component unmounts
+    return () => {
+      localStorage.removeItem('secondaryStonesLoadedFlag');
+    };
+  }, []);
         
         // Store product type in state (for later use with productTypes data)
         if (parsedInputs.productType) {
