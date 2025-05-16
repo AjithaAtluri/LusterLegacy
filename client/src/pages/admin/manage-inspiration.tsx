@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '@/components/admin/admin-layout';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, Eye, Plus, Save, X, Upload, Image, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
@@ -22,696 +19,685 @@ import ReliableProductImage from '@/components/ui/reliable-product-image';
 // Define types for inspiration gallery items
 type InspirationGalleryItem = {
   id: number;
+  imageUrl: string;
   title: string | null;
   description: string | null;
-  imageUrl: string;
   category: string | null;
-  tags: string[];
-  featured: boolean;
-  createdAt: string;
+  tags: string[] | null;
+  sortOrder?: number | null;
 };
 
-// Create a validation schema for updating inspiration items
-const updateInspirationSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  category: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  featured: z.boolean().optional(),
-  imageUrl: z.string().min(1, "Image URL is required")
+// Form validation schema
+const inspirationFormSchema = z.object({
+  imageUrl: z.string().min(1, "Image URL is required"),
+  title: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  tags: z.array(z.string()).nullable().optional(),
+  sortOrder: z.number().nullable().optional(),
 });
 
-type UpdateInspirationData = z.infer<typeof updateInspirationSchema>;
+type InspirationFormValues = z.infer<typeof inspirationFormSchema>;
 
-// Create a validation schema for creating new inspiration items
-const createInspirationSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  category: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  featured: z.boolean().optional().default(false),
-  imageUrl: z.string().min(1, "Image URL is required")
-});
-
-type CreateInspirationData = z.infer<typeof createInspirationSchema>;
-
-const ManageInspirationPage: React.FC = () => {
+export default function ManageInspiration() {
+  const [selectedItem, setSelectedItem] = useState<InspirationGalleryItem | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string>('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('all');
-  const [selectedItem, setSelectedItem] = useState<InspirationGalleryItem | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
-  const [newTagInput, setNewTagInput] = useState('');
 
-  // Query to fetch all inspiration items
-  const { data: inspirationItems, isLoading, isError } = useQuery({
-    queryKey: ['/api/inspiration'],
+  // Fetch all inspiration gallery items
+  const { data: inspirationItems = [], isLoading, isError } = useQuery({
+    queryKey: ['/api/inspiration-gallery'],
     queryFn: async () => {
-      const response = await fetch('/api/inspiration');
+      const response = await fetch('/api/inspiration-gallery');
       if (!response.ok) {
-        throw new Error('Failed to fetch inspiration items');
+        throw new Error('Failed to fetch inspiration gallery items');
       }
-      const data = await response.json();
-      return data as InspirationGalleryItem[];
-    }
+      return response.json();
+    },
   });
 
-  // Form setup for editing an existing item
-  const editForm = useForm<UpdateInspirationData>({
-    resolver: zodResolver(updateInspirationSchema),
-    defaultValues: {
-      title: selectedItem?.title || '',
-      description: selectedItem?.description || '',
-      category: selectedItem?.category || '',
-      tags: selectedItem?.tags || [],
-      featured: selectedItem?.featured || false,
-      imageUrl: selectedItem?.imageUrl || ''
-    }
+  // Add new inspiration gallery item
+  const addMutation = useMutation({
+    mutationFn: async (newItem: Omit<InspirationGalleryItem, 'id'>) => {
+      const response = await apiRequest('POST', '/api/inspiration-gallery', newItem);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Inspiration gallery item added successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/inspiration-gallery'] });
+      setIsAddModalOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to add inspiration gallery item: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
   });
 
-  // Form setup for creating a new item
-  const newForm = useForm<CreateInspirationData>({
-    resolver: zodResolver(createInspirationSchema),
+  // Update existing inspiration gallery item
+  const updateMutation = useMutation({
+    mutationFn: async (updatedItem: InspirationGalleryItem) => {
+      const response = await apiRequest(
+        'PATCH',
+        `/api/inspiration-gallery/${updatedItem.id}`,
+        updatedItem
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Inspiration gallery item updated successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/inspiration-gallery'] });
+      setIsEditModalOpen(false);
+      setSelectedItem(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to update inspiration gallery item: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete inspiration gallery item
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/inspiration-gallery/${id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Inspiration gallery item deleted successfully',
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/inspiration-gallery'] });
+      setIsDeleteDialogOpen(false);
+      setSelectedItem(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to delete inspiration gallery item: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Upload image mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Success',
+        description: 'Image uploaded successfully',
+      });
+      // Use the uploaded image URL in the add form
+      if (addForm.getValues()) {
+        addForm.setValue('imageUrl', data.imageUrl);
+      }
+      setIsUploadDialogOpen(false);
+      setUploadFile(null);
+      setUploadPreview('');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to upload image: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Form for adding a new inspiration gallery item
+  const addForm = useForm<InspirationFormValues>({
+    resolver: zodResolver(inspirationFormSchema),
     defaultValues: {
+      imageUrl: '',
       title: '',
       description: '',
       category: '',
       tags: [],
-      featured: false,
-      imageUrl: ''
-    }
+      sortOrder: null,
+    },
   });
 
-  // Reset edit form when selected item changes
-  React.useEffect(() => {
-    if (selectedItem) {
-      editForm.reset({
-        title: selectedItem.title || '',
-        description: selectedItem.description || '',
-        category: selectedItem.category || '',
-        tags: selectedItem.tags || [],
-        featured: selectedItem.featured,
-        imageUrl: selectedItem.imageUrl
-      });
-    }
-  }, [selectedItem, editForm]);
-
-  // Mutation to update an inspiration item
-  const updateMutation = useMutation({
-    mutationFn: async (data: { id: number; updates: UpdateInspirationData }) => {
-      const response = await apiRequest('PUT', `/api/admin/inspiration/${data.id}`, data.updates);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update inspiration item');
-      }
-      return await response.json();
+  // Form for editing an existing inspiration gallery item
+  const editForm = useForm<InspirationFormValues>({
+    resolver: zodResolver(inspirationFormSchema),
+    defaultValues: {
+      imageUrl: '',
+      title: '',
+      description: '',
+      category: '',
+      tags: [],
+      sortOrder: null,
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/inspiration'] });
-      toast({
-        title: 'Success',
-        description: 'Inspiration item updated successfully',
-      });
-      setIsEditDialogOpen(false);
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
   });
 
-  // Mutation to create a new inspiration item
-  const createMutation = useMutation({
-    mutationFn: async (data: CreateInspirationData) => {
-      const response = await apiRequest('POST', '/api/admin/inspiration', data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create inspiration item');
-      }
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/inspiration'] });
-      toast({
-        title: 'Success',
-        description: 'New inspiration item created successfully',
-      });
-      setIsNewDialogOpen(false);
-      newForm.reset();
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  });
-
-  // Mutation to delete an inspiration item
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/admin/inspiration/${id}`);
-      if (!response.ok && response.status !== 204) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete inspiration item');
-      }
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/inspiration'] });
-      toast({
-        title: 'Success',
-        description: 'Inspiration item deleted successfully',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  });
-
-  // Function to handle adding a new tag to the edit form
-  const handleAddEditTag = () => {
-    if (newTagInput.trim() && editForm.getValues().tags) {
-      editForm.setValue('tags', [...editForm.getValues().tags!, newTagInput.trim()]);
-      setNewTagInput('');
-    }
-  };
-
-  // Function to handle removing a tag from the edit form
-  const handleRemoveEditTag = (index: number) => {
-    const currentTags = editForm.getValues().tags || [];
-    editForm.setValue('tags', [...currentTags.slice(0, index), ...currentTags.slice(index + 1)]);
-  };
-
-  // Function to handle adding a new tag to the new item form
-  const handleAddNewTag = () => {
-    if (newTagInput.trim() && newForm.getValues().tags) {
-      newForm.setValue('tags', [...newForm.getValues().tags!, newTagInput.trim()]);
-      setNewTagInput('');
-    }
-  };
-
-  // Function to handle removing a tag from the new item form
-  const handleRemoveNewTag = (index: number) => {
-    const currentTags = newForm.getValues().tags || [];
-    newForm.setValue('tags', [...currentTags.slice(0, index), ...currentTags.slice(index + 1)]);
-  };
-
-  // Filter inspiration items based on the active tab
-  const filteredItems = React.useMemo(() => {
-    if (!inspirationItems) return [];
-    
-    if (activeTab === 'all') {
-      return inspirationItems;
-    } 
-    else if (activeTab === 'featured') {
-      return inspirationItems.filter(item => item.featured);
-    } 
-    else {
-      return inspirationItems.filter(item => item.category === activeTab);
-    }
-  }, [inspirationItems, activeTab]);
-
-  // Get unique categories for tab filtering
-  const categories = React.useMemo(() => {
-    if (!inspirationItems) return [];
-    const categorySet = new Set<string>();
-    
-    inspirationItems.forEach(item => {
-      if (item.category) {
-        categorySet.add(item.category);
-      }
+  // Handle opening the edit modal
+  const handleEditClick = (item: InspirationGalleryItem) => {
+    setSelectedItem(item);
+    editForm.reset({
+      imageUrl: item.imageUrl,
+      title: item.title || '',
+      description: item.description || '',
+      category: item.category || '',
+      tags: item.tags || [],
+      sortOrder: item.sortOrder || null,
     });
+    setIsEditModalOpen(true);
+  };
+
+  // Handle opening the delete dialog
+  const handleDeleteClick = (item: InspirationGalleryItem) => {
+    setSelectedItem(item);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Handle file input change for image upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadFile(file);
+      
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle form submission for adding a new item
+  const onAddSubmit = (values: InspirationFormValues) => {
+    addMutation.mutate({
+      imageUrl: values.imageUrl,
+      title: values.title || null,
+      description: values.description || null,
+      category: values.category || null,
+      tags: values.tags || null,
+      sortOrder: values.sortOrder || null,
+    });
+  };
+
+  // Handle form submission for editing an existing item
+  const onEditSubmit = (values: InspirationFormValues) => {
+    if (!selectedItem) return;
     
-    return Array.from(categorySet);
-  }, [inspirationItems]);
+    updateMutation.mutate({
+      id: selectedItem.id,
+      imageUrl: values.imageUrl,
+      title: values.title || null,
+      description: values.description || null,
+      category: values.category || null,
+      tags: values.tags || null,
+      sortOrder: values.sortOrder || null,
+    });
+  };
 
-  if (isLoading) {
-    return (
-      <AdminLayout title="Manage Inspiration Gallery">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin w-12 h-12 border-t-2 border-b-2 border-primary rounded-full"></div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (isError) {
-    return (
-      <AdminLayout title="Manage Inspiration Gallery">
-        <div className="text-center p-8">
-          <h2 className="text-xl font-bold text-destructive">Error loading inspiration gallery items</h2>
-          <p className="mt-2">Please try again later or contact support.</p>
-        </div>
-      </AdminLayout>
-    );
-  }
+  // Handle submitting the upload form
+  const handleUpload = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadFile) {
+      toast({
+        title: 'Error',
+        description: 'Please select a file to upload',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    uploadMutation.mutate(uploadFile);
+  };
 
   return (
     <AdminLayout title="Manage Inspiration Gallery">
-      <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Inspiration Gallery Management</h1>
-          <Button onClick={() => setIsNewDialogOpen(true)}>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Inspiration Gallery</h2>
+            <p className="text-muted-foreground">
+              Manage inspiration images that appear in the gallery and throughout the site.
+            </p>
+          </div>
+          <Button onClick={() => setIsAddModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Add New Item
+            Add New Inspiration
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="mb-2 flex flex-wrap">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="featured">Featured</TabsTrigger>
-            {categories.map(category => (
-              <TabsTrigger key={category} value={category}>
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <Separator />
 
-          <TabsContent value={activeTab} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map(item => (
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : isError ? (
+          <div className="bg-destructive/10 p-4 rounded-md text-center">
+            <p className="text-destructive">Error loading inspiration gallery items</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {inspirationItems.map((item: InspirationGalleryItem) => (
               <Card key={item.id} className="overflow-hidden">
-                <div className="aspect-video overflow-hidden relative">
-                  <ReliableProductImage
-                    src={item.imageUrl}
-                    alt={item.title || 'Inspiration image'}
-                    className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                <div className="relative aspect-square">
+                  <ReliableProductImage 
+                    productId={0}
+                    imageUrl={item.imageUrl} 
+                    alt={item.title || "Inspiration image"} 
+                    className="w-full h-full object-cover"
+                    allowDownload={true}
                   />
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    {item.featured && (
-                      <Badge variant="secondary">Featured</Badge>
-                    )}
-                  </div>
                 </div>
-                <CardHeader className="p-4">
-                  <CardTitle className="text-lg">{item.title || 'Untitled'}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {item.description || 'No description available'}
-                  </CardDescription>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{item.title || "Untitled Inspiration"}</CardTitle>
+                  {item.category && (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Tag className="mr-1 h-3 w-3" />
+                      {item.category}
+                    </div>
+                  )}
                 </CardHeader>
-                <CardContent className="px-4 pb-2">
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {item.category && (
-                      <Badge variant="outline">{item.category}</Badge>
-                    )}
-                    {item.tags?.slice(0, 3).map((tag, i) => (
-                      <Badge key={i} variant="outline">{tag}</Badge>
-                    ))}
-                    {item.tags?.length > 3 && <Badge variant="outline">+{item.tags.length - 3}</Badge>}
-                  </div>
+                <CardContent className="pb-2">
+                  {item.description && <p className="text-sm">{item.description}</p>}
                 </CardContent>
-                <CardFooter className="flex justify-end gap-2 p-4">
+                <CardFooter className="flex justify-end gap-2 pt-2">
                   <Button 
                     variant="outline" 
-                    size="icon"
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setIsEditDialogOpen(true);
-                    }}
+                    size="sm" 
+                    onClick={() => handleEditClick(item)}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-4 w-4 mr-1" />
+                    Edit
                   </Button>
                   <Button 
                     variant="destructive" 
-                    size="icon"
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this inspiration item?')) {
-                        deleteMutation.mutate(item.id);
-                      }
-                    }}
+                    size="sm" 
+                    onClick={() => handleDeleteClick(item)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
                   </Button>
                 </CardFooter>
               </Card>
             ))}
-          </TabsContent>
-        </Tabs>
-
-        {/* Edit Inspiration Item Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Inspiration Item</DialogTitle>
-            </DialogHeader>
-
-            {selectedItem && (
-              <Form {...editForm}>
-                <form onSubmit={editForm.handleSubmit(data => updateMutation.mutate({ id: selectedItem.id, updates: data }))} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-1 space-y-4">
-                      <FormField
-                        control={editForm.control}
-                        name="imageUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Image URL*</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Image URL" {...field} />
-                            </FormControl>
-                            <FormDescription>Direct URL to the image</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={editForm.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Title</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Title (optional)" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={editForm.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Category (optional)" {...field} value={field.value || ''} />
-                            </FormControl>
-                            <FormDescription>
-                              E.g., rings, necklaces, earrings, bracelets
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={editForm.control}
-                        name="featured"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Featured</FormLabel>
-                              <FormDescription>
-                                Display this item in featured sections
-                              </FormDescription>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="md:col-span-1 space-y-4">
-                      <FormField
-                        control={editForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Description (optional)" 
-                                className="min-h-[120px]" 
-                                {...field} 
-                                value={field.value || ''} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div>
-                        <Label>Tags</Label>
-                        <div className="flex flex-wrap gap-2 mt-2 mb-4">
-                          {editForm.watch('tags')?.map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                              {tag}
-                              <button 
-                                type="button" 
-                                onClick={() => handleRemoveEditTag(index)}
-                                className="text-xs rounded-full hover:bg-destructive/10 p-1"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="flex gap-2">
-                          <Input 
-                            placeholder="Add a tag" 
-                            value={newTagInput} 
-                            onChange={(e) => setNewTagInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddEditTag();
-                              }
-                            }}
-                          />
-                          <Button type="button" onClick={handleAddEditTag} size="sm">
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="pt-4">
-                        <Label>Preview</Label>
-                        <div className="border rounded-md mt-2 overflow-hidden">
-                          {editForm.watch('imageUrl') ? (
-                            <ReliableProductImage
-                              src={editForm.watch('imageUrl')}
-                              alt="Preview"
-                              className="w-full h-48 object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-48 bg-muted flex items-center justify-center">
-                              <Image className="h-12 w-12 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsEditDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit"
-                      disabled={updateMutation.isPending}
-                    >
-                      {updateMutation.isPending && (
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></div>
-                      )}
-                      Save Changes
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* New Inspiration Item Dialog */}
-        <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Inspiration Item</DialogTitle>
-            </DialogHeader>
-
-            <Form {...newForm}>
-              <form onSubmit={newForm.handleSubmit(data => createMutation.mutate(data))} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-1 space-y-4">
-                    <FormField
-                      control={newForm.control}
-                      name="imageUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Image URL*</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Image URL" {...field} />
-                          </FormControl>
-                          <FormDescription>Direct URL to the image</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={newForm.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Title (optional)" {...field} value={field.value || ''} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={newForm.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Category (optional)" {...field} value={field.value || ''} />
-                          </FormControl>
-                          <FormDescription>
-                            E.g., rings, necklaces, earrings, bracelets
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={newForm.control}
-                      name="featured"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Featured</FormLabel>
-                            <FormDescription>
-                              Display this item in featured sections
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="md:col-span-1 space-y-4">
-                    <FormField
-                      control={newForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Description (optional)" 
-                              className="min-h-[120px]" 
-                              {...field} 
-                              value={field.value || ''} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div>
-                      <Label>Tags</Label>
-                      <div className="flex flex-wrap gap-2 mt-2 mb-4">
-                        {newForm.watch('tags')?.map((tag, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {tag}
-                            <button 
-                              type="button" 
-                              onClick={() => handleRemoveNewTag(index)}
-                              className="text-xs rounded-full hover:bg-destructive/10 p-1"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder="Add a tag" 
-                          value={newTagInput} 
-                          onChange={(e) => setNewTagInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddNewTag();
-                            }
-                          }}
-                        />
-                        <Button type="button" onClick={handleAddNewTag} size="sm">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="pt-4">
-                      <Label>Preview</Label>
-                      <div className="border rounded-md mt-2 overflow-hidden">
-                        {newForm.watch('imageUrl') ? (
-                          <ReliableProductImage
-                            src={newForm.watch('imageUrl')}
-                            alt="Preview"
-                            className="w-full h-48 object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-48 bg-muted flex items-center justify-center">
-                            <Image className="h-12 w-12 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsNewDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    disabled={createMutation.isPending}
-                  >
-                    {createMutation.isPending && (
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></div>
-                    )}
-                    Create Item
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </div>
+
+      {/* Add New Inspiration Modal */}
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Inspiration</DialogTitle>
+          </DialogHeader>
+          <Form {...addForm}>
+            <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="space-y-6">
+              <div className="flex gap-4 items-start">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsUploadDialogOpen(true)}
+                  className="flex-shrink-0 h-20"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Image
+                </Button>
+                <FormField
+                  control={addForm.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Image URL *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="/uploads/image-filename.jpg" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        The image URL starting with /uploads/
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={addForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Beautiful Diamond Ring" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={addForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="A stunning diamond ring with intricate details..." 
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-4">
+                <FormField
+                  control={addForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Rings" {...field} value={field.value || ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addForm.control}
+                  name="sortOrder"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Sort Order</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          {...field}
+                          value={field.value === null ? '' : field.value}
+                          onChange={(e) => field.onChange(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={addMutation.isPending}>
+                  {addMutation.isPending && (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                  )}
+                  Save
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Inspiration Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Inspiration</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-6">
+              <div className="flex gap-4 items-start">
+                <div className="w-20 h-20 overflow-hidden rounded-md flex-shrink-0">
+                  {selectedItem && (
+                    <ReliableProductImage
+                      productId={0}
+                      imageUrl={selectedItem.imageUrl}
+                      alt={selectedItem.title || "Inspiration image"}
+                      className="w-full h-full object-cover"
+                      allowDownload={true}
+                    />
+                  )}
+                </div>
+                <FormField
+                  control={editForm.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Image URL *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="/uploads/image-filename.jpg" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        The image URL starting with /uploads/
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Beautiful Diamond Ring" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="A stunning diamond ring with intricate details..." 
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Rings" {...field} value={field.value || ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="sortOrder"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Sort Order</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          {...field}
+                          value={field.value === null ? '' : field.value}
+                          onChange={(e) => field.onChange(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  {updateMutation.isPending && (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                  )}
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>
+              Are you sure you want to delete this inspiration gallery item?
+              {selectedItem?.title && (
+                <span className="font-semibold block mt-2">"{selectedItem.title}"</span>
+              )}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => selectedItem && deleteMutation.mutate(selectedItem.id)}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending && (
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                )}
+                Delete
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Upload Dialog */}
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Upload Image</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpload} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="image-upload" className="block text-sm font-medium text-gray-700">
+                Select Image
+              </label>
+              <Input
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </div>
+            
+            {uploadPreview && (
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Preview:</p>
+                <div className="aspect-square w-full max-w-[300px] mx-auto overflow-hidden rounded-md">
+                  <img
+                    src={uploadPreview}
+                    alt="Upload preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsUploadDialogOpen(false);
+                  setUploadFile(null);
+                  setUploadPreview('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={!uploadFile || uploadMutation.isPending}
+              >
+                {uploadMutation.isPending && (
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
+                )}
+                Upload
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
-};
-
-export default ManageInspirationPage;
+}
