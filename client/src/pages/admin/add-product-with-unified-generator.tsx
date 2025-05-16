@@ -96,14 +96,24 @@ export default function AddProduct() {
   
   // First effect to load AI generated content - runs only once
   useEffect(() => {
+    // Create a session-specific flag in memory to prevent duplicate loading messages
+    // This is more reliable than localStorage for the current session
+    const sessionFlagId = 'content-loaded-' + Date.now();
+    
+    // Check if we already have the special session flag in this component instance
+    if ((window as any)[sessionFlagId]) {
+      console.log('AI content already loaded in this session - skipping');
+      return;
+    }
+    
     const savedContentJson = localStorage.getItem('aiGeneratedContent');
-    const contentLoaded = localStorage.getItem('aiContentLoadedFlag');
-
-    // Load AI generated content, but only if not already loaded
-    if (savedContentJson && contentLoaded !== 'true') {
+    
+    if (savedContentJson) {
       try {
         const parsedContent = JSON.parse(savedContentJson) as AIGeneratedContent;
+        console.log('Found saved AI content:', parsedContent.title);
         
+        // Apply the content to form values
         form.setValue('title', parsedContent.title);
         form.setValue('tagline', parsedContent.tagline);
         form.setValue('description', parsedContent.shortDescription);
@@ -115,6 +125,7 @@ export default function AddProduct() {
         const savedImagePreview = localStorage.getItem('aiGeneratedImagePreview');
         if (savedImagePreview) {
           setMainImagePreview(savedImagePreview);
+          console.log('Loaded saved image preview');
         }
         
         // Load the saved image data and convert it back to a File object
@@ -125,6 +136,7 @@ export default function AddProduct() {
             .then(blob => {
               const file = new File([blob], "product-image.jpg", { type: "image/jpeg" });
               setMainImageFile(file);
+              console.log('Converted saved image data to File object');
             })
             .catch(err => {
               console.error('Error converting saved image data to File:', err);
@@ -136,23 +148,34 @@ export default function AddProduct() {
         if (savedAdditionalImagesJson) {
           const parsedImages = JSON.parse(savedAdditionalImagesJson);
           setAdditionalImagePreviews(parsedImages);
+          console.log('Loaded saved additional images');
         }
 
-        // Set a flag to indicate that we've loaded the content
-        localStorage.setItem('aiContentLoadedFlag', 'true');
+        // Set the in-memory flag to prevent duplicate loading in this session
+        (window as any)[sessionFlagId] = true;
+        
+        // Set a flag in localStorage to help with persistence
+        // This is more for page refreshes than component remounts
+        localStorage.setItem('aiContentLoadedAt', new Date().toISOString());
 
+        // Only show toast if this is the first load
         toast({
           title: "AI Content Loaded",
           description: "AI-generated content has been loaded into the form.",
         });
+        
+        console.log('AI content successfully loaded');
       } catch (error) {
         console.error('Error parsing saved content from localStorage:', error);
       }
+    } else {
+      console.log('No saved AI content found in localStorage');
     }
     
-    // Cleanup function to reset the flag when component unmounts
+    // Cleanup function is much simpler - we don't want to remove any flags
+    // that would affect persistence across component mounts
     return () => {
-      localStorage.removeItem('aiContentLoadedFlag');
+      // Nothing to clean up - we want the flag to persist
     };
   }, [form, toast]);
   
@@ -529,6 +552,9 @@ export default function AddProduct() {
 
   // Handle AI generated content
   const handleContentGenerated = async (content: AIGeneratedContent) => {
+    console.log("Content generated handler called with content:", content.title);
+    
+    // Apply the content to the form fields
     form.setValue("title", content.title);
     form.setValue("tagline", content.tagline);
     form.setValue("description", content.shortDescription);
@@ -536,13 +562,24 @@ export default function AddProduct() {
     form.setValue("basePrice", content.priceUSD.toString());
     form.setValue("basePriceINR", content.priceINR.toString());
     
-    // Explicitly set metal type and weight and propagate to form
+    // Get existing form values
+    const formMetalType = form.getValues("metalType");
+    const formMetalWeight = form.getValues("metalWeight");
+    
+    // Ensure we use the form values if they exist, otherwise use the state or content
     if (metalType) {
       form.setValue("metalType", metalType);
+    } else if (content.additionalData?.metalType) {
+      form.setValue("metalType", content.additionalData.metalType);
+      setMetalType(content.additionalData.metalType);
     }
     
     if (metalWeight) {
       form.setValue("metalWeight", metalWeight);
+    } else if (content.additionalData?.metalWeight) {
+      const weightStr = content.additionalData.metalWeight.toString();
+      form.setValue("metalWeight", weightStr);
+      setMetalWeight(weightStr);
     }
     
     // Explicitly set stone details to form state variables
