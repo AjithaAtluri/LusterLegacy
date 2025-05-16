@@ -94,12 +94,13 @@ export default function AddProduct() {
     },
   });
   
-  // First effect to load AI generated content
+  // First effect to load AI generated content - runs only once
   useEffect(() => {
     const savedContentJson = localStorage.getItem('aiGeneratedContent');
+    const contentLoaded = localStorage.getItem('aiContentLoadedFlag');
 
-    // Load AI generated content
-    if (savedContentJson) {
+    // Load AI generated content, but only if not already loaded
+    if (savedContentJson && contentLoaded !== 'true') {
       try {
         const parsedContent = JSON.parse(savedContentJson) as AIGeneratedContent;
         
@@ -137,6 +138,9 @@ export default function AddProduct() {
           setAdditionalImagePreviews(parsedImages);
         }
 
+        // Set a flag to indicate that we've loaded the content
+        localStorage.setItem('aiContentLoadedFlag', 'true');
+
         toast({
           title: "AI Content Loaded",
           description: "AI-generated content has been loaded into the form.",
@@ -145,11 +149,23 @@ export default function AddProduct() {
         console.error('Error parsing saved content from localStorage:', error);
       }
     }
+    
+    // Cleanup function to reset the flag when component unmounts
+    return () => {
+      localStorage.removeItem('aiContentLoadedFlag');
+    };
   }, [form, toast]);
   
   // Second effect to load input values (except product type which requires productTypes to be loaded)
+  // This runs only once to prevent repeated loading of the same values
   useEffect(() => {
     const savedInputsJson = localStorage.getItem('aiGeneratorInputs');
+    const inputsLoadedFlag = localStorage.getItem('aiInputsLoadedFlag');
+    
+    // Skip if already loaded
+    if (inputsLoadedFlag === 'true') {
+      return;
+    }
     
     // Also load any additionalData from the content
     const savedContentJson = localStorage.getItem('aiGeneratedContent');
@@ -189,6 +205,19 @@ export default function AddProduct() {
           setMetalWeight(additionalData.metalWeight.toString());
           console.log("Setting metal weight from additionalData:", additionalData.metalWeight);
         }
+        
+        // Mark that inputs have been loaded to prevent duplicate loading
+        localStorage.setItem('aiInputsLoadedFlag', 'true');
+      } catch (error) {
+        console.error('Error parsing saved inputs from localStorage:', error);
+      }
+    }
+    
+    // Cleanup to ensure we don't leave flags in localStorage if component unmounts
+    return () => {
+      localStorage.removeItem('aiInputsLoadedFlag');
+    };
+  }, [form]);
         
         if (parsedInputs.mainStoneType) {
           setMainStoneType(parsedInputs.mainStoneType);
