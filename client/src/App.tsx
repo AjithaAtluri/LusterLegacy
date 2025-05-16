@@ -71,6 +71,8 @@ const AdminContactMessages = lazy(() => import("@/pages/admin/contact-messages")
 const AdminTestimonials = lazy(() => import("@/pages/admin/testimonials-fix"));
 // AI Content Generator
 const AIContentGenerator = lazy(() => import("@/pages/admin/ai-content-generator-page"));
+// Inspiration Gallery Management
+const ManageInspiration = lazy(() => import("@/pages/admin/manage-inspiration"));
 
 // Loading component
 const PageLoader = () => (
@@ -212,6 +214,7 @@ function App() {
                   <ProtectedRoute path="/admin/contact-messages" component={AdminContactMessages} adminOnly />
                   <ProtectedRoute path="/admin/users" component={lazy(() => import("@/pages/admin/users"))} adminOnly />
                   <ProtectedRoute path="/admin/testimonials" component={AdminTestimonials} adminOnly />
+                  <ProtectedRoute path="/admin/inspiration" component={ManageInspiration} adminOnly />
                   
                   {/* Redirect old add-product URL to the AI generator */}
                   <Route path="/admin/add-product">

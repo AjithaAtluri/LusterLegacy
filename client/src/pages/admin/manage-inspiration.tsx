@@ -17,7 +17,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { ReliableProductImage } from '@/components/ui/reliable-product-image';
+import ReliableProductImage from '@/components/ui/reliable-product-image';
 
 // Define types for inspiration gallery items
 type InspirationGalleryItem = {
