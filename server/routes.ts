@@ -73,31 +73,8 @@ const storage_disk = multer.diskStorage({
   },
   filename: (_req, file, cb) => {
     const uniqueFilename = uuidv4() + path.extname(file.originalname);
-    
-    // Also save to attached_assets for persistence
-    const fileCallback = (err, filename) => {
-      if (!err && filename) {
-        // Copy to attached_assets
-        const sourcePath = path.join(uploadDir, filename);
-        const destPath = path.join(attachedAssetsDir, filename);
-        
-        // Use setTimeout to ensure the file is written before copying
-        setTimeout(() => {
-          try {
-            if (fs.existsSync(sourcePath)) {
-              fs.copyFileSync(sourcePath, destPath);
-              console.log(`File saved to both uploads and attached_assets: ${filename}`);
-            }
-          } catch (copyError) {
-            console.error(`Error copying file to attached_assets: ${copyError}`);
-          }
-        }, 100);
-      }
-      
-      cb(err, filename);
-    };
-    
-    fileCallback(null, uniqueFilename);
+    console.log(`Multer generating filename: ${uniqueFilename}`);
+    cb(null, uniqueFilename);
   }
 });
 
@@ -7883,6 +7860,16 @@ Respond in JSON format:
         });
         
         console.log(`Database record created successfully with ID: ${newImage.id}`);
+        
+        // Copy file to attached_assets for persistence across deployments
+        try {
+          const destPath = path.join(attachedAssetsDir, filename);
+          fs.copyFileSync(filePath, destPath);
+          console.log(`File copied to attached_assets: ${destPath}`);
+        } catch (copyError) {
+          console.error(`Warning: Failed to copy to attached_assets: ${copyError}`);
+          // Don't fail the upload for this - file is already saved and in database
+        }
         
         return res.status(201).json({
           success: true,
