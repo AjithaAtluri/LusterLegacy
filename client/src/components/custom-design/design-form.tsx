@@ -904,6 +904,45 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
   const renderUploadArea = () => {
     return (
       <div className="mt-2 relative">
+        {/* Display inspiration image if present */}
+        {previewUrl && !uploadedImages.some(file => URL.createObjectURL(file) === previewUrl) && (
+          <div className="mb-4">
+            <h4 className="text-sm font-medium mb-2 font-montserrat flex items-center">
+              <Sparkles className="h-4 w-4 mr-2 text-primary" />
+              Inspiration Reference
+            </h4>
+            <div className="relative flex flex-col items-center border border-primary/30 rounded-lg bg-primary/5 p-3 w-[150px]">
+              <div className="relative w-full h-[100px] mb-2">
+                <img 
+                  src={previewUrl} 
+                  alt="Inspiration reference"
+                  className="w-full h-full object-cover rounded-md"
+                />
+                <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-sm">
+                  <Sparkles className="h-3 w-3" />
+                </div>
+              </div>
+              <div className="w-full text-center">
+                <p className="font-montserrat text-xs font-medium text-foreground">
+                  Inspiration Image
+                </p>
+                <p className="font-montserrat text-xs text-primary/70">
+                  Reference for design
+                </p>
+              </div>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                className="absolute -top-2 -left-2 h-6 w-6 rounded-full bg-background border" 
+                onClick={() => setPreviewUrl(null)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+        
         {/* Display all uploaded images */}
         {uploadedImages.length > 0 && (
           <div className="mb-4">
