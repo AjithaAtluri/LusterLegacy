@@ -38,10 +38,10 @@ export default function InspirationManager() {
       const response = await apiRequest('/api/admin/inspiration/validate', 'POST');
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: 'Validation Complete',
-        description: data.message,
+        description: data.message || 'Gallery validation completed',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/inspiration-gallery'] });
       setIsValidating(false);
@@ -63,10 +63,10 @@ export default function InspirationManager() {
       const response = await apiRequest('/api/admin/inspiration/populate', 'POST');
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: 'Gallery Populated',
-        description: data.message,
+        description: data.message || 'Gallery populated successfully',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/inspiration-gallery'] });
       setIsPopulating(false);
