@@ -21,29 +21,7 @@ interface GalleryImage {
   description?: string;
 }
 
-// Import fallback images
-import rubyLeafPendant from "@/assets/ruby-leaf-pendant.png";
-import pearlNecklaceSet from "@/assets/pearl-necklace-set.png";
-import polkiPendantNecklace from "@/assets/polki-pendant-necklace.png";
-import diamondBracelet from "@/assets/diamond-bracelet.jpeg";
-import emeraldRing from "@/assets/emerald-ring.jpeg";
-import goldEarrings from "@/assets/gold-earrings.jpeg";
-import emeraldNecklace from "@/assets/emerald-necklace.png";
-import jewelry1 from "@/assets/jewelry1.jpeg";
-import jewelry2 from "@/assets/jewelry2.jpeg";
-import jewelry3 from "@/assets/jewelry3.jpeg";
-import jewelry4 from "@/assets/jewelry4.jpeg";
-import jewelry5 from "@/assets/jewelry5.jpeg";
-import jewelry6 from "@/assets/jewelry6.jpeg";
-import jewelry7 from "@/assets/jewelry7.jpeg";
-import jewelry8 from "@/assets/jewelry8.jpeg";
-import jewelry9 from "@/assets/jewelry9.jpeg";
-import jewelry10 from "@/assets/jewelry10.jpeg";
-import jewelry11 from "@/assets/jewelry11.jpeg";
-import jewelry12 from "@/assets/jewelry12.jpeg";
-import jewelry13 from "@/assets/jewelry13.jpeg";
-import jewelry14 from "@/assets/jewelry14.jpeg";
-import jewelry15 from "@/assets/jewelry15.jpeg";
+
 
 export default function Inspiration() {
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -94,42 +72,14 @@ export default function Inspiration() {
     },
   });
   
-  // Fallback gallery images data
-  const galleryImages: GalleryImage[] = [
-    {
-      id: 1,
-      src: rubyLeafPendant,
-      alt: "Carved ruby leaf pendant in gold setting",
-      title: "Autumn Ruby Leaf",
-      description: "An exquisite carved ruby leaf pendant set in a luxurious 18K gold bezel, showcasing the natural beauty of the gemstone with its translucent quality."
-    },
-    {
-      id: 2,
-      src: pearlNecklaceSet,
-      alt: "Multi-strand pearl necklace with diamond accents",
-      title: "Royal Pearl Cascade",
-      description: "A stunning multi-strand pearl necklace featuring elegant gold and diamond spacers, creating a luxurious collar effect perfect for special occasions."
-    },
-    // More fallback images...
-    {
-      id: 22,
-      src: jewelry15,
-      alt: "Star motif diamond and sapphire pendant",
-      title: "Celestial Wonder",
-      description: "A celestial star motif pendant with diamonds and sapphires that captures the mystery and beauty of the night sky in an expertly crafted piece of fine jewelry."
-    }
-  ];
-  
-  // Transform API images to match GalleryImage format or use fallback data
-  const images: GalleryImage[] = apiImages?.length > 0 
-    ? apiImages.map((img: any) => ({
-        id: img.id,
-        src: img.imageUrl,
-        alt: img.title || 'Inspiration image',
-        title: img.title || 'Jewelry piece',
-        description: img.description
-      }))
-    : galleryImages;
+  // Transform API images to GalleryImage format
+  const images: GalleryImage[] = apiImages?.map((img: any) => ({
+    id: img.id,
+    src: img.imageUrl,
+    alt: img.title || 'Inspiration image',
+    title: img.title || 'Jewelry piece',
+    description: img.description
+  })) || [];
   
   // Upload mutation
   const uploadMutation = useMutation({
@@ -402,6 +352,26 @@ export default function Inspiration() {
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : images.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <Image className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-playfair text-xl font-semibold mb-2">No Inspiration Images</h3>
+            <p className="text-muted-foreground mb-4 max-w-md">
+              There are no inspiration images available at the moment. Check back later for new additions to our gallery.
+            </p>
+            {user && user.role === 'admin' && (
+              <Button 
+                variant="default"
+                onClick={() => setUploadOpen(true)}
+                className="bg-primary hover:bg-primary/90 text-white"
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add First Inspiration Image
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
