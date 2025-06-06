@@ -2558,6 +2558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const country = extractField('country', rawData) || null;
         const metalType = extractField('metalType', rawData) || '';
         const notes = extractField('notes', rawData) || null;
+        const inspirationImageUrl = extractField('inspirationImageUrl', rawData) || null;
         
         // Extract primaryStones as array 
         let primaryStones = extractArrayField('primaryStones', rawData);
@@ -2570,11 +2571,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Get the main image URL and additional image URLs
         // Use the first image from additionalImages as main image if mainImage is not available
+        // If no uploaded files, use inspiration image URL
         let mainImageUrl = '';
         if (mainImage) {
           mainImageUrl = `/uploads/${mainImage.filename}`;
         } else if (additionalImages.length > 0) {
           mainImageUrl = `/uploads/${additionalImages[0].filename}`;
+        } else if (inspirationImageUrl) {
+          mainImageUrl = inspirationImageUrl;
         }
         
         // Get all additional image URLs (including the first one that might have been used as main image)
