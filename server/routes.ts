@@ -3901,6 +3901,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   /**
+   * Inspiration Gallery management routes
+   */
+  // Validate and fix inspiration gallery images
+  app.post('/api/admin/inspiration/validate', validateAdmin, async (req, res) => {
+    try {
+      const { inspirationManager } = await import('./utils/inspiration-manager');
+      const result = await inspirationManager.validateAndFixImages();
+      res.json({
+        success: true,
+        message: `Validation complete: ${result.fixed} images fixed, ${result.removed} items removed`,
+        ...result
+      });
+    } catch (error) {
+      console.error('Error validating inspiration images:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error validating inspiration images',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Populate inspiration gallery from products
+  app.post('/api/admin/inspiration/populate', validateAdmin, async (req, res) => {
+    try {
+      const { inspirationManager } = await import('./utils/inspiration-manager');
+      const count = await inspirationManager.populateFromProducts();
+      res.json({
+        success: true,
+        message: `Successfully populated ${count} inspiration items from product images`,
+        count
+      });
+    } catch (error) {
+      console.error('Error populating inspiration gallery:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error populating inspiration gallery',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  /**
    * Chatbot API routes
    * These endpoints are accessible to both logged-in and non-logged-in users
    */
