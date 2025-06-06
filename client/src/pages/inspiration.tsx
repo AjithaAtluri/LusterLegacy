@@ -413,11 +413,25 @@ export default function Inspiration() {
                       
                       <div className="pt-4 border-t border-border">
                         <p className="text-sm mb-4">Inspired by this piece?</p>
-                        <Link href="/design-consultation">
-                          <Button className="w-full">
-                            Start Your Custom Design <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        </Link>
+                        <Button 
+                          className="w-full" 
+                          onClick={() => {
+                            // Store inspiration image in session storage
+                            const inspirationData = {
+                              imageUrl: image.src,
+                              title: image.title,
+                              description: image.description || '',
+                              timestamp: Date.now()
+                            };
+                            sessionStorage.setItem('inspirationImage', JSON.stringify(inspirationData));
+                            console.log('Stored inspiration image for custom design:', inspirationData);
+                            
+                            // Navigate to custom design page
+                            window.location.href = '/custom-design';
+                          }}
+                        >
+                          Start Your Custom Design <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -433,11 +447,26 @@ export default function Inspiration() {
           <p className="text-muted-foreground mb-6">
             Our design consultants are ready to bring your vision to life. Begin your custom jewelry journey today.
           </p>
-          <Link href="/design-consultation">
-            <Button size="lg" className="rounded-full px-8">
-              Start Custom Design Process <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <Button 
+            size="lg" 
+            className="rounded-full px-8"
+            onClick={() => {
+              // Store general inspiration context in session storage
+              const inspirationData = {
+                imageUrl: null,
+                title: 'General Inspiration',
+                description: 'Inspired by the gallery collection',
+                timestamp: Date.now()
+              };
+              sessionStorage.setItem('inspirationImage', JSON.stringify(inspirationData));
+              console.log('Stored general inspiration context for custom design:', inspirationData);
+              
+              // Navigate to custom design page
+              window.location.href = '/custom-design';
+            }}
+          >
+            Start Custom Design Process <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </div>
     </>

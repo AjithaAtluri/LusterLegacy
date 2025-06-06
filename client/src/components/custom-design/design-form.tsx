@@ -191,10 +191,34 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
       form.setValue("fullName", user.name || user.loginID);
       form.setValue("email", user.email);
       
-      // First, always check session storage
+      // First, always check session storage for form data and inspiration images
       console.log("DesignForm - Checking for saved form data in sessionStorage...");
       const savedFormData = sessionStorage.getItem('designFormData');
       console.log("DesignForm - savedFormData exists:", !!savedFormData);
+      
+      // Check for inspiration image from inspiration gallery
+      const inspirationImageData = sessionStorage.getItem('inspirationImage');
+      if (inspirationImageData) {
+        try {
+          const parsedData = JSON.parse(inspirationImageData);
+          console.log("DesignForm - Found inspiration image from session storage:", parsedData);
+          
+          // Pre-fill notes with inspiration reference
+          const inspirationNote = `Inspiration: ${parsedData.title}\n${parsedData.description ? parsedData.description + '\n' : ''}`;
+          const existingNotes = form.getValues("notes") || "";
+          if (!existingNotes.includes("Inspiration:")) {
+            form.setValue("notes", inspirationNote + existingNotes);
+          }
+          
+          // Display the inspiration image
+          setPreviewUrl(parsedData.imageUrl);
+          
+          // Clear the session storage after using it
+          sessionStorage.removeItem('inspirationImage');
+        } catch (error) {
+          console.error("DesignForm - Error parsing inspiration image data:", error);
+        }
+      }
       
       // Only check for URL query parameters if session storage is empty
       if (!savedFormData) {
