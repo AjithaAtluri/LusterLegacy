@@ -115,6 +115,20 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static files for uploads directory (for images)
+  const uploadsPath = path.join(process.cwd(), 'uploads');
+  if (fs.existsSync(uploadsPath)) {
+    app.use('/uploads', express.static(uploadsPath));
+    console.log('Static file serving enabled for uploads directory');
+  }
+
+  // Serve static files for attached_assets directory (for persistent storage)
+  const attachedAssetsPath = path.join(process.cwd(), 'attached_assets');
+  if (fs.existsSync(attachedAssetsPath)) {
+    app.use('/attached_assets', express.static(attachedAssetsPath));
+    console.log('Static file serving enabled for attached_assets directory');
+  }
+
   // Test route that returns stone types directly without any authentication
   // This is ONLY for debugging authentication issues
   app.get('/api/debug/stone-types', async (_req, res) => {
