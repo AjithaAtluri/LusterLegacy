@@ -81,7 +81,7 @@ export const validateAdmin = async (
     }
     
     // Check if the user is already authenticated and is an admin via session
-    if (req.isAuthenticated() && req.user && (req.user.role === 'admin' || req.user.role === 'limited-admin')) {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'limited-admin')) {
       console.log(`ADMIN ACCESS - USER AUTHENTICATED for ${endpoint} - ${req.user.loginID || req.user.username}`);
       
       // Also set the admin cookie to ensure both auth systems stay in sync
@@ -180,7 +180,7 @@ export const validateAdmin = async (
     // If this is an emergency check, provide more detailed information
     if (isEmergencyCheck) {
       console.log(`ADMIN ACCESS - EMERGENCY CHECK DETAILS:`, {
-        isAuthenticated: req.isAuthenticated?.() || false,
+        hasPassportAuth: false, // Passport authentication removed
         hasUser: !!req.user,
         userRole: req.user?.role || 'none',
         hasCookies: !!req.cookies,
