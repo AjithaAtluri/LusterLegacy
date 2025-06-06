@@ -28,7 +28,6 @@ export default function Inspiration() {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-  const [alt, setAlt] = useState("");
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,7 +53,6 @@ export default function Inspiration() {
     setImage(null);
     setImagePreview(null);
     setTitle("");
-    setAlt("");
     setUploading(false);
   };
 
@@ -143,7 +141,7 @@ export default function Inspiration() {
     const formData = new FormData();
     formData.append('image', image);
     formData.append('title', title);
-    formData.append('alt', alt);
+    formData.append('alt', title);
 
     
     uploadMutation.mutate(formData);
@@ -302,16 +300,7 @@ export default function Inspiration() {
                     />
                   </div>
                   
-                  <div className="grid gap-2">
-                    <Label htmlFor="alt">Alt Text</Label>
-                    <Input 
-                      id="alt"
-                      value={alt}
-                      onChange={(e) => setAlt(e.target.value)}
-                      placeholder="Enter image alt text"
-                      required
-                    />
-                  </div>
+
                   
 
                   
@@ -319,7 +308,7 @@ export default function Inspiration() {
                     <Button type="button" variant="outline" onClick={() => setUploadOpen(false)} disabled={uploading}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={!image || uploading}>
+                    <Button type="submit" disabled={!image || !title || uploading}>
                       {uploading ? (
                         <>
                           <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
