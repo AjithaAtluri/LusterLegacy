@@ -7782,10 +7782,53 @@ Respond in JSON format:
   // Admin: Upload inspiration image with file
   app.post('/api/inspiration-images', upload.single('image'), async (req, res) => {
     try {
-      // Admin authentication check
-      if (!req.isAuthenticated() || req.user?.role !== 'admin') {
-        return res.status(401).json({ message: 'Unauthorized - Admin access required' });
+      console.log('POST /api/inspiration-images - Starting admin validation');
+      
+      // Check for authentication through both regular user sessions and admin cookies
+      let isAuthenticated = false;
+      let user = req.user;
+      
+      // First check if passport has authenticated the user
+      if (req.user && (req.user.role === 'admin' || req.user.role === 'limited-admin')) {
+        isAuthenticated = true;
+        console.log('User authenticated via passport session. ID:', req.user.id, 'Username:', req.user.username);
+      } 
+      // If not, check for admin cookie authentication
+      else if (req.cookies && req.cookies.admin_id) {
+        const adminId = parseInt(req.cookies.admin_id);
+        if (!isNaN(adminId)) {
+          console.log('Attempting admin cookie authentication for ID:', adminId);
+          try {
+            const adminUser = await storage.getUser(adminId);
+            if (adminUser && adminUser.role === 'admin') {
+              isAuthenticated = true;
+              user = adminUser;
+              console.log('User authenticated via admin cookie. ID:', adminUser.id, 'Username:', adminUser.username);
+            } else {
+              console.log('Admin user not found or not admin role. Found:', adminUser ? adminUser.role : 'no user');
+            }
+          } catch (error) {
+            console.error('Error authenticating via admin cookie:', error);
+          }
+        }
       }
+      
+      if (!isAuthenticated || !user) {
+        console.log('POST /api/inspiration-images - Admin validation failed', {
+          hasUser: !!req.user,
+          userRole: req.user?.role || 'none',
+          isAuthenticated: req.isAuthenticated?.() || false,
+          hasCookies: !!req.cookies,
+          adminIdCookie: req.cookies?.admin_id || 'none',
+        });
+        
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
+      console.log('POST /api/inspiration-images - Admin validation successful', {
+        userId: user.id,
+        username: user.username || user.loginID
+      });
 
       const { title, alt } = req.body;
       
