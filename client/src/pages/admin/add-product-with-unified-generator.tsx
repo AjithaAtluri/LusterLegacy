@@ -331,17 +331,6 @@ export default function AddProduct() {
       localStorage.removeItem('secondaryStonesLoadedFlag');
     };
   }, []);
-        
-        // Store product type in state (for later use with productTypes data)
-        if (parsedInputs.productType) {
-          setProductType(parsedInputs.productType);
-          console.log("Saved product type from localStorage:", parsedInputs.productType);
-        }
-      } catch (error) {
-        console.error('Error parsing saved inputs from localStorage:', error);
-      }
-    }
-  }, [form]);
   
   // Third effect to handle secondary stone type (depends on stoneTypes being loaded)
   useEffect(() => {
