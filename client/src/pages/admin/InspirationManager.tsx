@@ -35,9 +35,7 @@ export default function InspirationManager() {
   const validateMutation = useMutation({
     mutationFn: async () => {
       setIsValidating(true);
-      const response = await apiRequest('/api/admin/inspiration/validate', {
-        method: 'POST',
-      });
+      const response = await apiRequest('/api/admin/inspiration/validate', 'POST');
       return response;
     },
     onSuccess: (data) => {
@@ -62,9 +60,7 @@ export default function InspirationManager() {
   const populateMutation = useMutation({
     mutationFn: async () => {
       setIsPopulating(true);
-      const response = await apiRequest('/api/admin/inspiration/populate', {
-        method: 'POST',
-      });
+      const response = await apiRequest('/api/admin/inspiration/populate', 'POST');
       return response;
     },
     onSuccess: (data) => {
@@ -88,9 +84,7 @@ export default function InspirationManager() {
   // Delete inspiration item mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/inspiration-gallery/${id}`, {
-        method: 'DELETE',
-      });
+      return await apiRequest(`/api/inspiration-gallery/${id}`, 'DELETE');
     },
     onSuccess: () => {
       toast({
@@ -111,10 +105,7 @@ export default function InspirationManager() {
   // Toggle featured status mutation
   const toggleFeaturedMutation = useMutation({
     mutationFn: async ({ id, featured }: { id: number; featured: boolean }) => {
-      return await apiRequest(`/api/inspiration-gallery/${id}`, {
-        method: 'PATCH',
-        body: { featured },
-      });
+      return await apiRequest(`/api/inspiration-gallery/${id}`, 'PATCH', { featured });
     },
     onSuccess: () => {
       toast({

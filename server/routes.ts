@@ -3952,7 +3952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updateData = req.body;
-      const updatedItem = await storage.updateInspirationGalleryItem(id, updateData);
+      const updatedItem = await storage.updateInspirationItem(id, updateData);
       
       if (!updatedItem) {
         return res.status(404).json({ message: 'Inspiration item not found' });
@@ -3973,7 +3973,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid inspiration item ID' });
       }
 
-      const success = await storage.deleteInspirationGalleryItem(id);
+      const success = await storage.deleteInspirationItem(id);
       
       if (!success) {
         return res.status(404).json({ message: 'Inspiration item not found or could not be deleted' });
