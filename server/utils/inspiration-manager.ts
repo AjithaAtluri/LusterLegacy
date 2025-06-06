@@ -129,9 +129,16 @@ export class InspirationManager {
         description: `Exquisite craftsmanship showcasing the beauty of ${product.category || 'fine jewelry'}`,
         imageUrl: product.imageUrl!,
         category: this.mapProductCategory(product.category),
-        tags: JSON.stringify(this.generateTags(product.name, product.category)),
+        tags: this.generateTags(product.name, product.category),
         featured: index < 4 // Make first 4 items featured
-      }));
+      })) as Array<{
+        title: string;
+        description: string;
+        imageUrl: string;
+        category: string;
+        tags: string[];
+        featured: boolean;
+      }>;
 
       await db.insert(inspirationGallery).values(inspirationItems);
       

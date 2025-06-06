@@ -3943,6 +3943,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update inspiration gallery item
+  app.patch('/api/inspiration-gallery/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid inspiration item ID' });
+      }
+
+      const updateData = req.body;
+      const updatedItem = await storage.updateInspirationGalleryItem(id, updateData);
+      
+      if (!updatedItem) {
+        return res.status(404).json({ message: 'Inspiration item not found' });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating inspiration item:', error);
+      res.status(500).json({ message: 'Error updating inspiration item' });
+    }
+  });
+
+  // Delete inspiration gallery item
+  app.delete('/api/inspiration-gallery/:id', validateAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid inspiration item ID' });
+      }
+
+      const success = await storage.deleteInspirationGalleryItem(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: 'Inspiration item not found or could not be deleted' });
+      }
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error('Error deleting inspiration item:', error);
+      res.status(500).json({ message: 'Error deleting inspiration item' });
+    }
+  });
+
   /**
    * Chatbot API routes
    * These endpoints are accessible to both logged-in and non-logged-in users
