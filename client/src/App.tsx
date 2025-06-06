@@ -17,6 +17,7 @@ import { SessionMonitor } from "@/components/utils/SessionMonitor";
 const Home = lazy(() => import("@/pages/home"));
 const Collections = lazy(() => import("@/pages/collections"));
 const CustomDesign = lazy(() => import("@/pages/custom-design"));
+const DesignConsultation = lazy(() => import("@/pages/design-consultation"));
 const About = lazy(() => import("@/pages/about"));
 const Contact = lazy(() => import("@/pages/contact"));
 const ClientStories = lazy(() => import("@/pages/client-stories"));
@@ -153,6 +154,7 @@ function App() {
                   <Route path="/" component={Home} />
                   <Route path="/collections" component={Collections} />
                   <Route path="/custom-design" component={CustomDesign} />
+                  <Route path="/design-consultation" component={DesignConsultation} />
                   <Route path="/about" component={About} />
                   <Route path="/contact" component={Contact} />
                   <Route path="/client-stories" component={ClientStories} />
