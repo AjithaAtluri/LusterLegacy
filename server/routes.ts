@@ -7803,7 +7803,7 @@ Respond in JSON format:
         return res.status(401).json({ message: 'Unauthorized - Admin access required' });
       }
 
-      const { title, alt, description } = req.body;
+      const { title, alt } = req.body;
       
       if (!req.file) {
         return res.status(400).json({ message: 'No image file provided' });
@@ -7820,7 +7820,7 @@ Respond in JSON format:
       // Save to database using the inspiration_gallery table
       const newImage = await storage.createInspirationItem({
         title,
-        description: description || '',
+        description: '',  // Always empty description
         imageUrl,
         category: 'general',  // Default category
         tags: [],  // Empty tags array as default

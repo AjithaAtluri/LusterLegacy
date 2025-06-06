@@ -29,7 +29,6 @@ export default function Inspiration() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [alt, setAlt] = useState("");
-  const [description, setDescription] = useState("");
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -56,7 +55,6 @@ export default function Inspiration() {
     setImagePreview(null);
     setTitle("");
     setAlt("");
-    setDescription("");
     setUploading(false);
   };
 
@@ -146,7 +144,7 @@ export default function Inspiration() {
     formData.append('image', image);
     formData.append('title', title);
     formData.append('alt', alt);
-    formData.append('description', description);
+
     
     uploadMutation.mutate(formData);
   };
@@ -315,16 +313,7 @@ export default function Inspiration() {
                     />
                   </div>
                   
-                  <div className="grid gap-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea 
-                      id="description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Enter detailed description"
-                      required
-                    />
-                  </div>
+
                   
                   <DialogFooter className="mt-4">
                     <Button type="button" variant="outline" onClick={() => setUploadOpen(false)} disabled={uploading}>
