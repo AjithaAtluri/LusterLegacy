@@ -7855,25 +7855,51 @@ Respond in JSON format:
         return res.status(400).json({ message: 'Title and alt text are required' });
       }
       
-      // Process and save the image
+      // Process and save the image with validation
       const filename = req.file.filename;
       const imageUrl = `/uploads/${filename}`;
+      const filePath = path.join(uploadDir, filename);
       
-      // Save to database using the inspiration_gallery table
-      const newImage = await storage.createInspirationItem({
-        title,
-        description: '',  // Always empty description
-        imageUrl,
-        category: 'general',  // Default category
-        tags: [],  // Empty tags array as default
-        featured: false  // Not featured by default
-      });
+      // Verify file was actually saved to disk before creating database record
+      if (!fs.existsSync(filePath)) {
+        console.error(`File upload failed - file not found at: ${filePath}`);
+        return res.status(500).json({ 
+          message: 'File upload failed - file not saved to disk',
+          error: 'FILE_SAVE_ERROR'
+        });
+      }
       
-      return res.status(201).json({
-        success: true,
-        message: 'Inspiration image uploaded successfully',
-        image: newImage
-      });
+      console.log(`File successfully saved to: ${filePath} (${fs.statSync(filePath).size} bytes)`);
+      
+      try {
+        // Save to database using the inspiration_gallery table
+        const newImage = await storage.createInspirationItem({
+          title,
+          description: '',  // Always empty description
+          imageUrl,
+          category: 'general',  // Default category
+          tags: [],  // Empty tags array as default
+          featured: false  // Not featured by default
+        });
+        
+        console.log(`Database record created successfully with ID: ${newImage.id}`);
+        
+        return res.status(201).json({
+          success: true,
+          message: 'Inspiration image uploaded successfully',
+          image: newImage
+        });
+      } catch (dbError) {
+        // If database save fails, clean up the uploaded file
+        console.error('Database save failed, cleaning up uploaded file:', dbError);
+        try {
+          fs.unlinkSync(filePath);
+          console.log('Orphaned file cleaned up successfully');
+        } catch (cleanupError) {
+          console.error('Failed to clean up orphaned file:', cleanupError);
+        }
+        throw dbError; // Re-throw to be caught by outer catch
+      }
       
     } catch (error) {
       console.error('Error uploading inspiration image:', error);
