@@ -58,9 +58,9 @@ export default function Inspiration() {
 
   // Fetch inspiration images from API
   const { data: apiImages, isLoading } = useQuery({
-    queryKey: ['/api/inspiration'],
+    queryKey: ['/api/inspiration-images'],
     queryFn: async () => {
-      const response = await fetch('/api/inspiration');
+      const response = await fetch('/api/inspiration-images');
       if (!response.ok) {
         throw new Error('Failed to fetch inspiration images');
       }
@@ -89,7 +89,7 @@ export default function Inspiration() {
       
       console.log('Uploading new inspiration image with headers:', headers);
       
-      const response = await fetch('/api/inspiration', {
+      const response = await fetch('/api/inspiration-images', {
         method: 'POST',
         headers, // No Content-Type as browser sets it automatically with boundary for FormData
         body: formData,
@@ -109,7 +109,7 @@ export default function Inspiration() {
         description: "The inspiration image was added successfully",
         variant: "default",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/inspiration'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inspiration-images'] });
       resetForm();
       setUploadOpen(false);
     },
@@ -180,7 +180,7 @@ export default function Inspiration() {
       });
       
       // Invalidate and refetch the inspiration images data
-      queryClient.invalidateQueries({ queryKey: ['/api/inspiration'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inspiration-images'] });
     },
     onError: (error: Error) => {
       toast({
