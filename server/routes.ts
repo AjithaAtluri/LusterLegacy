@@ -2481,10 +2481,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mainImage = files?.designImage?.[0];
       const additionalImages = files?.designImages || [];
       
-      // Check if we have at least one image
-      if (!mainImage && additionalImages.length === 0) {
-        console.error('No design images uploaded');
-        return res.status(400).json({ message: 'No image files uploaded' });
+      // Parse the data to check for inspiration image URL
+      let hasInspirationImage = false;
+      if (req.body.data) {
+        try {
+          const dataString = typeof req.body.data === 'string' ? req.body.data : JSON.stringify(req.body.data);
+          hasInspirationImage = dataString.includes('inspirationImageUrl');
+        } catch (e) {
+          // Continue with normal validation
+        }
+      }
+
+      // Check if we have at least one image (uploaded file or inspiration URL)
+      if (!mainImage && additionalImages.length === 0 && !hasInspirationImage) {
+        console.error('No design images uploaded or inspiration image provided');
+        return res.status(400).json({ message: 'No image files uploaded or inspiration image provided' });
       }
 
       // Check if user is authenticated

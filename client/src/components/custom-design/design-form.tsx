@@ -613,7 +613,7 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
       return;
     }
     
-    if (uploadedImages.length === 0) {
+    if (uploadedImages.length === 0 && !previewUrl) {
       toast({
         title: "Image required",
         description: "Please upload at least one reference image for your design.",
@@ -712,6 +712,12 @@ export default function DesignForm({ onFormChange, formState }: DesignFormProps)
       // Set primaryStone field for backward compatibility if not already set
       if (!dataToSend.primaryStone && dataToSend.primaryStones.length > 0) {
         dataToSend.primaryStone = dataToSend.primaryStones[0];
+      }
+      
+      // Add inspiration image URL if present and no uploaded files
+      if (previewUrl && uploadedImages.length === 0) {
+        dataToSend.inspirationImageUrl = previewUrl;
+        console.log("Including inspiration image URL:", previewUrl);
       }
       
       // Convert the entire object to a JSON string
