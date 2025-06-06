@@ -377,11 +377,7 @@ export default function Inspiration() {
                   
                   <div className="p-4">
                     <h3 className="font-playfair text-xl font-semibold mb-2">{image.title}</h3>
-                    {image.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                        {image.description}
-                      </p>
-                    )}
+
                     
                     <div className="flex items-center justify-between">
                       <DialogTrigger asChild>
@@ -424,11 +420,7 @@ export default function Inspiration() {
                     
                     <div>
                       <h3 className="font-playfair text-2xl font-semibold mb-4">{image.title}</h3>
-                      {image.description && (
-                        <p className="text-muted-foreground mb-6">
-                          {image.description}
-                        </p>
-                      )}
+
                       
                       <div className="pt-4 border-t border-border">
                         <p className="text-sm mb-4">Inspired by this piece?</p>
