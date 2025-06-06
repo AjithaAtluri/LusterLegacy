@@ -12,8 +12,8 @@ interface SessionMonitorProps {
  * This component is intended to be included at the application root level.
  */
 export function SessionMonitor({
-  idleTimeout = 10 * 60 * 1000, // 10 minutes
-  warningTime = 60 * 1000, // 1 minute
+  idleTimeout = 60 * 60 * 1000, // 60 minutes (1 hour)
+  warningTime = 5 * 60 * 1000, // 5 minutes warning
 }: SessionMonitorProps) {
   const { user } = useAuth();
   const [isActive, setIsActive] = useState(false);

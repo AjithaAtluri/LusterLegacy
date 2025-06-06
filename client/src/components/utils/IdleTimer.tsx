@@ -9,9 +9,9 @@ interface IdleTimerProps {
 }
 
 export function IdleTimer({
-  timeout = 10 * 60 * 1000, // Default timeout: 10 minutes
+  timeout = 60 * 60 * 1000, // Default timeout: 60 minutes (1 hour)
   onIdle,
-  warningTime = 60 * 1000, // Default warning time: 1 minute before timeout
+  warningTime = 5 * 60 * 1000, // Default warning time: 5 minutes before timeout
 }: IdleTimerProps) {
   const [isIdle, setIsIdle] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
@@ -38,7 +38,7 @@ export function IdleTimer({
       // Show warning toast
       toast({
         title: "Session Expiring Soon",
-        description: "You'll be logged out in 1 minute due to inactivity",
+        description: "You'll be logged out in 5 minutes due to inactivity",
         variant: "destructive",
         duration: 30000, // 30 seconds
       });
