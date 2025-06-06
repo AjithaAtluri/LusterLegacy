@@ -7605,28 +7605,7 @@ Respond in JSON format:
    */
   // Legacy endpoint removed - use /api/inspiration-images instead
 
-  // Get featured inspiration gallery items
-  app.get('/api/inspiration/featured', async (_req, res) => {
-    try {
-      const featuredItems = await storage.getFeaturedInspirationItems();
-      res.json(featuredItems);
-    } catch (error) {
-      console.error('Error fetching featured inspiration gallery items:', error);
-      res.status(500).json({ message: 'Failed to fetch featured inspiration gallery items' });
-    }
-  });
-
-  // Get inspiration gallery items by category
-  app.get('/api/inspiration/category/:category', async (req, res) => {
-    try {
-      const { category } = req.params;
-      const items = await storage.getInspirationItemsByCategory(category);
-      res.json(items);
-    } catch (error) {
-      console.error('Error fetching inspiration gallery items by category:', error);
-      res.status(500).json({ message: 'Failed to fetch inspiration gallery items by category' });
-    }
-  });
+  // Removed unused featured and category endpoints - use /api/inspiration-images instead
 
   // Admin: Create new inspiration gallery item
   app.post('/api/admin/inspiration', async (req, res) => {
