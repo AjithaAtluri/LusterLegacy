@@ -48,17 +48,12 @@ import { analyzeImage } from "./ai-image-analyzer";
 // USD to INR conversion rate - must match the rate in price-calculator.ts
 const USD_TO_INR_RATE = 83;
 
-// Set up multer for file uploads - using both /uploads and /attached_assets for persistence
-// attached_assets is part of source control and will persist between deployments
+// Set up multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
-const attachedAssetsDir = path.join(process.cwd(), 'attached_assets');
 
-// Ensure both directories exist
+// Ensure upload directory exists
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-}
-if (!fs.existsSync(attachedAssetsDir)) {
-  fs.mkdirSync(attachedAssetsDir, { recursive: true });
 }
 
 // Create a symbolic link from 'public/uploads' to 'uploads' if it doesn't exist
@@ -97,13 +92,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (fs.existsSync(uploadsPath)) {
     app.use('/uploads', express.static(uploadsPath));
     console.log('Static file serving enabled for uploads directory');
-  }
-
-  // Serve static files for attached_assets directory (for persistent storage)
-  const attachedAssetsPath = path.join(process.cwd(), 'attached_assets');
-  if (fs.existsSync(attachedAssetsPath)) {
-    app.use('/attached_assets', express.static(attachedAssetsPath));
-    console.log('Static file serving enabled for attached_assets directory');
   }
 
   // Test route that returns stone types directly without any authentication
@@ -7860,16 +7848,6 @@ Respond in JSON format:
         });
         
         console.log(`Database record created successfully with ID: ${newImage.id}`);
-        
-        // Copy file to attached_assets for persistence across deployments
-        try {
-          const destPath = path.join(attachedAssetsDir, filename);
-          fs.copyFileSync(filePath, destPath);
-          console.log(`File copied to attached_assets: ${destPath}`);
-        } catch (copyError) {
-          console.error(`Warning: Failed to copy to attached_assets: ${copyError}`);
-          // Don't fail the upload for this - file is already saved and in database
-        }
         
         return res.status(201).json({
           success: true,
