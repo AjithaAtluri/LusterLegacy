@@ -7603,16 +7603,7 @@ Respond in JSON format:
   /**
    * Inspiration Gallery Routes
    */
-  // Get all inspiration gallery items
-  app.get('/api/inspiration', async (_req, res) => {
-    try {
-      const inspirationItems = await storage.getAllInspirationItems();
-      res.json(inspirationItems);
-    } catch (error) {
-      console.error('Error fetching inspiration gallery items:', error);
-      res.status(500).json({ message: 'Failed to fetch inspiration gallery items' });
-    }
-  });
+  // Legacy endpoint removed - use /api/inspiration-images instead
 
   // Get featured inspiration gallery items
   app.get('/api/inspiration/featured', async (_req, res) => {
