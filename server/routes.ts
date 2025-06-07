@@ -19,7 +19,7 @@ import {
   insertUserSchema,
   insertMetalTypeSchema,
   insertStoneTypeSchema,
-  insertInspirationGallerySchema,
+
   insertProductTypeSchema,
   insertCustomizationRequestSchema,
   insertCustomizationRequestCommentSchema,
