@@ -7848,21 +7848,45 @@ Respond in JSON format:
         return res.status(400).json({ message: 'Title and alt text are required' });
       }
       
-      // Process and save the image with validation
+      // Process and save the image with enhanced validation
       const filename = req.file.filename;
       const imageUrl = `/uploads/${filename}`;
       const filePath = path.join(uploadDir, filename);
       
-      // Verify file was actually saved to disk before creating database record
-      if (!fs.existsSync(filePath)) {
-        console.error(`File upload failed - file not found at: ${filePath}`);
-        return res.status(500).json({ 
-          message: 'File upload failed - file not saved to disk',
-          error: 'FILE_SAVE_ERROR'
-        });
+      // Wait for file to be completely written and verify existence
+      let fileExists = false;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!fileExists && attempts < maxAttempts) {
+        try {
+          if (fs.existsSync(filePath)) {
+            // Additional check - ensure file has content and is not still being written
+            const stats = fs.statSync(filePath);
+            if (stats.size > 0) {
+              fileExists = true;
+              console.log(`File successfully saved to: ${filePath} (${stats.size} bytes)`);
+              break;
+            }
+          }
+        } catch (error) {
+          console.log(`File check attempt ${attempts + 1} failed:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          console.log(`File not ready, waiting 100ms... (attempt ${attempts}/${maxAttempts})`);
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
       
-      console.log(`File successfully saved to: ${filePath} (${fs.statSync(filePath).size} bytes)`);
+      if (!fileExists) {
+        console.error(`File upload failed after ${maxAttempts} attempts - file not found at: ${filePath}`);
+        return res.status(500).json({ 
+          message: 'File upload failed - file not saved to disk after multiple attempts',
+          error: 'FILE_SAVE_TIMEOUT'
+        });
+      }
       
       try {
         // Save to database using the inspiration_gallery table
