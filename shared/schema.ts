@@ -751,40 +751,7 @@ export type InsertStoneType = z.infer<typeof insertStoneTypeSchema>;
 
 export type ProductStone = typeof productStones.$inferSelect;
 
-// Inspiration gallery schema
-export const inspirationGallery = pgTable("inspiration_gallery", {
-  id: serial("id").primaryKey(),
-  title: text("title"),
-  description: text("description"),
-  imageUrl: text("image_url").notNull(), // Image URL is the only required field
-  category: text("category"), // "rings", "necklaces", "earrings", "bracelets", etc.
-  tags: json("tags").$type<string[]>().default([]),
-  featured: boolean("featured").default(false),
-  createdAt: timestamp("created_at").defaultNow()
-});
 
-// Base schema for inserting new inspiration items
-export const insertInspirationGallerySchema = createInsertSchema(inspirationGallery)
-  .pick({
-    title: true,
-    description: true,
-    imageUrl: true,
-    category: true,
-    tags: true,
-    featured: true,
-  })
-  .extend({
-    // Ensure imageUrl is still required when creating new items
-    imageUrl: z.string().min(1, "Image URL is required"),
-    // Make other fields optional with empty string defaults
-    title: z.string().optional(),
-    description: z.string().optional(),
-    category: z.string().optional(),
-    tags: z.array(z.string()).default([])
-  });
-
-export type InspirationGalleryItem = typeof inspirationGallery.$inferSelect;
-export type InsertInspirationGalleryItem = z.infer<typeof insertInspirationGallerySchema>;
 
 // Product types schema
 export const productTypes = pgTable("product_types", {
