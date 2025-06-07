@@ -64,11 +64,15 @@ if (!fs.existsSync(path.dirname(publicUploadsDir))) {
 
 const storage_disk = multer.diskStorage({
   destination: (_req, _file, cb) => {
+    // Ensure directory exists before attempting to save
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
     cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
     const uniqueFilename = uuidv4() + path.extname(file.originalname);
-    console.log(`Multer generating filename: ${uniqueFilename}`);
+    console.log(`Multer generating filename: ${uniqueFilename} for file: ${file.originalname}`);
     cb(null, uniqueFilename);
   }
 });
@@ -7853,38 +7857,72 @@ Respond in JSON format:
       const imageUrl = `/uploads/${filename}`;
       const filePath = path.join(uploadDir, filename);
       
-      // Wait for file to be completely written and verify existence
-      let fileExists = false;
+      // Enhanced file validation with integrity checks
+      let fileValidated = false;
       let attempts = 0;
-      const maxAttempts = 10;
+      const maxAttempts = 20;
+      let lastFileSize = 0;
+      let stableSizeChecks = 0;
       
-      while (!fileExists && attempts < maxAttempts) {
+      console.log(`Starting file validation for: ${filePath}`);
+      
+      while (!fileValidated && attempts < maxAttempts) {
         try {
           if (fs.existsSync(filePath)) {
-            // Additional check - ensure file has content and is not still being written
             const stats = fs.statSync(filePath);
+            
             if (stats.size > 0) {
-              fileExists = true;
-              console.log(`File successfully saved to: ${filePath} (${stats.size} bytes)`);
-              break;
+              // Check if file size is stable (not still being written)
+              if (stats.size === lastFileSize) {
+                stableSizeChecks++;
+                if (stableSizeChecks >= 3) {
+                  // File size has been stable for 3 checks, try to read it
+                  try {
+                    const testBuffer = fs.readFileSync(filePath, { flag: 'r' });
+                    if (testBuffer.length === stats.size) {
+                      fileValidated = true;
+                      console.log(`File validation successful: ${filePath} (${stats.size} bytes, stable after ${stableSizeChecks} checks)`);
+                      break;
+                    }
+                  } catch (readError) {
+                    console.log(`File read test failed on attempt ${attempts + 1}:`, readError);
+                    stableSizeChecks = 0; // Reset stability counter
+                  }
+                }
+              } else {
+                stableSizeChecks = 0; // Reset if size changed
+                lastFileSize = stats.size;
+              }
             }
           }
         } catch (error) {
-          console.log(`File check attempt ${attempts + 1} failed:`, error);
+          console.log(`File validation attempt ${attempts + 1} failed:`, error);
         }
         
         attempts++;
         if (attempts < maxAttempts) {
-          console.log(`File not ready, waiting 100ms... (attempt ${attempts}/${maxAttempts})`);
-          await new Promise(resolve => setTimeout(resolve, 100));
+          const waitTime = attempts < 10 ? 100 : 200; // Longer waits after initial attempts
+          console.log(`File validation ongoing... (attempt ${attempts}/${maxAttempts}, size: ${lastFileSize}, stable: ${stableSizeChecks})`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
       
-      if (!fileExists) {
-        console.error(`File upload failed after ${maxAttempts} attempts - file not found at: ${filePath}`);
+      if (!fileValidated) {
+        console.error(`File validation failed after ${maxAttempts} attempts for: ${filePath}`);
+        
+        // Cleanup failed upload
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`Cleaned up failed upload: ${filePath}`);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up failed file:', cleanupError);
+        }
+        
         return res.status(500).json({ 
-          message: 'File upload failed - file not saved to disk after multiple attempts',
-          error: 'FILE_SAVE_TIMEOUT'
+          message: 'File upload validation failed - file could not be properly saved or verified',
+          error: 'FILE_VALIDATION_FAILED'
         });
       }
       
