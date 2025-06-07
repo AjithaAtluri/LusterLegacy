@@ -98,33 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Static file serving enabled for uploads directory');
   }
 
-  // File integrity check on startup - clean orphaned database records
-  console.log('Running file integrity check for inspiration gallery...');
-  try {
-    const inspirationItems = await storage.getAllInspirationItems();
-    let cleanedCount = 0;
-    
-    for (const item of inspirationItems) {
-      if (item.imageUrl && item.imageUrl.startsWith('/uploads/')) {
-        const filename = item.imageUrl.replace('/uploads/', '');
-        const filePath = path.join(uploadsPath, filename);
-        
-        if (!fs.existsSync(filePath)) {
-          console.log(`Cleaning orphaned record: ID ${item.id}, missing file: ${filename}`);
-          await storage.deleteInspirationItem(item.id);
-          cleanedCount++;
-        }
-      }
-    }
-    
-    if (cleanedCount > 0) {
-      console.log(`File integrity check complete - cleaned ${cleanedCount} orphaned records`);
-    } else {
-      console.log('File integrity check complete - no orphaned records found');
-    }
-  } catch (error) {
-    console.error('Error during file integrity check:', error);
-  }
+
 
   // Test route that returns stone types directly without any authentication
   // This is ONLY for debugging authentication issues

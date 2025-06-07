@@ -232,14 +232,7 @@ export interface IStorage {
   updateProductStones(productId: number, stoneTypeIds: number[]): Promise<void>;
   removeProductStone(productId: number, stoneTypeId: number): Promise<boolean>;
 
-  // Inspiration Gallery methods
-  getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined>;
-  getAllInspirationItems(): Promise<InspirationGalleryItem[]>;
-  getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]>;
-  getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]>;
-  createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem>;
-  updateInspirationItem(id: number, item: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined>;
-  deleteInspirationItem(id: number): Promise<boolean>;
+
 
   // Product Type methods
   getProductType(id: number): Promise<ProductType | undefined>;
@@ -1723,90 +1716,7 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
-  async getInspirationItem(id: number): Promise<InspirationGalleryItem | undefined> {
-    try {
-      const [item] = await db.select()
-        .from(inspirationGallery)
-        .where(eq(inspirationGallery.id, id));
-      
-      return item;
-    } catch (error) {
-      console.error('Error fetching inspiration item:', error);
-      return undefined;
-    }
-  }
-  async getAllInspirationItems(): Promise<InspirationGalleryItem[]> {
-    try {
-      const items = await db.select().from(inspirationGallery).orderBy(desc(inspirationGallery.id));
-      return items;
-    } catch (error) {
-      console.error('Error fetching all inspiration items:', error);
-      return [];
-    }
-  }
-  async getFeaturedInspirationItems(): Promise<InspirationGalleryItem[]> {
-    try {
-      const items = await db.select()
-        .from(inspirationGallery)
-        .where(eq(inspirationGallery.featured, true))
-        .orderBy(desc(inspirationGallery.id));
-      
-      return items;
-    } catch (error) {
-      console.error('Error fetching featured inspiration items:', error);
-      return [];
-    }
-  }
-  async getInspirationItemsByCategory(category: string): Promise<InspirationGalleryItem[]> {
-    try {
-      const items = await db.select()
-        .from(inspirationGallery)
-        .where(eq(inspirationGallery.category, category))
-        .orderBy(desc(inspirationGallery.id));
-      
-      return items;
-    } catch (error) {
-      console.error('Error fetching inspiration items by category:', error);
-      return [];
-    }
-  }
-  async createInspirationItem(item: InsertInspirationGalleryItem): Promise<InspirationGalleryItem> {
-    try {
-      const [result] = await db.insert(inspirationGallery)
-        .values(item)
-        .returning();
-      
-      return result;
-    } catch (error) {
-      console.error('Error creating inspiration gallery item:', error);
-      throw new Error('Failed to create inspiration gallery item');
-    }
-  }
-  async updateInspirationItem(id: number, item: Partial<InspirationGalleryItem>): Promise<InspirationGalleryItem | undefined> {
-    try {
-      const [updated] = await db.update(inspirationGallery)
-        .set(item)
-        .where(eq(inspirationGallery.id, id))
-        .returning();
-      
-      return updated;
-    } catch (error) {
-      console.error('Error updating inspiration gallery item:', error);
-      return undefined;
-    }
-  }
-  async deleteInspirationItem(id: number): Promise<boolean> {
-    try {
-      const [result] = await db.delete(inspirationGallery)
-        .where(eq(inspirationGallery.id, id))
-        .returning();
-      
-      return !!result;
-    } catch (error) {
-      console.error('Error deleting inspiration gallery item:', error);
-      return false;
-    }
-  }
+
 }
 
 export const storage = new DatabaseStorage();
