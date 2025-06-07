@@ -20,8 +20,7 @@ import {
   StoneType,
   InsertStoneType,
   ProductStone,
-  InspirationGalleryItem,
-  InsertInspirationGalleryItem,
+
   ProductType,
   InsertProductType,
   DesignRequestComment,
@@ -56,7 +55,7 @@ import {
   metalTypes,
   stoneTypes,
   productStones,
-  inspirationGallery,
+
   productTypes
 } from "@shared/schema";
 import { db } from "./db";
